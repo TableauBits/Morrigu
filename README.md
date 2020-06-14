@@ -4,8 +4,7 @@
 
 # How to install: 
 Morrigu uses CMake as build tool and Conan as packet manager. This makes the setup process relatively easy.  
-You need [CMake 3.15+](https://cmake.org/download/), and a somewhat recent version of [Conan](https://conan.io/downloads.html).
-To make an "out of source build", the steps are then simply:
+You need [CMake 3.15+](https://cmake.org/download/), and a somewhat recent version of [Conan](https://conan.io/downloads.html). To make an "out of source build", the steps are then simply:
 ```bash
 mkdir build
 cd build

@@ -9,8 +9,8 @@ file(GLOB_RECURSE MORRIGU_SRC "${CMAKE_SOURCE_DIR}/src/*.h" "${CMAKE_SOURCE_DIR}
 add_executable("${PROJECT_NAME}" "${MORRIGU_SRC}")
 set_property(TARGET "${PROJECT_NAME}" PROPERTY CXX_STANDARD 17)
 
-target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/Morrigu")
-target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/Vendor")
+target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/src/Morrigu")
+target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/src/Vendor")
 
 if (MSVC)
     message("DETECTED MSVC COMPILER")
