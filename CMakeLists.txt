@@ -10,6 +10,7 @@ add_executable("${PROJECT_NAME}" "${MORRIGU_SRC}")
 set_property(TARGET "${PROJECT_NAME}" PROPERTY CXX_STANDARD 17)
 
 target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/src/Morrigu")
+target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/src/Sandbox")
 target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/src/Vendor")
 
 if (MSVC)
