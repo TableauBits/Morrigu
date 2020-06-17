@@ -12,3 +12,5 @@ conan install ..
 cmake -G "<GENERATOR>" ..
 ```
 Where `<GENERATOR>` is a [CMake generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html) supported by the version you are using.
+
+Note: The penultimum line of the script might need the `-s build_type=[Debug/Release]` and `--build<SOURCE CODE LIBS>` option to build necessary packages from source as debug or release.

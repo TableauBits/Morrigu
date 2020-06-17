@@ -15,4 +15,4 @@ namespace MRG
 	Application* createApplication();
 }  // namespace MRG
 
-#endif MRG_CLASS_APPLICATION
+#endif
