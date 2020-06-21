@@ -41,12 +41,12 @@ namespace MRG
 	};
 
 #define MRG_EVENT_CLASS_TYPE(type)                                                                                                         \
-	static EventType getStaticType() { return EventType::##type; }                                                                         \
-	virtual EventType getEventType() const override { return getStaticType(); }                                                            \
-	virtual const char* getName() const override { return #type; }
+	[[nodiscard]] static EventType getStaticType() { return EventType::##type; }                                                           \
+	[[nodiscard]] virtual EventType getEventType() const override { return getStaticType(); }                                              \
+	[[nodiscard]] virtual const char* getName() const override { return #type; }
 
 #define MRG_EVENT_CLASS_CATEGORY(category)                                                                                                 \
-	virtual int getCategoryFlags() const override { return category; }
+	[[nodiscard]] virtual int getCategoryFlags() const override { return category; }
 
 	class Event
 	{
