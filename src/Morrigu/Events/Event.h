@@ -3,6 +3,8 @@
 
 #include "Core/Core.h"
 
+#include <string>
+
 namespace MRG
 {
 	enum class EventType
@@ -38,8 +40,54 @@ namespace MRG
 		EventCategoryMouseButton = BIT(4)
 	};
 
+#define MRG_EVENT_CLASS_TYPE(type)                                                                                                         \
+	static EventType getStaticType() { return EventType::##type; }                                                                         \
+	virtual EventType getEventType() const override { return getStaticType(); }                                                            \
+	virtual const char* getName() const override { return #type; }
+
+#define MRG_EVENT_CLASS_CATEGORY(category)                                                                                                 \
+	virtual int getCategoryFlags() const override { return category; }
+
 	class Event
-	{};
+	{
+		friend class EventDispatcher;
+
+	public:
+		virtual EventType getEventType() const = 0;
+		virtual const char* getName() const = 0;
+		virtual int getCategoryFlags() const = 0;
+		virtual std::string toString() const { return getName(); }
+
+		inline bool isInCategory(EventCategory category) { return getCategoryFlags() & category; }
+
+	protected:
+		bool m_handled = false;
+	};
+
+	class EventDispatcher
+	{
+		template<typename T>
+		using EventFunction = std::function<bool(T&)>;
+
+	public:
+		EventDispatcher(Event& event) : m_event(event) {}
+
+		template<typename T>
+		bool dispatch(EventFunction<T> function)
+		{
+			if (m_event.getEventType() == T::getStaticType()) {
+				m_event.m_handled = function(*(T*)&m_event);
+				return true;
+			}
+			return false;
+		}
+
+	private:
+		Event& m_event;
+	};
+
+	inline std::ostream& operator<<(std::ostream& os, const Event& event) { return os << event.toString(); }
+
 }  // namespace MRG
 
 #endif
