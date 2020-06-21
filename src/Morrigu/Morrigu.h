@@ -1,6 +1,7 @@
 #ifndef MRG_GLOBAL_HEADER
 #define MRG_GLOBAL_HEADER
 
-#include "Application.h"
+#include "Core/Application.h"
+#include "Core/Logger.h"
 
 #endif

@@ -12,8 +12,8 @@ namespace MRG
 	public:
 		static void init(const std::string& loggerName);
 
-		inline static std::shared_ptr<spdlog::logger>& getEngineLogger() { return s_engineLogger; };
-		inline static std::shared_ptr<spdlog::logger>& getClientLogger() { return s_clientLogger; };
+		[[nodiscard]] inline static std::shared_ptr<spdlog::logger>& getEngineLogger() { return s_engineLogger; };
+		[[nodiscard]] inline static std::shared_ptr<spdlog::logger>& getClientLogger() { return s_clientLogger; };
 
 	private:
 		static std::shared_ptr<spdlog::logger> s_engineLogger;
