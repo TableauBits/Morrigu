@@ -22,8 +22,8 @@ namespace MRG
 			return ss.str();
 		}
 
-		MRG_EVENT_CLASS_TYPE(WindowResize);
-		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication);
+		MRG_EVENT_CLASS_TYPE(WindowResize)
+		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication)
 
 	private:
 		unsigned int m_width, m_height;
@@ -34,8 +34,8 @@ namespace MRG
 	public:
 		WindowCloseEvent() = default;
 
-		MRG_EVENT_CLASS_TYPE(WindowClose);
-		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication);
+		MRG_EVENT_CLASS_TYPE(WindowClose)
+		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
 	class AppTickEvent : public Event
@@ -43,8 +43,8 @@ namespace MRG
 	public:
 		AppTickEvent() = default;
 
-		MRG_EVENT_CLASS_TYPE(AppTick);
-		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication);
+		MRG_EVENT_CLASS_TYPE(AppTick)
+		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
 	class AppUpdateEvent : public Event
@@ -52,8 +52,8 @@ namespace MRG
 	public:
 		AppUpdateEvent() = default;
 
-		MRG_EVENT_CLASS_TYPE(AppUpdate);
-		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication);
+		MRG_EVENT_CLASS_TYPE(AppUpdate)
+		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
 	class AppRenderEvent : public Event
@@ -61,8 +61,8 @@ namespace MRG
 	public:
 		AppRenderEvent() = default;
 
-		MRG_EVENT_CLASS_TYPE(AppRender);
-		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication);
+		MRG_EVENT_CLASS_TYPE(AppRender)
+		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 }  // namespace MRG
 

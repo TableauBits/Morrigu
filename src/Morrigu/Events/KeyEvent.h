@@ -12,10 +12,10 @@ namespace MRG
 	public:
 		[[nodiscard]] inline int getKeyCode() const { return m_keyCode; }
 
-		MRG_EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput);
+		MRG_EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 
 	protected:
-		KeyEvent(int keyCode) : m_keyCode(keyCode){};
+		KeyEvent(int keyCode) : m_keyCode(keyCode) {}
 
 		int m_keyCode;
 	};
@@ -33,7 +33,7 @@ namespace MRG
 			return ss.str();
 		}
 
-		MRG_EVENT_CLASS_TYPE(KeyPressed);
+		MRG_EVENT_CLASS_TYPE(KeyPressed)
 
 	private:
 		int m_repeatCount;
@@ -42,7 +42,7 @@ namespace MRG
 	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
-		KeyReleasedEvent(int keyCode) : KeyEvent(keyCode){};
+		KeyReleasedEvent(int keyCode) : KeyEvent(keyCode) {}
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -51,7 +51,7 @@ namespace MRG
 			return ss.str();
 		}
 
-		MRG_EVENT_CLASS_TYPE(KeyReleased);
+		MRG_EVENT_CLASS_TYPE(KeyReleased)
 	};
 }  // namespace MRG
 
