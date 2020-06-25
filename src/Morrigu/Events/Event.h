@@ -3,8 +3,10 @@
 
 #include "Core/Core.h"
 
-#include <string>
 #include <functional>
+#include <string>
+#include <ostream>
+
 
 namespace MRG
 {
@@ -42,7 +44,7 @@ namespace MRG
 	};
 
 #define MRG_EVENT_CLASS_TYPE(type)                                                                                                         \
-	[[nodiscard]] static EventType getStaticType() { return EventType::##type; }                                                           \
+	[[nodiscard]] static EventType getStaticType() { return EventType::type; }                                                             \
 	[[nodiscard]] virtual EventType getEventType() const override { return getStaticType(); }                                              \
 	[[nodiscard]] virtual const char* getName() const override { return #type; }
 
