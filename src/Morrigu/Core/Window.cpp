@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "Events/ApplicationEvent.h"
 #include "Logger.h"
 
 namespace MRG
@@ -26,6 +27,16 @@ namespace MRG
 		glfwSetWindowUserPointer(m_window, &m_properties);
 
 		setVsync(props.VSync);
+
+		// GLFW callbacks
+		glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
+			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
+			data->width = width;
+			data->height = height;
+
+			WindowResizeEvent resize{width, height};
+			data->callback(resize);
+		});
 	}
 
 	void Window::_shutdown() { glfwDestroyWindow(m_window); }
