@@ -23,9 +23,9 @@ namespace MRG
 	class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent(int keyCode, int repeatCount) : KeyEvent(keyCode), m_repeatCount(repeatCount) {}
+		KeyPressedEvent(int keyCode, unsigned int repeatCount) : KeyEvent(keyCode), m_repeatCount(repeatCount) {}
 
-		[[nodiscard]] inline int getRepeatCount() const { return m_repeatCount; }
+		[[nodiscard]] inline unsigned int getRepeatCount() const { return m_repeatCount; }
 		[[nodiscard]] std::string toString() const override
 		{
 			std::stringstream ss;

@@ -11,7 +11,9 @@ namespace MRG
 		m_window = std::make_unique<Window>(WindowProperties{"Morrigu", 1280, 720, true});
 		m_window->setEventCallback(MRG_EVENT_BIND_FUNCTION(Application::onEvent));
 	}
-	Application::~Application() { glfwTerminate(); }
+	Application::~Application() {
+		glfwTerminate();
+	}
 
 	void Application::onEvent(Event& event)
 	{
