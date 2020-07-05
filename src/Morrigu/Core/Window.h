@@ -19,6 +19,7 @@ namespace MRG
 		unsigned int height;
 		bool VSync;
 		EventCallbackFunction callback;
+		unsigned int keyRepeats;
 	};
 
 	class Window

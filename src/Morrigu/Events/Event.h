@@ -4,9 +4,8 @@
 #include "Core/Core.h"
 
 #include <functional>
-#include <string>
 #include <ostream>
-
+#include <string>
 
 namespace MRG
 {
@@ -36,11 +35,11 @@ namespace MRG
 	enum EventCategory
 	{
 		None = 0,
-		EventCategoryApplication = BIT(0),
-		EventCategoryInput = BIT(1),
-		EventCategoryKeyboard = BIT(2),
-		EventCategoryMouse = BIT(3),
-		EventCategoryMouseButton = BIT(4)
+		EventCategoryApplication = MRG_BIT(0),
+		EventCategoryInput = MRG_BIT(1),
+		EventCategoryKeyboard = MRG_BIT(2),
+		EventCategoryMouse = MRG_BIT(3),
+		EventCategoryMouseButton = MRG_BIT(4)
 	};
 
 #define MRG_EVENT_CLASS_TYPE(type)                                                                                                         \
