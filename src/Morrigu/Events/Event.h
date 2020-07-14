@@ -52,18 +52,15 @@ namespace MRG
 
 	class Event
 	{
-		friend class EventDispatcher;
-
 	public:
+		bool handled = false;
+
 		virtual EventType getEventType() const = 0;
 		virtual const char* getName() const = 0;
 		virtual int getCategoryFlags() const = 0;
 		virtual std::string toString() const { return getName(); }
 
 		inline bool isInCategory(EventCategory category) { return getCategoryFlags() & category; }
-
-	protected:
-		bool m_handled = false;
 	};
 
 	class EventDispatcher
@@ -78,7 +75,7 @@ namespace MRG
 		bool dispatch(EventFunction<T> function)
 		{
 			if (m_event.getEventType() == T::getStaticType()) {
-				m_event.m_handled = function(*(T*)&m_event);
+				m_event.handled = function(*(T*)&m_event);
 				return true;
 			}
 			return false;
