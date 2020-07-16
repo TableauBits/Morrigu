@@ -1,4 +1,3 @@
-#include "../Morrigu/Events/ApplicationEvent.h"
 #include <Morrigu.h>
 
 class SampleLayer : public MRG::Layer
