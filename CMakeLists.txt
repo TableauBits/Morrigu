@@ -26,5 +26,7 @@ endif()
 # finding openGL
 find_package(OpenGL)
 
+add_compile_definitions(GLFW_INCLUDE_NONE)
+
 set_target_properties("${PROJECT_NAME}" PROPERTIES LINK_FLAGS ${CONAN_EXE_LINKER_FLAGS})
 target_link_libraries("${PROJECT_NAME}" PRIVATE ${CONAN_LIBS} OpenGL::GL)

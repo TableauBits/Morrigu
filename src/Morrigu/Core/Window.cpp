@@ -4,6 +4,8 @@
 #include "Events/MouseEvent.h"
 #include "Logger.h"
 
+#include <glad/glad.h>
+
 namespace MRG
 {
 	static void GLFWErrorCallback(int error, const char* description)
@@ -32,6 +34,10 @@ namespace MRG
 
 		m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
 		glfwMakeContextCurrent(m_window);
+
+		int status = gladLoadGLLoader(GLADloadproc(glfwGetProcAddress));
+		MRG_CORE_ASSERT(status, "Could not initialize glad !");
+
 		glfwSetWindowUserPointer(m_window, &m_properties);
 
 		setVsync(props.VSync);
