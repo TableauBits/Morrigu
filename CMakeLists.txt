@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 project(Morrigu CXX)
 
-include("${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+# glad doesn't support configurations other than Debug and Release, so we enforce that only these two are generated
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+
+include("${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake")
 conan_basic_setup()
 
 file(GLOB_RECURSE MORRIGU_SRC "${CMAKE_SOURCE_DIR}/src/*.h" "${CMAKE_SOURCE_DIR}/src/*.cpp")
@@ -11,6 +14,7 @@ set_property(TARGET "${PROJECT_NAME}" PROPERTY CXX_STANDARD 17)
 
 target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/src/Morrigu")
 target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/src/Sandbox")
+target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_SOURCE_DIR}/src/Vendor")
 
 if (MSVC)
     message("DETECTED MSVC COMPILER")
@@ -23,10 +27,5 @@ elseif()
     add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 endif()
 
-# finding openGL
-find_package(OpenGL)
-
-add_compile_definitions(GLFW_INCLUDE_NONE)
-
-set_target_properties("${PROJECT_NAME}" PROPERTIES LINK_FLAGS ${CONAN_EXE_LINKER_FLAGS})
-target_link_libraries("${PROJECT_NAME}" PRIVATE ${CONAN_LIBS} OpenGL::GL)
+add_compile_definitions(GLFW_INCLUDE_NONE IMGUI_IMPL_OPENGL_LOADER_GLAD)
+conan_target_link_libraries("${PROJECT_NAME}")
