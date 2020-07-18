@@ -25,6 +25,7 @@ namespace MRG
 		// Key events
 		KeyPressed,
 		KeyReleased,
+		KeyTyped,
 		// Mouse events
 		MouseButtonPressed,
 		MouseButtonReleased,
