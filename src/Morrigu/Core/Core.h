@@ -5,8 +5,6 @@
 
 #define MRG_BIT(x) (1 << x)
 
-#define MRG_EVENT_BIND_FUNCTION(func) std::bind(&func, this, std::placeholders::_1)
-
 // defining debug Macros
 // disabling clang-format indentation temporarily makes for more readable code
 // clang-format off

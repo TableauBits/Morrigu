@@ -118,6 +118,13 @@ namespace MRG
 			MouseMovedEvent move{static_cast<float>(xPos), static_cast<float>(yPos)};
 			data->callback(move);
 		});
+
+		glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int codePoint) {
+			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
+
+			KeyTypedEvent typedChar{static_cast<int>(codePoint)};
+			data->callback(typedChar);
+		});
 	}
 
 	void Window::_shutdown() { glfwDestroyWindow(m_window); }

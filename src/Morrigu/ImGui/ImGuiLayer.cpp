@@ -3,11 +3,8 @@
 #include "Core/Application.h"
 
 #include "GLFW/glfw3.h"
-// the order of include of these two files is important
-// clang-format off
-#include "imgui.h"
 #include "ImGui/bindings/imgui_impl_opengl3.h"
-// clang-format on
+#include "glad/glad.h"
 
 namespace MRG
 {
@@ -69,5 +66,95 @@ namespace MRG
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 
-	void ImGuiLayer::onEvent(Event& event) {}
+	void ImGuiLayer::onEvent(Event& event)
+	{
+		EventDispatcher dispatcher{event};
+		dispatcher.dispatch<MouseButtonPressedEvent>(
+		  [this](MouseButtonPressedEvent& event) -> bool { return onMouseButtonPressedEvent(event); });
+		dispatcher.dispatch<MouseButtonReleasedEvent>(
+		  [this](MouseButtonReleasedEvent& event) -> bool { return onMouseButtonReleasedEvent(event); });
+		dispatcher.dispatch<MouseMovedEvent>([this](MouseMovedEvent& event) -> bool { return onMouseMovedEvent(event); });
+		dispatcher.dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& event) -> bool { return onMouseScrolledEvent(event); });
+		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) -> bool { return onKeyPressedEvent(event); });
+		dispatcher.dispatch<KeyReleasedEvent>([this](KeyReleasedEvent& event) -> bool { return onKeyReleasedEvent(event); });
+		dispatcher.dispatch<KeyTypedEvent>([this](KeyTypedEvent& event) -> bool { return onKeyTypedEvent(event); });
+		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool { return onWindowResizeEvent(event); });
+	}
+
+	bool ImGuiLayer::onMouseButtonPressedEvent(MouseButtonPressedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MouseDown[event.getMouseButton()] = true;
+
+		return false;
+	}
+
+	bool ImGuiLayer::onMouseButtonReleasedEvent(MouseButtonReleasedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MouseDown[event.getMouseButton()] = false;
+
+		return false;
+	}
+
+	bool ImGuiLayer::onMouseMovedEvent(MouseMovedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MousePos = ImVec2{event.getX(), event.getY()};
+
+		return false;
+	}
+
+	bool ImGuiLayer::onMouseScrolledEvent(MouseScrolledEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.MouseWheelH += event.getX();
+		io.MouseWheel += event.getY();
+
+		return false;
+	}
+
+	bool ImGuiLayer::onKeyPressedEvent(KeyPressedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.KeysDown[event.getKeyCode()] = true;
+		updateSpecialKeys(io);
+
+		return false;
+	}
+
+	bool ImGuiLayer::onKeyReleasedEvent(KeyReleasedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.KeysDown[event.getKeyCode()] = false;
+		updateSpecialKeys(io);
+
+		return false;
+	}
+
+	bool ImGuiLayer::onKeyTypedEvent(KeyTypedEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.AddInputCharacter(event.getKeyCode());
+
+		return false;
+	}
+
+	bool ImGuiLayer::onWindowResizeEvent(WindowResizeEvent& event)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.DisplaySize = ImVec2(event.getWidth(), event.getHeight());
+		io.DisplayFramebufferScale = ImVec2(1.f, 1.f);
+		glViewport(0, 0, event.getWidth(), event.getHeight());
+
+		return false;
+	}
+
+	void ImGuiLayer::updateSpecialKeys(ImGuiIO& io)
+	{
+		io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
+		io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
+		io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
+		io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+	}
 }  // namespace MRG

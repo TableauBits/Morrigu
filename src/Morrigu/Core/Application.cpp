@@ -14,14 +14,14 @@ namespace MRG
 		s_instance = this;
 
 		m_window = std::make_unique<Window>(WindowProperties{"Morrigu", 1280, 720, true});
-		m_window->setEventCallback(MRG_EVENT_BIND_FUNCTION(Application::onEvent));
+		m_window->setEventCallback([this](Event& event) { onEvent(event); });
 	}
-	Application::~Application() { glfwTerminate(); }
+	Application::~Application() { /*glfwTerminate();*/ }
 
 	void Application::onEvent(Event& event)
 	{
 		EventDispatcher dispatcher{event};
-		dispatcher.dispatch<WindowCloseEvent>(MRG_EVENT_BIND_FUNCTION(Application::onWindowClose));
+		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& event) -> bool { return onWindowClose(event); });
 
 		for (auto it = m_layerStack.end(); it != m_layerStack.begin();) {
 			(*--it)->onEvent(event);

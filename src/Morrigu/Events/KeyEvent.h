@@ -53,6 +53,21 @@ namespace MRG
 
 		MRG_EVENT_CLASS_TYPE(KeyReleased)
 	};
+
+	class KeyTypedEvent : public KeyEvent
+	{
+	public:
+		KeyTypedEvent(int keyCode) : KeyEvent(keyCode) {}
+
+		[[nodiscard]] std::string toString() const override
+		{
+			std::stringstream ss;
+			ss << "KeyTypedEvent: " << m_keyCode;
+			return ss.str();
+		}
+
+		MRG_EVENT_CLASS_TYPE(KeyTyped)
+	};
 }  // namespace MRG
 
 #endif
