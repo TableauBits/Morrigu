@@ -6,8 +6,13 @@
 
 namespace MRG
 {
+	Application* Application::s_instance = nullptr;
+
 	Application::Application()
 	{
+		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists !");
+		s_instance = this;
+
 		m_window = std::make_unique<Window>(WindowProperties{"Morrigu", 1280, 720, true});
 		m_window->setEventCallback(MRG_EVENT_BIND_FUNCTION(Application::onEvent));
 	}
@@ -35,8 +40,16 @@ namespace MRG
 		}
 	}
 
-	void Application::pushLayer(Layer* newLayer) { m_layerStack.pushLayer(newLayer); }
-	void Application::pushOverlay(Layer* newOverlay) { m_layerStack.pushOverlay(newOverlay); }
+	void Application::pushLayer(Layer* newLayer)
+	{
+		m_layerStack.pushLayer(newLayer);
+		newLayer->onAttach();
+	}
+	void Application::pushOverlay(Layer* newOverlay)
+	{
+		m_layerStack.pushOverlay(newOverlay);
+		newOverlay->onAttach();
+	}
 
 	bool Application::onWindowClose(WindowCloseEvent& event)
 	{

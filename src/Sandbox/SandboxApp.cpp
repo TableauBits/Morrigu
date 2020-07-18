@@ -14,7 +14,11 @@ public:
 class Sandbox : public MRG::Application
 {
 public:
-	Sandbox() { pushLayer(new SampleLayer{}); }
+	Sandbox()
+	{
+		pushLayer(new SampleLayer{});
+		pushLayer(new MRG::ImGuiLayer{});
+	}
 	~Sandbox() {}
 };
 
