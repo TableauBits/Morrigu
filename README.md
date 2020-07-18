@@ -10,9 +10,9 @@ mkdir build
 cd build
 conan install .. -s build_type=Debug
 conan install .. -s build_type=Release
-cmake -G "<GENERATOR>" ..
+cmake -G "<GENERATOR>" .. [-DCMAKE_BUILD_TYPE={Debug|Release}]
 ```
-Where `<GENERATOR>` is a [CMake generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html) supported by the version you are using. Not providing a `G` flag should fall back to a default value (defined by your cmake installation).
+Where `<GENERATOR>` is a [CMake generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html) supported by the version you are using. Not providing a `G` flag should fall back to a default value (defined by your cmake installation). IMPORTANT: Unless the generator you are trying to build for does support multi-configuration environment (Visual Studio, Xcode), you will have to tell cmake which version you would like to build, and you will HAVE to put in the part in square brackets in the command above.
 
 To actually build, you can use the tool that cmake generated for, or use the universal build interface provided by cmake :
 ```bash
