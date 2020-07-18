@@ -37,6 +37,8 @@ namespace MRG
 		void setEventCallback(const EventCallbackFunction& callback) { m_properties.callback = callback; }
 		void setVsync(bool enabled);
 
+		GLFWwindow* getGLFWWindow() const { return m_window; }
+
 	private:
 		void _init(const WindowProperties& props);
 		void _shutdown();
