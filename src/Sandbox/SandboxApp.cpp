@@ -7,7 +7,11 @@ public:
 
 	void onAttach() override {}
 	void onDetach() override {}
-	void onUpdate() override { MRG_TRACE("UPDATE !"); }
+	void onUpdate() override
+	{
+		if (MRG::Input::isKeyDown(GLFW_KEY_SPACE))
+			MRG_TRACE("UPDATE !");
+	}
 	void onEvent(MRG::Event& event) override { MRG_TRACE("{}", event.toString()); }
 };
 
