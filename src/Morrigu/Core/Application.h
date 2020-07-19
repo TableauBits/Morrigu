@@ -20,8 +20,8 @@ namespace MRG
 		void pushLayer(Layer* newLayer);
 		void pushOverlay(Layer* newOverlay);
 
-		inline Window& getWindow() { return *m_window; }
-		inline static Application& get() { return *s_instance; }
+		[[nodiscard]] inline Window& getWindow() const { return *m_window; }
+		[[nodiscard]] inline static Application& get() { return *s_instance; }
 
 	private:
 		bool onWindowClose(WindowCloseEvent& event);
