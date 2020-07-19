@@ -25,7 +25,7 @@ namespace MRG
 
 	private:
 		std::vector<Layer*> m_layers;
-		std::vector<Layer*>::iterator m_layerInsertor;
+		std::size_t m_layerInsertionIndex;
 	};
 }  // namespace MRG
 
