@@ -1,5 +1,7 @@
 #include <Morrigu.h>
 
+#include "imgui.h"
+
 class SampleLayer : public MRG::Layer
 {
 public:
@@ -13,16 +15,18 @@ public:
 			MRG_TRACE("UPDATE !");
 	}
 	void onEvent(MRG::Event& event) override { MRG_TRACE("{}", event.toString()); }
+	void onImGuiRender() override
+	{
+		ImGui::Begin("Test");
+		ImGui::Text("Hello world !");
+		ImGui::End();
+	}
 };
 
 class Sandbox : public MRG::Application
 {
 public:
-	Sandbox()
-	{
-		pushLayer(new SampleLayer{});
-		pushLayer(new MRG::ImGuiLayer{});
-	}
+	Sandbox() { pushLayer(new SampleLayer{}); }
 	~Sandbox() {}
 };
 
