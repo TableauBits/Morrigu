@@ -4,7 +4,9 @@
 
 # How to install: 
 Morrigu uses CMake as build tool and Conan as packet manager. This makes the setup process relatively easy.  
-You need [CMake 3.15+](https://cmake.org/download/), and a somewhat recent version of [Conan](https://conan.io/downloads.html) (tested on 1.26.1) with the [bincrafters remote](https://docs.conan.io/en/latest/uploading_packages/remotes.html#bincrafters). Morrigu uses the `cmake_multi` conan generator, so you should be able to install both Debug and Release versions of the dependencies and use both without having to switch context. To make an "out of source build", the steps are then simply:
+You need [CMake 3.15+](https://cmake.org/download/), and a somewhat recent version of [Conan](https://conan.io/downloads.html) (tested on 1.26.1) with the [bincrafters remote](https://docs.conan.io/en/latest/uploading_packages/remotes.html#bincrafters), and a [personal remote](https://bintray.com/ithyx/imgui/imgui-docking%3Aithyx) that contains a ImGui docking recipe (follow the instructions that appear when you click "SET ME UP!").
+
+Morrigu uses the `cmake_multi` conan generator, so you should be able to install both Debug and Release versions of the dependencies and use both without having to switch context. To make an "out of source build", the steps are then simply:
 ```bash
 mkdir build
 cd build
