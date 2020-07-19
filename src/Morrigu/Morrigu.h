@@ -7,5 +7,4 @@
 #include "Core/Logger.h"
 #include "ImGui/ImGuiLayer.h"
 
-
 #endif

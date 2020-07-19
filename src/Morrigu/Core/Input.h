@@ -8,11 +8,11 @@ namespace MRG
 	class Input
 	{
 	public:
-		static bool isKeyDown(int keyCode);
-		static bool isMouseButtonDown(int button);
-		static std::pair<float, float> getMousePosition();
-		static float getMouseX();
-		static float getMouseY();
+		[[nodiscard]] static bool isKeyDown(int keyCode);
+		[[nodiscard]] static bool isMouseButtonDown(int button);
+		[[nodiscard]] static std::pair<float, float> getMousePosition();
+		[[nodiscard]] static float getMouseX();
+		[[nodiscard]] static float getMouseY();
 	};
 }  // namespace MRG
 
