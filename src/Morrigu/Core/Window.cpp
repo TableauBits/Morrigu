@@ -61,33 +61,35 @@ namespace MRG
 			data->callback(close);
 		});
 
-		glfwSetKeyCallback(m_window, [](GLFWwindow* window, int keycode, int scancode, int action, int mods) {
-			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
+		glfwSetKeyCallback(
+		  m_window,
+		  [](GLFWwindow* window, int keycode, [[maybe_unused]] int scancode, [[maybe_unused]] int action, [[maybe_unused]] int mods) {
+			  const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
-			switch (action) {
-			case GLFW_PRESS: {
-				KeyPressedEvent press{keycode, 0};
-				data->callback(press);
-			} break;
+			  switch (action) {
+			  case GLFW_PRESS: {
+				  KeyPressedEvent press{keycode, 0};
+				  data->callback(press);
+			  } break;
 
-			case GLFW_REPEAT: {
-				KeyPressedEvent press{keycode, ++data->keyRepeats};
-				data->callback(press);
-			} break;
+			  case GLFW_REPEAT: {
+				  KeyPressedEvent press{keycode, ++data->keyRepeats};
+				  data->callback(press);
+			  } break;
 
-			case GLFW_RELEASE: {
-				data->keyRepeats = 0;
-				KeyReleasedEvent release{keycode};
-				data->callback(release);
-			} break;
+			  case GLFW_RELEASE: {
+				  data->keyRepeats = 0;
+				  KeyReleasedEvent release{keycode};
+				  data->callback(release);
+			  } break;
 
-			default: {
-				MRG_ENGINE_WARN("Ignoring unrecognized GLFW key event (type {})", action);
-			} break;
-			}
-		});
+			  default: {
+				  MRG_ENGINE_WARN("Ignoring unrecognized GLFW key event (type {})", action);
+			  } break;
+			  }
+		  });
 
-		glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int mods) {
+		glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, [[maybe_unused]] int mods) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
 			switch (action) {
