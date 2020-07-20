@@ -54,7 +54,7 @@ namespace MRG
 	void Application::pushLayer(Layer* newLayer) { m_layerStack.pushLayer(newLayer); }
 	void Application::pushOverlay(Layer* newOverlay) { m_layerStack.pushOverlay(newOverlay); }
 
-	bool Application::onWindowClose(WindowCloseEvent& event)
+	bool Application::onWindowClose([[maybe_unused]] WindowCloseEvent& event)
 	{
 		m_running = false;
 		return true;

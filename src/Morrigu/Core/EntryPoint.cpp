@@ -6,7 +6,7 @@
 
 extern MRG::Application* MRG::createApplication();
 
-int main(int argc, char** argv)
+int main()
 {
 	MRG::Logger::init("APP");
 	MRG_ENGINE_INFO("Finished engine initialisation.");

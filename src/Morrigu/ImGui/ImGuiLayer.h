@@ -18,7 +18,7 @@ namespace MRG
 		void onAttach() override;
 		void onDetach() override;
 		void onUpdate() override {}
-		void onEvent(Event& event) override {}
+		void onEvent([[maybe_unused]] Event& event) override {}
 		void onImGuiRender() override;
 
 		void begin();

@@ -20,11 +20,11 @@ if (MSVC)
     message("DETECTED MSVC COMPILER")
     # the permissive flag is only supported in VS2017+, so please delete this line if your version is not new enough,
     # although the codebase is in C++17, so the compiler you're using is probably supporting it :p
-    add_compile_options(/permissive- /W4 /w14640)
+    target_compile_options("${PROJECT_NAME}" PRIVATE /permissive- /W4 /w14640 /WX)
 elseif()
     # we consider that the majority of C++ compilers other than MSVC recognise the following flags,
     # otherwise feel free to modify them
-    add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
+    target_compile_options("${PROJECT_NAME}" PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 endif()
 
 add_compile_definitions(GLFW_INCLUDE_NONE IMGUI_IMPL_OPENGL_LOADER_GLAD)
