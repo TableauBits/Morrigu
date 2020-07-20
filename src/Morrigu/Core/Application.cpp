@@ -15,8 +15,14 @@ namespace MRG
 
 		m_window = std::make_unique<Window>(WindowProperties{"Morrigu", 1280, 720, true});
 		m_window->setEventCallback([this](Event& event) { onEvent(event); });
+
+		m_ImGuiLayer = new ImGuiLayer{};
+		pushOverlay(m_ImGuiLayer);
 	}
-	Application::~Application() { /*glfwTerminate();*/ }
+
+	Application::~Application()
+	{ /*glfwTerminate();*/
+	}
 
 	void Application::onEvent(Event& event)
 	{
@@ -35,7 +41,12 @@ namespace MRG
 		while (m_running) {
 			glClearColor(1, 0, 1, 1);
 			glClear(GL_COLOR_BUFFER_BIT);
+
 			for (auto& layer : m_layerStack) layer->onUpdate();
+
+			m_ImGuiLayer->begin();
+			for (auto& layer : m_layerStack) layer->onImGuiRender();
+			m_ImGuiLayer->end();
 			m_window->onUpdate();
 		}
 	}
