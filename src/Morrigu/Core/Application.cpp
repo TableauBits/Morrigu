@@ -51,16 +51,8 @@ namespace MRG
 		}
 	}
 
-	void Application::pushLayer(Layer* newLayer)
-	{
-		m_layerStack.pushLayer(newLayer);
-		newLayer->onAttach();
-	}
-	void Application::pushOverlay(Layer* newOverlay)
-	{
-		m_layerStack.pushOverlay(newOverlay);
-		newOverlay->onAttach();
-	}
+	void Application::pushLayer(Layer* newLayer) { m_layerStack.pushLayer(newLayer); }
+	void Application::pushOverlay(Layer* newOverlay) { m_layerStack.pushOverlay(newOverlay); }
 
 	bool Application::onWindowClose(WindowCloseEvent& event)
 	{
