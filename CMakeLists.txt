@@ -24,7 +24,7 @@ if (MSVC)
 elseif()
     # we consider that the majority of C++ compilers other than MSVC recognise the following flags,
     # otherwise feel free to modify them
-    target_compile_options("${PROJECT_NAME}" PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
+    target_compile_options("${PROJECT_NAME}" PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Werror)
 endif()
 
 add_compile_definitions(GLFW_INCLUDE_NONE IMGUI_IMPL_OPENGL_LOADER_GLAD)
