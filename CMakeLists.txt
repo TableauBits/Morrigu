@@ -20,11 +20,13 @@ if (MSVC)
     message("DETECTED MSVC COMPILER")
     # the permissive flag is only supported in VS2017+, so please delete this line if your version is not new enough,
     # although the codebase is in C++17, so the compiler you're using is probably supporting it :p
-    target_compile_options("${PROJECT_NAME}" PRIVATE /permissive- /W4 /w14640 /WX)
+    target_compile_options("${PROJECT_NAME}" PRIVATE /permissive- /W4 /w14640)
+    # setting the default project in the solution
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "${PROJECT_NAME}")
 elseif()
     # we consider that the majority of C++ compilers other than MSVC recognise the following flags,
     # otherwise feel free to modify them
-    target_compile_options("${PROJECT_NAME}" PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Werror)
+    target_compile_options("${PROJECT_NAME}" PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 endif()
 
 add_compile_definitions(GLFW_INCLUDE_NONE IMGUI_IMPL_OPENGL_LOADER_GLAD)

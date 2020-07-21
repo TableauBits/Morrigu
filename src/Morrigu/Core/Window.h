@@ -2,8 +2,7 @@
 #define MRG_CLASS_WINDOW
 
 #include "Events/Event.h"
-
-#include <GLFW/glfw3.h>
+#include "Renderer/APIs/OpenGLContext.h"
 
 #include <functional>
 #include <memory>
@@ -44,6 +43,7 @@ namespace MRG
 		void _shutdown();
 
 		GLFWwindow* m_window;
+		Context* m_context;
 		WindowProperties m_properties;
 
 		static bool s_GLFWInit;
