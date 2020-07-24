@@ -1,12 +1,9 @@
 #include "Window.h"
+
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 #include "Logger.h"
-
-#include "GLFW/glfw3.h"
-
-#include <glad/glad.h>
 
 namespace MRG
 {
@@ -27,7 +24,7 @@ namespace MRG
 		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", props.title, props.width, props.height);
 
 		if (!s_GLFWInit) {
-			auto success = glfwInit();
+			[[maybe_unused]] auto success = glfwInit();
 			MRG_CORE_ASSERT(success, "Could not initialize GLFW !");
 			glfwSetErrorCallback(GLFWErrorCallback);
 
@@ -35,10 +32,8 @@ namespace MRG
 		}
 
 		m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_window);
 
-		int status = gladLoadGLLoader(GLADloadproc(glfwGetProcAddress));
-		MRG_CORE_ASSERT(status, "Could not initialize glad !");
+		m_context = new OpenGLContext{m_window};
 
 		glfwSetWindowUserPointer(m_window, &m_properties);
 
@@ -131,12 +126,16 @@ namespace MRG
 		});
 	}
 
-	void Window::_shutdown() { glfwDestroyWindow(m_window); }
+	void Window::_shutdown()
+	{
+		glfwDestroyWindow(m_window);
+		delete m_context;
+	}
 
 	void Window::onUpdate()
 	{
 		glfwPollEvents();
-		glfwSwapBuffers(m_window);
+		m_context->swapBuffers();
 	}
 
 	void Window::setVsync(bool enabled)
