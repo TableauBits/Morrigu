@@ -24,7 +24,7 @@ namespace MRG
 		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", props.title, props.width, props.height);
 
 		if (!s_GLFWInit) {
-			auto success = glfwInit();
+			[[maybe_unused]] auto success = glfwInit();
 			MRG_CORE_ASSERT(success, "Could not initialize GLFW !");
 			glfwSetErrorCallback(GLFWErrorCallback);
 
