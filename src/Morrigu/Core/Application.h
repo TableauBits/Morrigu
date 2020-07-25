@@ -32,6 +32,8 @@ namespace MRG
 		bool m_running = true;
 		LayerStack m_layerStack;
 		static Application* s_instance;
+
+		unsigned int m_vertexArray, m_vertexBuffer, m_indexBuffer;
 	};
 	Application* createApplication();
 }  // namespace MRG
