@@ -4,6 +4,7 @@
 #include "Events/ApplicationEvent.h"
 #include "ImGui/ImGuiLayer.h"
 #include "LayerStack.h"
+#include "Renderer/Buffers.h"
 #include "Renderer/Shader.h"
 #include "Window.h"
 
@@ -32,10 +33,12 @@ namespace MRG
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_running = true;
 		LayerStack m_layerStack;
-		std::unique_ptr<Shader> m_shader;
 		static Application* s_instance;
 
-		unsigned int m_vertexArray, m_vertexBuffer, m_indexBuffer;
+		unsigned int m_vertexArray;
+		std::unique_ptr<Shader> m_shader;
+		std::unique_ptr<VertexBuffer> m_vertexBuffer;
+		std::unique_ptr<IndexBuffer> m_indexBuffer;
 	};
 	Application* createApplication();
 }  // namespace MRG
