@@ -2,7 +2,7 @@
 #define MRG_CLASS_WINDOW
 
 #include "Events/Event.h"
-#include "Renderer/APIs/OpenGL/Context.h"
+#include "Renderer/Context.h"
 
 #include <functional>
 #include <memory>
