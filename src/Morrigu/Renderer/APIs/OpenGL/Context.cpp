@@ -1,12 +1,12 @@
-#include "OpenGLContext.h"
+#include "Context.h"
 
 #include "Core/Core.h"
 
 #include <glad/glad.h>
 
-namespace MRG
+namespace MRG::OpenGL
 {
-	OpenGLContext::OpenGLContext(GLFWwindow* window) : m_window(window)
+	Context::Context(GLFWwindow* window) : m_window(window)
 	{
 		MRG_CORE_ASSERT(window, "Window handle is null !");
 
@@ -20,5 +20,5 @@ namespace MRG
 		MRG_ENGINE_INFO("\tOpenGL version: {0}", glGetString(GL_VERSION));
 	}
 
-	void OpenGLContext::swapBuffers() { glfwSwapBuffers(m_window); }
+	void Context::swapBuffers() { glfwSwapBuffers(m_window); }
 }  // namespace MRG
