@@ -61,10 +61,6 @@ namespace MRG
 		m_shader.reset(new Shader(vertexShader, fragmentShader));
 	}
 
-	Application::~Application()
-	{ /*glfwTerminate();*/
-	}
-
 	void Application::onEvent(Event& event)
 	{
 		EventDispatcher dispatcher{event};

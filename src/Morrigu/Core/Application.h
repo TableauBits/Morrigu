@@ -15,7 +15,7 @@ namespace MRG
 	private:
 	public:
 		Application();
-		virtual ~Application();
+		virtual ~Application() = default;
 
 		void onEvent(Event& event);
 		void run();
