@@ -33,7 +33,7 @@ namespace MRG
 
 		m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
 
-		m_context = new OpenGLContext{m_window};
+		m_context = Context::create(m_window);
 
 		glfwSetWindowUserPointer(m_window, &m_properties);
 
