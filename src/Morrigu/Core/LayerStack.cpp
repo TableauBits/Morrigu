@@ -2,7 +2,6 @@
 
 namespace MRG
 {
-	LayerStack::LayerStack() { m_layerInsertionIndex = 0; }
 	LayerStack::~LayerStack()
 	{
 		for (const auto& layerPtr : m_layers) delete layerPtr;
@@ -26,9 +25,9 @@ namespace MRG
 		  (m_layers.begin() + m_layerInsertionIndex == m_layers.end()) ? m_layers.end() : m_layers.begin() + m_layerInsertionIndex + 1;
 		auto it = std::find(m_layers.begin(), max, layerToRemove);
 		if (it != max) {
+			layerToRemove->onDetach();
 			m_layers.erase(it);
 			--m_layerInsertionIndex;
-			layerToRemove->onDetach();
 		}
 	}
 
@@ -38,8 +37,8 @@ namespace MRG
 		  (m_layers.begin() + m_layerInsertionIndex == m_layers.end()) ? m_layers.end() : m_layers.begin() + m_layerInsertionIndex + 1;
 		auto it = std::find(min, m_layers.end(), overlayToRemove);
 		if (it != m_layers.end()) {
-			m_layers.erase(it);
 			overlayToRemove->onDetach();
+			m_layers.erase(it);
 		}
 	}
 }  // namespace MRG

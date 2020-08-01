@@ -10,7 +10,7 @@ namespace MRG
 	class LayerStack
 	{
 	public:
-		LayerStack();
+		LayerStack() = default;
 		~LayerStack();
 
 		void pushLayer(Layer* newLayer);
@@ -25,7 +25,7 @@ namespace MRG
 
 	private:
 		std::vector<Layer*> m_layers;
-		std::size_t m_layerInsertionIndex;
+		std::size_t m_layerInsertionIndex = 0;
 	};
 }  // namespace MRG
 
