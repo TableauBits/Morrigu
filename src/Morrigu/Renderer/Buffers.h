@@ -116,7 +116,7 @@ namespace MRG
 
 		BufferLayout layout;
 
-		static VertexBuffer* create(const float* vertices, uint32_t size);
+		[[nodiscard]] static VertexBuffer* create(const float* vertices, uint32_t size);
 	};
 
 	class IndexBuffer
@@ -128,7 +128,7 @@ namespace MRG
 		virtual void unbind() const = 0;
 		[[nodiscard]] virtual uint32_t getCount() const = 0;
 
-		static IndexBuffer* create(const uint32_t* indices, uint32_t size);
+		[[nodiscard]] static IndexBuffer* create(const uint32_t* indices, uint32_t size);
 	};
 }  // namespace MRG
 

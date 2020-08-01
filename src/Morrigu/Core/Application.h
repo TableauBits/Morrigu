@@ -6,6 +6,7 @@
 #include "LayerStack.h"
 #include "Renderer/Buffers.h"
 #include "Renderer/Shader.h"
+#include "Renderer/VertexArray.h"
 #include "Window.h"
 
 namespace MRG
@@ -35,10 +36,8 @@ namespace MRG
 		LayerStack m_layerStack;
 		static Application* s_instance;
 
-		unsigned int m_vertexArray;
-		std::unique_ptr<Shader> m_shader;
-		std::unique_ptr<VertexBuffer> m_vertexBuffer;
-		std::unique_ptr<IndexBuffer> m_indexBuffer;
+		std::shared_ptr<VertexArray> m_vertexArray;
+		std::shared_ptr<Shader> m_shader;
 	};
 	Application* createApplication();
 }  // namespace MRG

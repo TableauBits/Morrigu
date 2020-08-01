@@ -12,7 +12,7 @@ namespace MRG
 
 		virtual void swapBuffers() = 0;
 
-		static Context* create(GLFWwindow* window);
+		[[nodiscard]] static Context* create(GLFWwindow* window);
 	};
 }  // namespace MRG
 

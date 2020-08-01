@@ -12,7 +12,7 @@ namespace MRG
 	class Renderer
 	{
 	public:
-		inline static RendererAPI getAPI() { return s_API; }
+		[[nodiscard]] inline static RendererAPI getAPI() { return s_API; }
 
 	private:
 		static const RendererAPI s_API;
