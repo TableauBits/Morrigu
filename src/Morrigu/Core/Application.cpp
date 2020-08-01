@@ -8,34 +8,6 @@ namespace MRG
 {
 	Application* Application::s_instance = nullptr;
 
-	// THIS FUNCTION NEEDS TO BE MOVED SOMEWHERE
-	// Where ? I have no idea :)
-	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
-	{
-		// clang-format off
-		switch (type)
-		{
-			case MRG::ShaderDataType::Float:  return GL_FLOAT;
-			case MRG::ShaderDataType::Float2: return GL_FLOAT;
-			case MRG::ShaderDataType::Float3: return GL_FLOAT;
-			case MRG::ShaderDataType::Float4: return GL_FLOAT;
-
-			case MRG::ShaderDataType::Mat3:   return GL_FLOAT;
-			case MRG::ShaderDataType::Mat4:   return GL_FLOAT;
-
-			case MRG::ShaderDataType::Int:    return GL_INT;
-			case MRG::ShaderDataType::Int2:   return GL_INT;
-			case MRG::ShaderDataType::Int3:   return GL_INT;
-			case MRG::ShaderDataType::Int4:   return GL_INT;
-
-			case MRG::ShaderDataType::Bool:   return GL_BOOL;
-		}
-		// clang-format on
-
-		MRG_CORE_ASSERT(false, "Invalid shader data type ! ({})", type);
-		return 0;
-	}
-
 	Application::Application()
 	{
 		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists !");
@@ -47,43 +19,58 @@ namespace MRG
 		m_ImGuiLayer = new ImGuiLayer{};
 		pushOverlay(m_ImGuiLayer);
 
-		glGenVertexArrays(1, &m_vertexArray);
-		glBindVertexArray(m_vertexArray);
-
+		// triangle
 		// clang-format off
-		static constexpr float vertices[3 * 7] =
+		static constexpr float triangleVertices[3 * 7] =
 		{
 			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
 			 0.5f, -0.5f, 0.0f, 0.2f, 0.2f, 0.8f, 1.0f,
 			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
 		};
+		
+		std::shared_ptr<VertexBuffer> triangleVertexBuffer;
+		triangleVertexBuffer.reset(VertexBuffer::create(triangleVertices, sizeof(triangleVertices)));
 
-		m_vertexBuffer.reset(VertexBuffer::create(vertices, sizeof(vertices)));
-
-		m_vertexBuffer->layout = {
+		triangleVertexBuffer->layout = {
 			{ShaderDataType::Float3, "a_Position"},
 			{ShaderDataType::Float4, "a_Color"}
 		};
 		// clang-format on
-
-		auto index = 0;
-		const auto& layout = m_vertexBuffer->layout;
-		for (const auto& element : layout) {
-			glEnableVertexAttribArray(index);
-			glVertexAttribPointer(index,
-			                      element.getComponentCount(),
-			                      ShaderDataTypeToOpenGLBaseType(element.type),
-			                      element.isNormalized ? GL_TRUE : GL_FALSE,
-			                      layout.getStride(),
-			                      (const void*)(element.offset));
-			++index;
-		}
+		m_triangleArray.reset(VertexArray::create());
+		m_triangleArray->addVertexBuffer(triangleVertexBuffer);
 
 		unsigned int indices[3] = {0, 1, 2};
-		m_indexBuffer.reset(IndexBuffer::create(indices, 3));
+		std::shared_ptr<IndexBuffer> triangleIndexBuffer;
+		triangleIndexBuffer.reset(IndexBuffer::create(indices, 3));
+		m_triangleArray->setIndexBuffer(triangleIndexBuffer);
 
-		std::string vertexShader = R"(
-			#version 410 core
+		// square
+		// clang-format off
+		static constexpr float squareVertices[3 * 4] =
+		{
+			-0.40f, -0.40f, 0.0f,
+			 0.40f, -0.40f, 0.0f,
+			 0.40f,  0.40f, 0.0f,
+			-0.40f,  0.40f, 0.0f
+		};
+		
+		std::shared_ptr<VertexBuffer> squareVertexBuffer;
+		squareVertexBuffer.reset(VertexBuffer::create(squareVertices, sizeof(squareVertices)));
+
+		squareVertexBuffer->layout = {
+			{ShaderDataType::Float3, "a_Position"}
+		};
+		// clang-format on
+		m_squareArray.reset(VertexArray::create());
+		m_squareArray->addVertexBuffer(squareVertexBuffer);
+
+		uint32_t squareindices[6] = {0, 1, 2, 2, 3, 0};
+		std::shared_ptr<IndexBuffer> squareIndexBuffer;
+		squareIndexBuffer.reset(IndexBuffer::create(squareindices, 6));
+		m_squareArray->setIndexBuffer(squareIndexBuffer);
+
+		std::string triangleVShader = R"(
+			#version 460 core
 
 			layout(location = 0) in vec3 a_Position;
 			layout(location = 1) in vec4 a_Color;
@@ -97,8 +84,8 @@ namespace MRG
 			}
 		)";
 
-		std::string fragmentShader = R"(
-			#version 410 core
+		std::string triangleFShader = R"(
+			#version 460 core
 
 			layout(location = 0) out vec4 color;
 			
@@ -109,7 +96,30 @@ namespace MRG
 				color = v_Color;
 			}
 		)";
-		m_shader.reset(new Shader(vertexShader, fragmentShader));
+		m_triangleShader.reset(new Shader(triangleVShader, triangleFShader));
+
+		std::string squareVShader = R"(
+			#version 460 core
+
+			layout(location = 0) in vec3 a_Position;
+
+			void main()
+			{
+				gl_Position = vec4(a_Position, 1.0);
+			}
+		)";
+
+		std::string squareFShader = R"(
+			#version 460 core
+
+			layout(location = 0) out vec4 color;
+			
+			void main()
+			{
+				color = vec4(0.2, 0.3, 0.8, 1.0);;
+			}
+		)";
+		m_squareShader.reset(new Shader(squareVShader, squareFShader));
 	}
 
 	void Application::onEvent(Event& event)
@@ -130,9 +140,13 @@ namespace MRG
 			glClearColor(0.2f, 0.2f, 0.2f, 1);
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			m_shader->bind();
-			glBindVertexArray(m_vertexArray);
-			glDrawElements(GL_TRIANGLES, m_indexBuffer->getCount(), GL_UNSIGNED_INT, nullptr);
+			m_squareShader->bind();
+			m_squareArray->bind();
+			glDrawElements(GL_TRIANGLES, m_squareArray->getIndexBuffer()->getCount(), GL_UNSIGNED_INT, nullptr);
+
+			m_triangleShader->bind();
+			m_triangleArray->bind();
+			glDrawElements(GL_TRIANGLES, m_triangleArray->getIndexBuffer()->getCount(), GL_UNSIGNED_INT, nullptr);
 
 			for (auto& layer : m_layerStack) layer->onUpdate();
 
