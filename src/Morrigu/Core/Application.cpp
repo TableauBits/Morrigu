@@ -1,6 +1,6 @@
 #include "Application.h"
 
-#include <glad/glad.h>
+#include "Renderer/Renderer.h"
 
 #include <functional>
 
@@ -137,16 +137,14 @@ namespace MRG
 	void Application::run()
 	{
 		while (m_running) {
-			glClearColor(0.2f, 0.2f, 0.2f, 1);
-			glClear(GL_COLOR_BUFFER_BIT);
+			RenderCommand::setClearColor({0.2f, 0.2f, 0.2f, 1});
+			RenderCommand::clear();
 
 			m_squareShader->bind();
-			m_squareArray->bind();
-			glDrawElements(GL_TRIANGLES, m_squareArray->getIndexBuffer()->getCount(), GL_UNSIGNED_INT, nullptr);
+			Renderer::submit(m_squareArray);
 
 			m_triangleShader->bind();
-			m_triangleArray->bind();
-			glDrawElements(GL_TRIANGLES, m_triangleArray->getIndexBuffer()->getCount(), GL_UNSIGNED_INT, nullptr);
+			Renderer::submit(m_triangleArray);
 
 			for (auto& layer : m_layerStack) layer->onUpdate();
 
