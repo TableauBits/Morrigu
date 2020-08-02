@@ -35,12 +35,6 @@ namespace MRG
 		bool m_running = true;
 		LayerStack m_layerStack;
 		static Application* s_instance;
-
-		std::shared_ptr<VertexArray> m_triangleArray;
-		std::shared_ptr<Shader> m_triangleShader;
-
-		std::shared_ptr<VertexArray> m_squareArray;
-		std::shared_ptr<Shader> m_squareShader;
 	};
 	Application* createApplication();
 }  // namespace MRG

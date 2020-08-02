@@ -1,21 +1,19 @@
 #ifndef MRG_CLASS_RENDERER
 #define MRG_CLASS_RENDERER
 
+#include "RenderCommand.h"
+
 namespace MRG
 {
-	enum class RendererAPI
-	{
-		None = 0,
-		OpenGL = 1
-	};
-
 	class Renderer
 	{
 	public:
-		[[nodiscard]] inline static RendererAPI getAPI() { return s_API; }
+		static void beginScene();
+		static void endScene();
 
-	private:
-		static const RendererAPI s_API;
+		static void submit(const std::shared_ptr<VertexArray>& vertexArray);
+
+		inline static auto getAPI() { return RenderingAPI::getAPI(); }
 	};
 }  // namespace MRG
 

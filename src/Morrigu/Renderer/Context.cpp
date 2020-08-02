@@ -9,11 +9,11 @@ namespace MRG
 	Context* Context::create(GLFWwindow* window)
 	{
 		switch (Renderer::getAPI()) {
-		case RendererAPI::OpenGL: {
+		case RenderingAPI::API::OpenGL: {
 			return new OpenGL::Context{window};
 		} break;
 
-		case RendererAPI::None:
+		case RenderingAPI::API::None:
 		default: {
 			MRG_CORE_ASSERT(false, "UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI());
 			return nullptr;
