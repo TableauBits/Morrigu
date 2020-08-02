@@ -6,6 +6,7 @@
 #include "Core/Layer.h"
 #include "Core/Logger.h"
 
+#include "Renderer/OrthoCamera.h"
 #include "Renderer/Renderer.h"
 
 #endif

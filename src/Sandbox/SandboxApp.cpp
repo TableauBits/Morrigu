@@ -5,7 +5,7 @@
 class SampleLayer : public MRG::Layer
 {
 public:
-	SampleLayer() : Layer("Sample Layer") {}
+	SampleLayer() : Layer("Sample Layer"), m_camera(-1.6f, 1.6f, -0.9f, 0.9f) {}
 
 	void onAttach() override
 	{
@@ -65,12 +65,14 @@ public:
 			layout(location = 0) in vec3 a_Position;
 			layout(location = 1) in vec4 a_Color;
 
+			uniform mat4 u_viewProjection;
+
 			out vec4 v_Color;
 
 			void main()
 			{
 				v_Color = a_Color;
-				gl_Position = vec4(a_Position, 1.0);
+				gl_Position = u_viewProjection * vec4(a_Position, 1.0);
 			}
 		)";
 
@@ -93,9 +95,11 @@ public:
 
 			layout(location = 0) in vec3 a_Position;
 
+			uniform mat4 u_viewProjection;
+
 			void main()
 			{
-				gl_Position = vec4(a_Position, 1.0);
+				gl_Position = u_viewProjection * vec4(a_Position, 1.0);
 			}
 		)";
 
@@ -117,11 +121,15 @@ public:
 		MRG::RenderCommand::setClearColor({0.2f, 0.2f, 0.2f, 1});
 		MRG::RenderCommand::clear();
 
-		m_squareShader->bind();
-		MRG::Renderer::submit(m_squareArray);
+		m_camera.setPosition({0.5f, 0.5f, 0.0f});
+		m_camera.setRotation(45.0f);
 
-		m_triangleShader->bind();
-		MRG::Renderer::submit(m_triangleArray);
+		MRG::Renderer::beginScene(m_camera);
+
+		MRG::Renderer::submit(m_squareShader, m_squareArray);
+		MRG::Renderer::submit(m_triangleShader, m_triangleArray);
+
+		MRG::Renderer::endScene();
 
 		if (MRG::Input::isKeyDown(GLFW_KEY_SPACE))
 			MRG_TRACE("UPDATE !");
@@ -140,6 +148,8 @@ private:
 
 	std::shared_ptr<MRG::VertexArray> m_squareArray;
 	std::shared_ptr<MRG::Shader> m_squareShader;
+
+	MRG::OrthoCamera m_camera;
 };
 
 class Sandbox : public MRG::Application

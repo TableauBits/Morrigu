@@ -3,6 +3,7 @@
 #include "Core/Core.h"
 
 #include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <vector>
 
@@ -87,4 +88,10 @@ namespace MRG
 
 	void Shader::bind() const { glUseProgram(m_rendererId); }
 	void Shader::unbind() const { glUseProgram(0); }
+
+	void Shader::uploadUniform(const char* name, const glm::mat4& matrix)
+	{
+		auto location = glGetUniformLocation(m_rendererId, name);
+		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+	}
 }  // namespace MRG
