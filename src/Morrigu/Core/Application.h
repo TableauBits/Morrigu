@@ -4,9 +4,6 @@
 #include "Events/ApplicationEvent.h"
 #include "ImGui/ImGuiLayer.h"
 #include "LayerStack.h"
-#include "Renderer/Buffers.h"
-#include "Renderer/Shader.h"
-#include "Renderer/VertexArray.h"
 #include "Window.h"
 
 namespace MRG
@@ -34,6 +31,8 @@ namespace MRG
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_running = true;
 		LayerStack m_layerStack;
+		float m_lastFrameTime = 0.0f;
+
 		static Application* s_instance;
 	};
 	Application* createApplication();

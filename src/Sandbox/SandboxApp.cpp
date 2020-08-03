@@ -116,13 +116,36 @@ public:
 		m_squareShader.reset(new MRG::Shader(squareVShader, squareFShader));
 	}
 	void onDetach() override {}
-	void onUpdate() override
+	void onUpdate(MRG::Timestep ts) override
 	{
+		if (MRG::Input::isKeyDown(GLFW_KEY_SPACE))
+			MRG_TRACE("Framerate: {} ({} milliseconds)", 1.0f / ts.getSeconds(), ts.getMillieconds());
+
+		static const float movSpeed = 2.f;
+		static const float rotSpeed = 180.f;
+		if (MRG::Input::isKeyDown(GLFW_KEY_W))
+			position.y += movSpeed * ts;
+
+		if (MRG::Input::isKeyDown(GLFW_KEY_A))
+			position.x -= movSpeed * ts;
+
+		if (MRG::Input::isKeyDown(GLFW_KEY_S))
+			position.y -= movSpeed * ts;
+
+		if (MRG::Input::isKeyDown(GLFW_KEY_D))
+			position.x += movSpeed * ts;
+
+		if (MRG::Input::isKeyDown(GLFW_KEY_Q))
+			rotation -= rotSpeed * ts;
+
+		if (MRG::Input::isKeyDown(GLFW_KEY_E))
+			rotation += rotSpeed * ts;
+
 		MRG::RenderCommand::setClearColor({0.2f, 0.2f, 0.2f, 1});
 		MRG::RenderCommand::clear();
 
-		m_camera.setPosition({0.5f, 0.5f, 0.0f});
-		m_camera.setRotation(45.0f);
+		m_camera.setPosition(glm::vec3(position, 0.0f));
+		m_camera.setRotation(rotation);
 
 		MRG::Renderer::beginScene(m_camera);
 
@@ -130,11 +153,8 @@ public:
 		MRG::Renderer::submit(m_triangleShader, m_triangleArray);
 
 		MRG::Renderer::endScene();
-
-		if (MRG::Input::isKeyDown(GLFW_KEY_SPACE))
-			MRG_TRACE("UPDATE !");
 	}
-	void onEvent(MRG::Event& event) override { MRG_TRACE("{}", event.toString()); }
+	void onEvent(MRG::Event&) override {}
 	void onImGuiRender() override
 	{
 		ImGui::Begin("Test");
@@ -150,6 +170,8 @@ private:
 	std::shared_ptr<MRG::Shader> m_squareShader;
 
 	MRG::OrthoCamera m_camera;
+	glm::vec2 position = {0.0f, 0.0f};
+	float rotation = 0.0f;
 };
 
 class Sandbox : public MRG::Application

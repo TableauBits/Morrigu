@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include <GLFW/glfw3.h>
+
 #include <functional>
 
 namespace MRG
@@ -33,7 +35,11 @@ namespace MRG
 	void Application::run()
 	{
 		while (m_running) {
-			for (auto& layer : m_layerStack) layer->onUpdate();
+			auto time = float(glfwGetTime());
+			Timestep ts = time - m_lastFrameTime;
+			m_lastFrameTime = time;
+
+			for (auto& layer : m_layerStack) layer->onUpdate(ts);
 
 			m_ImGuiLayer->begin();
 			for (auto& layer : m_layerStack) layer->onImGuiRender();
