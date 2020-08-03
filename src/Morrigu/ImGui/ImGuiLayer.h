@@ -17,7 +17,7 @@ namespace MRG
 
 		void onAttach() override;
 		void onDetach() override;
-		void onUpdate() override {}
+		void onUpdate([[maybe_unused]] Timestep ts) override {}
 		void onEvent([[maybe_unused]] Event& event) override {}
 		void onImGuiRender() override;
 
