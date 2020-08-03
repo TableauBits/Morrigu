@@ -118,7 +118,9 @@ public:
 	void onDetach() override {}
 	void onUpdate(MRG::Timestep ts) override
 	{
-		MRG_TRACE("Framerate: {} ({} milliseconds)", 1.0f / ts.getSeconds(), ts.getMillieconds());
+		if (MRG::Input::isKeyDown(GLFW_KEY_SPACE))
+			MRG_TRACE("Framerate: {} ({} milliseconds)", 1.0f / ts.getSeconds(), ts.getMillieconds());
+
 		static const float movSpeed = 2.f;
 		static const float rotSpeed = 180.f;
 		if (MRG::Input::isKeyDown(GLFW_KEY_W))
@@ -152,7 +154,7 @@ public:
 
 		MRG::Renderer::endScene();
 	}
-	void onEvent(MRG::Event& event) override { MRG_TRACE("{}", event.toString()); }
+	void onEvent(MRG::Event&) override {}
 	void onImGuiRender() override
 	{
 		ImGui::Begin("Test");
