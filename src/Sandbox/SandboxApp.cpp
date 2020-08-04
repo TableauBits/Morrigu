@@ -1,7 +1,11 @@
 #include <Morrigu.h>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
+
+// VERY TEMPORARY
+#include "Renderer/APIs/OpenGL/Shader.h"
 
 class SampleLayer : public MRG::Layer
 {
@@ -90,7 +94,7 @@ public:
 				color = v_Color;
 			}
 		)";
-		m_triangleShader.reset(new MRG::Shader(triangleVShader, triangleFShader));
+		m_triangleShader.reset(MRG::Shader::create(triangleVShader, triangleFShader));
 
 		std::string squareVShader = R"(
 			#version 460 core
@@ -110,13 +114,15 @@ public:
 			#version 460 core
 
 			layout(location = 0) out vec4 color;
+
+			uniform vec3 u_color;
 			
 			void main()
 			{
-				color = vec4(0.2, 0.3, 0.8, 1.0);;
+				color = vec4(u_color, 1.0);;
 			}
 		)";
-		m_squareShader.reset(new MRG::Shader(squareVShader, squareFShader));
+		m_squareShader.reset(MRG::Shader::create(squareVShader, squareFShader));
 	}
 	void onDetach() override {}
 	void onUpdate(MRG::Timestep ts) override
@@ -154,6 +160,9 @@ public:
 
 		auto scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
+		std::static_pointer_cast<MRG::OpenGL::Shader>(m_squareShader)->bind();
+		std::static_pointer_cast<MRG::OpenGL::Shader>(m_squareShader)->uploadUniform("u_color", m_squareColor);
+
 		for (std::size_t y = 0; y < 20; ++y)
 			for (std::size_t x = 0; x < 20; ++x) {
 				glm::vec3 pos{x * 0.11f, y * 0.11f, 0.f};
@@ -168,8 +177,8 @@ public:
 	void onEvent(MRG::Event&) override {}
 	void onImGuiRender() override
 	{
-		ImGui::Begin("Test");
-		ImGui::Text("Hello world !");
+		ImGui::Begin("Settings");
+		ImGui::ColorEdit3("Squares color", glm::value_ptr(m_squareColor));
 		ImGui::End();
 	}
 
@@ -183,6 +192,8 @@ private:
 	MRG::OrthoCamera m_camera;
 	glm::vec2 position = {0.0f, 0.0f};
 	float rotation = 0.0f;
+
+	glm::vec3 m_squareColor = {0.2f, 0.3f, 0.8f};
 };
 
 class Sandbox : public MRG::Application

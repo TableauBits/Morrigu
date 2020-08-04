@@ -1,5 +1,8 @@
 #include "Renderer.h"
 
+// TEMPORARY
+#include "Renderer/APIs/OpenGL/Shader.h"
+
 namespace MRG
 {
 	Renderer::SceneData* Renderer::s_sceneData = new Renderer::SceneData;
@@ -11,8 +14,8 @@ namespace MRG
 	Renderer::submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
 		shader->bind();
-		shader->uploadUniform("u_viewProjection", s_sceneData->projectionViewMatrix);
-		shader->uploadUniform("u_transform", transform);
+		std::static_pointer_cast<OpenGL::Shader>(shader)->uploadUniform("u_viewProjection", s_sceneData->projectionViewMatrix);
+		std::static_pointer_cast<OpenGL::Shader>(shader)->uploadUniform("u_transform", transform);
 
 		vertexArray->bind();
 		RenderCommand::drawIndexed(vertexArray);
