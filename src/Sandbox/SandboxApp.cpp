@@ -1,6 +1,7 @@
 #include <Morrigu.h>
 
-#include "imgui.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <imgui.h>
 
 class SampleLayer : public MRG::Layer
 {
@@ -38,10 +39,10 @@ public:
 		// clang-format off
 		static constexpr float squareVertices[3 * 4] =
 		{
-			-0.40f, -0.40f, 0.0f,
-			 0.40f, -0.40f, 0.0f,
-			 0.40f,  0.40f, 0.0f,
-			-0.40f,  0.40f, 0.0f
+			-0.50f, -0.50f, 0.0f,
+			 0.50f, -0.50f, 0.0f,
+			 0.50f,  0.50f, 0.0f,
+			-0.50f,  0.50f, 0.0f
 		};
 		
 		std::shared_ptr<MRG::VertexBuffer> squareVertexBuffer;
@@ -66,13 +67,14 @@ public:
 			layout(location = 1) in vec4 a_Color;
 
 			uniform mat4 u_viewProjection;
+			uniform mat4 u_transform;
 
 			out vec4 v_Color;
 
 			void main()
 			{
 				v_Color = a_Color;
-				gl_Position = u_viewProjection * vec4(a_Position, 1.0);
+				gl_Position = u_viewProjection * u_transform * vec4(a_Position, 1.0);
 			}
 		)";
 
@@ -96,10 +98,11 @@ public:
 			layout(location = 0) in vec3 a_Position;
 
 			uniform mat4 u_viewProjection;
+			uniform mat4 u_transform;
 
 			void main()
 			{
-				gl_Position = u_viewProjection * vec4(a_Position, 1.0);
+				gl_Position = u_viewProjection * u_transform * vec4(a_Position, 1.0);
 			}
 		)";
 
@@ -149,7 +152,15 @@ public:
 
 		MRG::Renderer::beginScene(m_camera);
 
-		MRG::Renderer::submit(m_squareShader, m_squareArray);
+		auto scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+
+		for (std::size_t y = 0; y < 20; ++y)
+			for (std::size_t x = 0; x < 20; ++x) {
+				glm::vec3 pos{x * 0.11f, y * 0.11f, 0.f};
+				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
+				MRG::Renderer::submit(m_squareShader, m_squareArray, transform);
+			}
+
 		MRG::Renderer::submit(m_triangleShader, m_triangleArray);
 
 		MRG::Renderer::endScene();
