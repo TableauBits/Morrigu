@@ -9,6 +9,7 @@ namespace MRG::OpenGL
 	Texture2D::Texture2D(const std::string& path) : m_path(path)
 	{
 		int width, height, channels;
+		stbi_set_flip_vertically_on_load(1);
 		const auto data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 		MRG_CORE_ASSERT(data, "Failed to load " + path);
 
