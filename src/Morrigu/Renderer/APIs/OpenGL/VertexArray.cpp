@@ -36,7 +36,7 @@ namespace MRG::OpenGL
 	void VertexArray::bind() const { glBindVertexArray(m_rendererID); }
 	void VertexArray::unbind() const { glBindVertexArray(0); }
 
-	void VertexArray::addVertexBuffer(const std::shared_ptr<MRG::VertexBuffer>& vertexBuffer)
+	void VertexArray::addVertexBuffer(const Ref<MRG::VertexBuffer>& vertexBuffer)
 	{
 		MRG_CORE_ASSERT(vertexBuffer->layout.getElements().size() != 0, "Vertex Buffer layout has not been set !");
 
@@ -59,7 +59,7 @@ namespace MRG::OpenGL
 		m_vertexBuffers.emplace_back(vertexBuffer);
 	}
 
-	void VertexArray::setIndexBuffer(const std::shared_ptr<MRG::IndexBuffer>& indexBuffer)
+	void VertexArray::setIndexBuffer(const Ref<MRG::IndexBuffer>& indexBuffer)
 	{
 		glBindVertexArray(m_rendererID);
 		indexBuffer->bind();

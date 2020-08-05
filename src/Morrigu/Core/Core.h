@@ -44,7 +44,6 @@
     #define MRG_CORE_ASSERT(x, ...) do {} while(0)
 #endif
 // clang-format on
-#endif
 
 namespace MRG
 {
@@ -64,3 +63,5 @@ namespace MRG
 		return std::make_shared<T>(std::forward<Args>(args));
 	}
 }  // namespace MRG
+
+#endif

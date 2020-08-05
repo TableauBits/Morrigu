@@ -19,7 +19,7 @@ namespace MRG
 		virtual void setClearColor(const glm::vec4& color) = 0;
 		virtual void clear() = 0;
 
-		virtual void drawIndexed(const std::shared_ptr<VertexArray>& vertexArray) = 0;
+		virtual void drawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 
 		[[nodiscard]] inline static auto getAPI() { return s_API; }
 

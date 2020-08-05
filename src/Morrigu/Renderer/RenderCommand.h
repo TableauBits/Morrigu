@@ -11,7 +11,7 @@ namespace MRG
 		inline static void setClearColor(const glm::vec4& color) { s_renderingAPI->setClearColor(color); }
 		inline static void clear() { s_renderingAPI->clear(); }
 
-		inline static void drawIndexed(const std::shared_ptr<VertexArray>& vertexArray) { s_renderingAPI->drawIndexed(vertexArray); }
+		inline static void drawIndexed(const Ref<VertexArray>& vertexArray) { s_renderingAPI->drawIndexed(vertexArray); }
 
 	private:
 		static RenderingAPI* s_renderingAPI;
