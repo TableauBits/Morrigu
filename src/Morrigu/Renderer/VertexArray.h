@@ -1,6 +1,7 @@
 #ifndef MRG_CLASS_VERTEXARRAY
 #define MRG_CLASS_VERTEXARRAY
 
+#include "Core/Core.h"
 #include "Renderer/Buffers.h"
 
 namespace MRG
@@ -19,7 +20,7 @@ namespace MRG
 		[[nodiscard]] virtual const std::vector<Ref<VertexBuffer>>& getVertexBuffers() const = 0;
 		[[nodiscard]] virtual const Ref<IndexBuffer>& getIndexBuffer() const = 0;
 
-		[[nodiscard]] static VertexArray* create();
+		[[nodiscard]] static Ref<VertexArray> create();
 	};
 }  // namespace MRG
 

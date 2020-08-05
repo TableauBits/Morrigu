@@ -1,6 +1,7 @@
 #ifndef MRG_CLASS_CONTEXT
 #define MRG_CLASS_CONTEXT
 
+#include "Core/Core.h"
 #include <GLFW/glfw3.h>
 
 namespace MRG
@@ -12,7 +13,7 @@ namespace MRG
 
 		virtual void swapBuffers() = 0;
 
-		[[nodiscard]] static Context* create(GLFWwindow* window);
+		[[nodiscard]] static Scope<Context> create(GLFWwindow* window);
 	};
 }  // namespace MRG
 

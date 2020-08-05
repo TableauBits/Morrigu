@@ -5,11 +5,11 @@
 
 namespace MRG
 {
-	Shader* Shader::create(const std::string& vertexSrc, const std::string& fragmentSrc)
+	Ref<Shader> Shader::create(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
-			return new OpenGL::Shader{vertexSrc, fragmentSrc};
+			return createRef<OpenGL::Shader>(vertexSrc, fragmentSrc);
 		} break;
 
 		case RenderingAPI::API::None:

@@ -24,19 +24,19 @@ public:
 		};
 		
 		MRG::Ref<MRG::VertexBuffer> triangleVertexBuffer;
-		triangleVertexBuffer.reset(MRG::VertexBuffer::create(triangleVertices, sizeof(triangleVertices)));
+		triangleVertexBuffer = MRG::VertexBuffer::create(triangleVertices, sizeof(triangleVertices));
 
 		triangleVertexBuffer->layout = {
 			{MRG::ShaderDataType::Float3, "a_Position"},
 			{MRG::ShaderDataType::Float4, "a_Color"}
 		};
 		// clang-format on
-		m_triangleArray.reset(MRG::VertexArray::create());
+		m_triangleArray = MRG::VertexArray::create();
 		m_triangleArray->addVertexBuffer(triangleVertexBuffer);
 
 		unsigned int indices[3] = {0, 1, 2};
 		MRG::Ref<MRG::IndexBuffer> triangleIndexBuffer;
-		triangleIndexBuffer.reset(MRG::IndexBuffer::create(indices, 3));
+		triangleIndexBuffer = MRG::IndexBuffer::create(indices, 3);
 		m_triangleArray->setIndexBuffer(triangleIndexBuffer);
 
 		// square
@@ -50,19 +50,19 @@ public:
 		};
 		
 		MRG::Ref<MRG::VertexBuffer> squareVertexBuffer;
-		squareVertexBuffer.reset(MRG::VertexBuffer::create(squareVertices, sizeof(squareVertices)));
+		squareVertexBuffer = MRG::VertexBuffer::create(squareVertices, sizeof(squareVertices));
 
 		squareVertexBuffer->layout = {
 			{MRG::ShaderDataType::Float3, "a_Position"},
 			{MRG::ShaderDataType::Float2, "a_texCoord"}
 		};
 		// clang-format on
-		m_squareArray.reset(MRG::VertexArray::create());
+		m_squareArray = MRG::VertexArray::create();
 		m_squareArray->addVertexBuffer(squareVertexBuffer);
 
 		uint32_t squareindices[6] = {0, 1, 2, 2, 3, 0};
 		MRG::Ref<MRG::IndexBuffer> squareIndexBuffer;
-		squareIndexBuffer.reset(MRG::IndexBuffer::create(squareindices, 6));
+		squareIndexBuffer = MRG::IndexBuffer::create(squareindices, 6);
 		m_squareArray->setIndexBuffer(squareIndexBuffer);
 
 		std::string triangleVShader = R"(
@@ -95,7 +95,7 @@ public:
 				color = v_Color;
 			}
 		)";
-		m_triangleShader.reset(MRG::Shader::create(triangleVShader, triangleFShader));
+		m_triangleShader = MRG::Shader::create(triangleVShader, triangleFShader);
 
 		std::string squareVShader = R"(
 			#version 460 core
@@ -123,7 +123,7 @@ public:
 				color = vec4(u_color, 1.0);;
 			}
 		)";
-		m_squareShader.reset(MRG::Shader::create(squareVShader, squareFShader));
+		m_squareShader = MRG::Shader::create(squareVShader, squareFShader);
 
 		std::string textureVShader = R"(
 			#version 460 core
@@ -157,7 +157,7 @@ public:
 				color = texture(u_texture, v_texCoord);
 			}
 		)";
-		m_textureShader.reset(MRG::Shader::create(textureVShader, textureFShader));
+		m_textureShader = MRG::Shader::create(textureVShader, textureFShader);
 
 		m_texture = MRG::Texture2D::create("resources/sandbox/textures/Checkerboard.png");
 
