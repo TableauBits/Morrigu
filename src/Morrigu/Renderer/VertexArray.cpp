@@ -5,11 +5,11 @@
 
 namespace MRG
 {
-	VertexArray* VertexArray::create()
+	Ref<VertexArray> VertexArray::create()
 	{
 		switch (Renderer::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
-			return new OpenGL::VertexArray;
+			return createRef<OpenGL::VertexArray>();
 		} break;
 
 		case RenderingAPI::API::None:

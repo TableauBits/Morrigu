@@ -6,11 +6,11 @@
 
 namespace MRG
 {
-	Context* Context::create(GLFWwindow* window)
+	Scope<Context> Context::create(GLFWwindow* window)
 	{
 		switch (Renderer::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
-			return new OpenGL::Context{window};
+			return createScope<OpenGL::Context>(window);
 		} break;
 
 		case RenderingAPI::API::None:

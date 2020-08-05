@@ -43,7 +43,7 @@ namespace MRG
 		void _shutdown();
 
 		GLFWwindow* m_window;
-		Context* m_context;
+		Scope<Context> m_context;
 		WindowProperties m_properties;
 
 		static bool s_GLFWInit;

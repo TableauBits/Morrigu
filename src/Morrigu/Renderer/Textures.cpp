@@ -1,15 +1,15 @@
-#include "Shader.h"
+#include "Textures.h"
 
-#include "Renderer/APIs/OpenGL/Shader.h"
+#include "Renderer/APIs/OpenGL/Textures.h"
 #include "Renderer/Renderer.h"
 
 namespace MRG
 {
-	Ref<Shader> Shader::create(const std::string& vertexSrc, const std::string& fragmentSrc)
+	Ref<Texture2D> Texture2D::create(const std::string& path)
 	{
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
-			return createRef<OpenGL::Shader>(vertexSrc, fragmentSrc);
+			return createRef<OpenGL::Texture2D>(path);
 		} break;
 
 		case RenderingAPI::API::None:

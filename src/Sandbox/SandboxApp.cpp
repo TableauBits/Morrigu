@@ -23,45 +23,46 @@ public:
 			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
 		};
 		
-		std::shared_ptr<MRG::VertexBuffer> triangleVertexBuffer;
-		triangleVertexBuffer.reset(MRG::VertexBuffer::create(triangleVertices, sizeof(triangleVertices)));
+		MRG::Ref<MRG::VertexBuffer> triangleVertexBuffer;
+		triangleVertexBuffer = MRG::VertexBuffer::create(triangleVertices, sizeof(triangleVertices));
 
 		triangleVertexBuffer->layout = {
 			{MRG::ShaderDataType::Float3, "a_Position"},
 			{MRG::ShaderDataType::Float4, "a_Color"}
 		};
 		// clang-format on
-		m_triangleArray.reset(MRG::VertexArray::create());
+		m_triangleArray = MRG::VertexArray::create();
 		m_triangleArray->addVertexBuffer(triangleVertexBuffer);
 
 		unsigned int indices[3] = {0, 1, 2};
-		std::shared_ptr<MRG::IndexBuffer> triangleIndexBuffer;
-		triangleIndexBuffer.reset(MRG::IndexBuffer::create(indices, 3));
+		MRG::Ref<MRG::IndexBuffer> triangleIndexBuffer;
+		triangleIndexBuffer = MRG::IndexBuffer::create(indices, 3);
 		m_triangleArray->setIndexBuffer(triangleIndexBuffer);
 
 		// square
 		// clang-format off
-		static constexpr float squareVertices[3 * 4] =
+		static constexpr float squareVertices[5 * 4] =
 		{
-			-0.50f, -0.50f, 0.0f,
-			 0.50f, -0.50f, 0.0f,
-			 0.50f,  0.50f, 0.0f,
-			-0.50f,  0.50f, 0.0f
+			-0.50f, -0.50f, 0.0f, 0.0f, 0.0f,
+			 0.50f, -0.50f, 0.0f, 1.0f, 0.0f,
+			 0.50f,  0.50f, 0.0f, 1.0f, 1.0f,
+			-0.50f,  0.50f, 0.0f, 0.0f, 1.0f 
 		};
 		
-		std::shared_ptr<MRG::VertexBuffer> squareVertexBuffer;
-		squareVertexBuffer.reset(MRG::VertexBuffer::create(squareVertices, sizeof(squareVertices)));
+		MRG::Ref<MRG::VertexBuffer> squareVertexBuffer;
+		squareVertexBuffer = MRG::VertexBuffer::create(squareVertices, sizeof(squareVertices));
 
 		squareVertexBuffer->layout = {
-			{MRG::ShaderDataType::Float3, "a_Position"}
+			{MRG::ShaderDataType::Float3, "a_Position"},
+			{MRG::ShaderDataType::Float2, "a_texCoord"}
 		};
 		// clang-format on
-		m_squareArray.reset(MRG::VertexArray::create());
+		m_squareArray = MRG::VertexArray::create();
 		m_squareArray->addVertexBuffer(squareVertexBuffer);
 
 		uint32_t squareindices[6] = {0, 1, 2, 2, 3, 0};
-		std::shared_ptr<MRG::IndexBuffer> squareIndexBuffer;
-		squareIndexBuffer.reset(MRG::IndexBuffer::create(squareindices, 6));
+		MRG::Ref<MRG::IndexBuffer> squareIndexBuffer;
+		squareIndexBuffer = MRG::IndexBuffer::create(squareindices, 6);
 		m_squareArray->setIndexBuffer(squareIndexBuffer);
 
 		std::string triangleVShader = R"(
@@ -94,7 +95,7 @@ public:
 				color = v_Color;
 			}
 		)";
-		m_triangleShader.reset(MRG::Shader::create(triangleVShader, triangleFShader));
+		m_triangleShader = MRG::Shader::create(triangleVShader, triangleFShader);
 
 		std::string squareVShader = R"(
 			#version 460 core
@@ -122,7 +123,46 @@ public:
 				color = vec4(u_color, 1.0);;
 			}
 		)";
-		m_squareShader.reset(MRG::Shader::create(squareVShader, squareFShader));
+		m_squareShader = MRG::Shader::create(squareVShader, squareFShader);
+
+		std::string textureVShader = R"(
+			#version 460 core
+
+			layout(location = 0) in vec3 a_Position;
+			layout(location = 1) in vec2 a_texCoord;
+
+			uniform mat4 u_viewProjection;
+			uniform mat4 u_transform;
+
+			out vec2 v_texCoord;
+
+			void main()
+			{
+				v_texCoord = a_texCoord;
+				gl_Position = u_viewProjection * u_transform * vec4(a_Position, 1.0);
+			}
+		)";
+
+		std::string textureFShader = R"(
+			#version 460 core
+
+			layout(location = 0) out vec4 color;
+
+			in vec2 v_texCoord;
+
+			uniform sampler2D u_texture;
+			
+			void main()
+			{
+				color = texture(u_texture, v_texCoord);
+			}
+		)";
+		m_textureShader = MRG::Shader::create(textureVShader, textureFShader);
+
+		m_texture = MRG::Texture2D::create("resources/sandbox/textures/Checkerboard.png");
+
+		std::static_pointer_cast<MRG::OpenGL::Shader>(m_textureShader)->bind();
+		std::static_pointer_cast<MRG::OpenGL::Shader>(m_textureShader)->uploadUniform("u_texture", 0);
 	}
 	void onDetach() override {}
 	void onUpdate(MRG::Timestep ts) override
@@ -170,7 +210,9 @@ public:
 				MRG::Renderer::submit(m_squareShader, m_squareArray, transform);
 			}
 
-		MRG::Renderer::submit(m_triangleShader, m_triangleArray);
+		m_texture->bind();
+		MRG::Renderer::submit(m_textureShader, m_squareArray, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		// MRG::Renderer::submit(m_triangleShader, m_triangleArray);
 
 		MRG::Renderer::endScene();
 	}
@@ -183,11 +225,14 @@ public:
 	}
 
 private:
-	std::shared_ptr<MRG::VertexArray> m_triangleArray;
-	std::shared_ptr<MRG::Shader> m_triangleShader;
+	MRG::Ref<MRG::VertexArray> m_triangleArray;
+	MRG::Ref<MRG::Shader> m_triangleShader;
 
-	std::shared_ptr<MRG::VertexArray> m_squareArray;
-	std::shared_ptr<MRG::Shader> m_squareShader;
+	MRG::Ref<MRG::VertexArray> m_squareArray;
+	MRG::Ref<MRG::Shader> m_squareShader;
+
+	MRG::Ref<MRG::Texture2D> m_texture;
+	MRG::Ref<MRG::Shader> m_textureShader;
 
 	MRG::OrthoCamera m_camera;
 	glm::vec2 position = {0.0f, 0.0f};

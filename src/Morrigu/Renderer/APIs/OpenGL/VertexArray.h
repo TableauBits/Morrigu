@@ -14,16 +14,16 @@ namespace MRG::OpenGL
 		void bind() const override;
 		void unbind() const override;
 
-		void addVertexBuffer(const std::shared_ptr<MRG::VertexBuffer>& vertexBuffer) override;
-		void setIndexBuffer(const std::shared_ptr<MRG::IndexBuffer>& indexBuffer) override;
+		void addVertexBuffer(const Ref<MRG::VertexBuffer>& vertexBuffer) override;
+		void setIndexBuffer(const Ref<MRG::IndexBuffer>& indexBuffer) override;
 
-		[[nodiscard]] const std::vector<std::shared_ptr<MRG::VertexBuffer>>& getVertexBuffers() const override { return m_vertexBuffers; };
-		[[nodiscard]] const std::shared_ptr<MRG::IndexBuffer>& getIndexBuffer() const override { return m_indexBuffer; };
+		[[nodiscard]] const std::vector<Ref<MRG::VertexBuffer>>& getVertexBuffers() const override { return m_vertexBuffers; };
+		[[nodiscard]] const Ref<MRG::IndexBuffer>& getIndexBuffer() const override { return m_indexBuffer; };
 
 	private:
 		uint32_t m_rendererID;
-		std::vector<std::shared_ptr<MRG::VertexBuffer>> m_vertexBuffers;
-		std::shared_ptr<MRG::IndexBuffer> m_indexBuffer;
+		std::vector<Ref<MRG::VertexBuffer>> m_vertexBuffers;
+		Ref<MRG::IndexBuffer> m_indexBuffer;
 	};
 }  // namespace MRG::OpenGL
 
