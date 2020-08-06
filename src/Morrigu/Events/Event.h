@@ -66,17 +66,14 @@ namespace MRG
 
 	class EventDispatcher
 	{
-		template<typename T>
-		using EventFunction = std::function<bool(T&)>;
-
 	public:
 		EventDispatcher(Event& event) : m_event(event) {}
 
-		template<typename T>
-		bool dispatch(EventFunction<T> function)
+		template<typename T, typename F>
+		bool dispatch(const F& function)
 		{
 			if (m_event.getEventType() == T::getStaticType()) {
-				m_event.handled = function(*(T*)&m_event);
+				m_event.handled = function(static_cast<T&>(m_event));
 				return true;
 			}
 			return false;
