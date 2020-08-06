@@ -37,7 +37,7 @@ namespace MRG
 		case ShaderDataType::Bool:   return 1;
 		}
 
-		MRG_CORE_ASSERT(false, "Invalid shader data type ! ({})", type);
+		MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
 		return 0;
 	}
 	// clang-format on
@@ -76,7 +76,7 @@ namespace MRG
 			}
 			// clang-format on
 
-			MRG_CORE_ASSERT(false, "Invalid shader data type ! ({})", type);
+			MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
 			return 0;
 		}
 	};
