@@ -8,6 +8,8 @@ namespace MRG::OpenGL
 	class RenderingAPI : public MRG::RenderingAPI
 	{
 	public:
+		void init() override;
+
 		void setClearColor(const glm::vec4& color) override;
 		void clear() override;
 

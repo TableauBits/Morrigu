@@ -160,6 +160,7 @@ public:
 		m_textureShader = MRG::Shader::create(textureVShader, textureFShader);
 
 		m_texture = MRG::Texture2D::create("resources/sandbox/textures/Checkerboard.png");
+		m_logo = MRG::Texture2D::create("resources/sandbox/textures/logo.png");
 
 		std::static_pointer_cast<MRG::OpenGL::Shader>(m_textureShader)->bind();
 		std::static_pointer_cast<MRG::OpenGL::Shader>(m_textureShader)->uploadUniform("u_texture", 0);
@@ -203,15 +204,19 @@ public:
 		std::static_pointer_cast<MRG::OpenGL::Shader>(m_squareShader)->bind();
 		std::static_pointer_cast<MRG::OpenGL::Shader>(m_squareShader)->uploadUniform("u_color", m_squareColor);
 
-		for (std::size_t y = 0; y < 20; ++y)
+		for (std::size_t y = 0; y < 20; ++y) {
 			for (std::size_t x = 0; x < 20; ++x) {
 				glm::vec3 pos{x * 0.11f, y * 0.11f, 0.f};
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
 				MRG::Renderer::submit(m_squareShader, m_squareArray, transform);
 			}
+		}
 
 		m_texture->bind();
 		MRG::Renderer::submit(m_textureShader, m_squareArray, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		m_logo->bind();
+		MRG::Renderer::submit(m_textureShader, m_squareArray, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+
 		// MRG::Renderer::submit(m_triangleShader, m_triangleArray);
 
 		MRG::Renderer::endScene();
@@ -231,7 +236,7 @@ private:
 	MRG::Ref<MRG::VertexArray> m_squareArray;
 	MRG::Ref<MRG::Shader> m_squareShader;
 
-	MRG::Ref<MRG::Texture2D> m_texture;
+	MRG::Ref<MRG::Texture2D> m_texture, m_logo;
 	MRG::Ref<MRG::Shader> m_textureShader;
 
 	MRG::OrthoCamera m_camera;

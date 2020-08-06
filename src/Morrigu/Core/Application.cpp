@@ -1,5 +1,7 @@
 #include "Application.h"
 
+#include "Renderer/Renderer.h"
+
 #include <GLFW/glfw3.h>
 
 #include <functional>
@@ -15,6 +17,8 @@ namespace MRG
 
 		m_window = std::make_unique<Window>(WindowProperties{"Morrigu", 1280, 720, true});
 		m_window->setEventCallback([this](Event& event) { onEvent(event); });
+
+		Renderer::init();
 
 		m_ImGuiLayer = new ImGuiLayer{};
 		pushOverlay(m_ImGuiLayer);
