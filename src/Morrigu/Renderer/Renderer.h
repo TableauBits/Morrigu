@@ -11,6 +11,8 @@ namespace MRG
 	class Renderer
 	{
 	public:
+		static void init();
+
 		static void beginScene(const OrthoCamera& camera);
 		static void endScene();
 

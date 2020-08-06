@@ -8,6 +8,8 @@ namespace MRG
 	class RenderCommand
 	{
 	public:
+		inline static void init() { s_renderingAPI->init(); }
+
 		inline static void setClearColor(const glm::vec4& color) { s_renderingAPI->setClearColor(color); }
 		inline static void clear() { s_renderingAPI->clear(); }
 

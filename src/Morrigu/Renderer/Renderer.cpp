@@ -7,6 +7,8 @@ namespace MRG
 {
 	Renderer::SceneData* Renderer::s_sceneData = new Renderer::SceneData;
 
+	void Renderer::init() { RenderCommand::init(); }
+
 	void Renderer::beginScene(const OrthoCamera& camera) { s_sceneData->projectionViewMatrix = camera.getProjectionViewMatrix(); }
 	void Renderer::endScene() {}
 

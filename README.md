@@ -7,7 +7,6 @@ Morrigu uses CMake as build tool and Conan as packet manager. This makes the set
 You need [CMake 3.15+](https://cmake.org/download/), and a somewhat recent version of [Conan](https://conan.io/downloads.html) (tested on 1.26.1) with the follwing remotes:
  * The [bincrafters remote](https://docs.conan.io/en/latest/uploading_packages/remotes.html#bincrafters);
  * A [personal remote](https://bintray.com/ithyx/imgui) that contains a ImGui docking recipe.
- * The [conan-community remote](https://bintray.com/conan-community/conan)
 
 To install a remote, follow the instructions that appear when you click "SET ME UP!" on bintray (or the conan doc to install the bincrafters remote). You do not have to login to anything to use these remotes.
 
