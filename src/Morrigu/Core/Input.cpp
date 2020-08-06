@@ -29,13 +29,15 @@ namespace MRG
 
 	float Input::getMouseX()
 	{
-		const auto [x, y] = getMousePosition();
+		float x;
+		std::tie(x, std::ignore) = getMousePosition();
 		return x;
 	}
 
 	float Input::getMouseY()
 	{
-		const auto [x, y] = getMousePosition();
+		float y;
+		std::tie(std::ignore, y) = getMousePosition();
 		return y;
 	}
 }  // namespace MRG

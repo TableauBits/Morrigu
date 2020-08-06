@@ -54,6 +54,8 @@ namespace MRG
 	class Event
 	{
 	public:
+		virtual ~Event() = default;
+
 		bool handled = false;
 
 		virtual EventType getEventType() const = 0;

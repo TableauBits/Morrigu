@@ -21,19 +21,19 @@ namespace
 		return 0;
 	}
 
-	static char returnCharFromEncoding(MRG::Encoding encoding)
+	constexpr static const char* returnCharFromEncoding(MRG::Encoding encoding)
 	{
 		switch (encoding) {
 		case MRG::Encoding::LF:
-			return '\n';
+			return "\n";
 		case MRG::Encoding::CRLF:
-			return static_cast<char>('\r\n');
+			return "\r\n";
 		case MRG::Encoding::CR:
-			return '\r';
+			return "\r";
 
 		default:
 			MRG_CORE_ASSERT(false, "Invalid encoding selected !");
-			return '\0';
+			return "\0";
 		}
 	}
 }  // namespace

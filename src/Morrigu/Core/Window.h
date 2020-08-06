@@ -17,8 +17,8 @@ namespace MRG
 		unsigned int width;
 		unsigned int height;
 		bool VSync;
-		EventCallbackFunction callback;
-		unsigned int keyRepeats;
+		EventCallbackFunction callback = [](MRG::Event&) {};
+		unsigned int keyRepeats = 0;
 	};
 
 	class Window

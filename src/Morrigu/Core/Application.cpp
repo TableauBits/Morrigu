@@ -27,7 +27,7 @@ namespace MRG
 	void Application::onEvent(Event& event)
 	{
 		EventDispatcher dispatcher{event};
-		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& event) -> bool { return onWindowClose(event); });
+		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& closeEvent) -> bool { return onWindowClose(closeEvent); });
 
 		for (auto it = m_layerStack.end(); it != m_layerStack.begin();) {
 			(*--it)->onEvent(event);

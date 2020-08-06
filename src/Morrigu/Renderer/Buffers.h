@@ -35,10 +35,14 @@ namespace MRG
 		case ShaderDataType::Int4:   return 4 * 4;
 
 		case ShaderDataType::Bool:   return 1;
+
+		case ShaderDataType::None:
+		default: {
+			MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
+			return 0;
+		}
 		}
 
-		MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
-		return 0;
 	}
 	// clang-format on
 
@@ -51,9 +55,10 @@ namespace MRG
 		bool isNormalized;
 
 		BufferElement() = default;
-		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
-		    : name(name), type(type), size(ShaderDataTypeSize(type)), offset(0), isNormalized(normalized)
+		BufferElement(ShaderDataType bufferType, const std::string& bufferName, bool normalized = false)
+		    : name(bufferName), type(bufferType), size(ShaderDataTypeSize(bufferType)), offset(0), isNormalized(normalized)
 		{}
+
 		[[nodiscard]] uint32_t getComponentCount() const
 		{
 			// clang-format off
@@ -73,11 +78,14 @@ namespace MRG
 			case ShaderDataType::Int4:   return 4;
 
 			case ShaderDataType::Bool:   return 1;
+
+			case ShaderDataType::None:
+			default: {
+				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
+				return 0;
+			}
 			}
 			// clang-format on
-
-			MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
-			return 0;
 		}
 	};
 
