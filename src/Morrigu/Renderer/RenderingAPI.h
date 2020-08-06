@@ -16,6 +16,8 @@ namespace MRG
 			OpenGL
 		};
 
+		virtual ~RenderingAPI() = default;
+
 		virtual void init() = 0;
 
 		virtual void setClearColor(const glm::vec4& color) = 0;
