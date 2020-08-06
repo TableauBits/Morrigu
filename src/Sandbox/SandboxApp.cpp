@@ -125,42 +125,10 @@ public:
 		)";
 		m_squareShader = MRG::Shader::create(squareVShader, squareFShader);
 
-		std::string textureVShader = R"(
-			#version 460 core
-
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec2 a_texCoord;
-
-			uniform mat4 u_viewProjection;
-			uniform mat4 u_transform;
-
-			out vec2 v_texCoord;
-
-			void main()
-			{
-				v_texCoord = a_texCoord;
-				gl_Position = u_viewProjection * u_transform * vec4(a_Position, 1.0);
-			}
-		)";
-
-		std::string textureFShader = R"(
-			#version 460 core
-
-			layout(location = 0) out vec4 color;
-
-			in vec2 v_texCoord;
-
-			uniform sampler2D u_texture;
-			
-			void main()
-			{
-				color = texture(u_texture, v_texCoord);
-			}
-		)";
-		m_textureShader = MRG::Shader::create(textureVShader, textureFShader);
+		m_textureShader = MRG::Shader::create("resources/sandbox/shaders/Textures.glsl");
 
 		m_texture = MRG::Texture2D::create("resources/sandbox/textures/Checkerboard.png");
-		m_logo = MRG::Texture2D::create("resources/sandbox/textures/logo.png");
+		m_logo = MRG::Texture2D::create("resources/sandbox/textures/Logo.png");
 
 		std::static_pointer_cast<MRG::OpenGL::Shader>(m_textureShader)->bind();
 		std::static_pointer_cast<MRG::OpenGL::Shader>(m_textureShader)->uploadUniform("u_texture", 0);

@@ -3,6 +3,7 @@
 
 #include "Renderer/Shader.h"
 
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 
 #include <cstdint>
@@ -12,6 +13,7 @@ namespace MRG::OpenGL
 	class Shader : public MRG::Shader
 	{
 	public:
+		Shader(const std::string& filePath);
 		Shader(const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~Shader();
 
@@ -29,6 +31,10 @@ namespace MRG::OpenGL
 		void uploadUniform(const std::string& name, const glm::mat4& matrix);
 
 	private:
+		std::string readFile(const std::string& filePath);
+		std::unordered_map<GLenum, std::string> preProcess(const std::string& source);
+		void compile(const std::unordered_map<GLenum, std::string>& shaderSources);
+
 		uint32_t m_rendererID;
 	};
 }  // namespace MRG::OpenGL
