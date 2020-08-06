@@ -2,86 +2,57 @@
 
 #include "Core/Core.h"
 
-#include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <fstream>
+#include <ios>
 #include <vector>
+
+namespace
+{
+	static GLenum shaderTypeFromString(const std::string& type)
+	{
+		if (type == "vertex")
+			return GL_VERTEX_SHADER;
+		if (type == "fragment" || type == "pixel")
+			return GL_FRAGMENT_SHADER;
+
+		MRG_CORE_ASSERT(false, fmt::format("Invalid shader type '{}'!", type));
+		return 0;
+	}
+
+	static char returnCharFromEncoding(MRG::Encoding encoding)
+	{
+		switch (encoding) {
+		case MRG::Encoding::LF:
+			return '\n';
+		case MRG::Encoding::CRLF:
+			return static_cast<char>('\r\n');
+		case MRG::Encoding::CR:
+			return '\r';
+
+		default:
+			MRG_CORE_ASSERT(false, "Invalid encoding selected !");
+			return '\0';
+		}
+	}
+}  // namespace
 
 namespace MRG::OpenGL
 {
+	Shader::Shader(const std::string& filePath, MRG::Encoding encoding)
+	{
+		const auto source = readFile(filePath);
+		const auto shaderSources = preProcess(source, encoding);
+		compile(shaderSources);
+	}
+
 	Shader::Shader(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
-		GLuint vertexID = glCreateShader(GL_VERTEX_SHADER);
-
-		const GLchar* vertexShader = vertexSrc.c_str();
-		glShaderSource(vertexID, 1, &vertexShader, 0);
-
-		glCompileShader(vertexID);
-
-		GLint isShaderCompiled = 0;
-		glGetShaderiv(vertexID, GL_COMPILE_STATUS, &isShaderCompiled);
-		if (isShaderCompiled == GL_FALSE) {
-			GLint logLength = 0;
-			glGetShaderiv(vertexID, GL_INFO_LOG_LENGTH, &logLength);
-
-			std::vector<GLchar> infoLog(logLength);
-			glGetShaderInfoLog(vertexID, logLength, &logLength, infoLog.data());
-
-			glDeleteShader(vertexID);
-
-			MRG_ENGINE_ERROR("Could not compile shader: {0}", infoLog.data());
-			MRG_ASSERT(false, "Vertex compilation failed !");
-			return;
-		}
-
-		GLuint fragmentID = glCreateShader(GL_FRAGMENT_SHADER);
-
-		const GLchar* fragmentShader = fragmentSrc.c_str();
-		glShaderSource(fragmentID, 1, &fragmentShader, 0);
-
-		glCompileShader(fragmentID);
-
-		glGetShaderiv(fragmentID, GL_COMPILE_STATUS, &isShaderCompiled);
-		if (isShaderCompiled == GL_FALSE) {
-			GLint logLength = 0;
-			glGetShaderiv(fragmentID, GL_INFO_LOG_LENGTH, &logLength);
-
-			std::vector<GLchar> infoLog(logLength);
-			glGetShaderInfoLog(fragmentID, logLength, &logLength, infoLog.data());
-
-			glDeleteShader(fragmentID);
-
-			MRG_ENGINE_ERROR("Could not compile shader: {0}", infoLog.data());
-			MRG_ASSERT(false, "Vertex compilation failed !");
-			return;
-		}
-
-		m_rendererID = glCreateProgram();
-
-		glAttachShader(m_rendererID, vertexID);
-		glAttachShader(m_rendererID, fragmentID);
-		glLinkProgram(m_rendererID);
-
-		GLint isProgramLinked = 0;
-		glGetProgramiv(m_rendererID, GL_LINK_STATUS, &isProgramLinked);
-		if (isProgramLinked == GL_FALSE) {
-			GLint logLength = 0;
-			glGetProgramiv(m_rendererID, GL_INFO_LOG_LENGTH, &logLength);
-
-			std::vector<GLchar> infoLog(logLength);
-			glGetProgramInfoLog(m_rendererID, logLength, &logLength, infoLog.data());
-
-			glDeleteProgram(m_rendererID);
-			glDeleteShader(vertexID);
-			glDeleteShader(fragmentID);
-
-			MRG_ENGINE_ERROR("Could not link program: {0}", infoLog.data());
-			MRG_ASSERT(false, "Program linking failed !");
-			return;
-		}
-
-		glDetachShader(m_rendererID, vertexID);
-		glDetachShader(m_rendererID, fragmentID);
+		std::unordered_map<GLenum, std::string> sources;
+		sources[GL_VERTEX_SHADER] = vertexSrc;
+		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
+		compile(sources);
 	}
 
 	Shader::~Shader() { glDeleteProgram(m_rendererID); }
@@ -129,5 +100,103 @@ namespace MRG::OpenGL
 	{
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+	}
+
+	std::string Shader::readFile(const std::string& filePath)
+	{
+		std::string result;
+		std::ifstream file(filePath, std::ios::in | std::ios::binary);
+		if (file.fail()) {
+			MRG_ENGINE_ERROR("Could not open file '{}'", filePath);
+			return result;
+		}
+		file.seekg(0, std::ios::end);
+		result.resize(file.tellg());
+		file.seekg(0, std::ios::beg);
+		file.read(&result[0], result.size());
+		file.close();
+
+		return result;
+	}
+
+	std::unordered_map<GLenum, std::string> Shader::preProcess(const std::string& source, Encoding encoding)
+	{
+		std::unordered_map<GLenum, std::string> shaderSources;
+		auto newLineChar = returnCharFromEncoding(encoding);
+
+		constexpr const char* typeToken = "#type";
+		static std::size_t typeTokenLength = strlen(typeToken);
+		std::size_t pos = source.find(typeToken, 0);
+
+		while (pos != std::string::npos) {
+			std::size_t eol = source.find_first_of(newLineChar, pos);
+			MRG_CORE_ASSERT(eol != std::string::npos, "Invalid syntax in shader !");
+			std::size_t begin = pos + typeTokenLength + 1;
+			std::string type = source.substr(begin, eol - begin);
+			MRG_CORE_ASSERT(shaderTypeFromString(type),
+			                fmt::format("Invalid shader type '{}' in shader preprocessing type definition !", type));
+
+			std::size_t nextLine = source.find_first_not_of(newLineChar, eol);
+			pos = source.find(typeToken, nextLine);
+			shaderSources[shaderTypeFromString(type)] =
+			  source.substr(nextLine, pos - (nextLine == std::string::npos ? source.size() - 1 : nextLine));
+		}
+
+		return shaderSources;
+	}
+
+	void Shader::compile(const std::unordered_map<GLenum, std::string>& sources)
+	{
+		auto program = glCreateProgram();
+		std::vector<GLenum> shaderIDs;
+		shaderIDs.reserve(sources.size());
+
+		for (auto& [type, source] : sources) {
+			auto shader = glCreateShader(type);
+			const auto sourceCString = source.c_str();
+
+			glShaderSource(shader, 1, &sourceCString, 0);
+			glCompileShader(shader);
+
+			GLint isShaderCompiled = 0;
+			glGetShaderiv(shader, GL_COMPILE_STATUS, &isShaderCompiled);
+			if (isShaderCompiled == GL_FALSE) {
+				GLint logLength = 0;
+				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+
+				std::vector<GLchar> infoLog(logLength);
+				glGetShaderInfoLog(shader, logLength, &logLength, infoLog.data());
+
+				glDeleteShader(shader);
+
+				MRG_ENGINE_ERROR("Could not compile shader: {0}", infoLog.data());
+				MRG_ASSERT(false, "Shader compilation failed !");
+				break;
+			}
+			glAttachShader(program, shader);
+			shaderIDs.emplace_back(shader);
+		}
+		m_rendererID = program;
+
+		glLinkProgram(program);
+
+		GLint isProgramLinked = 0;
+		glGetProgramiv(program, GL_LINK_STATUS, &isProgramLinked);
+		if (isProgramLinked == GL_FALSE) {
+			GLint logLength = 0;
+			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+
+			std::vector<GLchar> infoLog(logLength);
+			glGetProgramInfoLog(program, logLength, &logLength, infoLog.data());
+
+			glDeleteProgram(program);
+			for (auto id : shaderIDs) glDeleteShader(id);
+
+			MRG_ENGINE_ERROR("Could not link program: {0}", infoLog.data());
+			MRG_ASSERT(false, "Program linking failed !");
+			return;
+		}
+
+		for (auto id : shaderIDs) glDetachShader(program, id);
 	}
 }  // namespace MRG::OpenGL

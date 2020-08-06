@@ -7,6 +7,13 @@
 
 namespace MRG
 {
+	enum class Encoding
+	{
+		LF = 0,
+		CRLF,
+		CR
+	};
+
 	class Shader
 	{
 	public:
@@ -16,6 +23,7 @@ namespace MRG
 		virtual void unbind() const = 0;
 
 		[[nodiscard]] static Ref<Shader> create(const std::string& vertexSrc, const std::string& fragmentSrc);
+		[[nodiscard]] static Ref<Shader> create(const std::string& filePath, Encoding encoding = Encoding::LF);
 	};
 }  // namespace MRG
 

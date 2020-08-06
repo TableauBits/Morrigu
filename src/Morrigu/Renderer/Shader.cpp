@@ -5,6 +5,21 @@
 
 namespace MRG
 {
+	Ref<Shader> Shader::create(const std::string& filePath, Encoding encoding)
+	{
+		switch (RenderingAPI::getAPI()) {
+		case RenderingAPI::API::OpenGL: {
+			return createRef<OpenGL::Shader>(filePath, encoding);
+		} break;
+
+		case RenderingAPI::API::None:
+		default: {
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
+			return nullptr;
+		} break;
+		}
+	}
+
 	Ref<Shader> Shader::create(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		switch (RenderingAPI::getAPI()) {
@@ -14,7 +29,7 @@ namespace MRG
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, "UNSUPPORTED RENDERING API OPTION ! ({})", RenderingAPI::getAPI());
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
 			return nullptr;
 		} break;
 		}

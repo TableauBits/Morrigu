@@ -3,6 +3,7 @@ project(Morrigu CXX)
 
 # glad doesn't support configurations other than Debug and Release, so we enforce that only these two are generated
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+set(CONAN_SYSTEM_INCLUDES ON)
 
 include("${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake")
 conan_basic_setup()
@@ -23,7 +24,8 @@ if (MSVC)
     target_compile_options("${PROJECT_NAME}" PRIVATE /permissive- /W4 /w14640 /wd4005 /wd4201 /WX)
     # setting the default project in the solution
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "${PROJECT_NAME}")
-elseif()
+else()
+    message("DETECTED NON MSVC COMPILER")
     # we consider that the majority of C++ compilers other than MSVC recognise the following flags,
     # otherwise feel free to modify them
     target_compile_options("${PROJECT_NAME}" PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Werror)
