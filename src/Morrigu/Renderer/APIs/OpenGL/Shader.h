@@ -13,7 +13,7 @@ namespace MRG::OpenGL
 	class Shader : public MRG::Shader
 	{
 	public:
-		Shader(const std::string& filePath);
+		Shader(const std::string& filePath, MRG::Encoding encoding);
 		Shader(const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~Shader();
 
@@ -32,7 +32,7 @@ namespace MRG::OpenGL
 
 	private:
 		std::string readFile(const std::string& filePath);
-		std::unordered_map<GLenum, std::string> preProcess(const std::string& source);
+		std::unordered_map<GLenum, std::string> preProcess(const std::string& source, Encoding encoding);
 		void compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 
 		uint32_t m_rendererID;

@@ -20,14 +20,30 @@ namespace
 		MRG_CORE_ASSERT(false, fmt::format("Invalid shader type '{}'!", type));
 		return 0;
 	}
+
+	static char returnCharFromEncoding(MRG::Encoding encoding)
+	{
+		switch (encoding) {
+		case MRG::Encoding::LF:
+			return '\n';
+		case MRG::Encoding::CRLF:
+			return static_cast<char>('\r\n');
+		case MRG::Encoding::CR:
+			return '\r';
+
+		default:
+			MRG_CORE_ASSERT(false, "Invalid encoding selected !");
+			return '\0';
+		}
+	}
 }  // namespace
 
 namespace MRG::OpenGL
 {
-	Shader::Shader(const std::string& filePath)
+	Shader::Shader(const std::string& filePath, MRG::Encoding encoding)
 	{
 		const auto source = readFile(filePath);
-		const auto shaderSources = preProcess(source);
+		const auto shaderSources = preProcess(source, encoding);
 		compile(shaderSources);
 	}
 
@@ -103,23 +119,24 @@ namespace MRG::OpenGL
 		return result;
 	}
 
-	std::unordered_map<GLenum, std::string> Shader::preProcess(const std::string& source)
+	std::unordered_map<GLenum, std::string> Shader::preProcess(const std::string& source, Encoding encoding)
 	{
 		std::unordered_map<GLenum, std::string> shaderSources;
+		auto newLineChar = returnCharFromEncoding(encoding);
 
 		constexpr const char* typeToken = "#type";
 		static std::size_t typeTokenLength = strlen(typeToken);
 		std::size_t pos = source.find(typeToken, 0);
 
 		while (pos != std::string::npos) {
-			std::size_t eol = source.find_first_of('\n', pos);
+			std::size_t eol = source.find_first_of(newLineChar, pos);
 			MRG_CORE_ASSERT(eol != std::string::npos, "Invalid syntax in shader !");
 			std::size_t begin = pos + typeTokenLength + 1;
 			std::string type = source.substr(begin, eol - begin);
 			MRG_CORE_ASSERT(shaderTypeFromString(type),
 			                fmt::format("Invalid shader type '{}' in shader preprocessing type definition !", type));
 
-			std::size_t nextLine = source.find_first_not_of('\n', eol);
+			std::size_t nextLine = source.find_first_not_of(newLineChar, eol);
 			pos = source.find(typeToken, nextLine);
 			shaderSources[shaderTypeFromString(type)] =
 			  source.substr(nextLine, pos - (nextLine == std::string::npos ? source.size() - 1 : nextLine));

@@ -5,11 +5,11 @@
 
 namespace MRG
 {
-	Ref<Shader> Shader::create(const std::string& filePath)
+	Ref<Shader> Shader::create(const std::string& filePath, Encoding encoding)
 	{
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
-			return createRef<OpenGL::Shader>(filePath);
+			return createRef<OpenGL::Shader>(filePath, encoding);
 		} break;
 
 		case RenderingAPI::API::None:
