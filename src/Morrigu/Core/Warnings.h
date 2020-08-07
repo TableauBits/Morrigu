@@ -5,6 +5,7 @@
     #define DISABLE_WARNING(warningNumber) __pragma(warning( disable : warningNumber ))
  
     #define DISABLE_WARNING_NONSTANDARD_EXTENSION    DISABLE_WARNING(4201)
+    #define DISABLE_WARNING_CONSTEXPR_IF    DISABLE_WARNING(4127)
     
 #elif defined(__GNUC__) || defined(__clang__)
     #define DO_PRAGMA(X) _Pragma(#X)
@@ -21,6 +22,7 @@
     #define DISABLE_WARNING(warningNumber)
 
     #define DISABLE_WARNING_NONSTANDARD_EXTENSION
+    #define DISABLE_WARNING_CONSTEXPR_IF
  
 #endif
 // clang-format on
