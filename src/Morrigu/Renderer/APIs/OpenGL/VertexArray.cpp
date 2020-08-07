@@ -2,9 +2,9 @@
 
 #include <glad/glad.h>
 
-namespace MRG::OpenGL
+namespace
 {
-	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
+	[[nodiscard]] static GLenum ShaderDataTypeToOpenGLBaseType(MRG::ShaderDataType type)
 	{
 		// clang-format off
 		switch (type)
@@ -32,7 +32,10 @@ namespace MRG::OpenGL
 		}
 		// clang-format on
 	}
+}  // namespace
 
+namespace MRG::OpenGL
+{
 	VertexArray::VertexArray() { glCreateVertexArrays(1, &m_rendererID); }
 	VertexArray::~VertexArray() { glDeleteVertexArrays(1, &m_rendererID); }
 

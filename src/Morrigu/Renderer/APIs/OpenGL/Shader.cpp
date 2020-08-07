@@ -14,7 +14,7 @@ DISABLE_WARNING_POP
 
 namespace
 {
-	static GLenum shaderTypeFromString(const std::string& type)
+	[[nodiscard]] static GLenum shaderTypeFromString(const std::string& type)
 	{
 		if (type == "vertex")
 			return GL_VERTEX_SHADER;
@@ -25,7 +25,7 @@ namespace
 		return 0;
 	}
 
-	constexpr static const char* returnCharFromEncoding(MRG::Encoding encoding)
+	[[nodiscard]] constexpr static const char* returnCharFromEncoding(MRG::Encoding encoding)
 	{
 		switch (encoding) {
 		case MRG::Encoding::LF:

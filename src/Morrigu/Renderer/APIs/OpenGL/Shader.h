@@ -31,8 +31,8 @@ namespace MRG::OpenGL
 		void uploadUniform(const std::string& name, const glm::mat4& matrix);
 
 	private:
-		std::string readFile(const std::string& filePath);
-		std::unordered_map<GLenum, std::string> preProcess(const std::string& source, Encoding encoding);
+		[[nodiscard]] std::string readFile(const std::string& filePath);
+		[[nodiscard]] std::unordered_map<GLenum, std::string> preProcess(const std::string& source, Encoding encoding);
 		void compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 
 		uint32_t m_rendererID;

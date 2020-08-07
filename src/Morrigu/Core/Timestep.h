@@ -10,8 +10,8 @@ namespace MRG
 
 		operator float() const { return m_time; }
 
-		float getSeconds() const { return m_time; }
-		float getMillieconds() const { return m_time * 1000; }
+		[[nodiscard]] float getSeconds() const { return m_time; }
+		[[nodiscard]] float getMillieconds() const { return m_time * 1000; }
 
 	private:
 		float m_time;
