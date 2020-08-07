@@ -102,7 +102,7 @@ public:
 				color = v_Color;
 			}
 		)";
-		m_triangleShader = MRG::Shader::create(triangleVShader, triangleFShader);
+		m_triangleShader = MRG::Shader::create("triangleShader", triangleVShader, triangleFShader);
 
 		std::string squareVShader = R"(
 			#version 460 core
@@ -130,15 +130,15 @@ public:
 				color = vec4(u_color, 1.0);;
 			}
 		)";
-		m_squareShader = MRG::Shader::create(squareVShader, squareFShader);
+		m_squareShader = MRG::Shader::create("squareShader", squareVShader, squareFShader);
 
-		m_textureShader = MRG::Shader::create("resources/sandbox/shaders/Textures.glsl", MRG::Encoding::CRLF);
+		auto textureShader = m_shaderLibrary.load("resources/sandbox/shaders/texture.glsl");
 
 		m_texture = MRG::Texture2D::create("resources/sandbox/textures/Checkerboard.png");
 		m_logo = MRG::Texture2D::create("resources/sandbox/textures/Logo.png");
 
-		std::static_pointer_cast<MRG::OpenGL::Shader>(m_textureShader)->bind();
-		std::static_pointer_cast<MRG::OpenGL::Shader>(m_textureShader)->uploadUniform("u_texture", 0);
+		std::static_pointer_cast<MRG::OpenGL::Shader>(textureShader)->bind();
+		std::static_pointer_cast<MRG::OpenGL::Shader>(textureShader)->uploadUniform("u_texture", 0);
 	}
 	void onDetach() override {}
 	void onUpdate(MRG::Timestep ts) override
@@ -187,10 +187,12 @@ public:
 			}
 		}
 
+		auto textureShader = m_shaderLibrary.get("texture");
+
 		m_texture->bind();
-		MRG::Renderer::submit(m_textureShader, m_squareArray, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		MRG::Renderer::submit(textureShader, m_squareArray, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 		m_logo->bind();
-		MRG::Renderer::submit(m_textureShader, m_squareArray, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		MRG::Renderer::submit(textureShader, m_squareArray, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
 		// MRG::Renderer::submit(m_triangleShader, m_triangleArray);
 
@@ -211,8 +213,8 @@ private:
 	MRG::Ref<MRG::VertexArray> m_squareArray;
 	MRG::Ref<MRG::Shader> m_squareShader;
 
+	MRG::ShaderLibrary m_shaderLibrary;
 	MRG::Ref<MRG::Texture2D> m_texture, m_logo;
-	MRG::Ref<MRG::Shader> m_textureShader;
 
 	MRG::OrthoCamera m_camera;
 	glm::vec2 position = {0.0f, 0.0f};
