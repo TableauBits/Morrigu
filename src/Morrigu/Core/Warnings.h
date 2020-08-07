@@ -14,6 +14,7 @@
     #define DISABLE_WARNING(warningName)   DO_PRAGMA(GCC diagnostic ignored #warningName)
     
     #define DISABLE_WARNING_NONSTANDARD_EXTENSION   // no warning equivalent ?
+    #define DISABLE_WARNING_CONSTEXPR_IF            // no warning equivalent ?
     
 #else
     // please define the warning supression macros specific to you compiler here
