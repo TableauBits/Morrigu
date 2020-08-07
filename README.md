@@ -28,8 +28,10 @@ Where `<CONFIG>` is either `Debug` or `Release`. Just make sure the right depend
 
 Note: The `conan install` lines of the script might need the `--build=<SOURCE_CODE_LIBS>` option to build necessary packages from source as debug or release (this might be necessary if you have the "missing PDB" warning and want to make it go away, but it should not prevent you from compiling successfully). It is also important to note that you HAVE to install both versions of the dependencies to be able to use CMake.
 
-If you are building spdlog and/or fmt make sure to setup your conan for a gcc version newer than 5.0. From [conan's getting started](https://docs.conan.io/en/latest/getting_started.html):
+If you are building spdlog and/or fmt make sure to setup your conan for a GCC version newer than 5.0. From [conan's getting started](https://docs.conan.io/en/latest/getting_started.html):
 ```bash
 conan profile new default --detect  # Generates default profile detecting GCC and sets old ABI
 conan profile update settings.compiler.libcxx=libstdc++11 default  # Sets libcxx to C++11 ABI
 ```
+
+Another important note: This library uses the `filesystem` standard library. While this is part of C++17, GCC-6 and more importantly GCC-7, which are considered C++17 compliant, do not recognize the `<filesystem>` header (instead it's `<experimental/filesystem>` + a special compile flag). Thus, if you want to modify the source code, go ahead, but I will only support GCC-8 and above.
