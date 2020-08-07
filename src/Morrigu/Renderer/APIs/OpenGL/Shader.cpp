@@ -1,8 +1,12 @@
 #include "Shader.h"
 
 #include "Core/Core.h"
+#include "Core/Warnings.h"
 
+DISABLE_WARNING_PUSH
+DISABLE_WARNING_NONSTANDARD_EXTENSION
 #include <glm/gtc/type_ptr.hpp>
+DISABLE_WARNING_POP
 
 #include <fstream>
 #include <ios>
