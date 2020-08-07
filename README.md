@@ -34,4 +34,4 @@ conan profile new default --detect  # Generates default profile detecting GCC an
 conan profile update settings.compiler.libcxx=libstdc++11 default  # Sets libcxx to C++11 ABI
 ```
 
-Another important note: This library uses the `filesystem` standard library. While this is part of C++17, GCC-6 and more importantly GCC-7, which are considered C++17 compliant, do not recognize the `<filesystem>` header (instead it's `<experimental/filesystem>` + a special compile flag). Thus, if you want to modify the source code, go ahead, but I will only support GCC-8 and above.
+Another important note: This project uses the `filesystem` standard library. While this is part of C++17, GCC-6 and more importantly GCC-7, which are considered C++17 compliant, do not recognize the `<filesystem>` header (instead it's `<experimental/filesystem>` + a special compile flag). Thus, if you want to modify the source code, go ahead, but I will only support GCC-8 and above.
