@@ -14,11 +14,13 @@ namespace MRG::OpenGL
 	{
 	public:
 		Shader(const std::string& filePath, MRG::Encoding encoding);
-		Shader(const std::string& vertexSrc, const std::string& fragmentSrc);
+		Shader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~Shader();
 
 		void bind() const override;
 		void unbind() const override;
+
+		[[nodiscard]] const std::string& getName() const override { return m_name; }
 
 		void uploadUniform(const std::string& name, int value);
 
@@ -36,6 +38,7 @@ namespace MRG::OpenGL
 		void compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 
 		uint32_t m_rendererID;
+		std::string m_name;
 	};
 }  // namespace MRG::OpenGL
 

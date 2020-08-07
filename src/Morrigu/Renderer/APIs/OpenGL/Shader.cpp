@@ -8,9 +8,10 @@ DISABLE_WARNING_NONSTANDARD_EXTENSION
 #include <glm/gtc/type_ptr.hpp>
 DISABLE_WARNING_POP
 
+#include <array>
+#include <filesystem>
 #include <fstream>
 #include <ios>
-#include <vector>
 
 namespace
 {
@@ -46,12 +47,16 @@ namespace MRG::OpenGL
 {
 	Shader::Shader(const std::string& filePath, MRG::Encoding encoding)
 	{
+		std::filesystem::path path{filePath};
+		MRG_CORE_ASSERT(std::filesystem::exists(path), fmt::format("File '{}' does not exist !", filePath));
+		m_name = path.stem().string();
+
 		const auto source = readFile(filePath);
 		const auto shaderSources = preProcess(source, encoding);
 		compile(shaderSources);
 	}
 
-	Shader::Shader(const std::string& vertexSrc, const std::string& fragmentSrc)
+	Shader::Shader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) : m_name(name)
 	{
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
@@ -152,9 +157,10 @@ namespace MRG::OpenGL
 	void Shader::compile(const std::unordered_map<GLenum, std::string>& sources)
 	{
 		auto program = glCreateProgram();
-		std::vector<GLenum> shaderIDs;
-		shaderIDs.reserve(sources.size());
+		MRG_CORE_ASSERT(sources.size() <= 4, "Invalid number of shaders in file");
+		std::array<GLuint, 4> shaderIDs{};
 
+		auto shaderIndex = 0;
 		for (auto& [type, source] : sources) {
 			auto shader = glCreateShader(type);
 			const auto sourceCString = source.c_str();
@@ -178,7 +184,7 @@ namespace MRG::OpenGL
 				break;
 			}
 			glAttachShader(program, shader);
-			shaderIDs.emplace_back(shader);
+			shaderIDs[shaderIndex++] = shader;
 		}
 		m_rendererID = program;
 
@@ -201,6 +207,8 @@ namespace MRG::OpenGL
 			return;
 		}
 
-		for (auto id : shaderIDs) glDetachShader(program, id);
+		for (auto id : shaderIDs)
+			if (id != 0)
+				glDetachShader(program, id);
 	}
 }  // namespace MRG::OpenGL
