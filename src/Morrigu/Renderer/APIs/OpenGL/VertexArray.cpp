@@ -31,9 +31,6 @@ namespace
 			}
 		}
 		// clang-format on
-
-		MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
-		return 0;
 	}
 }  // namespace
 

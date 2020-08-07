@@ -1,7 +1,14 @@
 #include <Morrigu.h>
 
-#include <glm/gtc/matrix_transform.hpp>
+#include "Core/Warnings.h"
+
+// This is very temporary. I don't know how to properly deal with that for now,
+// so this will have to do.
+DISABLE_WARNING_PUSH
+DISABLE_WARNING_NONSTANDARD_EXTENSION
 #include <glm/gtc/type_ptr.hpp>
+DISABLE_WARNING_POP
+#include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 
 // VERY TEMPORARY
@@ -125,7 +132,7 @@ public:
 		)";
 		m_squareShader = MRG::Shader::create(squareVShader, squareFShader);
 
-		m_textureShader = MRG::Shader::create("resources/sandbox/shaders/Textures.glsl");
+		m_textureShader = MRG::Shader::create("resources/sandbox/shaders/Textures.glsl", MRG::Encoding::CRLF);
 
 		m_texture = MRG::Texture2D::create("resources/sandbox/textures/Checkerboard.png");
 		m_logo = MRG::Texture2D::create("resources/sandbox/textures/Logo.png");
