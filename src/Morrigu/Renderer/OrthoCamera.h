@@ -10,6 +10,8 @@ namespace MRG
 	public:
 		OrthoCamera(float left, float right, float bottom, float top);
 
+		void setProjection(float left, float right, float bottom, float top);
+
 		[[nodiscard]] const auto& getPosition() const { return m_position; }
 		[[nodiscard]] const auto& getRotation() const { return m_rotation; }
 

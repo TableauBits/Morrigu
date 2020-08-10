@@ -17,7 +17,7 @@ DISABLE_WARNING_POP
 class SampleLayer : public MRG::Layer
 {
 public:
-	SampleLayer() : Layer("Sample Layer"), m_camera(-1.6f, 1.6f, -0.9f, 0.9f) {}
+	SampleLayer() : Layer("Sample Layer"), m_camera(1280.f / 720.f, true) {}
 
 	void onAttach() override
 	{
@@ -146,33 +146,12 @@ public:
 		if (MRG::Input::isKeyDown(GLFW_KEY_SPACE))
 			MRG_TRACE("Framerate: {} ({} milliseconds)", 1.0f / ts.getSeconds(), ts.getMillieconds());
 
-		static const float movSpeed = 2.f;
-		static const float rotSpeed = 180.f;
-		if (MRG::Input::isKeyDown(GLFW_KEY_W))
-			position.y += movSpeed * ts;
-
-		if (MRG::Input::isKeyDown(GLFW_KEY_A))
-			position.x -= movSpeed * ts;
-
-		if (MRG::Input::isKeyDown(GLFW_KEY_S))
-			position.y -= movSpeed * ts;
-
-		if (MRG::Input::isKeyDown(GLFW_KEY_D))
-			position.x += movSpeed * ts;
-
-		if (MRG::Input::isKeyDown(GLFW_KEY_Q))
-			rotation -= rotSpeed * ts;
-
-		if (MRG::Input::isKeyDown(GLFW_KEY_E))
-			rotation += rotSpeed * ts;
-
 		MRG::RenderCommand::setClearColor({0.2f, 0.2f, 0.2f, 1});
 		MRG::RenderCommand::clear();
 
-		m_camera.setPosition(glm::vec3(position, 0.0f));
-		m_camera.setRotation(rotation);
+		m_camera.onUpdate(ts);
 
-		MRG::Renderer::beginScene(m_camera);
+		MRG::Renderer::beginScene(m_camera.getCamera());
 
 		auto scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
@@ -198,7 +177,8 @@ public:
 
 		MRG::Renderer::endScene();
 	}
-	void onEvent(MRG::Event&) override {}
+	void onEvent(MRG::Event& event) override { m_camera.onEvent(event); }
+
 	void onImGuiRender() override
 	{
 		ImGui::Begin("Settings");
@@ -216,9 +196,7 @@ private:
 	MRG::ShaderLibrary m_shaderLibrary;
 	MRG::Ref<MRG::Texture2D> m_texture, m_logo;
 
-	MRG::OrthoCamera m_camera;
-	glm::vec2 position = {0.0f, 0.0f};
-	float rotation = 0.0f;
+	MRG::OrthoCameraController m_camera;
 
 	glm::vec3 m_squareColor = {0.2f, 0.3f, 0.8f};
 };
