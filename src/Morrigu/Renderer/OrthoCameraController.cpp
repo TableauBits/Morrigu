@@ -12,17 +12,25 @@ namespace MRG
 
 	void OrthoCameraController::onUpdate(Timestep ts)
 	{
-		if (MRG::Input::isKeyDown(MRG_KEY_W))
-			m_position.y += m_movementSpeed * ts;
+		if (MRG::Input::isKeyDown(MRG_KEY_W)) {
+			m_position.x += -std::sin(glm::radians(m_rotation)) * m_movementSpeed * ts;
+			m_position.y += std::cos(glm::radians(m_rotation)) * m_movementSpeed * ts;
+		}
 
-		if (MRG::Input::isKeyDown(MRG_KEY_A))
-			m_position.x -= m_movementSpeed * ts;
+		if (MRG::Input::isKeyDown(MRG_KEY_A)) {
+			m_position.x -= std::cos(glm::radians(m_rotation)) * m_movementSpeed * ts;
+			m_position.y -= std::sin(glm::radians(m_rotation)) * m_movementSpeed * ts;
+		}
 
-		if (MRG::Input::isKeyDown(MRG_KEY_S))
-			m_position.y -= m_movementSpeed * ts;
+		if (MRG::Input::isKeyDown(MRG_KEY_S)) {
+			m_position.x -= -std::sin(glm::radians(m_rotation)) * m_movementSpeed * ts;
+			m_position.y -= std::cos(glm::radians(m_rotation)) * m_movementSpeed * ts;
+		}
 
-		if (MRG::Input::isKeyDown(MRG_KEY_D))
-			m_position.x += m_movementSpeed * ts;
+		if (MRG::Input::isKeyDown(MRG_KEY_D)) {
+			m_position.x += std::cos(glm::radians(m_rotation)) * m_movementSpeed * ts;
+			m_position.y += std::sin(glm::radians(m_rotation)) * m_movementSpeed * ts;
+		}
 
 		m_camera.setPosition(m_position);
 
@@ -33,6 +41,10 @@ namespace MRG
 			if (MRG::Input::isKeyDown(MRG_KEY_E))
 				m_rotation += m_rotationSpeed * ts;
 
+			if (m_rotation > 180.f)
+				m_rotation -= 360.f;
+			if (m_rotation <= -180.f)
+				m_rotation += 360.f;
 			m_camera.setRotation(m_rotation);
 		}
 
