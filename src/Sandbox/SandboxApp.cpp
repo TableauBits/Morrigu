@@ -73,7 +73,7 @@ public:
 		m_squareArray->setIndexBuffer(squareIndexBuffer);
 
 		std::string triangleVShader = R"(
-			#version 460 core
+			#version 450 core
 
 			layout(location = 0) in vec3 a_Position;
 			layout(location = 1) in vec4 a_Color;
@@ -91,7 +91,7 @@ public:
 		)";
 
 		std::string triangleFShader = R"(
-			#version 460 core
+			#version 450 core
 
 			layout(location = 0) out vec4 color;
 			
@@ -105,7 +105,7 @@ public:
 		m_triangleShader = MRG::Shader::create("triangleShader", triangleVShader, triangleFShader);
 
 		std::string squareVShader = R"(
-			#version 460 core
+			#version 450 core
 
 			layout(location = 0) in vec3 a_Position;
 
@@ -119,7 +119,7 @@ public:
 		)";
 
 		std::string squareFShader = R"(
-			#version 460 core
+			#version 450 core
 
 			layout(location = 0) out vec4 color;
 
