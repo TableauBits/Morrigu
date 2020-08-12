@@ -21,12 +21,13 @@ namespace MRG
 		[[nodiscard]] OrthoCamera& getCamera() { return m_camera; }
 		[[nodiscard]] const OrthoCamera& getCamera() const { return m_camera; }
 
+		float m_zoomFactor = 1.f;
+
 	private:
 		bool onMouseScrolled(MouseScrolledEvent& event);
 		bool onWindowResized(WindowResizeEvent& event);
 
 		float m_aspectRatio;
-		float m_zoomFactor = 1.f;
 		OrthoCamera m_camera;
 		bool m_isRotatable;
 

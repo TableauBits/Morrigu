@@ -28,6 +28,7 @@ namespace MRG
 	{
 		EventDispatcher dispatcher{event};
 		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& closeEvent) -> bool { return onWindowClose(closeEvent); });
+		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) -> bool { return onWindowResize(resizeEvent); });
 
 		for (auto it = m_layerStack.end(); it != m_layerStack.begin();) {
 			(*--it)->onEvent(event);
@@ -43,7 +44,9 @@ namespace MRG
 			Timestep ts = time - m_lastFrameTime;
 			m_lastFrameTime = time;
 
-			for (auto& layer : m_layerStack) layer->onUpdate(ts);
+			if (!m_minimized) {
+				for (auto& layer : m_layerStack) layer->onUpdate(ts);
+			}
 
 			m_ImGuiLayer->begin();
 			for (auto& layer : m_layerStack) layer->onImGuiRender();
@@ -59,5 +62,17 @@ namespace MRG
 	{
 		m_running = false;
 		return true;
+	}
+
+	bool Application::onWindowResize(WindowResizeEvent& event)
+	{
+		if (event.getWidth() == 0 || event.getHeight() == 0) {
+			m_minimized = true;
+			return false;
+		}
+
+		m_minimized = false;
+		Renderer::onWindowResize(event.getWidth(), event.getHeight());
+		return false;
 	}
 }  // namespace MRG
