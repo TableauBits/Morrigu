@@ -5,15 +5,42 @@
 
 #define MRG_BIT(x) (1 << x)
 
+// clang-format off
+// PLATFORM DETECTION:
+#ifdef _WIN32
+    #define MRG_PLATFORM_WINDOWS
+#elif defined(__APPLE__) || defined(__MACH__)
+    // Apple devices ALL fall in this category. Apple provides the following includes to know what exact platform we're exactly on:
+    #include <TargetConditionals.h>
+
+    // We can now use this include to define a bit more specifically what we are compiling on:
+    #if TARGET_IPHONE_SIMULATOR == 1
+        #error "IOS simulator is not supported !"
+    #elif TARGET_OS_IPHONE == 1
+        #define MRG_PLATFORM_IOS
+        #error "IOS is not supported !"
+    #elif TARGET_OS_MAC == 1
+        #define MRG_PLATFORM_MACOS
+    #else
+        #error "Unkown Apple platform !"
+    #endif
+#elif defined(__ANDROID__)
+    #define MRG_PLATFORM_ANDROID
+    #error "Android platform not supported !"
+#elif defined(__linux__)
+    #define MRG_PLATFORM_LINUX
+#else
+    #error "Unknown platform detected !"
+#endif
+
 // defining debug Macros
 // disabling clang-format indentation temporarily makes for more readable code
-// clang-format off
 #ifndef NDEBUG
     // defining platform specific debug break
-    #ifdef _MSC_VER
+    #ifdef MRG_PLATFORM_WINDOWS
         /// Windows
         #define DEBUG_BREAK __debugbreak()
-    #elif defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+    #elif defined(MRG_PLATFORM_LINUX) || defined(MRG_PLATFORM_MACOS)
         /// POSIX
         #include <signal.h>
         #define DEBUG_BREAK raise(SIGTRAP)
