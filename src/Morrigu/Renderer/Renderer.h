@@ -27,7 +27,7 @@ namespace MRG
 			glm::mat4 projectionViewMatrix;
 		};
 
-		static SceneData* s_sceneData;
+		static Scope<SceneData> s_sceneData;
 	};
 }  // namespace MRG
 
