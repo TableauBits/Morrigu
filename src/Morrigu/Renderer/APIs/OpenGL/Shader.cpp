@@ -208,7 +208,9 @@ namespace MRG::OpenGL
 		}
 
 		for (auto id : shaderIDs)
-			if (id != 0)
+			if (id != 0) {
 				glDetachShader(program, id);
+				glDeleteShader(id);
+			}
 	}
 }  // namespace MRG::OpenGL
