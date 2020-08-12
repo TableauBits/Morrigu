@@ -4,7 +4,10 @@ namespace MRG
 {
 	LayerStack::~LayerStack()
 	{
-		for (const auto& layerPtr : m_layers) delete layerPtr;
+		for (const auto& layerPtr : m_layers) {
+			layerPtr->onDetach();
+			delete layerPtr;
+		}
 	}
 
 	void LayerStack::pushLayer(Layer* newLayer)
