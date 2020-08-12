@@ -146,9 +146,11 @@ namespace MRG::OpenGL
 			                fmt::format("Invalid shader type '{}' in shader preprocessing type definition !", type));
 
 			std::size_t nextLine = source.find_first_not_of(newLineChar, eol);
+			MRG_CORE_ASSERT(nextLine != std::string::npos, "Syntax Error");
 			pos = source.find(typeToken, nextLine);
+
 			shaderSources[shaderTypeFromString(type)] =
-			  source.substr(nextLine, pos - (nextLine == std::string::npos ? source.size() - 1 : nextLine));
+			  (pos == std::string::npos) ? source.substr(nextLine) : source.substr(nextLine, pos - nextLine);
 		}
 
 		return shaderSources;
