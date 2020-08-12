@@ -20,7 +20,7 @@ namespace MRG
 		inline static void drawIndexed(const Ref<VertexArray>& vertexArray) { s_renderingAPI->drawIndexed(vertexArray); }
 
 	private:
-		static RenderingAPI* s_renderingAPI;
+		static Scope<RenderingAPI> s_renderingAPI;
 	};
 }  // namespace MRG
 

@@ -5,7 +5,7 @@
 
 namespace MRG
 {
-	Renderer::SceneData* Renderer::s_sceneData = new Renderer::SceneData;
+	Scope<Renderer::SceneData> Renderer::s_sceneData = createScope<Renderer::SceneData>();
 
 	void Renderer::init() { RenderCommand::init(); }
 

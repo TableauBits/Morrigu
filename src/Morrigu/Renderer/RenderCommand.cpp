@@ -4,5 +4,5 @@
 
 namespace MRG
 {
-	RenderingAPI* RenderCommand::s_renderingAPI = new OpenGL::RenderingAPI;
+	Scope<RenderingAPI> RenderCommand::s_renderingAPI = createScope<OpenGL::RenderingAPI>();
 }
