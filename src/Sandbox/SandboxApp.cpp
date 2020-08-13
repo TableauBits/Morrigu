@@ -1,3 +1,5 @@
+#include "Sandbox2D.h"
+
 #include <Morrigu.h>
 
 #include "Core/Warnings.h"
@@ -29,7 +31,7 @@ public:
 			 0.5f, -0.5f, 0.0f, 0.2f, 0.2f, 0.8f, 1.0f,
 			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
 		};
-		
+
 		MRG::Ref<MRG::VertexBuffer> triangleVertexBuffer;
 		triangleVertexBuffer = MRG::VertexBuffer::create(triangleVertices, sizeof(triangleVertices));
 
@@ -204,7 +206,7 @@ private:
 class Sandbox : public MRG::Application
 {
 public:
-	Sandbox() { pushLayer(new SampleLayer{}); }
+	Sandbox() { pushLayer(new Sandbox2D{}); }
 	~Sandbox() {}
 };
 
