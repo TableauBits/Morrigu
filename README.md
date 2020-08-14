@@ -26,7 +26,7 @@ cmake --build . --config <CONFIG>
 ```
 Where `<CONFIG>` is either `Debug` or `Release`. Just make sure the right dependencies are installed with conan (see above).
 
-Note: The `conan install` lines of the script might need the `--build=<SOURCE_CODE_LIBS>` option to build necessary packages from source as debug or release (this might be necessary if you have the "missing PDB" warning and want to make it go away, but it should not prevent you from compiling successfully). It is also important to note that you HAVE to install both versions of the dependencies to be able to use CMake.
+Note: The `conan install` lines of the script might need the `--build=missing` option to build necessary packages from source as debug or release (this might be necessary if you have the "missing PDB" warning and want to make it go away, but it should not prevent you from compiling successfully). It is also important to note that you HAVE to install both versions of the dependencies to be able to use CMake.
 
 If you are building spdlog and/or fmt make sure to setup your conan for a GCC version newer than 5.0. From [conan's getting started](https://docs.conan.io/en/latest/getting_started.html):
 ```bash
