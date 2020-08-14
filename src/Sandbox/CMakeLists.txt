@@ -2,7 +2,7 @@
 file(GLOB_RECURSE TEST_SRC ${CMAKE_CURRENT_LIST_DIR}/*.h ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 
 add_executable(${TEST_PRJ_NAME} ${TEST_SRC})
-target_link_libraries(${TEST_PRJ_NAME} LINK_PRIVATE ${PROJECT_NAME})
+target_link_libraries(${TEST_PRJ_NAME} PRIVATE ${PROJECT_NAME})
 
 set_property(TARGET ${TEST_PRJ_NAME} PROPERTY CXX_STANDARD 17)
 
