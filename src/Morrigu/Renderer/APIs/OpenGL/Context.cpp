@@ -11,7 +11,7 @@ namespace MRG::OpenGL
 		MRG_CORE_ASSERT(window, "Window handle is null !");
 
 		glfwMakeContextCurrent(window);
-		const auto status = gladLoadGLLoader(GLADloadproc(glfwGetProcAddress));
+		[[maybe_unused]] const auto status = gladLoadGLLoader(GLADloadproc(glfwGetProcAddress));
 		MRG_CORE_ASSERT(status, "Could not initialize glad !");
 
 		MRG_ENGINE_INFO("Using OpenGL as a rendering API. Useful stats:");

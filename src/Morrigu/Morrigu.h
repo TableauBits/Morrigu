@@ -18,5 +18,4 @@
 #include "Renderer/Textures.h"
 #include "Renderer/VertexArray.h"
 
-
 #endif
