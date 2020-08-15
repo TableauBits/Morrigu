@@ -11,7 +11,7 @@ namespace MRG
 	{
 	public:
 		static void init();
-		// static void shutdown();
+		static void shutdown();
 
 		static void beginScene(const OrthoCamera& camera);
 		static void endScene();

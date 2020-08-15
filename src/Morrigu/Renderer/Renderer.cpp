@@ -15,6 +15,8 @@ namespace MRG
 		Renderer2D::init();
 	}
 
+	void Renderer::shutdown() { Renderer2D::shutdown(); }
+
 	void Renderer::onWindowResize(uint32_t width, uint32_t height) { RenderCommand::setViewport(0, 0, width, height); }
 	void Renderer::beginScene(const OrthoCamera& camera) { s_sceneData->projectionViewMatrix = camera.getProjectionViewMatrix(); }
 	void Renderer::endScene() {}

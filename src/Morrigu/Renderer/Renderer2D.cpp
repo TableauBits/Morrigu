@@ -13,10 +13,11 @@ namespace MRG
 		Ref<Shader> flatColorShader;
 	};
 
-	static Scope<Renderer2DStorage> s_data = createScope<Renderer2DStorage>();
+	static Renderer2DStorage* s_data;
 
 	void Renderer2D::init()
 	{
+		s_data = new Renderer2DStorage;
 		s_data->quadVertexArray = VertexArray::create();
 
 		// clang-format off
@@ -41,6 +42,8 @@ namespace MRG
 
 		s_data->flatColorShader = Shader::create("resources/sandbox/shaders/flatColor.glsl");
 	}
+
+	void Renderer2D::shutdown() { delete s_data; }
 
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{

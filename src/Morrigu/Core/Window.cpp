@@ -12,7 +12,7 @@ namespace MRG
 		MRG_ENGINE_ERROR("GLFW error detected: {0}: {1}", error, description);
 	}
 
-	bool Window::s_GLFWInit = false;
+	uint8_t Window::s_GLFWWindowCount = 0;
 
 	Window::Window(const WindowProperties& props) { _init(props); }
 	Window::~Window() { _shutdown(); }
@@ -23,15 +23,15 @@ namespace MRG
 
 		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", props.title, props.width, props.height);
 
-		if (!s_GLFWInit) {
+		if (s_GLFWWindowCount == 0) {
+			MRG_ENGINE_INFO("Initializing GLFW");
 			[[maybe_unused]] auto success = glfwInit();
 			MRG_CORE_ASSERT(success, "Could not initialize GLFW !");
 			glfwSetErrorCallback(GLFWErrorCallback);
-
-			s_GLFWInit = true;
 		}
 
 		m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
+		++s_GLFWWindowCount;
 
 		m_context = std::move(Context::create(m_window));
 
@@ -126,7 +126,16 @@ namespace MRG
 		});
 	}
 
-	void Window::_shutdown() { glfwDestroyWindow(m_window); }
+	void Window::_shutdown()
+	{
+		glfwDestroyWindow(m_window);
+
+		--s_GLFWWindowCount;
+		if (s_GLFWWindowCount == 0) {
+			MRG_ENGINE_INFO("Terminating GLFW");
+			glfwTerminate();
+		}
+	}
 
 	void Window::onUpdate()
 	{
