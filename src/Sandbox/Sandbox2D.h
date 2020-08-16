@@ -19,6 +19,7 @@ private:
 	// temp, should not be here
 	MRG::Ref<MRG::VertexArray> m_vertexArray;
 	MRG::Ref<MRG::Shader> m_shader;
+	MRG::Ref<MRG::Texture2D> m_checkerboard;
 
 	glm::vec4 m_color = {0.2f, 0.3f, 0.8f, 1.f};
 };

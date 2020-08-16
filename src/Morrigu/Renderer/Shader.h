@@ -3,6 +3,8 @@
 
 #include "Core/Core.h"
 
+#include <glm/glm.hpp>
+
 #include <string>
 #include <unordered_map>
 
@@ -22,6 +24,11 @@ namespace MRG
 
 		virtual void bind() const = 0;
 		virtual void unbind() const = 0;
+
+		virtual void upload(const std::string& name, int value) = 0;
+		virtual void upload(const std::string& name, const glm::vec3& value) = 0;
+		virtual void upload(const std::string& name, const glm::vec4& value) = 0;
+		virtual void upload(const std::string& name, const glm::mat4& value) = 0;
 
 		[[nodiscard]] virtual const std::string& getName() const = 0;
 

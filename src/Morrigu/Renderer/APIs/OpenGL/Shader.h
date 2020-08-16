@@ -20,6 +20,11 @@ namespace MRG::OpenGL
 		void bind() const override;
 		void unbind() const override;
 
+		void upload(const std::string& name, int value) override;
+		void upload(const std::string& name, const glm::vec3& value) override;
+		void upload(const std::string& name, const glm::vec4& value) override;
+		void upload(const std::string& name, const glm::mat4& value) override;
+
 		[[nodiscard]] const std::string& getName() const override { return m_name; }
 
 		void uploadUniform(const std::string& name, int value);

@@ -69,6 +69,11 @@ namespace MRG::OpenGL
 	void Shader::bind() const { glUseProgram(m_rendererID); }
 	void Shader::unbind() const { glUseProgram(0); }
 
+	void Shader::upload(const std::string& name, int value) { uploadUniform(name, value); }
+	void Shader::upload(const std::string& name, const glm::vec3& value) { uploadUniform(name, value); }
+	void Shader::upload(const std::string& name, const glm::vec4& value) { uploadUniform(name, value); }
+	void Shader::upload(const std::string& name, const glm::mat4& value) { uploadUniform(name, value); }
+
 	void Shader::uploadUniform(const std::string& name, int value)
 	{
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
