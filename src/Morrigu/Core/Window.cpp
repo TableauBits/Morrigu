@@ -133,7 +133,10 @@ namespace MRG
 		--s_GLFWWindowCount;
 		if (s_GLFWWindowCount == 0) {
 			MRG_ENGINE_INFO("Terminating GLFW");
+#ifdef MRG_PLATFORM_WINDOW
+			// For some reason, that causes an exception on linux. This is most likely a GLFW bug.
 			glfwTerminate();
+#endif
 		}
 	}
 
