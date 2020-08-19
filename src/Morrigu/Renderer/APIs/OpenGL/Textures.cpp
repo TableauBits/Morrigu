@@ -49,7 +49,7 @@ namespace MRG::OpenGL
 		stbi_image_free(data);
 	}
 
-	void Texture2D::setData(void* data, uint32_t size)
+	void Texture2D::setData(void* data, [[maybe_unused]] uint32_t size)
 	{
 		[[maybe_unused]] const auto bpp = m_dataFormat == GL_RGBA ? 4 : 3;
 		MRG_CORE_ASSERT(size == m_width * m_width * bpp, "Data size is incorrect !");
