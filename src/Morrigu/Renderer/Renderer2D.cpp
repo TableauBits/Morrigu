@@ -12,8 +12,8 @@ namespace MRG
 	struct Renderer2DStorage
 	{
 		Ref<VertexArray> quadVertexArray;
-		Ref<Shader> flatColorShader;
 		Ref<Shader> textureShader;
+		Ref<Texture2D> whiteTexture;
 	};
 
 	static Renderer2DStorage* s_data;
@@ -44,8 +44,11 @@ namespace MRG
 
 		s_data->quadVertexArray->setIndexBuffer(squareIB);
 
-		s_data->flatColorShader = Shader::create("resources/sandbox/shaders/flatColor.glsl");
-		s_data->textureShader = Shader::create("resources/sandbox/shaders/texture.glsl");
+		s_data->whiteTexture = Texture2D::create(1, 1);
+		auto whiteTextureData = 0xffffffff;
+		s_data->whiteTexture->setData(&whiteTextureData, sizeof(whiteTextureData));
+
+		s_data->textureShader = Shader::create("resources/shaders/texture.glsl");
 		s_data->textureShader->bind();
 		s_data->textureShader->upload("u_texture", 0);
 	}
@@ -54,9 +57,6 @@ namespace MRG
 
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
-		s_data->flatColorShader->bind();
-		s_data->flatColorShader->upload("u_viewProjection", camera.getProjectionViewMatrix());
-
 		s_data->textureShader->bind();
 		s_data->textureShader->upload("u_viewProjection", camera.getProjectionViewMatrix());
 	}
@@ -70,11 +70,11 @@ namespace MRG
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		s_data->flatColorShader->bind();
-		s_data->flatColorShader->upload("u_color", color);
+		s_data->textureShader->upload("u_color", color);
+		s_data->whiteTexture->bind();
 
 		glm::mat4 transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
-		s_data->flatColorShader->upload("u_transform", transform);
+		s_data->textureShader->upload("u_transform", transform);
 
 		s_data->quadVertexArray->bind();
 		RenderCommand::drawIndexed(s_data->quadVertexArray);
@@ -87,12 +87,11 @@ namespace MRG
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)
 	{
-		s_data->textureShader->bind();
+		s_data->textureShader->upload("u_color", glm::vec4(1.f));
+		texture->bind();
 
 		glm::mat4 transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
 		s_data->textureShader->upload("u_transform", transform);
-
-		texture->bind();
 
 		s_data->quadVertexArray->bind();
 		RenderCommand::drawIndexed(s_data->quadVertexArray);

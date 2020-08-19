@@ -12,14 +12,14 @@ DISABLE_WARNING_POP
 
 Sandbox2D::Sandbox2D() : MRG::Layer("Sandbox 2D"), m_camera(1280.f / 720.f) {}
 
-void Sandbox2D::onAttach() { m_checkerboard = MRG::Texture2D::create("resources/sandbox/textures/Checkerboard.png"); }
+void Sandbox2D::onAttach() { m_checkerboard = MRG::Texture2D::create("resources/textures/Checkerboard.png"); }
 
 void Sandbox2D::onDetach() {}
 
 void Sandbox2D::onUpdate(MRG::Timestep ts)
 {
 	m_camera.onUpdate(ts);
-	MRG::RenderCommand::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
+	MRG::RenderCommand::setClearColor(m_color);
 	MRG::RenderCommand::clear();
 
 	MRG::Renderer2D::beginScene(m_camera.getCamera());

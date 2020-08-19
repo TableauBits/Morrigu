@@ -26,6 +26,17 @@ namespace
 		return 0;
 	}
 
+	[[nodiscard]] static std::string shaderTypeFromEnum(GLenum type)
+	{
+		if (type == GL_VERTEX_SHADER)
+			return "GL_VERTEX_SHADER";
+		if (type == GL_FRAGMENT_SHADER)
+			return "GL_FRAGMENT_SHADER";
+
+		MRG_CORE_ASSERT(false, fmt::format("Invalid shader type '{}'!", type));
+		return 0;
+	}
+
 	[[nodiscard]] constexpr static const char* returnCharFromEncoding(MRG::Encoding encoding)
 	{
 		switch (encoding) {
@@ -144,7 +155,7 @@ namespace MRG::OpenGL
 
 		while (pos != std::string::npos) {
 			std::size_t eol = source.find_first_of(newLineChar, pos);
-			MRG_CORE_ASSERT(eol != std::string::npos, "Invalid syntax in shader !");
+			MRG_CORE_ASSERT(eol != std::string::npos, fmt::format("Invalid syntax in shader '{}'!", m_name));
 			std::size_t begin = pos + typeTokenLength + 1;
 			std::string type = source.substr(begin, eol - begin);
 			MRG_CORE_ASSERT(shaderTypeFromString(type),
@@ -186,7 +197,7 @@ namespace MRG::OpenGL
 
 				glDeleteShader(shader);
 
-				MRG_ENGINE_ERROR("Could not compile shader: {0}", infoLog.data());
+				MRG_ENGINE_ERROR("Could not compile the {} of '{}': {}", shaderTypeFromEnum(type), m_name, infoLog.data());
 				MRG_ASSERT(false, "Shader compilation failed !");
 				break;
 			}

@@ -21,5 +21,5 @@ private:
 	MRG::Ref<MRG::Shader> m_shader;
 	MRG::Ref<MRG::Texture2D> m_checkerboard;
 
-	glm::vec4 m_color = {0.2f, 0.3f, 0.8f, 1.f};
+	glm::vec4 m_color = {0.1f, 0.1f, 0.1f, 1.0f};
 };
