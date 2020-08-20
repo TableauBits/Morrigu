@@ -135,8 +135,15 @@ namespace MRG::OpenGL
 			MRG_ENGINE_ERROR("Could not open file '{}'", filePath);
 			return result;
 		}
+
 		file.seekg(0, std::ios::end);
-		result.resize(file.tellg());
+		const auto size = file.tellg();
+		if (size == -1) {
+			MRG_ENGINE_ERROR("Could not read file '{}'", filePath);
+			return result;
+		}
+
+		result.resize(size);
 		file.seekg(0, std::ios::beg);
 		file.read(&result[0], result.size());
 		file.close();
