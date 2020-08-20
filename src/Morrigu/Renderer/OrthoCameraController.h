@@ -4,7 +4,7 @@
 #include "Core/Timestep.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/MouseEvent.h"
-#include "OrthoCamera.h"
+#include "Renderer/OrthoCamera.h"
 
 #include <glm/glm.hpp>
 

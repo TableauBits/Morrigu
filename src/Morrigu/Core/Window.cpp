@@ -1,9 +1,9 @@
 #include "Window.h"
 
+#include "Core/Logger.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
-#include "Logger.h"
 
 namespace MRG
 {

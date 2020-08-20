@@ -1,7 +1,7 @@
 #ifndef MRG_CLASS_KEYEVENT
 #define MRG_CLASS_KEYEVENT
 
-#include "Event.h"
+#include "Events/Event.h"
 
 #include <sstream>
 

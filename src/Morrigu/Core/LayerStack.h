@@ -1,7 +1,7 @@
 #ifndef MRG_CLASS_LAYERSTACK
 #define MRG_CLASS_LAYERSTACK
 
-#include "Layer.h"
+#include "Core/Layer.h"
 
 #include <vector>
 

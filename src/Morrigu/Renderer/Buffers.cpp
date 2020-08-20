@@ -1,8 +1,8 @@
 #include "Buffers.h"
 
 #include "Core/Core.h"
-#include "Renderer.h"
 #include "Renderer/APIs/OpenGL/Buffers.h"
+#include "Renderer/Renderer.h"
 
 namespace MRG
 {

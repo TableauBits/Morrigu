@@ -1,10 +1,9 @@
 #ifndef MRG_CLASS_RENDERER
 #define MRG_CLASS_RENDERER
 
-#include "RenderCommand.h"
-
 #include "Renderer/OrthoCamera.h"
-#include "Shader.h"
+#include "Renderer/RenderCommand.h"
+#include "Renderer/Shader.h"
 
 namespace MRG
 {
