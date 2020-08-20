@@ -28,6 +28,8 @@ namespace MRG
 
 		[[nodiscard]] inline static auto getAPI() { return s_API; }
 
+		[[nodiscard]] static Scope<RenderingAPI> create();
+
 	private:
 		static API s_API;
 	};

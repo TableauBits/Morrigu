@@ -24,8 +24,8 @@ namespace MRG
 	void Renderer::submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
 		shader->bind();
-		std::static_pointer_cast<OpenGL::Shader>(shader)->uploadUniform("u_viewProjection", s_sceneData->projectionViewMatrix);
-		std::static_pointer_cast<OpenGL::Shader>(shader)->uploadUniform("u_transform", transform);
+		shader->upload("u_viewProjection", s_sceneData->projectionViewMatrix);
+		shader->upload("u_transform", transform);
 
 		vertexArray->bind();
 		RenderCommand::drawIndexed(vertexArray);
