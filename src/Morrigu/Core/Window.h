@@ -46,7 +46,7 @@ namespace MRG
 		Scope<Context> m_context;
 		WindowProperties m_properties;
 
-		static bool s_GLFWInit;
+		static uint8_t s_GLFWWindowCount;
 	};
 }  // namespace MRG
 

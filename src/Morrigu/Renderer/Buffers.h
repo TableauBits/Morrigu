@@ -51,7 +51,7 @@ namespace MRG
 		std::string name;
 		ShaderDataType type;
 		uint32_t size;
-		uint64_t offset;
+		std::size_t offset;
 		bool isNormalized;
 
 		BufferElement() = default;
@@ -95,7 +95,7 @@ namespace MRG
 		BufferLayout() = default;
 		BufferLayout(const std::initializer_list<BufferElement>& elements) : m_elements(elements)
 		{
-			uint64_t offset = 0;
+			std::size_t offset = 0;
 			for (auto& element : m_elements) {
 				element.offset = offset;
 				m_stride += element.size;

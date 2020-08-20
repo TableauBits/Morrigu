@@ -1,7 +1,7 @@
 #ifndef MRG_CLASS_APPLICATIONEVENT
 #define MRG_CLASS_APPLICATIONEVENT
 
-#include "Event.h"
+#include "Events/Event.h"
 
 #include <sstream>
 

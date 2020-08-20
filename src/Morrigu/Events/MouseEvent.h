@@ -1,7 +1,7 @@
 #ifndef MRG_CLASS_MOUSEEVENT
 #define MRG_CLASS_MOUSEEVENT
 
-#include "Event.h"
+#include "Events/Event.h"
 
 #include <sstream>
 

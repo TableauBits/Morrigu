@@ -24,6 +24,8 @@ namespace MRG
 		pushOverlay(m_ImGuiLayer);
 	}
 
+	Application::~Application() { Renderer::shutdown(); }
+
 	void Application::onEvent(Event& event)
 	{
 		EventDispatcher dispatcher{event};

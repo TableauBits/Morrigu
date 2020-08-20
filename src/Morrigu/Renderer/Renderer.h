@@ -1,10 +1,9 @@
 #ifndef MRG_CLASS_RENDERER
 #define MRG_CLASS_RENDERER
 
-#include "RenderCommand.h"
-
 #include "Renderer/OrthoCamera.h"
-#include "Shader.h"
+#include "Renderer/RenderCommand.h"
+#include "Renderer/Shader.h"
 
 namespace MRG
 {
@@ -12,6 +11,7 @@ namespace MRG
 	{
 	public:
 		static void init();
+		static void shutdown();
 
 		static void onWindowResize(uint32_t width, uint32_t height);
 		static void beginScene(const OrthoCamera& camera);

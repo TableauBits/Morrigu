@@ -26,6 +26,17 @@ namespace
 		return 0;
 	}
 
+	[[nodiscard]] static std::string shaderTypeFromEnum(GLenum type)
+	{
+		if (type == GL_VERTEX_SHADER)
+			return "GL_VERTEX_SHADER";
+		if (type == GL_FRAGMENT_SHADER)
+			return "GL_FRAGMENT_SHADER";
+
+		MRG_CORE_ASSERT(false, fmt::format("Invalid shader type '{}'!", type));
+		return 0;
+	}
+
 	[[nodiscard]] constexpr static const char* returnCharFromEncoding(MRG::Encoding encoding)
 	{
 		switch (encoding) {
@@ -68,6 +79,11 @@ namespace MRG::OpenGL
 
 	void Shader::bind() const { glUseProgram(m_rendererID); }
 	void Shader::unbind() const { glUseProgram(0); }
+
+	void Shader::upload(const std::string& name, int value) { uploadUniform(name, value); }
+	void Shader::upload(const std::string& name, const glm::vec3& value) { uploadUniform(name, value); }
+	void Shader::upload(const std::string& name, const glm::vec4& value) { uploadUniform(name, value); }
+	void Shader::upload(const std::string& name, const glm::mat4& value) { uploadUniform(name, value); }
 
 	void Shader::uploadUniform(const std::string& name, int value)
 	{
@@ -119,8 +135,15 @@ namespace MRG::OpenGL
 			MRG_ENGINE_ERROR("Could not open file '{}'", filePath);
 			return result;
 		}
+
 		file.seekg(0, std::ios::end);
-		result.resize(file.tellg());
+		const auto size = file.tellg();
+		if (size == -1) {
+			MRG_ENGINE_ERROR("Could not read file '{}'", filePath);
+			return result;
+		}
+
+		result.resize(size);
 		file.seekg(0, std::ios::beg);
 		file.read(&result[0], result.size());
 		file.close();
@@ -139,7 +162,7 @@ namespace MRG::OpenGL
 
 		while (pos != std::string::npos) {
 			std::size_t eol = source.find_first_of(newLineChar, pos);
-			MRG_CORE_ASSERT(eol != std::string::npos, "Invalid syntax in shader !");
+			MRG_CORE_ASSERT(eol != std::string::npos, fmt::format("Invalid syntax in shader '{}'!", m_name));
 			std::size_t begin = pos + typeTokenLength + 1;
 			std::string type = source.substr(begin, eol - begin);
 			MRG_CORE_ASSERT(shaderTypeFromString(type),
@@ -181,7 +204,7 @@ namespace MRG::OpenGL
 
 				glDeleteShader(shader);
 
-				MRG_ENGINE_ERROR("Could not compile shader: {0}", infoLog.data());
+				MRG_ENGINE_ERROR("Could not compile the {} of '{}': {}", shaderTypeFromEnum(type), m_name, infoLog.data());
 				MRG_ASSERT(false, "Shader compilation failed !");
 				break;
 			}

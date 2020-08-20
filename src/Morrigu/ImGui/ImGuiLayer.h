@@ -6,7 +6,7 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
-#include "imgui.h"
+#include <imgui.h>
 
 namespace MRG
 {
