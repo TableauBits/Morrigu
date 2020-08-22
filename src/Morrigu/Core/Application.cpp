@@ -1,5 +1,6 @@
 #include "Application.h"
 
+#include "Debug/Instrumentor.h"
 #include "Renderer/Renderer.h"
 
 #include <GLFW/glfw3.h>
@@ -12,6 +13,8 @@ namespace MRG
 
 	Application::Application()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists !");
 		s_instance = this;
 
@@ -24,10 +27,17 @@ namespace MRG
 		pushOverlay(m_ImGuiLayer);
 	}
 
-	Application::~Application() { Renderer::shutdown(); }
+	Application::~Application()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		Renderer::shutdown();
+	}
 
 	void Application::onEvent(Event& event)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher{event};
 		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& closeEvent) -> bool { return onWindowClose(closeEvent); });
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) -> bool { return onWindowResize(resizeEvent); });
@@ -41,24 +51,44 @@ namespace MRG
 
 	void Application::run()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		while (m_running) {
+			MRG_PROFILE_SCOPE("RunLoop");
+
 			auto time = float(glfwGetTime());
 			Timestep ts = time - m_lastFrameTime;
 			m_lastFrameTime = time;
 
 			if (!m_minimized) {
+				MRG_PROFILE_SCOPE("LayerStack onUpdate");
+
 				for (auto& layer : m_layerStack) layer->onUpdate(ts);
 			}
 
 			m_ImGuiLayer->begin();
-			for (auto& layer : m_layerStack) layer->onImGuiRender();
+			{
+				MRG_PROFILE_SCOPE("LayerStack onImGuiRender");
+
+				for (auto& layer : m_layerStack) layer->onImGuiRender();
+			}
 			m_ImGuiLayer->end();
 			m_window->onUpdate();
 		}
 	}
 
-	void Application::pushLayer(Layer* newLayer) { m_layerStack.pushLayer(newLayer); }
-	void Application::pushOverlay(Layer* newOverlay) { m_layerStack.pushOverlay(newOverlay); }
+	void Application::pushLayer(Layer* newLayer)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_layerStack.pushLayer(newLayer);
+	}
+	void Application::pushOverlay(Layer* newOverlay)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_layerStack.pushOverlay(newOverlay);
+	}
 
 	bool Application::onWindowClose([[maybe_unused]] WindowCloseEvent& event)
 	{
@@ -68,6 +98,8 @@ namespace MRG
 
 	bool Application::onWindowResize(WindowResizeEvent& event)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		if (event.getWidth() == 0 || event.getHeight() == 0) {
 			m_minimized = true;
 			return false;

@@ -1,6 +1,7 @@
 #include "Context.h"
 
 #include "Core/Core.h"
+#include "Debug/Instrumentor.h"
 
 #include <glad/glad.h>
 
@@ -8,6 +9,8 @@ namespace MRG::OpenGL
 {
 	Context::Context(GLFWwindow* window) : m_window(window)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		MRG_CORE_ASSERT(window, "Window handle is null !");
 
 		glfwMakeContextCurrent(window);
@@ -28,5 +31,10 @@ namespace MRG::OpenGL
 #endif
 	}
 
-	void Context::swapBuffers() { glfwSwapBuffers(m_window); }
+	void Context::swapBuffers()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glfwSwapBuffers(m_window);
+	}
 }  // namespace MRG::OpenGL

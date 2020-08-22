@@ -1,11 +1,15 @@
 #include "RenderingAPI.h"
 
+#include "Debug/Instrumentor.h"
+
 #include <glad/glad.h>
 
 namespace MRG::OpenGL
 {
 	void RenderingAPI::init()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -18,6 +22,8 @@ namespace MRG::OpenGL
 
 	void RenderingAPI::drawIndexed(const Ref<VertexArray>& vertexArray)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		glDrawElements(GL_TRIANGLES, vertexArray->getIndexBuffer()->getCount(), GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}

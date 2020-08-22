@@ -17,7 +17,7 @@ namespace MRG
 	{
 		std::string name;
 		long long start, end;
-		uint32_t tid;
+		std::size_t tid;
 	};
 
 	// will be expanded in the future (hopefully)
@@ -36,7 +36,7 @@ namespace MRG
 		void beginSession(const std::string& name, const std::string& filepath)
 		{
 			m_outputStream.open(filepath);
-			writeEpilogue();
+			writePrologue();
 			m_currentSession = new InstrumentationSession{name};
 		}
 
@@ -55,7 +55,7 @@ namespace MRG
 				m_outputStream << ',';
 
 			// escaping names to be JSON compliant
-			std::string name = m_currentSession->name;
+			std::string name = result.name;
 			std::replace(name.begin(), name.end(), '"', '\'');
 
 			m_outputStream << '{';
@@ -73,7 +73,7 @@ namespace MRG
 
 		void writePrologue()
 		{
-			m_outputStream << R"({"otherData": {},"traceEvents:[")";
+			m_outputStream << R"({"otherData": {},"traceEvents":[)";
 			m_outputStream.flush();
 		}
 
@@ -132,9 +132,9 @@ namespace MRG
 // clang-format off
 #define MRG_PROFILING 1
 #if MRG_PROFILING
-	#define MRG_PROFILE_BEGIN_SESSION(name, filepath) ::MRG::Instrumentor::get().beginSession(name, filePath)
+	#define MRG_PROFILE_BEGIN_SESSION(name, filepath) ::MRG::Instrumentor::get().beginSession(name, filepath)
 	#define MRG_PROFILE_END_SESSION() ::MRG::Instrumentor::get().endSession()
-	#define MRG_PROFILE_SCOPE(name) ::MRG::InstrumentationTimer timer##__LINE__(name);
+	#define MRG_PROFILE_SCOPE(name) ::MRG::InstrumentationTimer MRG_PREPOC_EVALUATOR(timer,__LINE__)(name); // we need this workaround to uniquely define timers
 	#define MRG_PROFILE_FUNCTION() MRG_PROFILE_SCOPE(MRG_FUNCSIG)
 #else
 	#define MRG_PROFILE_BEGIN_SESSION(name, filepath)

@@ -2,6 +2,7 @@
 
 #include "Core/Input.h"
 #include "Core/KeyCodes.h"
+#include "Debug/Instrumentor.h"
 
 namespace MRG
 {
@@ -12,6 +13,8 @@ namespace MRG
 
 	void OrthoCameraController::onUpdate(Timestep ts)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		if (MRG::Input::isKeyDown(MRG_KEY_W)) {
 			m_position.x += -std::sin(glm::radians(m_rotation)) * m_movementSpeed * ts;
 			m_position.y += std::cos(glm::radians(m_rotation)) * m_movementSpeed * ts;
@@ -53,6 +56,8 @@ namespace MRG
 
 	void OrthoCameraController::onEvent(Event& event)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher{event};
 		dispatcher.dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& scrollEvent) { return onMouseScrolled(scrollEvent); });
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) { return onWindowResized(resizeEvent); });
@@ -60,6 +65,8 @@ namespace MRG
 
 	bool OrthoCameraController::onMouseScrolled(MouseScrolledEvent& event)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_zoomFactor -= event.getY() * 0.25f;
 		m_zoomFactor = std::max(m_zoomFactor, 0.25f);
 		m_camera.setProjection(-m_aspectRatio * m_zoomFactor, m_aspectRatio * m_zoomFactor, -m_zoomFactor, m_zoomFactor);
@@ -69,6 +76,8 @@ namespace MRG
 
 	bool OrthoCameraController::onWindowResized(WindowResizeEvent& event)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_aspectRatio = static_cast<float>(event.getWidth()) / static_cast<float>(event.getHeight());
 		m_camera.setProjection(-m_aspectRatio * m_zoomFactor, m_aspectRatio * m_zoomFactor, -m_zoomFactor, m_zoomFactor);
 

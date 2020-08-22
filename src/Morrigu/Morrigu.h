@@ -19,5 +19,6 @@
 #include "Renderer/Textures.h"
 #include "Renderer/VertexArray.h"
 
+#include "Debug/Instrumentor.h"
 
 #endif

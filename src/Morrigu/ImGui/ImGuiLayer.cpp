@@ -1,6 +1,7 @@
 #include "ImGuiLayer.h"
 
 #include "Core/Application.h"
+#include "Debug/Instrumentor.h"
 
 #include <ImGui/bindings/imgui_impl_glfw.h>
 #include <ImGui/bindings/imgui_impl_opengl3.h>
@@ -12,6 +13,8 @@ namespace MRG
 
 	void ImGuiLayer::onAttach()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		auto& io = ImGui::GetIO();
@@ -36,6 +39,8 @@ namespace MRG
 
 	void ImGuiLayer::onDetach()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
@@ -43,6 +48,8 @@ namespace MRG
 
 	void ImGuiLayer::begin()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -50,6 +57,8 @@ namespace MRG
 
 	void ImGuiLayer::end()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		auto& io = ImGui::GetIO();
 		auto& app = Application::get();
 		io.DisplaySize = ImVec2{static_cast<float>(app.getWindow().getWidth()), static_cast<float>(app.getWindow().getHeight())};

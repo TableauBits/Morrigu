@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "Core/Warnings.h"
+#include "Debug/Instrumentor.h"
 
 DISABLE_WARNING_PUSH
 DISABLE_WARNING_NONSTANDARD_EXTENSION
@@ -58,6 +59,8 @@ namespace MRG::OpenGL
 {
 	Shader::Shader(const std::string& filePath, MRG::Encoding encoding)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		std::filesystem::path path{filePath};
 		MRG_CORE_ASSERT(std::filesystem::exists(path), fmt::format("File '{}' does not exist !", filePath));
 		m_name = path.stem().string();
@@ -69,16 +72,33 @@ namespace MRG::OpenGL
 
 	Shader::Shader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) : m_name(name)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
 		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
 		compile(sources);
 	}
 
-	Shader::~Shader() { glDeleteProgram(m_rendererID); }
+	Shader::~Shader()
+	{
+		MRG_PROFILE_FUNCTION();
 
-	void Shader::bind() const { glUseProgram(m_rendererID); }
-	void Shader::unbind() const { glUseProgram(0); }
+		glDeleteProgram(m_rendererID);
+	}
+
+	void Shader::bind() const
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glUseProgram(m_rendererID);
+	}
+	void Shader::unbind() const
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glUseProgram(0);
+	}
 
 	void Shader::upload(const std::string& name, int value) { uploadUniform(name, value); }
 	void Shader::upload(const std::string& name, const glm::vec3& value) { uploadUniform(name, value); }
@@ -87,48 +107,64 @@ namespace MRG::OpenGL
 
 	void Shader::uploadUniform(const std::string& name, int value)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 		glUniform1i(location, value);
 	}
 
 	void Shader::uploadUniform(const std::string& name, float value)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 		glUniform1f(location, value);
 	}
 
 	void Shader::uploadUniform(const std::string& name, const glm::vec2& value)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 		glUniform2f(location, value.x, value.y);
 	}
 
 	void Shader::uploadUniform(const std::string& name, const glm::vec3& value)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 		glUniform3f(location, value.x, value.y, value.z);
 	}
 
 	void Shader::uploadUniform(const std::string& name, const glm::vec4& value)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 		glUniform4f(location, value.x, value.y, value.z, value.w);
 	}
 
 	void Shader::uploadUniform(const std::string& name, const glm::mat3& matrix)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 	void Shader::uploadUniform(const std::string& name, const glm::mat4& matrix)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 	std::string Shader::readFile(const std::string& filePath)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		std::string result;
 		std::ifstream file(filePath, std::ios::in | std::ios::binary);
 		if (file.fail()) {
@@ -153,6 +189,8 @@ namespace MRG::OpenGL
 
 	std::unordered_map<GLenum, std::string> Shader::preProcess(const std::string& source, Encoding encoding)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> shaderSources;
 		auto newLineChar = returnCharFromEncoding(encoding);
 
@@ -181,6 +219,8 @@ namespace MRG::OpenGL
 
 	void Shader::compile(const std::unordered_map<GLenum, std::string>& sources)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		auto program = glCreateProgram();
 		MRG_CORE_ASSERT(sources.size() <= 4, "Invalid number of shaders in file");
 		std::array<GLuint, 4> shaderIDs{};

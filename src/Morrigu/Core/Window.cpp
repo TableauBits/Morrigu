@@ -1,6 +1,7 @@
 #include "Window.h"
 
 #include "Core/Logger.h"
+#include "Debug/Instrumentor.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
@@ -14,24 +15,40 @@ namespace MRG
 
 	uint8_t Window::s_GLFWWindowCount = 0;
 
-	Window::Window(const WindowProperties& props) { _init(props); }
-	Window::~Window() { _shutdown(); }
+	Window::Window(const WindowProperties& props)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		_init(props);
+	}
+	Window::~Window()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		_shutdown();
+	}
 
 	void Window::_init(const WindowProperties& props)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_properties = props;
 
 		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", props.title, props.width, props.height);
 
 		if (s_GLFWWindowCount == 0) {
+			MRG_PROFILE_SCOPE("glfwInit");
 			MRG_ENGINE_INFO("Initializing GLFW");
 			[[maybe_unused]] auto success = glfwInit();
 			MRG_CORE_ASSERT(success, "Could not initialize GLFW !");
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
-		m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
-		++s_GLFWWindowCount;
+		{
+			MRG_PROFILE_SCOPE("glfwCreateWindow")
+			m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
+			++s_GLFWWindowCount;
+		}
 
 		m_context = std::move(Context::create(m_window));
 
@@ -128,6 +145,8 @@ namespace MRG
 
 	void Window::_shutdown()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		glfwDestroyWindow(m_window);
 
 		--s_GLFWWindowCount;
@@ -142,12 +161,16 @@ namespace MRG
 
 	void Window::onUpdate()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		glfwPollEvents();
 		m_context->swapBuffers();
 	}
 
 	void Window::setVsync(bool enabled)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		if (enabled) {
 			glfwSwapInterval(1);
 		} else {
