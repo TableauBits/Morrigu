@@ -1,6 +1,7 @@
 #ifndef MRG_CLASS_MOUSEEVENT
 #define MRG_CLASS_MOUSEEVENT
 
+#include "Core/Input.h"
 #include "Events/Event.h"
 
 #include <sstream>
@@ -54,20 +55,20 @@ namespace MRG
 	class MouseButtonEvent : public Event
 	{
 	public:
-		[[nodiscard]] inline int getMouseButton() const { return m_button; }
+		[[nodiscard]] inline MouseCode getMouseButton() const { return m_button; }
 
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 
 	protected:
-		MouseButtonEvent(int button) : m_button(button) {}
+		MouseButtonEvent(MouseCode button) : m_button(button) {}
 
-		int m_button;
+		MouseCode m_button;
 	};
 
 	class MouseButtonPressedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonPressedEvent(int button) : MouseButtonEvent(button) {}
+		MouseButtonPressedEvent(MouseCode button) : MouseButtonEvent(button) {}
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -82,7 +83,7 @@ namespace MRG
 	class MouseButtonReleasedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonReleasedEvent(int button) : MouseButtonEvent(button) {}
+		MouseButtonReleasedEvent(MouseCode button) : MouseButtonEvent(button) {}
 
 		[[nodiscard]] std::string toString() const override
 		{

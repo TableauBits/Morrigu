@@ -85,18 +85,18 @@ namespace MRG
 
 			  switch (action) {
 			  case GLFW_PRESS: {
-				  KeyPressedEvent press{keycode, 0};
+				  KeyPressedEvent press{static_cast<KeyCode>(keycode), 0};
 				  data->callback(press);
 			  } break;
 
 			  case GLFW_REPEAT: {
-				  KeyPressedEvent press{keycode, ++data->keyRepeats};
+				  KeyPressedEvent press{static_cast<KeyCode>(keycode), ++data->keyRepeats};
 				  data->callback(press);
 			  } break;
 
 			  case GLFW_RELEASE: {
 				  data->keyRepeats = 0;
-				  KeyReleasedEvent release{keycode};
+				  KeyReleasedEvent release{static_cast<KeyCode>(keycode)};
 				  data->callback(release);
 			  } break;
 
@@ -111,12 +111,12 @@ namespace MRG
 
 			switch (action) {
 			case GLFW_PRESS: {
-				MouseButtonPressedEvent press{button};
+				MouseButtonPressedEvent press{static_cast<MouseCode>(button)};
 				data->callback(press);
 			} break;
 
 			case GLFW_RELEASE: {
-				MouseButtonReleasedEvent release{button};
+				MouseButtonReleasedEvent release{static_cast<MouseCode>(button)};
 				data->callback(release);
 			} break;
 
@@ -143,7 +143,7 @@ namespace MRG
 		glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int codePoint) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
-			KeyTypedEvent typedChar{static_cast<int>(codePoint)};
+			KeyTypedEvent typedChar{static_cast<KeyCode>(codePoint)};
 			data->callback(typedChar);
 		});
 	}
