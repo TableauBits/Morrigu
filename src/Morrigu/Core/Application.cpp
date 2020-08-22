@@ -42,8 +42,8 @@ namespace MRG
 		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& closeEvent) -> bool { return onWindowClose(closeEvent); });
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) -> bool { return onWindowResize(resizeEvent); });
 
-		for (auto it = m_layerStack.end(); it != m_layerStack.begin();) {
-			(*--it)->onEvent(event);
+		for (auto it = m_layerStack.rbegin(); it != m_layerStack.rend(); ++it) {
+			(*it)->onEvent(event);
 			if (event.handled)
 				break;
 		}
