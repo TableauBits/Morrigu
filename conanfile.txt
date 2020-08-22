@@ -1,4 +1,5 @@
 [requires]
+fmt/6.0.0@bincrafters/stable
 spdlog/1.4.2@bincrafters/stable
 glad/0.1.29@bincrafters/stable
 glfw/3.3.2@bincrafters/stable

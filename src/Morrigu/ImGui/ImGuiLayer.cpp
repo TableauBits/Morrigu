@@ -64,10 +64,4 @@ namespace MRG
 			glfwMakeContextCurrent(contextBkp);
 		}
 	}
-
-	void ImGuiLayer::onImGuiRender()
-	{
-		static bool show = true;
-		ImGui::ShowDemoWindow(&show);
-	}
 }  // namespace MRG

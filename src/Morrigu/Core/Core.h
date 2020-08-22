@@ -5,6 +5,7 @@
 
 #define MRG_BIT(x) (1 << x)
 
+// disabling clang-format indentation temporarily makes for more readable code
 // clang-format off
 // PLATFORM DETECTION:
 #ifdef _WIN32
@@ -33,8 +34,14 @@
     #error "Unknown platform detected !"
 #endif
 
+// defining common interface for function signature macro
+#ifdef _MSC_VER
+    #define MRG_FUNCSIG __FUNCSIG__
+#elif defined(__GNUC__) || defined(__clang__)
+    #define MRG_FUNCSIG __PRETTY_FUNCTION__ 
+#endif
+
 // defining debug Macros
-// disabling clang-format indentation temporarily makes for more readable code
 #ifndef NDEBUG
     // defining platform specific debug break
     #ifdef MRG_PLATFORM_WINDOWS
@@ -64,9 +71,8 @@
             }                                                                                                                                  \
         }
 #else
-    // should be optimized out by any compiler:
-    #define MRG_ASSERT(x, ...) do {} while(0)
-    #define MRG_CORE_ASSERT(x, ...) do {} while(0)
+    #define MRG_ASSERT(x, ...)
+    #define MRG_CORE_ASSERT(x, ...)
 #endif
 // clang-format on
 
