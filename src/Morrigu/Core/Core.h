@@ -11,6 +11,10 @@
 
 // disabling clang-format indentation temporarily makes for more readable code
 // clang-format off
+#ifndef NDEBUG
+    #define MRG_DEBUG
+#endif
+
 // PLATFORM DETECTION:
 #ifdef _WIN32
     #define MRG_PLATFORM_WINDOWS
@@ -46,7 +50,7 @@
 #endif
 
 // defining debug Macros
-#ifndef NDEBUG
+#ifdef MRG_DEBUG
     // defining platform specific debug break
     #ifdef MRG_PLATFORM_WINDOWS
         /// Windows

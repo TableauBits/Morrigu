@@ -22,7 +22,7 @@ namespace MRG::OpenGL
 		MRG_ENGINE_INFO("\tHardware device used to render: {0}", glGetString(GL_RENDERER));
 		MRG_ENGINE_INFO("\tOpenGL version: {0}", glGetString(GL_VERSION));
 
-#ifndef NDEBUG
+#ifdef MRG_DEBUG
 		int vMajor, vMinor;
 		glGetIntegerv(GL_MAJOR_VERSION, &vMajor);
 		glGetIntegerv(GL_MINOR_VERSION, &vMinor);

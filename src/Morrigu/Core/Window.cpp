@@ -5,6 +5,7 @@
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
+#include "Renderer/Renderer.h"
 
 namespace MRG
 {
@@ -46,6 +47,10 @@ namespace MRG
 
 		{
 			MRG_PROFILE_SCOPE("glfwCreateWindow")
+#ifdef MRG_DEBUG
+			if (Renderer::getAPI() == RenderingAPI::API::OpenGL)
+				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
 			m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
 		}
