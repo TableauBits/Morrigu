@@ -2,12 +2,15 @@
 #define MRG_INSTRUMENTOR
 
 #include "Core/Core.h"
+#include "Core/Logger.h"
 
 #include <fmt/core.h>
+#include <fmt/ostream.h>
 
 #include <algorithm>
 #include <chrono>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <thread>
 
@@ -17,7 +20,7 @@ namespace MRG
 	{
 		std::string name;
 		long long start, end;
-		std::size_t tid;
+		std::thread::id tid;
 	};
 
 	// will be expanded in the future (hopefully)
@@ -31,56 +34,56 @@ namespace MRG
 	class Instrumentor
 	{
 	public:
-		Instrumentor() : m_currentSession(nullptr), m_profileCount(0) {}
-
 		void beginSession(const std::string& name, const std::string& filepath)
 		{
+			std::lock_guard lock(m_mutex);
+			if (m_currentSession) {
+				if (Logger::getEngineLogger()) {
+					MRG_ENGINE_ERROR(
+					  "Instrumentor::beginSession('{}') called when session '{}' was already active!", name, m_currentSession->name);
+				}
+				internalEndSession();
+			}
 			m_outputStream.open(filepath);
-			writePrologue();
-			m_currentSession = new InstrumentationSession{name};
+			if (m_outputStream.is_open()) {
+				writePrologue();
+				m_currentSession = new InstrumentationSession{name};
+			} else {
+				if (Logger::getEngineLogger()) {
+					MRG_ENGINE_ERROR("Instrumentor could not open file '{}'", filepath);
+				}
+			}
 		}
 
 		void endSession()
 		{
-			writeEpilogue();
-			m_outputStream.close();
-			delete m_currentSession;
-			m_currentSession = nullptr;
-			m_profileCount = 0;
+			std::lock_guard lock(m_mutex);
+			internalEndSession();
 		}
 
 		void writeProfile(const ProfileResult& result)
 		{
-			if (m_profileCount++ > 0)
-				m_outputStream << ',';
+			std::stringstream json;
 
 			// escaping names to be JSON compliant
 			std::string name = result.name;
 			std::replace(name.begin(), name.end(), '"', '\'');
 
-			m_outputStream << '{';
-			m_outputStream << R"("cat":"function",)";
-			m_outputStream << fmt::format(R"("dur":{},)", result.end - result.start);
-			m_outputStream << fmt::format(R"("name":"{}",)", name);
-			m_outputStream << R"("ph":"X",)";
-			m_outputStream << R"("pid":0,)";
-			m_outputStream << fmt::format(R"("tid":{},)", result.tid);
-			m_outputStream << fmt::format(R"("ts":{})", result.start);
-			m_outputStream << '}';
+			json << ",{";
+			json << R"("cat":"function",)";
+			json << fmt::format(R"("dur":{},)", result.end - result.start);
+			json << fmt::format(R"("name":"{}",)", name);
+			json << R"("ph":"X",)";
+			json << R"("pid":0,)";
+			json << fmt::format(R"("tid":{},)", result.tid);
+			json << fmt::format(R"("ts":{})", result.start);
+			json << '}';
 
-			m_outputStream.flush();
-		}
-
-		void writePrologue()
-		{
-			m_outputStream << R"({"otherData": {},"traceEvents":[)";
-			m_outputStream.flush();
-		}
-
-		void writeEpilogue()
-		{
-			m_outputStream << "]}";
-			m_outputStream.flush();
+			std::lock_guard lock(m_mutex);
+			if (m_currentSession) {
+				m_outputStream << json.str();
+				m_outputStream.flush();
+			}
 		}
 
 		static Instrumentor& get()
@@ -90,9 +93,31 @@ namespace MRG
 		}
 
 	private:
-		InstrumentationSession* m_currentSession;
+		void writePrologue()
+		{
+			m_outputStream << R"({"otherData": {},"traceEvents":[{})";
+			m_outputStream.flush();
+		}
+
+		void writeEpilogue()
+		{
+			m_outputStream << "]}";
+			m_outputStream.flush();
+		}
+
+		void internalEndSession()
+		{
+			if (m_currentSession) {
+				writeEpilogue();
+				m_outputStream.close();
+				delete m_currentSession;
+				m_currentSession = nullptr;
+			}
+		}
+
+		std::mutex m_mutex;
+		InstrumentationSession* m_currentSession = nullptr;
 		std::ofstream m_outputStream;
-		int m_profileCount;
 	};
 
 	class InstrumentationTimer
@@ -116,8 +141,7 @@ namespace MRG
 			auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_startTimePoint).time_since_epoch().count();
 			auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimePoint).time_since_epoch().count();
 
-			auto tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
-			Instrumentor::get().writeProfile({m_name, start, end, tid});
+			Instrumentor::get().writeProfile({m_name, start, end, std::this_thread::get_id()});
 
 			m_stopped = true;
 		}
