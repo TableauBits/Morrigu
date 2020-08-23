@@ -36,9 +36,9 @@ void Sandbox2D::onUpdate(MRG::Timestep ts)
 	{
 		MRG_PROFILE_SCOPE("Render draw");
 		MRG::Renderer2D::beginScene(m_camera.getCamera());
-		MRG::Renderer2D::drawQuad({-1.f, 0.f}, {0.8f, 0.8f}, {0.8f, 0.2f, 0.3f, 1.f});
+		MRG::Renderer2D::drawRotatedQuad({-1.f, 0.f}, {0.8f, 0.8f}, glm::radians(-45.f), {0.8f, 0.2f, 0.3f, 1.f});
 		MRG::Renderer2D::drawQuad({0.5f, -0.5f}, {0.5f, 0.75f}, {0.2f, 0.3f, 0.8f, 1.f});
-		MRG::Renderer2D::drawQuad({0.f, 0.f, -0.1f}, {10.f, 10.f}, m_checkerboard);
+		MRG::Renderer2D::drawQuad({0.f, 0.f, -0.1f}, {10.f, 10.f}, m_checkerboard, 10.f);
 		MRG::Renderer2D::endScene();
 	}
 }

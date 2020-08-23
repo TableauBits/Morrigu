@@ -21,6 +21,7 @@ namespace MRG::OpenGL
 		void unbind() const override;
 
 		void upload(const std::string& name, int value) override;
+		void upload(const std::string& name, float value) override;
 		void upload(const std::string& name, const glm::vec3& value) override;
 		void upload(const std::string& name, const glm::vec4& value) override;
 		void upload(const std::string& name, const glm::mat4& value) override;
