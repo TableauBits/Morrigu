@@ -3,6 +3,5 @@ build
 .vscode
 src/Morrigu/Vendor/ImGui/bindings
 imgui.ini
-src/Sandbox/MRGProfile-Runtime.json
-src/Sandbox/MRGProfile-Shutdown.json
-src/Sandbox/MRGProfile-Startup.json
+*.json
+*.log

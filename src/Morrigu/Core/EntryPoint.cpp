@@ -9,7 +9,7 @@ extern MRG::Application* MRG::createApplication();
 
 int main()
 {
-	MRG::Logger::init("APP");
+	MRG::Logger::init();
 	MRG_ENGINE_INFO("Finished engine initialisation.");
 
 	MRG_PROFILE_BEGIN_SESSION("Startup", "MRGProfile-Startup.json");
