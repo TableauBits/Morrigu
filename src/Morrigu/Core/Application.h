@@ -6,6 +6,8 @@
 #include "LayerStack.h"
 #include "Window.h"
 
+int main();
+
 namespace MRG
 {
 	class Application
@@ -16,7 +18,6 @@ namespace MRG
 		virtual ~Application();
 
 		void onEvent(Event& event);
-		void run();
 
 		void pushLayer(Layer* newLayer);
 		void pushOverlay(Layer* newOverlay);
@@ -25,6 +26,8 @@ namespace MRG
 		[[nodiscard]] inline static Application& get() { return *s_instance; }
 
 	private:
+		void run();
+
 		bool onWindowClose(WindowCloseEvent& event);
 		bool onWindowResize(WindowResizeEvent& event);
 
@@ -36,6 +39,8 @@ namespace MRG
 		float m_lastFrameTime = 0.0f;
 
 		static Application* s_instance;
+
+		friend int ::main();
 	};
 	Application* createApplication();
 }  // namespace MRG

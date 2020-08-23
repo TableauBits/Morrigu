@@ -1,5 +1,7 @@
 #include "VertexArray.h"
 
+#include "Debug/Instrumentor.h"
+
 #include <glad/glad.h>
 
 namespace
@@ -36,14 +38,36 @@ namespace
 
 namespace MRG::OpenGL
 {
-	VertexArray::VertexArray() { glCreateVertexArrays(1, &m_rendererID); }
-	VertexArray::~VertexArray() { glDeleteVertexArrays(1, &m_rendererID); }
+	VertexArray::VertexArray()
+	{
+		MRG_PROFILE_FUNCTION();
 
-	void VertexArray::bind() const { glBindVertexArray(m_rendererID); }
-	void VertexArray::unbind() const { glBindVertexArray(0); }
+		glCreateVertexArrays(1, &m_rendererID);
+	}
+	VertexArray::~VertexArray()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glDeleteVertexArrays(1, &m_rendererID);
+	}
+
+	void VertexArray::bind() const
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glBindVertexArray(m_rendererID);
+	}
+	void VertexArray::unbind() const
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glBindVertexArray(0);
+	}
 
 	void VertexArray::addVertexBuffer(const Ref<MRG::VertexBuffer>& vertexBuffer)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		MRG_CORE_ASSERT(vertexBuffer->layout.getElements().size() != 0, "Vertex Buffer layout has not been set !");
 
 		glBindVertexArray(m_rendererID);
@@ -67,6 +91,8 @@ namespace MRG::OpenGL
 
 	void VertexArray::setIndexBuffer(const Ref<MRG::IndexBuffer>& indexBuffer)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		glBindVertexArray(m_rendererID);
 		indexBuffer->bind();
 

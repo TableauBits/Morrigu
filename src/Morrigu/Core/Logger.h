@@ -10,7 +10,7 @@ namespace MRG
 	class Logger
 	{
 	public:
-		static void init(const std::string& loggerName);
+		static void init();
 
 		[[nodiscard]] inline static std::shared_ptr<spdlog::logger>& getEngineLogger() { return s_engineLogger; };
 		[[nodiscard]] inline static std::shared_ptr<spdlog::logger>& getClientLogger() { return s_clientLogger; };

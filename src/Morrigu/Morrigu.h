@@ -3,10 +3,8 @@
 
 #include "Core/Application.h"
 #include "Core/Input.h"
-#include "Core/KeyCodes.h"
 #include "Core/Layer.h"
 #include "Core/Logger.h"
-#include "Core/MouseButtonCodes.h"
 #include "Core/Timestep.h"
 
 #include "Renderer/Buffers.h"
@@ -19,5 +17,6 @@
 #include "Renderer/Textures.h"
 #include "Renderer/VertexArray.h"
 
+#include "Debug/Instrumentor.h"
 
 #endif

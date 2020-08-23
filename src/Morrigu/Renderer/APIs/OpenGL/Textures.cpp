@@ -1,5 +1,7 @@
 #include "Textures.h"
 
+#include "Debug/Instrumentor.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -7,6 +9,8 @@ namespace MRG::OpenGL
 {
 	Texture2D::Texture2D(uint32_t width, uint32_t height) : m_width(width), m_height(height)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_internalFormat = GL_RGBA8;
 		m_dataFormat = GL_RGBA;
 
@@ -22,6 +26,8 @@ namespace MRG::OpenGL
 
 	Texture2D::Texture2D(const std::string& path)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		int width, height, channels;
 		stbi_set_flip_vertically_on_load(1);
 		const auto data = stbi_load(path.c_str(), &width, &height, &channels, 0);
@@ -51,13 +57,25 @@ namespace MRG::OpenGL
 
 	void Texture2D::setData(void* data, [[maybe_unused]] uint32_t size)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		[[maybe_unused]] const auto bpp = m_dataFormat == GL_RGBA ? 4 : 3;
 		MRG_CORE_ASSERT(size == m_width * m_width * bpp, "Data size is incorrect !");
 
 		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, m_dataFormat, GL_UNSIGNED_BYTE, data);
 	}
 
-	Texture2D::~Texture2D() { glDeleteTextures(1, &m_rendererID); }
+	Texture2D::~Texture2D()
+	{
+		MRG_PROFILE_FUNCTION();
 
-	void Texture2D::bind(uint32_t slot) const { glBindTextureUnit(slot, m_rendererID); }
+		glDeleteTextures(1, &m_rendererID);
+	}
+
+	void Texture2D::bind(uint32_t slot) const
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glBindTextureUnit(slot, m_rendererID);
+	}
 }  // namespace MRG::OpenGL

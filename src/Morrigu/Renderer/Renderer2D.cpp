@@ -1,5 +1,6 @@
 #include "Renderer2D.h"
 
+#include "Debug/Instrumentor.h"
 #include "Renderer/APIs/OpenGL/Shader.h"
 #include "Renderer/RenderCommand.h"
 #include "Renderer/Shader.h"
@@ -20,6 +21,8 @@ namespace MRG
 
 	void Renderer2D::init()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		s_data = new Renderer2DStorage;
 		s_data->quadVertexArray = VertexArray::create();
 
@@ -53,15 +56,22 @@ namespace MRG
 		s_data->textureShader->upload("u_texture", 0);
 	}
 
-	void Renderer2D::shutdown() { delete s_data; }
+	void Renderer2D::shutdown()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		delete s_data;
+	}
 
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		s_data->textureShader->bind();
 		s_data->textureShader->upload("u_viewProjection", camera.getProjectionViewMatrix());
 	}
 
-	void Renderer2D::endScene() {}
+	void Renderer2D::endScene() { MRG_PROFILE_FUNCTION(); }
 
 	void Renderer2D::drawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 	{
@@ -70,6 +80,8 @@ namespace MRG
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		s_data->textureShader->upload("u_color", color);
 		s_data->whiteTexture->bind();
 
@@ -87,6 +99,8 @@ namespace MRG
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		s_data->textureShader->upload("u_color", glm::vec4(1.f));
 		texture->bind();
 

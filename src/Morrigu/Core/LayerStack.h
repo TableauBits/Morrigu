@@ -18,10 +18,14 @@ namespace MRG
 		void removeLayer(Layer* layerToRemove);
 		void removeOverlay(Layer* overlayToRemove);
 
-		[[nodiscard]] std::vector<Layer*>::iterator begin() { return m_layers.begin(); };
-		[[nodiscard]] std::vector<Layer*>::iterator end() { return m_layers.end(); };
-		[[nodiscard]] std::vector<Layer*>::const_iterator cbegin() const { return m_layers.cbegin(); };
-		[[nodiscard]] std::vector<Layer*>::const_iterator cend() const { return m_layers.cend(); };
+		[[nodiscard]] auto begin() { return m_layers.begin(); };
+		[[nodiscard]] auto end() { return m_layers.end(); };
+		[[nodiscard]] auto cbegin() const { return m_layers.cbegin(); };
+		[[nodiscard]] auto cend() const { return m_layers.cend(); };
+		[[nodiscard]] auto rbegin() { return m_layers.rbegin(); };
+		[[nodiscard]] auto rend() { return m_layers.rend(); };
+		[[nodiscard]] auto crbegin() const { return m_layers.crbegin(); };
+		[[nodiscard]] auto crend() const { return m_layers.crend(); };
 
 	private:
 		std::vector<Layer*> m_layers;

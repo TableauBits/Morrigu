@@ -1,9 +1,11 @@
 #include "Window.h"
 
 #include "Core/Logger.h"
+#include "Debug/Instrumentor.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
+#include "Renderer/Renderer.h"
 
 namespace MRG
 {
@@ -14,24 +16,44 @@ namespace MRG
 
 	uint8_t Window::s_GLFWWindowCount = 0;
 
-	Window::Window(const WindowProperties& props) { _init(props); }
-	Window::~Window() { _shutdown(); }
+	Window::Window(const WindowProperties& props)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		_init(props);
+	}
+	Window::~Window()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		_shutdown();
+	}
 
 	void Window::_init(const WindowProperties& props)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_properties = props;
 
 		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", props.title, props.width, props.height);
 
 		if (s_GLFWWindowCount == 0) {
+			MRG_PROFILE_SCOPE("glfwInit");
 			MRG_ENGINE_INFO("Initializing GLFW");
 			[[maybe_unused]] auto success = glfwInit();
 			MRG_CORE_ASSERT(success, "Could not initialize GLFW !");
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
-		m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
-		++s_GLFWWindowCount;
+		{
+			MRG_PROFILE_SCOPE("glfwCreateWindow")
+#ifdef MRG_DEBUG
+			if (Renderer::getAPI() == RenderingAPI::API::OpenGL)
+				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
+			m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
+			++s_GLFWWindowCount;
+		}
 
 		m_context = std::move(Context::create(m_window));
 
@@ -63,18 +85,18 @@ namespace MRG
 
 			  switch (action) {
 			  case GLFW_PRESS: {
-				  KeyPressedEvent press{keycode, 0};
+				  KeyPressedEvent press{static_cast<KeyCode>(keycode), 0};
 				  data->callback(press);
 			  } break;
 
 			  case GLFW_REPEAT: {
-				  KeyPressedEvent press{keycode, ++data->keyRepeats};
+				  KeyPressedEvent press{static_cast<KeyCode>(keycode), ++data->keyRepeats};
 				  data->callback(press);
 			  } break;
 
 			  case GLFW_RELEASE: {
 				  data->keyRepeats = 0;
-				  KeyReleasedEvent release{keycode};
+				  KeyReleasedEvent release{static_cast<KeyCode>(keycode)};
 				  data->callback(release);
 			  } break;
 
@@ -89,12 +111,12 @@ namespace MRG
 
 			switch (action) {
 			case GLFW_PRESS: {
-				MouseButtonPressedEvent press{button};
+				MouseButtonPressedEvent press{static_cast<MouseCode>(button)};
 				data->callback(press);
 			} break;
 
 			case GLFW_RELEASE: {
-				MouseButtonReleasedEvent release{button};
+				MouseButtonReleasedEvent release{static_cast<MouseCode>(button)};
 				data->callback(release);
 			} break;
 
@@ -121,13 +143,15 @@ namespace MRG
 		glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int codePoint) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
-			KeyTypedEvent typedChar{static_cast<int>(codePoint)};
+			KeyTypedEvent typedChar{static_cast<KeyCode>(codePoint)};
 			data->callback(typedChar);
 		});
 	}
 
 	void Window::_shutdown()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		glfwDestroyWindow(m_window);
 
 		--s_GLFWWindowCount;
@@ -142,12 +166,16 @@ namespace MRG
 
 	void Window::onUpdate()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		glfwPollEvents();
 		m_context->swapBuffers();
 	}
 
 	void Window::setVsync(bool enabled)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		if (enabled) {
 			glfwSwapInterval(1);
 		} else {

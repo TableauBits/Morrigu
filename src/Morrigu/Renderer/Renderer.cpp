@@ -1,9 +1,7 @@
 #include "Renderer.h"
 
+#include "Debug/Instrumentor.h"
 #include "Renderer/Renderer2D.h"
-
-// TEMPORARY
-#include "Renderer/APIs/OpenGL/Shader.h"
 
 namespace MRG
 {
@@ -11,6 +9,8 @@ namespace MRG
 
 	void Renderer::init()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		RenderCommand::init();
 		Renderer2D::init();
 	}
@@ -23,6 +23,8 @@ namespace MRG
 
 	void Renderer::submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		shader->bind();
 		shader->upload("u_viewProjection", s_sceneData->projectionViewMatrix);
 		shader->upload("u_transform", transform);

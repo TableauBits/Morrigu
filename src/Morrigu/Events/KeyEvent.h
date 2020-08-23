@@ -1,6 +1,7 @@
 #ifndef MRG_CLASS_KEYEVENT
 #define MRG_CLASS_KEYEVENT
 
+#include "Core/Input.h"
 #include "Events/Event.h"
 
 #include <sstream>
@@ -10,20 +11,20 @@ namespace MRG
 	class KeyEvent : public Event
 	{
 	public:
-		[[nodiscard]] inline int getKeyCode() const { return m_keyCode; }
+		[[nodiscard]] inline KeyCode getKeyCode() const { return m_keyCode; }
 
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 
 	protected:
-		KeyEvent(int keyCode) : m_keyCode(keyCode) {}
+		KeyEvent(KeyCode keyCode) : m_keyCode(keyCode) {}
 
-		int m_keyCode;
+		KeyCode m_keyCode;
 	};
 
 	class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent(int keyCode, unsigned int repeatCount) : KeyEvent(keyCode), m_repeatCount(repeatCount) {}
+		KeyPressedEvent(KeyCode keyCode, unsigned int repeatCount) : KeyEvent(keyCode), m_repeatCount(repeatCount) {}
 
 		[[nodiscard]] inline unsigned int getRepeatCount() const { return m_repeatCount; }
 		[[nodiscard]] std::string toString() const override
@@ -42,7 +43,7 @@ namespace MRG
 	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
-		KeyReleasedEvent(int keyCode) : KeyEvent(keyCode) {}
+		KeyReleasedEvent(KeyCode keyCode) : KeyEvent(keyCode) {}
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -57,7 +58,7 @@ namespace MRG
 	class KeyTypedEvent : public KeyEvent
 	{
 	public:
-		KeyTypedEvent(int keyCode) : KeyEvent(keyCode) {}
+		KeyTypedEvent(KeyCode keyCode) : KeyEvent(keyCode) {}
 
 		[[nodiscard]] std::string toString() const override
 		{

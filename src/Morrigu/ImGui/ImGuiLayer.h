@@ -19,7 +19,6 @@ namespace MRG
 		void onDetach() override;
 		void onUpdate([[maybe_unused]] Timestep ts) override {}
 		void onEvent([[maybe_unused]] Event& event) override {}
-		void onImGuiRender() override;
 
 		void begin();
 		void end();
