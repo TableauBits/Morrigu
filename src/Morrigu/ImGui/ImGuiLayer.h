@@ -22,9 +22,6 @@ namespace MRG
 
 		void begin();
 		void end();
-
-	private:
-		// float m_cumulativeTime;
 	};
 }  // namespace MRG
 
