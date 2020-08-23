@@ -1,5 +1,5 @@
 #ifndef MRG_KEYCODES
-#define MEG_KEYCODES
+#define MRG_KEYCODES
 
 #include <cstdint>
 #include <ostream>

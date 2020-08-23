@@ -9,7 +9,7 @@
 
 namespace MRG
 {
-	ImGuiLayer::ImGuiLayer() : Layer{"ImGui Layer"}, m_cumulativeTime{0.0f} {}
+	ImGuiLayer::ImGuiLayer() : Layer{"ImGui Layer"} {}
 
 	void ImGuiLayer::onAttach()
 	{

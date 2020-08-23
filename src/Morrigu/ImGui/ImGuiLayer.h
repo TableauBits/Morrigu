@@ -24,7 +24,7 @@ namespace MRG
 		void end();
 
 	private:
-		float m_cumulativeTime;
+		// float m_cumulativeTime;
 	};
 }  // namespace MRG
 

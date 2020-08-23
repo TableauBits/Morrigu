@@ -55,7 +55,7 @@ namespace MRG
 			++s_GLFWWindowCount;
 		}
 
-		m_context = std::move(Context::create(m_window));
+		m_context = Context::create(m_window);
 
 		glfwSetWindowUserPointer(m_window, &m_properties);
 
