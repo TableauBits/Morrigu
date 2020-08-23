@@ -101,6 +101,7 @@ namespace MRG::OpenGL
 	}
 
 	void Shader::upload(const std::string& name, int value) { uploadUniform(name, value); }
+	void Shader::upload(const std::string& name, float value) { uploadUniform(name, value); }
 	void Shader::upload(const std::string& name, const glm::vec3& value) { uploadUniform(name, value); }
 	void Shader::upload(const std::string& name, const glm::vec4& value) { uploadUniform(name, value); }
 	void Shader::upload(const std::string& name, const glm::mat4& value) { uploadUniform(name, value); }
