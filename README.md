@@ -22,9 +22,9 @@ Where `<GENERATOR>` is a [CMake generator](https://cmake.org/cmake/help/latest/m
 
 To actually build, you can use the tool that cmake generated for, or use the universal build interface provided by cmake :
 ```bash
-cmake --build . --config <CONFIG>
+cmake --build . [--config <CONFIG>]
 ```
-Where `<CONFIG>` is either `Debug` or `Release`. Just make sure the right dependencies are installed with conan (see above).
+If your generator of choice supports multi-configuration environments , you need to specify the `<CONFIG>` param. It is either `Debug` or `Release`. You don't need to specify anything here otherwise.
 
 Note: The `conan install` lines of the script might not need the `--build=missing` option to build necessary packages from source as debug or release if you already have installed that version before. It is also important to note that you HAVE to install both versions of the dependencies to be able to use CMake.
 
