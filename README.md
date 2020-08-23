@@ -14,8 +14,8 @@ Morrigu uses the `cmake_multi` conan generator, so you should be able to install
 ```bash
 mkdir build
 cd build
-conan install .. -s build_type=Debug
-conan install .. -s build_type=Release
+conan install .. -s build_type=Debug --build=missing
+conan install .. -s build_type=Release --build=missing
 cmake -G "<GENERATOR>" .. [-DCMAKE_BUILD_TYPE={Debug|Release}]
 ```
 Where `<GENERATOR>` is a [CMake generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html) supported by the version you are using. Not providing a `G` flag should fall back to a default value (defined by your cmake installation). IMPORTANT: Unless the generator you are trying to build for does support multi-configuration environment (Visual Studio, Xcode), you will have to tell cmake which version you would like to build, and you will HAVE to put in the part in square brackets in the command above.
@@ -26,7 +26,7 @@ cmake --build . --config <CONFIG>
 ```
 Where `<CONFIG>` is either `Debug` or `Release`. Just make sure the right dependencies are installed with conan (see above).
 
-Note: The `conan install` lines of the script might need the `--build=missing` option to build necessary packages from source as debug or release (this might be necessary if you have the "missing PDB" warning and want to make it go away, but it should not prevent you from compiling successfully). It is also important to note that you HAVE to install both versions of the dependencies to be able to use CMake.
+Note: The `conan install` lines of the script might not need the `--build=missing` option to build necessary packages from source as debug or release if you already have installed that version before. It is also important to note that you HAVE to install both versions of the dependencies to be able to use CMake.
 
 If you are building spdlog and/or fmt make sure to setup your conan for a GCC version newer than 5.0. From [conan's getting started](https://docs.conan.io/en/latest/getting_started.html):
 ```bash
