@@ -10,16 +10,21 @@
 #include <algorithm>
 #include <chrono>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <thread>
 
 namespace MRG
 {
+	using FloatMs = std::chrono::duration<double, std::micro>;
+
 	struct ProfileResult
 	{
 		std::string name;
-		long long start, end;
+
+		FloatMs start;
+		std::chrono::microseconds elapsedTime;
 		std::thread::id tid;
 	};
 
@@ -45,6 +50,7 @@ namespace MRG
 				internalEndSession();
 			}
 			m_outputStream.open(filepath);
+
 			if (m_outputStream.is_open()) {
 				writePrologue();
 				m_currentSession = new InstrumentationSession{name};
@@ -69,14 +75,15 @@ namespace MRG
 			std::string name = result.name;
 			std::replace(name.begin(), name.end(), '"', '\'');
 
+			json << std::setprecision(3) << std::fixed;
 			json << ",{";
 			json << R"("cat":"function",)";
-			json << fmt::format(R"("dur":{},)", result.end - result.start);
+			json << R"("dur":)" << result.elapsedTime.count() << ",";
 			json << fmt::format(R"("name":"{}",)", name);
 			json << R"("ph":"X",)";
 			json << R"("pid":0,)";
 			json << fmt::format(R"("tid":{},)", result.tid);
-			json << fmt::format(R"("ts":{})", result.start);
+			json << R"("ts":)" << result.start.count();
 			json << '}';
 
 			std::lock_guard lock(m_mutex);
@@ -123,10 +130,12 @@ namespace MRG
 	class InstrumentationTimer
 	{
 	public:
+		// clang-format off
 		InstrumentationTimer(const char* name) : m_name(name), m_stopped(false)
 		{
-			m_startTimePoint = std::chrono::high_resolution_clock::now();
+			m_startTimePoint = std::chrono::steady_clock::now();
 		}
+		// clang-format on
 
 		~InstrumentationTimer()
 		{
@@ -136,19 +145,20 @@ namespace MRG
 
 		void stop()
 		{
-			auto endTimePoint = std::chrono::high_resolution_clock::now();
+			auto endTimePoint = std::chrono::steady_clock::now();
 
-			auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_startTimePoint).time_since_epoch().count();
-			auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimePoint).time_since_epoch().count();
+			auto start = FloatMs{m_startTimePoint.time_since_epoch()};
+			auto elapsed = std::chrono::time_point_cast<std::chrono::microseconds>(endTimePoint).time_since_epoch() -
+			               std::chrono::time_point_cast<std::chrono::microseconds>(m_startTimePoint).time_since_epoch();
 
-			Instrumentor::get().writeProfile({m_name, start, end, std::this_thread::get_id()});
+			Instrumentor::get().writeProfile({m_name, start, elapsed, std::this_thread::get_id()});
 
 			m_stopped = true;
 		}
 
 	private:
 		const char* m_name;
-		std::chrono::time_point<std::chrono::high_resolution_clock> m_startTimePoint;
+		std::chrono::time_point<std::chrono::steady_clock> m_startTimePoint;
 		bool m_stopped;
 	};
 }  // namespace MRG
