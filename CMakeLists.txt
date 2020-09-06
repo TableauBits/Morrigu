@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.18.2)
 project(Morrigu CXX)
 
 set(MAIN_PRJ_NAME ${PROJECT_NAME})
@@ -12,7 +12,7 @@ set(CONAN_SYSTEM_INCLUDES ON)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake)
 conan_basic_setup()
 
-add_compile_definitions(GLFW_INCLUDE_NONE IMGUI_IMPL_OPENGL_LOADER_GLAD)
+add_compile_definitions(GLFW_INCLUDE_NONE GLFW_INCLUDE_VULKAN IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 add_subdirectory(src/${MAIN_PRJ_NAME})
 add_subdirectory(src/${TEST_PRJ_NAME})
@@ -33,5 +33,14 @@ else()
     target_compile_options(${MAIN_PRJ_NAME} PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Werror)
     target_compile_options(${TEST_PRJ_NAME} PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Werror)
 endif()
+
+# Finding and adding vulkan to the list of libraries
+# In the end, vulkan won't be mandatory, but it is for now.
+find_package(Vulkan REQUIRED)
+set(CONAN_LIBS_DEBUG ${CONAN_LIBS_DEBUG} ${Vulkan_LIBRARIES})
+set(CONAN_LIBS_RELEASE ${CONAN_LIBS_RELEASE} ${Vulkan_LIBRARIES})
+
+target_include_directories(${MAIN_PRJ_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_include_directories(${TEST_PRJ_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 
 conan_target_link_libraries(${MAIN_PRJ_NAME})

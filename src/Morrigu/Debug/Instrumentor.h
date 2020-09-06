@@ -164,7 +164,7 @@ namespace MRG
 }  // namespace MRG
 
 // clang-format off
-#define MRG_PROFILING 1
+#define MRG_PROFILING 0
 #if MRG_PROFILING
 	#define MRG_PROFILE_BEGIN_SESSION(name, filepath) ::MRG::Instrumentor::get().beginSession(name, filepath)
 	#define MRG_PROFILE_END_SESSION() ::MRG::Instrumentor::get().endSession()

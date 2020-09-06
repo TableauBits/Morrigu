@@ -4,7 +4,7 @@
 
 # How to install: 
 Morrigu uses CMake as build tool and Conan as packet manager. This makes the setup process relatively easy.  
-You need [CMake 3.15+](https://cmake.org/download/), and a somewhat recent version of [Conan](https://conan.io/downloads.html) (tested on 1.26.1) with the follwing remotes:
+You need [CMake 3.18.2+](https://cmake.org/download/), and a somewhat recent version of [Conan](https://conan.io/downloads.html) (tested on 1.26.1) with the follwing remotes:
  * The [bincrafters remote](https://docs.conan.io/en/latest/uploading_packages/remotes.html#bincrafters);
  * A [personal remote](https://bintray.com/ithyx/imgui) that contains a ImGui docking recipe.
 
@@ -35,3 +35,5 @@ conan profile update settings.compiler.libcxx=libstdc++11 default  # Sets libcxx
 ```
 
 Another important note: This project uses the `filesystem` standard library. While this is part of C++17, GCC-6 and more importantly GCC-7, which are considered C++17 compliant, do not recognize the `<filesystem>` header (instead it's `<experimental/filesystem>` + a special compile flag). Thus, if you want to modify the source code, go ahead, but I will only support GCC-8 and above.
+
+The minimal CMake version is also quite recent (the newest at time of writing), but it doesn't have to be. The only new feature that we use is the "[FindVulkan](https://cmake.org/cmake/help/latest/module/FindVulkan.html)" CMake module. If you want to build this project without having the necessary CMake version, you will have to specify the location of the vulkan SDK on your system (you need to specify the `lib` and `include` folder).
