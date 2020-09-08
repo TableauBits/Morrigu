@@ -13,7 +13,8 @@ namespace MRG
 		enum class API
 		{
 			None = 0,
-			OpenGL
+			OpenGL,
+			Vulkan
 		};
 
 		virtual ~RenderingAPI() = default;

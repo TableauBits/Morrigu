@@ -51,6 +51,9 @@ namespace MRG
 			if (Renderer::getAPI() == RenderingAPI::API::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
+			if (Renderer::getAPI() == RenderingAPI::API::Vulkan)
+				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
 			m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
 		}
