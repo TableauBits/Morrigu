@@ -42,7 +42,7 @@ namespace MRG::Vulkan
 		[[nodiscard]] std::unordered_map<uint64_t, std::string> preProcess(const std::string& source, Encoding encoding);
 		void compile(const std::unordered_map<uint64_t, std::string>& shaderSources);
 
-		uint32_t m_rendererID;
+		// uint32_t m_rendererID;
 		std::string m_name;
 	};
 }  // namespace MRG::Vulkan

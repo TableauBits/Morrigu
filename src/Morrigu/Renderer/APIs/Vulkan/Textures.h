@@ -21,7 +21,7 @@ namespace MRG::Vulkan
 
 	private:
 		uint32_t m_width, m_height;
-		uint32_t m_rendererID;
+		// uint32_t m_rendererID;
 		uint64_t m_internalFormat, m_dataFormat;
 	};
 }  // namespace MRG::Vulkan

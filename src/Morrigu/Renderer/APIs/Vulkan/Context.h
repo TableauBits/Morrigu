@@ -16,7 +16,7 @@ namespace MRG::Vulkan
 		void swapInterval(int interval) override;
 
 	private:
-		GLFWwindow* m_window;
+		// GLFWwindow* m_window;
 	};
 }  // namespace MRG::Vulkan
 

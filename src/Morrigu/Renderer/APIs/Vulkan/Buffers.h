@@ -15,7 +15,7 @@ namespace MRG::Vulkan
 		void unbind() const override;
 
 	private:
-		uint32_t m_rendererID;
+		// uint32_t m_rendererID;
 	};
 
 	class IndexBuffer : public MRG::IndexBuffer
@@ -30,7 +30,7 @@ namespace MRG::Vulkan
 		[[nodiscard]] uint32_t getCount() const override { return m_count; };
 
 	private:
-		uint32_t m_rendererID;
+		// uint32_t m_rendererID;
 		uint32_t m_count;
 	};
 }  // namespace MRG::Vulkan

@@ -21,7 +21,7 @@ namespace MRG::Vulkan
 		[[nodiscard]] const Ref<MRG::IndexBuffer>& getIndexBuffer() const override { return m_indexBuffer; };
 
 	private:
-		uint32_t m_rendererID;
+		// uint32_t m_rendererID;
 		std::vector<Ref<MRG::VertexBuffer>> m_vertexBuffers;
 		Ref<MRG::IndexBuffer> m_indexBuffer;
 	};

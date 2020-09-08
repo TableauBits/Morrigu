@@ -5,7 +5,7 @@
 
 namespace MRG::Vulkan
 {
-	Context::Context(GLFWwindow* window) : m_window(window)
+	Context::Context([[maybe_unused]] GLFWwindow* window)
 	{
 		MRG_PROFILE_FUNCTION();
 
