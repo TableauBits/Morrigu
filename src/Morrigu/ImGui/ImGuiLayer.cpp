@@ -2,9 +2,11 @@
 
 #include "Core/Application.h"
 #include "Debug/Instrumentor.h"
+#include "Renderer/RenderingAPI.h"
 
 #include <ImGui/bindings/imgui_impl_glfw.h>
 #include <ImGui/bindings/imgui_impl_opengl3.h>
+#include <ImGui/bindings/imgui_impl_vulkan.h>
 #include <imgui.h>
 
 namespace MRG
@@ -33,16 +35,43 @@ namespace MRG
 
 		const auto window = Application::get().getWindow().getGLFWWindow();
 
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 460 core");
+		switch (RenderingAPI::getAPI()) {
+		case RenderingAPI::API::OpenGL: {
+			ImGui_ImplGlfw_InitForOpenGL(window, true);
+			ImGui_ImplOpenGL3_Init("#version 460 core");
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			// nothing for now
+		} break;
+
+		case RenderingAPI::API::None:
+		default: {
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
+		} break;
+		}
 	}
 
 	void ImGuiLayer::onDetach()
 	{
 		MRG_PROFILE_FUNCTION();
 
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
+		switch (RenderingAPI::getAPI()) {
+		case RenderingAPI::API::OpenGL: {
+			ImGui_ImplOpenGL3_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			// nothing for now
+		} break;
+
+		case RenderingAPI::API::None:
+		default: {
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
+		} break;
+		}
+
 		ImGui::DestroyContext();
 	}
 
@@ -50,9 +79,22 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+		switch (RenderingAPI::getAPI()) {
+		case RenderingAPI::API::OpenGL: {
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			// nothing for now
+		} break;
+
+		case RenderingAPI::API::None:
+		default: {
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
+		} break;
+		}
 	}
 
 	void ImGuiLayer::end()
@@ -63,14 +105,27 @@ namespace MRG
 		auto& app = Application::get();
 		io.DisplaySize = ImVec2{static_cast<float>(app.getWindow().getWidth()), static_cast<float>(app.getWindow().getHeight())};
 
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		switch (RenderingAPI::getAPI()) {
+		case RenderingAPI::API::OpenGL: {
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			const auto contextBkp = glfwGetCurrentContext();
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-			glfwMakeContextCurrent(contextBkp);
+			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+				const auto contextBkp = glfwGetCurrentContext();
+				ImGui::UpdatePlatformWindows();
+				ImGui::RenderPlatformWindowsDefault();
+				glfwMakeContextCurrent(contextBkp);
+			}
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			// nothing for now
+		} break;
+
+		case RenderingAPI::API::None:
+		default: {
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
+		} break;
 		}
 	}
 }  // namespace MRG
