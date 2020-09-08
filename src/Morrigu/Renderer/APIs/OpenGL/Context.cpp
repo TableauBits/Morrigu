@@ -37,4 +37,11 @@ namespace MRG::OpenGL
 
 		glfwSwapBuffers(m_window);
 	}
+
+	void Context::swapInterval(int interval)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glfwSwapInterval(interval);
+	}
 }  // namespace MRG::OpenGL

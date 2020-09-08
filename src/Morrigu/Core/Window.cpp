@@ -180,9 +180,9 @@ namespace MRG
 		MRG_PROFILE_FUNCTION();
 
 		if (enabled) {
-			glfwSwapInterval(1);
+			m_context->swapInterval(1);
 		} else {
-			glfwSwapInterval(0);
+			m_context->swapInterval(0);
 		}
 
 		m_properties.VSync = enabled;
