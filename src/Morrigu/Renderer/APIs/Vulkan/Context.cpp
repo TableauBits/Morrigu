@@ -49,8 +49,12 @@ namespace MRG::Vulkan
 
 		MRG_ENGINE_INFO("Using Vulkan as a rendering API. Other useful stats coming (hopefully) soon!");
 
-		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
-		createInstance(data->title.c_str());
+		try {
+			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
+			createInstance(data->title.c_str());
+		} catch (std::runtime_error e) {
+			MRG_ERROR("Vulkan error detected: {}", e.what());
+		}
 	}
 
 	Context::~Context() {}
