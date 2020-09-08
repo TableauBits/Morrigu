@@ -1,6 +1,7 @@
 #include "VertexArray.h"
 
 #include "Renderer/APIs/OpenGL/VertexArray.h"
+#include "Renderer/APIs/Vulkan/VertexArray.h"
 #include "Renderer/Renderer.h"
 
 namespace MRG
@@ -10,6 +11,10 @@ namespace MRG
 		switch (Renderer::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::VertexArray>();
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::VertexArray>();
 		} break;
 
 		case RenderingAPI::API::None:

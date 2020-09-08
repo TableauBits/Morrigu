@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "Renderer/APIs/OpenGL/Context.h"
+#include "Renderer/APIs/Vulkan/Context.h"
 #include "Renderer/Renderer.h"
 
 namespace MRG
@@ -11,6 +12,10 @@ namespace MRG
 		switch (Renderer::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createScope<OpenGL::Context>(window);
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			return createScope<Vulkan::Context>(window);
 		} break;
 
 		case RenderingAPI::API::None:

@@ -2,6 +2,7 @@
 
 #include "Core/Core.h"
 #include "Renderer/APIs/OpenGL/Buffers.h"
+#include "Renderer/APIs/Vulkan/Buffers.h"
 #include "Renderer/Renderer.h"
 
 namespace MRG
@@ -11,6 +12,10 @@ namespace MRG
 		switch (Renderer::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::VertexBuffer>(vertices, size);
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::VertexBuffer>(vertices, size);
 		} break;
 
 		case RenderingAPI::API::None:
@@ -26,6 +31,10 @@ namespace MRG
 		switch (Renderer::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::IndexBuffer>(indices, size);
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::IndexBuffer>(indices, size);
 		} break;
 
 		case RenderingAPI::API::None:

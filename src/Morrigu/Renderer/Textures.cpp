@@ -1,6 +1,7 @@
 #include "Textures.h"
 
 #include "Renderer/APIs/OpenGL/Textures.h"
+#include "Renderer/APIs/Vulkan/Textures.h"
 #include "Renderer/Renderer.h"
 
 namespace MRG
@@ -10,6 +11,10 @@ namespace MRG
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::Texture2D>(width, height);
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::Texture2D>(width, height);
 		} break;
 
 		case RenderingAPI::API::None:
@@ -25,6 +30,10 @@ namespace MRG
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::Texture2D>(path);
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::Texture2D>(path);
 		} break;
 
 		case RenderingAPI::API::None:

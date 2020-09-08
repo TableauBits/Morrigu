@@ -1,6 +1,7 @@
 #include "Shader.h"
 
 #include "Renderer/APIs/OpenGL/Shader.h"
+#include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/Renderer.h"
 
 namespace MRG
@@ -10,6 +11,10 @@ namespace MRG
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::Shader>(filePath, encoding);
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::Shader>(filePath, encoding);
 		} break;
 
 		case RenderingAPI::API::None:
@@ -25,6 +30,10 @@ namespace MRG
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::Shader>(name, vertexSrc, fragmentSrc);
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::Shader>(name, vertexSrc, fragmentSrc);
 		} break;
 
 		case RenderingAPI::API::None:
