@@ -11,6 +11,7 @@ namespace MRG::Vulkan
 	{
 	public:
 		Context(GLFWwindow* window);
+		virtual ~Context();
 
 		void swapBuffers() override;
 		void swapInterval(int interval) override;

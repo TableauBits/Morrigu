@@ -58,9 +58,9 @@ namespace MRG
 			++s_GLFWWindowCount;
 		}
 
-		m_context = Context::create(m_window);
-
 		glfwSetWindowUserPointer(m_window, &m_properties);
+
+		m_context = Context::create(m_window);
 
 		setVsync(props.VSync);
 
