@@ -21,5 +21,7 @@ glad:no_loader=False
 # these 4 lines copy the necessary bindings for imGui to the right place. 
 ./misc/bindings, imgui_impl_glfw.cpp -> ../src/Morrigu/Vendor/ImGui/bindings
 ./misc/bindings, imgui_impl_opengl3.cpp -> ../src/Morrigu/Vendor/ImGui/bindings
+./misc/bindings, imgui_impl_vulkan.cpp -> ../src/Morrigu/Vendor/ImGui/bindings
 ./misc/bindings, imgui_impl_glfw.h -> ../src/Morrigu/Vendor/ImGui/bindings
 ./misc/bindings, imgui_impl_opengl3.h -> ../src/Morrigu/Vendor/ImGui/bindings
+./misc/bindings, imgui_impl_vulkan.h -> ../src/Morrigu/Vendor/ImGui/bindings
