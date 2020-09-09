@@ -63,6 +63,47 @@ namespace
 		return requiredExtensions;
 	}
 
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	                                                    VkDebugUtilsMessageTypeFlagsEXT,
+	                                                    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	                                                    void*)
+	{
+		switch (messageSeverity) {
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: {
+			MRG_TRACE("[VK] {}", pCallbackData->pMessage);
+		} break;
+
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: {
+			MRG_INFO("[VK] {}", pCallbackData->pMessage);
+		} break;
+
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: {
+			MRG_WARN("[VK] {}", pCallbackData->pMessage);
+		} break;
+
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
+			MRG_ERROR("[VK] {}", pCallbackData->pMessage);
+		} break;
+
+		default: {
+			MRG_FATAL("[VK] {}", pCallbackData->pMessage);
+		} break;
+		}
+
+		return VK_FALSE;
+	}
+
+	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
+	{
+		createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+		                             VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+		                         VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		createInfo.pfnUserCallback = debugCallback;
+	}
+
 	[[nodiscard]] VkInstance createInstance(const char* appName)
 	{
 		// this if statement is split to allow constexpr if
@@ -81,7 +122,7 @@ namespace
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);  // TODO: give option to create appropriate versions
 		appInfo.apiVersion = VK_API_VERSION_1_0;                // TODO: check if update may be necessary
 
-		auto requiredExtensions = getRequiredExtensions();
+		const auto requiredExtensions = getRequiredExtensions();
 
 		uint32_t supportedExtensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &supportedExtensionCount, nullptr);
@@ -110,6 +151,8 @@ namespace
 			MRG_TRACE("\t{} (version {})", extension.extensionName, extension.specVersion);
 		}
 
+		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+
 		VkInstanceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		createInfo.pApplicationInfo = &appInfo;
@@ -118,12 +161,44 @@ namespace
 		if constexpr (enableValidation) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			createInfo.ppEnabledLayerNames = validationLayers.data();
+
+			populateDebugMessengerCreateInfo(debugCreateInfo);
+			createInfo.pNext = &debugCreateInfo;
 		} else {
 			createInfo.enabledLayerCount = 0;
 		}
 
 		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "instance creation failed !");
 		return returnInstance;
+	}
+
+	[[nodiscard]] VkResult createDebugUtilsMessengerEXT(VkInstance instance,
+	                                                    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+	                                                    const VkAllocationCallbacks* pAllocator,
+	                                                    VkDebugUtilsMessengerEXT* pDebugMessenger)
+	{
+		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+		if (func != nullptr)
+			return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+
+	void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator)
+	{
+		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+		if (func != nullptr)
+			func(instance, messenger, pAllocator);
+	}
+
+	[[nodiscard]] VkDebugUtilsMessengerEXT setupDebugMessenger(VkInstance instance)
+	{
+		VkDebugUtilsMessengerEXT returnMessenger;
+
+		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+		populateDebugMessengerCreateInfo(createInfo);
+
+		MRG_VKVALIDATE(createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &returnMessenger), "Failed to setup messenger !");
+		return returnMessenger;
 	}
 
 	// CLEANUP
@@ -143,12 +218,19 @@ namespace MRG::Vulkan
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 			m_instance = createInstance(data->title.c_str());
+			if constexpr (enableValidation)
+				m_messenger = setupDebugMessenger(m_instance);
 		} catch (std::runtime_error e) {
 			MRG_ERROR("Vulkan error detected: {}", e.what());
 		}
 	}
 
-	Context::~Context() { vkDestroyInstance(m_instance, nullptr); }
+	Context::~Context()
+	{
+		if constexpr (enableValidation)
+			destroyDebugUtilsMessengerEXT(m_instance, m_messenger, nullptr);
+		vkDestroyInstance(m_instance, nullptr);
+	}
 
 	void Context::swapBuffers()
 	{

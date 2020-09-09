@@ -19,6 +19,7 @@ namespace MRG::Vulkan
 
 	private:
 		VkInstance m_instance;
+		VkDebugUtilsMessengerEXT m_messenger;
 	};
 }  // namespace MRG::Vulkan
 
