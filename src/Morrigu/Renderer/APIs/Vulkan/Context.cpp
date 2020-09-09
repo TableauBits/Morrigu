@@ -14,6 +14,7 @@
 // These function will mostly follow the structure of https://vulkan-tutorial.com
 namespace
 {
+	// INITIALISATION
 	[[nodiscard]] VkInstance createInstance(const char* appName)
 	{
 		VkInstance returnInstance;
@@ -67,6 +68,9 @@ namespace
 		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "instance creation failed !");
 		return returnInstance;
 	}
+
+	// CLEANUP
+
 }  // namespace
 
 namespace MRG::Vulkan
@@ -81,13 +85,13 @@ namespace MRG::Vulkan
 
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
-			[[maybe_unused]] const auto instance = createInstance(data->title.c_str());
+			m_instance = createInstance(data->title.c_str());
 		} catch (std::runtime_error e) {
 			MRG_ERROR("Vulkan error detected: {}", e.what());
 		}
 	}
 
-	Context::~Context() {}
+	Context::~Context() { vkDestroyInstance(m_instance, nullptr); }
 
 	void Context::swapBuffers()
 	{

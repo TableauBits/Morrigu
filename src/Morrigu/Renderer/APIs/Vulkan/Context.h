@@ -4,6 +4,7 @@
 #include "Renderer/Context.h"
 
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.hpp>
 
 namespace MRG::Vulkan
 {
@@ -17,7 +18,7 @@ namespace MRG::Vulkan
 		void swapInterval(int interval) override;
 
 	private:
-		// GLFWwindow* m_window;
+		VkInstance m_instance;
 	};
 }  // namespace MRG::Vulkan
 
