@@ -12,7 +12,7 @@
 // These function will mostly follow the structure of https://vulkan-tutorial.com
 namespace
 {
-	auto createInstance(const char* appName)
+	[[nodiscard]] VkInstance createInstance(const char* appName)
 	{
 		VkInstance returnInstance;
 
@@ -36,12 +36,13 @@ namespace
 		createInfo.enabledLayerCount = 0;  // TODO: Change this when getting back to layers (validation especially)
 
 		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "instance creation failed !");
+		return returnInstance;
 	}
 }  // namespace
 
 namespace MRG::Vulkan
 {
-	Context::Context([[maybe_unused]] GLFWwindow* window)
+	Context::Context(GLFWwindow* window)
 	{
 		MRG_PROFILE_FUNCTION();
 
@@ -51,7 +52,7 @@ namespace MRG::Vulkan
 
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
-			createInstance(data->title.c_str());
+			[[maybe_unused]] const auto instance = createInstance(data->title.c_str());
 		} catch (std::runtime_error e) {
 			MRG_ERROR("Vulkan error detected: {}", e.what());
 		}
