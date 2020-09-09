@@ -8,6 +8,8 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 
+#include <vector>
+
 // This anonymous namespace will host all necessary vulkan calls to create the vulkan context
 // These function will mostly follow the structure of https://vulkan-tutorial.com
 namespace
@@ -27,6 +29,33 @@ namespace
 		uint32_t glfwExtensionCount = 0;
 		const char** glfwExtensions;
 		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+		uint32_t supportedExtensionCount = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &supportedExtensionCount, nullptr);
+		std::vector<VkExtensionProperties> supportedExtensions(supportedExtensionCount);
+		vkEnumerateInstanceExtensionProperties(nullptr, &supportedExtensionCount, supportedExtensions.data());
+
+		MRG_INFO("GLFW requires the following {} extensions for vulkan to work:", glfwExtensionCount);
+		for (uint32_t i = 0; i < glfwExtensionCount; ++i) {
+			bool isSupported = false;
+			for (uint32_t j = 0; j < supportedExtensionCount; ++j) {
+				if (strcmp(supportedExtensions[j].extensionName, glfwExtensions[i]) == 0) {
+					MRG_INFO("\t{} (version {}) [SUPPORTED]", supportedExtensions[j].extensionName, supportedExtensions[j].specVersion);
+					supportedExtensions.erase(supportedExtensions.begin() + j);
+					--j;  // might underflow if set to 0, but will overflow back to 0
+					isSupported = true;
+					break;
+				}
+			}
+			if (!isSupported) {
+				MRG_ERROR("\t{} (NO VERSION FOUND) [NOT SUPPORTED]", glfwExtensions[i]);
+				MRG_ASSERT(false, "Required extension not supported by hardware !");
+			}
+		}
+		MRG_TRACE("All required extensions have been found. Additional supported extensions ({}): ", supportedExtensions.size());
+		for (const auto& extension : supportedExtensions) {
+			MRG_TRACE("\t{} (version {})", extension.extensionName, extension.specVersion);
+		}
 
 		VkInstanceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -48,7 +77,7 @@ namespace MRG::Vulkan
 
 		MRG_CORE_ASSERT(window, "Window handle is null !");
 
-		MRG_ENGINE_INFO("Using Vulkan as a rendering API. Other useful stats coming (hopefully) soon!");
+		MRG_ENGINE_INFO("Using Vulkan as a rendering API. Other useful stats will follow:");
 
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
