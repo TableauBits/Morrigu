@@ -20,6 +20,7 @@ namespace MRG::Vulkan
 	private:
 		VkInstance m_instance;
 		VkDebugUtilsMessengerEXT m_messenger;
+		VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
 	};
 }  // namespace MRG::Vulkan
 

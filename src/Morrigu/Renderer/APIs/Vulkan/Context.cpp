@@ -40,7 +40,7 @@ namespace
 				}
 			}
 			if (!layerFound) {
-				MRG_ERROR("Validation layers missing !");
+				MRG_ERROR("Validation layers missing!");
 				return false;
 			}
 		}
@@ -109,7 +109,7 @@ namespace
 		// this if statement is split to allow constexpr if
 		if constexpr (enableValidation) {
 			if (!checkValidationLayerSupport())
-				throw std::runtime_error("Validation layers requested but not found !");
+				throw std::runtime_error("Validation layers requested but not found!");
 		}
 
 		VkInstance returnInstance;
@@ -143,7 +143,7 @@ namespace
 			}
 			if (!isSupported) {
 				MRG_ERROR("\t{} (NO VERSION FOUND) [NOT SUPPORTED]", requiredExtensions[i]);
-				MRG_ASSERT(false, "Required extension not supported by hardware !");
+				MRG_ASSERT(false, "Required extension not supported by hardware!");
 			}
 		}
 		MRG_TRACE("All required extensions have been found. Additional supported extensions ({}): ", supportedExtensions.size());
@@ -168,7 +168,7 @@ namespace
 			createInfo.enabledLayerCount = 0;
 		}
 
-		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "instance creation failed !");
+		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "instance creation failed!");
 		return returnInstance;
 	}
 
@@ -197,8 +197,30 @@ namespace
 		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
 		populateDebugMessengerCreateInfo(createInfo);
 
-		MRG_VKVALIDATE(createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &returnMessenger), "Failed to setup messenger !");
+		MRG_VKVALIDATE(createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &returnMessenger), "Failed to setup messenger!");
 		return returnMessenger;
+	}
+
+	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice) { return true; }
+
+	[[nodiscard]] VkPhysicalDevice pickPhysicalDevice(VkInstance instance)
+	{
+		uint32_t deviceCount = 0;
+		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+		if (deviceCount == 0)
+			throw std::runtime_error("no available GPUs available for Vulkan!");
+
+		std::vector<VkPhysicalDevice> devices(deviceCount);
+		vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+		for (const auto& device : devices) {
+			if (isDeviceSuitable(device)) {
+				return device;
+			}
+		}
+
+		throw std::runtime_error("no suitable GPU found!");
 	}
 
 	// CLEANUP
@@ -211,15 +233,18 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
-		MRG_CORE_ASSERT(window, "Window handle is null !");
+		MRG_CORE_ASSERT(window, "Window handle is null!");
 
 		MRG_ENGINE_INFO("Using Vulkan as a rendering API. Other useful stats will follow:");
 
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 			m_instance = createInstance(data->title.c_str());
+
 			if constexpr (enableValidation)
 				m_messenger = setupDebugMessenger(m_instance);
+
+			m_physicalDevice = pickPhysicalDevice(m_instance);
 		} catch (std::runtime_error e) {
 			MRG_ERROR("Vulkan error detected: {}", e.what());
 		}
