@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 
+#include <map>
 #include <vector>
 
 // This anonymous namespace will host all necessary vulkan calls to create the vulkan context
@@ -24,7 +25,7 @@ namespace
 	// INITIALISATION
 	[[nodiscard]] bool checkValidationLayerSupport()
 	{
-		MRG_TRACE("Validation layers requested. Checking availability...");
+		MRG_ENGINE_TRACE("Validation layers requested. Checking availability...");
 		uint32_t layerCount;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -40,11 +41,11 @@ namespace
 				}
 			}
 			if (!layerFound) {
-				MRG_ERROR("Validation layers missing!");
+				MRG_ENGINE_ERROR("Validation layers missing!");
 				return false;
 			}
 		}
-		MRG_INFO("Validation layers found.");
+		MRG_ENGINE_INFO("Validation layers found.");
 		return true;
 	}
 
@@ -70,23 +71,23 @@ namespace
 	{
 		switch (messageSeverity) {
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: {
-			MRG_TRACE("[VK] {}", pCallbackData->pMessage);
+			MRG_ENGINE_TRACE("[VK] {}", pCallbackData->pMessage);
 		} break;
 
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: {
-			MRG_INFO("[VK] {}", pCallbackData->pMessage);
+			MRG_ENGINE_INFO("[VK] {}", pCallbackData->pMessage);
 		} break;
 
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: {
-			MRG_WARN("[VK] {}", pCallbackData->pMessage);
+			MRG_ENGINE_WARN("[VK] {}", pCallbackData->pMessage);
 		} break;
 
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
-			MRG_ERROR("[VK] {}", pCallbackData->pMessage);
+			MRG_ENGINE_ERROR("[VK] {}", pCallbackData->pMessage);
 		} break;
 
 		default: {
-			MRG_FATAL("[VK] {}", pCallbackData->pMessage);
+			MRG_ENGINE_FATAL("[VK] {}", pCallbackData->pMessage);
 		} break;
 		}
 
@@ -129,12 +130,13 @@ namespace
 		std::vector<VkExtensionProperties> supportedExtensions(supportedExtensionCount);
 		vkEnumerateInstanceExtensionProperties(nullptr, &supportedExtensionCount, supportedExtensions.data());
 
-		MRG_INFO("The following {} vulkan extensions are required:", requiredExtensions.size());
+		MRG_ENGINE_INFO("The following {} vulkan extensions are required:", requiredExtensions.size());
 		for (std::size_t i = 0; i < requiredExtensions.size(); ++i) {
 			bool isSupported = false;
 			for (uint32_t j = 0; j < supportedExtensionCount; ++j) {
 				if (strcmp(supportedExtensions[j].extensionName, requiredExtensions[i]) == 0) {
-					MRG_INFO("\t{} (version {}) [SUPPORTED]", supportedExtensions[j].extensionName, supportedExtensions[j].specVersion);
+					MRG_ENGINE_INFO(
+					  "\t{} (version {}) [SUPPORTED]", supportedExtensions[j].extensionName, supportedExtensions[j].specVersion);
 					supportedExtensions.erase(supportedExtensions.begin() + j);
 					--j;  // might underflow if set to 0, but will overflow back to 0
 					isSupported = true;
@@ -142,13 +144,14 @@ namespace
 				}
 			}
 			if (!isSupported) {
-				MRG_ERROR("\t{} (NO VERSION FOUND) [NOT SUPPORTED]", requiredExtensions[i]);
+				MRG_ENGINE_ERROR("\t{} (NO VERSION FOUND) [NOT SUPPORTED]", requiredExtensions[i]);
 				MRG_ASSERT(false, "Required extension not supported by hardware!");
 			}
 		}
-		MRG_TRACE("All required extensions have been found. Additional supported extensions ({}): ", supportedExtensions.size());
+		MRG_ENGINE_INFO("All required extensions have been found.");
+		MRG_ENGINE_TRACE("Additional supported extensions ({}): ", supportedExtensions.size());
 		for (const auto& extension : supportedExtensions) {
-			MRG_TRACE("\t{} (version {})", extension.extensionName, extension.specVersion);
+			MRG_ENGINE_TRACE("\t{} (version {})", extension.extensionName, extension.specVersion);
 		}
 
 		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
@@ -201,7 +204,47 @@ namespace
 		return returnMessenger;
 	}
 
-	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice) { return true; }
+	[[nodiscard]] std::size_t evaluateDevice(VkPhysicalDevice device)
+	{
+		VkPhysicalDeviceProperties properties;
+		VkPhysicalDeviceFeatures features;
+		std::size_t score{};
+
+		vkGetPhysicalDeviceProperties(device, &properties);
+		vkGetPhysicalDeviceFeatures(device, &features);
+
+		if (features.geometryShader == VK_FALSE)
+			return 0;
+
+		// Favor discrete GPUs over anything else
+		if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			score += 10000;  // This value is completely arbitrary, and subject to change
+
+		score += properties.limits.maxFramebufferHeight;
+		score += properties.limits.maxFramebufferWidth;
+		return score;
+	}
+
+	constexpr const char* vendorStringfromID(uint32_t vendorID)
+	{
+		switch (vendorID) {
+		case 0x1002:
+			return "AMD";
+		case 0x1010:
+			return "ImgTec";
+		case 0x10DE:
+			return "NVIDIA";
+		case 0x13B5:
+			return "ARM";
+		case 0x5143:
+			return "Qualcomm";
+		case 0x8086:
+			return "Intel";
+
+		default:
+			return "Unknown vendor";
+		}
+	}
 
 	[[nodiscard]] VkPhysicalDevice pickPhysicalDevice(VkInstance instance)
 	{
@@ -214,13 +257,21 @@ namespace
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
+		std::multimap<std::size_t, VkPhysicalDevice> candidates;
+
+		VkPhysicalDeviceProperties props;
+		MRG_ENGINE_TRACE("{} physical devices found:", deviceCount);
 		for (const auto& device : devices) {
-			if (isDeviceSuitable(device)) {
-				return device;
-			}
+			vkGetPhysicalDeviceProperties(device, &props);
+			MRG_ENGINE_TRACE("\t{} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringfromID(props.vendorID));
+			candidates.emplace(evaluateDevice(device), device);
 		}
 
-		throw std::runtime_error("no suitable GPU found!");
+		// It's possible that no suitable devices have been found
+		if (candidates.rbegin()->first == 0)
+			throw std::runtime_error("No suitable GPU found!");
+
+		return candidates.rbegin()->second;
 	}
 
 	// CLEANUP
@@ -245,8 +296,14 @@ namespace MRG::Vulkan
 				m_messenger = setupDebugMessenger(m_instance);
 
 			m_physicalDevice = pickPhysicalDevice(m_instance);
+
+			VkPhysicalDeviceProperties props;
+			vkGetPhysicalDeviceProperties(m_physicalDevice, &props);
+			MRG_ENGINE_INFO(
+			  "Physical device selected: {} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringfromID(props.vendorID));
+
 		} catch (std::runtime_error e) {
-			MRG_ERROR("Vulkan error detected: {}", e.what());
+			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
 	}
 
