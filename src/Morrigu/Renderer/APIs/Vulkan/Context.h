@@ -21,6 +21,8 @@ namespace MRG::Vulkan
 		VkInstance m_instance;
 		VkDebugUtilsMessengerEXT m_messenger;
 		VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
+		VkDevice m_device;
+		VkQueue m_graphicsQueue;
 	};
 }  // namespace MRG::Vulkan
 

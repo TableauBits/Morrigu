@@ -126,7 +126,7 @@ namespace
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		appInfo.pEngineName = "Morrigu";
 		appInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
-		appInfo.pApplicationName = appName;                     // TODO: verify if Vulkan copies the necessary information
+		appInfo.pApplicationName = appName;
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);  // TODO: give option to create appropriate versions
 		appInfo.apiVersion = VK_API_VERSION_1_0;                // TODO: check if update may be necessary
 
@@ -178,7 +178,7 @@ namespace
 			createInfo.enabledLayerCount = 0;
 		}
 
-		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "instance creation failed!");
+		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "failed to create instance!");
 		return returnInstance;
 	}
 
@@ -207,11 +207,11 @@ namespace
 		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
 		populateDebugMessengerCreateInfo(createInfo);
 
-		MRG_VKVALIDATE(createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &returnMessenger), "Failed to setup messenger!");
+		MRG_VKVALIDATE(createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &returnMessenger), "failed to setup messenger!");
 		return returnMessenger;
 	}
 
-	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
+	[[nodiscard]] QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
 	{
 		QueueFamilyIndices indices;
 
@@ -302,9 +302,42 @@ namespace
 
 		// It's possible that no suitable devices have been found
 		if (candidates.rbegin()->first == 0)
-			throw std::runtime_error("No suitable GPU found!");
+			throw std::runtime_error("no suitable GPU found!");
 
 		return candidates.rbegin()->second;
+	}
+
+	[[nodiscard]] VkDevice createDevice(VkPhysicalDevice physicalDevice)
+	{
+		VkDevice returnDevice;
+
+		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+		float queuePriority = 1.f;
+
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+
+		// TODO: Come back to this to select advanced device features
+		VkPhysicalDeviceFeatures deviceFeatures{};
+		deviceFeatures.geometryShader = VK_TRUE;
+
+		VkDeviceCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		createInfo.queueCreateInfoCount = 1;
+		createInfo.pQueueCreateInfos = &queueCreateInfo;
+		if (enableValidation) {
+			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
+		} else {
+			createInfo.enabledLayerCount = 0;
+		}
+
+		MRG_VKVALIDATE(vkCreateDevice(physicalDevice, &createInfo, nullptr, &returnDevice), "failed to create device!");
+
+		return returnDevice;
 	}
 
 }  // namespace
@@ -333,6 +366,9 @@ namespace MRG::Vulkan
 			MRG_ENGINE_INFO(
 			  "Physical device selected: {} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringfromID(props.vendorID));
 
+			m_device = createDevice(m_physicalDevice);
+			auto queueFamilies = findQueueFamilies(m_physicalDevice);
+			vkGetDeviceQueue(m_device, queueFamilies.graphicsFamily.value(), 0, &m_graphicsQueue);
 		} catch (std::runtime_error e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
@@ -340,8 +376,11 @@ namespace MRG::Vulkan
 
 	Context::~Context()
 	{
+		vkDestroyDevice(m_device, nullptr);
+
 		if constexpr (enableValidation)
 			destroyDebugUtilsMessengerEXT(m_instance, m_messenger, nullptr);
+
 		vkDestroyInstance(m_instance, nullptr);
 	}
 
