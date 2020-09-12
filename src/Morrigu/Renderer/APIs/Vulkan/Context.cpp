@@ -18,6 +18,8 @@
 namespace
 {
 	static const std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+	static const std::vector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
 #ifdef MRG_DEBUG
 	static constexpr bool enableValidation = true;
 #else
@@ -30,6 +32,13 @@ namespace
 		std::optional<uint32_t> presentFamily;
 
 		[[nodiscard]] bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+	};
+
+	struct SwapChainSupportDetails
+	{
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
 	};
 
 	[[nodiscard]] bool checkValidationLayerSupport()
@@ -242,6 +251,69 @@ namespace
 		return indices;
 	}
 
+	[[nodiscard]] bool checkDeviceExtensionsSupport(VkPhysicalDevice device)
+	{
+		uint32_t extensionCount{};
+		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+		std::vector<VkExtensionProperties> extensions(extensionCount);
+		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, extensions.data());
+
+		std::set<std::string> requiredExtensions{deviceExtensions.begin(), deviceExtensions.end()};
+		for (const auto& extension : extensions) {
+			if (requiredExtensions.erase(extension.extensionName))
+				MRG_ENGINE_TRACE("\t\tFound required extension {} (version {})", extension.extensionName, extension.specVersion);
+		}
+
+		if (requiredExtensions.empty()) {
+			MRG_ENGINE_TRACE("\t\tAll required extensions supported.");
+			return true;
+		}
+
+		MRG_ENGINE_TRACE("\t\tMissing required extensions:");
+		for (const auto& extension : requiredExtensions) { MRG_ENGINE_TRACE("\t\t\t{}", extension); }
+		return false;
+	}
+
+	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
+	{
+		SwapChainSupportDetails details;
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+		uint32_t count{};
+
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, nullptr);
+		if (count != 0) {
+			details.formats.resize(count);
+			vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, details.formats.data());
+		}
+
+		count = 0;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &count, nullptr);
+		if (count != 0) {
+			details.formats.resize(count);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &count, details.presentModes.data());
+		}
+
+		return details;
+	}
+
+	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface, VkPhysicalDeviceFeatures features)
+	{
+		if (!features.geometryShader)
+			return false;
+		if (!findQueueFamilies(device, surface).isComplete())
+			return false;
+		if (!checkDeviceExtensionsSupport(device))
+			return false;
+
+		const auto swapChainSupport = querySwapChainSupport(device, surface);
+		if (swapChainSupport.formats.empty() || swapChainSupport.presentModes.empty())
+			return false;
+
+		return true;
+	}
+
 	[[nodiscard]] std::size_t evaluateDevice(VkPhysicalDevice device, VkSurfaceKHR surface)
 	{
 		VkPhysicalDeviceProperties properties;
@@ -251,11 +323,10 @@ namespace
 		vkGetPhysicalDeviceProperties(device, &properties);
 		vkGetPhysicalDeviceFeatures(device, &features);
 
-		if (features.geometryShader == VK_FALSE)
+		if (!isDeviceSuitable(device, surface, features)) {
+			MRG_ENGINE_TRACE("\t\tNot suitable.");
 			return 0;
-
-		if (!findQueueFamilies(device, surface).isComplete())
-			return 0;
+		}
 
 		// Favor discrete GPUs over anything else
 		if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
@@ -289,6 +360,7 @@ namespace
 
 	[[nodiscard]] VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
 	{
+		MRG_ENGINE_TRACE("Starting device selection process.");
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -300,6 +372,8 @@ namespace
 
 		std::multimap<std::size_t, VkPhysicalDevice> candidates;
 
+		MRG_ENGINE_TRACE("The following device extensions are required and will be checked:");
+		for (const auto& extension : deviceExtensions) MRG_ENGINE_TRACE("\t{}", extension);
 		VkPhysicalDeviceProperties props;
 		MRG_ENGINE_TRACE("{} physical devices found:", deviceCount);
 		for (const auto& device : devices) {
@@ -343,6 +417,8 @@ namespace
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 		if (enableValidation) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			createInfo.ppEnabledLayerNames = validationLayers.data();
