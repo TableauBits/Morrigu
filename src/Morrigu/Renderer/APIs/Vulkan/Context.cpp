@@ -291,7 +291,7 @@ namespace
 		count = 0;
 		vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &count, nullptr);
 		if (count != 0) {
-			details.formats.resize(count);
+			details.presentModes.resize(count);
 			vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &count, details.presentModes.data());
 		}
 
