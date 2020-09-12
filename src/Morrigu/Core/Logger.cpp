@@ -21,12 +21,22 @@ namespace MRG
 
 		s_engineLogger = std::make_shared<spdlog::logger>("MORRIGU", begin(logSinks), end(logSinks));
 		spdlog::register_logger(s_engineLogger);
+#ifdef MRG_DEBUG
 		s_engineLogger->set_level(spdlog::level::trace);
 		s_engineLogger->flush_on(spdlog::level::trace);
+#else
+		s_engineLogger->set_level(spdlog::level::info);
+		s_engineLogger->flush_on(spdlog::level::info);
+#endif
 
 		s_clientLogger = std::make_shared<spdlog::logger>("APP", begin(logSinks), end(logSinks));
 		spdlog::register_logger(s_clientLogger);
+#ifdef MRG_DEBUG
 		s_clientLogger->set_level(spdlog::level::trace);
 		s_clientLogger->flush_on(spdlog::level::trace);
+#else
+		s_clientLogger->set_level(spdlog::level::info);
+		s_clientLogger->flush_on(spdlog::level::info);
+#endif
 	}
 }  // namespace MRG
