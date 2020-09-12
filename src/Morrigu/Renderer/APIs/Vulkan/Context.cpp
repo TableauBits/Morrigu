@@ -32,7 +32,7 @@ namespace
 
 	[[nodiscard]] bool checkValidationLayerSupport()
 	{
-		MRG_ENGINE_TRACE("Validation layers requested. Checking availability...");
+		MRG_ENGINE_INFO("Validation layers requested. Checking availability...");
 		uint32_t layerCount;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
