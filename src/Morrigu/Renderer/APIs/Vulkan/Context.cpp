@@ -359,6 +359,8 @@ namespace MRG::Vulkan
 			if constexpr (enableValidation)
 				m_messenger = setupDebugMessenger(m_instance);
 
+			MRG_VKVALIDATE(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface), "failed to create window surface!");
+
 			m_physicalDevice = pickPhysicalDevice(m_instance);
 
 			VkPhysicalDeviceProperties props;
@@ -381,6 +383,7 @@ namespace MRG::Vulkan
 		if constexpr (enableValidation)
 			destroyDebugUtilsMessengerEXT(m_instance, m_messenger, nullptr);
 
+		vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
 		vkDestroyInstance(m_instance, nullptr);
 	}
 

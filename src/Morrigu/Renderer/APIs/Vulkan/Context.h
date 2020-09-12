@@ -20,6 +20,7 @@ namespace MRG::Vulkan
 	private:
 		VkInstance m_instance;
 		VkDebugUtilsMessengerEXT m_messenger;
+		VkSurfaceKHR m_surface;
 		VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
 		VkDevice m_device;
 		VkQueue m_graphicsQueue;
