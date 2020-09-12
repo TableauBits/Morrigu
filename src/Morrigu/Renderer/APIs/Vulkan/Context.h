@@ -23,7 +23,7 @@ namespace MRG::Vulkan
 		VkSurfaceKHR m_surface;
 		VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
 		VkDevice m_device;
-		VkQueue m_graphicsQueue;
+		VkQueue m_graphicsQueue, m_presentQueue;
 	};
 }  // namespace MRG::Vulkan
 

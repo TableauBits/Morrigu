@@ -10,6 +10,7 @@
 
 #include <map>
 #include <optional>
+#include <set>
 #include <vector>
 
 // This anonymous namespace will host all necessary vulkan calls to create the vulkan context
@@ -26,8 +27,9 @@ namespace
 	struct QueueFamilyIndices
 	{
 		std::optional<uint32_t> graphicsFamily;
+		std::optional<uint32_t> presentFamily;
 
-		[[nodiscard]] bool isComplete() { return graphicsFamily.has_value(); }
+		[[nodiscard]] bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
 	};
 
 	[[nodiscard]] bool checkValidationLayerSupport()
@@ -211,7 +213,7 @@ namespace
 		return returnMessenger;
 	}
 
-	[[nodiscard]] QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
+	[[nodiscard]] QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
 	{
 		QueueFamilyIndices indices;
 
@@ -226,6 +228,12 @@ namespace
 			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 				indices.graphicsFamily = i;
 
+			VkBool32 presentSupport = VK_FALSE;
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+			if (presentSupport) {
+				indices.presentFamily = i;
+			}
+
 			if (indices.isComplete())
 				break;
 			++i;
@@ -234,7 +242,7 @@ namespace
 		return indices;
 	}
 
-	[[nodiscard]] std::size_t evaluateDevice(VkPhysicalDevice device)
+	[[nodiscard]] std::size_t evaluateDevice(VkPhysicalDevice device, VkSurfaceKHR surface)
 	{
 		VkPhysicalDeviceProperties properties;
 		VkPhysicalDeviceFeatures features;
@@ -246,7 +254,7 @@ namespace
 		if (features.geometryShader == VK_FALSE)
 			return 0;
 
-		if (!findQueueFamilies(device).isComplete())
+		if (!findQueueFamilies(device, surface).isComplete())
 			return 0;
 
 		// Favor discrete GPUs over anything else
@@ -279,7 +287,7 @@ namespace
 		}
 	}
 
-	[[nodiscard]] VkPhysicalDevice pickPhysicalDevice(VkInstance instance)
+	[[nodiscard]] VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
 	{
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -297,7 +305,7 @@ namespace
 		for (const auto& device : devices) {
 			vkGetPhysicalDeviceProperties(device, &props);
 			MRG_ENGINE_TRACE("\t{} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringfromID(props.vendorID));
-			candidates.emplace(evaluateDevice(device), device);
+			candidates.emplace(evaluateDevice(device, surface), device);
 		}
 
 		// It's possible that no suitable devices have been found
@@ -307,18 +315,25 @@ namespace
 		return candidates.rbegin()->second;
 	}
 
-	[[nodiscard]] VkDevice createDevice(VkPhysicalDevice physicalDevice)
+	[[nodiscard]] VkDevice createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 	{
 		VkDevice returnDevice;
 
-		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+		QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 		float queuePriority = 1.f;
 
-		VkDeviceQueueCreateInfo queueCreateInfo{};
-		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queueCreateInfo.queueCount = 1;
-		queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-		queueCreateInfo.pQueuePriorities = &queuePriority;
+		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
+		std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
+		for (auto queueFamily : uniqueQueueFamilies) {
+			VkDeviceQueueCreateInfo queueCreateInfo{};
+			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queueCreateInfo.queueCount = 1;
+			queueCreateInfo.queueFamilyIndex = queueFamily;
+			queueCreateInfo.pQueuePriorities = &queuePriority;
+
+			queueCreateInfos.emplace_back(queueCreateInfo);
+		}
 
 		// TODO: Come back to this to select advanced device features
 		VkPhysicalDeviceFeatures deviceFeatures{};
@@ -326,8 +341,8 @@ namespace
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		createInfo.queueCreateInfoCount = 1;
-		createInfo.pQueueCreateInfos = &queueCreateInfo;
+		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+		createInfo.pQueueCreateInfos = queueCreateInfos.data();
 		if (enableValidation) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			createInfo.ppEnabledLayerNames = validationLayers.data();
@@ -361,16 +376,17 @@ namespace MRG::Vulkan
 
 			MRG_VKVALIDATE(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface), "failed to create window surface!");
 
-			m_physicalDevice = pickPhysicalDevice(m_instance);
+			m_physicalDevice = pickPhysicalDevice(m_instance, m_surface);
 
 			VkPhysicalDeviceProperties props;
 			vkGetPhysicalDeviceProperties(m_physicalDevice, &props);
 			MRG_ENGINE_INFO(
 			  "Physical device selected: {} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringfromID(props.vendorID));
 
-			m_device = createDevice(m_physicalDevice);
-			auto queueFamilies = findQueueFamilies(m_physicalDevice);
+			m_device = createDevice(m_physicalDevice, m_surface);
+			auto queueFamilies = findQueueFamilies(m_physicalDevice, m_surface);
 			vkGetDeviceQueue(m_device, queueFamilies.graphicsFamily.value(), 0, &m_graphicsQueue);
+			vkGetDeviceQueue(m_device, queueFamilies.presentFamily.value(), 0, &m_presentQueue);
 		} catch (std::runtime_error e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
