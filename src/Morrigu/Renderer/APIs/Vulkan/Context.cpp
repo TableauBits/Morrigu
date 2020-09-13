@@ -431,6 +431,47 @@ namespace
 		return returnDevice;
 	}
 
+	[[nodiscard]] VkSurfaceFormatKHR chooseSwapFormat(const std::vector<VkSurfaceFormatKHR>& formats)
+	{
+		for (const auto& format : formats) {
+			if (format.format == VK_FORMAT_B8G8R8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+				return format;
+		}
+
+		// In case we don't find exactly what we are searching for, we just select the first one.
+		// This is guaranteed to exist because of the isDeviceSuitable check beforehand
+		// TODO: update this function to better select surface formats
+		return formats[0];
+	}
+
+	[[nodiscard]] VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes)
+	{
+		// If possible, prefer triple buffering
+		for (const auto& presentMode : presentModes) {
+			if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+				return presentMode;
+		}
+
+		// This mode is guaranteed to be present by the specs
+		return VK_PRESENT_MODE_FIFO_KHR;
+	}
+
+	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, const MRG::WindowProperties* data)
+	{
+		if (capabilities.currentExtent.width != UINT32_MAX) {
+			// We don't need to change anything in this case !
+			return capabilities.currentExtent;
+		}
+
+		// Otherwise, we have to provide the best values possible
+		VkExtent2D actualExtent{data->width, data->height};
+
+		actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+		actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+		return actualExtent;
+	}
+
 }  // namespace
 
 namespace MRG::Vulkan
