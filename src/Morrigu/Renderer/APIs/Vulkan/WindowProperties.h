@@ -13,6 +13,7 @@ namespace MRG::Vulkan
 		std::vector<VkImage> images;
 		VkFormat imageFormat;
 		VkExtent2D extent;
+		std::vector<VkImageView> imageViews;
 	};
 
 	class WindowProperties : public MRG::WindowProperties
