@@ -194,7 +194,7 @@ namespace
 		return returnInstance;
 	}
 
-	[[nodiscard]] VkResult createDebugUtilsMessengerEXT(VkInstance instance,
+	[[nodiscard]] VkResult createDebugUtilsMessengerEXT(const VkInstance instance,
 	                                                    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
 	                                                    const VkAllocationCallbacks* pAllocator,
 	                                                    VkDebugUtilsMessengerEXT* pDebugMessenger)
@@ -205,14 +205,16 @@ namespace
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 
-	void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator)
+	void destroyDebugUtilsMessengerEXT(const VkInstance instance,
+	                                   const VkDebugUtilsMessengerEXT messenger,
+	                                   const VkAllocationCallbacks* pAllocator)
 	{
 		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 		if (func != nullptr)
 			func(instance, messenger, pAllocator);
 	}
 
-	[[nodiscard]] VkDebugUtilsMessengerEXT setupDebugMessenger(VkInstance instance)
+	[[nodiscard]] VkDebugUtilsMessengerEXT setupDebugMessenger(const VkInstance instance)
 	{
 		VkDebugUtilsMessengerEXT returnMessenger;
 
@@ -223,7 +225,7 @@ namespace
 		return returnMessenger;
 	}
 
-	[[nodiscard]] QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
+	[[nodiscard]] QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 	{
 		QueueFamilyIndices indices;
 
@@ -252,7 +254,7 @@ namespace
 		return indices;
 	}
 
-	[[nodiscard]] bool checkDeviceExtensionsSupport(VkPhysicalDevice device)
+	[[nodiscard]] bool checkDeviceExtensionsSupport(const VkPhysicalDevice device)
 	{
 		uint32_t extensionCount{};
 		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -276,7 +278,7 @@ namespace
 		return false;
 	}
 
-	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
+	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 	{
 		SwapChainSupportDetails details;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
@@ -299,7 +301,7 @@ namespace
 		return details;
 	}
 
-	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface, VkPhysicalDeviceFeatures features)
+	[[nodiscard]] bool isDeviceSuitable(const VkPhysicalDevice device, const VkSurfaceKHR surface, const VkPhysicalDeviceFeatures features)
 	{
 		if (!features.geometryShader)
 			return false;
@@ -315,7 +317,7 @@ namespace
 		return true;
 	}
 
-	[[nodiscard]] std::size_t evaluateDevice(VkPhysicalDevice device, VkSurfaceKHR surface)
+	[[nodiscard]] std::size_t evaluateDevice(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 	{
 		VkPhysicalDeviceProperties properties;
 		VkPhysicalDeviceFeatures features;
@@ -338,7 +340,7 @@ namespace
 		return score;
 	}
 
-	constexpr const char* vendorStringfromID(uint32_t vendorID)
+	constexpr const char* vendorStringfromID(const uint32_t vendorID)
 	{
 		switch (vendorID) {
 		case 0x1002:
@@ -359,7 +361,7 @@ namespace
 		}
 	}
 
-	[[nodiscard]] VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
+	[[nodiscard]] VkPhysicalDevice pickPhysicalDevice(const VkInstance instance, const VkSurfaceKHR surface)
 	{
 		MRG_ENGINE_TRACE("Starting device selection process.");
 		uint32_t deviceCount = 0;
@@ -390,7 +392,7 @@ namespace
 		return candidates.rbegin()->second;
 	}
 
-	[[nodiscard]] VkDevice createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+	[[nodiscard]] VkDevice createDevice(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
 	{
 		VkDevice returnDevice;
 
@@ -473,8 +475,10 @@ namespace
 		return actualExtent;
 	}
 
-	[[nodiscard]] MRG::Vulkan::SwapChain
-	createSwapChain(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkDevice device, const MRG::WindowProperties* data)
+	[[nodiscard]] MRG::Vulkan::SwapChain createSwapChain(const VkPhysicalDevice physicalDevice,
+	                                                     const VkSurfaceKHR surface,
+	                                                     const VkDevice device,
+	                                                     const MRG::WindowProperties* data)
 	{
 		VkSwapchainKHR handle{};
 		SwapChainSupportDetails SwapChainSupport = querySwapChainSupport(physicalDevice, surface);
