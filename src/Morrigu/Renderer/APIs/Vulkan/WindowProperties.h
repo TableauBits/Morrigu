@@ -7,6 +7,14 @@
 
 namespace MRG::Vulkan
 {
+	struct SwapChain
+	{
+		VkSwapchainKHR handle;
+		std::vector<VkImage> images;
+		VkFormat imageFormat;
+		VkExtent2D extent;
+	};
+
 	class WindowProperties : public MRG::WindowProperties
 	{
 	public:
@@ -20,7 +28,7 @@ namespace MRG::Vulkan
 		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 		VkDevice device;
 		VkQueue graphicsQueue, presentQueue;
-		VkSwapchainKHR swapChain;
+		SwapChain swapChain;
 	};
 }  // namespace MRG::Vulkan
 

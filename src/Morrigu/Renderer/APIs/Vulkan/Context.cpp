@@ -473,10 +473,10 @@ namespace
 		return actualExtent;
 	}
 
-	[[nodiscard]] VkSwapchainKHR
+	[[nodiscard]] MRG::Vulkan::SwapChain
 	createSwapChain(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkDevice device, const MRG::WindowProperties* data)
 	{
-		VkSwapchainKHR returnSwapChain{};
+		VkSwapchainKHR handle{};
 		SwapChainSupportDetails SwapChainSupport = querySwapChainSupport(physicalDevice, surface);
 
 		const auto surfaceFormat = chooseSwapFormat(SwapChainSupport.formats);
@@ -514,9 +514,13 @@ namespace
 		createInfo.clipped = VK_TRUE;
 		createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-		MRG_VKVALIDATE(vkCreateSwapchainKHR(device, &createInfo, nullptr, &returnSwapChain), "failed to create swapChain!");
+		MRG_VKVALIDATE(vkCreateSwapchainKHR(device, &createInfo, nullptr, &handle), "failed to create swapChain!");
 
-		return returnSwapChain;
+		vkGetSwapchainImagesKHR(device, handle, &imageCount, nullptr);
+		std::vector<VkImage> images(imageCount);
+		vkGetSwapchainImagesKHR(device, handle, &imageCount, images.data());
+
+		return {handle, images, surfaceFormat.format, extent};
 	}
 
 }  // namespace
@@ -564,7 +568,7 @@ namespace MRG::Vulkan
 	{
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(m_window));
 
-		vkDestroySwapchainKHR(data->device, data->swapChain, nullptr);
+		vkDestroySwapchainKHR(data->device, data->swapChain.handle, nullptr);
 		vkDestroyDevice(data->device, nullptr);
 
 		if (enableValidation)
