@@ -524,7 +524,7 @@ namespace
 		std::vector<VkImage> images(imageCount);
 		vkGetSwapchainImagesKHR(device, handle, &imageCount, images.data());
 
-		return {handle, images, surfaceFormat.format, extent};
+		return {handle, images, surfaceFormat.format, extent, {}};
 	}
 
 	[[nodiscard]] std::vector<VkImageView> createimageViews(const VkDevice device, const std::vector<VkImage>& images, VkFormat imageFormat)
