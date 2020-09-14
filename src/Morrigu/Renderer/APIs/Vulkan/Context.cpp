@@ -472,6 +472,52 @@ namespace
 		return actualExtent;
 	}
 
+	[[nodiscard]] VkSwapchainKHR
+	createSwapChain(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkDevice device, const MRG::WindowProperties* data)
+	{
+		VkSwapchainKHR returnSwapChain{};
+		SwapChainSupportDetails SwapChainSupport = querySwapChainSupport(physicalDevice, surface);
+
+		const auto surfaceFormat = chooseSwapFormat(SwapChainSupport.formats);
+		const auto presentMode = chooseSwapPresentMode(SwapChainSupport.presentModes);
+		const auto extent = chooseSwapExtent(SwapChainSupport.capabilities, data);
+
+		auto imageCount = SwapChainSupport.capabilities.minImageCount + 1;
+		if (SwapChainSupport.capabilities.minImageCount > 0 && imageCount > SwapChainSupport.capabilities.maxImageCount)
+			imageCount = SwapChainSupport.capabilities.maxImageCount;
+
+		QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+		uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
+		VkSwapchainCreateInfoKHR createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+		createInfo.surface = surface;
+		createInfo.minImageCount = imageCount;
+		createInfo.imageFormat = surfaceFormat.format;
+		createInfo.imageColorSpace = surfaceFormat.colorSpace;
+		createInfo.imageExtent = extent;
+		createInfo.imageArrayLayers = 1;
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		if (indices.graphicsFamily != indices.presentFamily) {
+			// The queues are not the same!
+			createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+			createInfo.queueFamilyIndexCount = 2;
+			createInfo.pQueueFamilyIndices = queueFamilyIndices;
+		} else {
+			// The queues are the same, no need to separated them!
+			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		}
+		createInfo.preTransform = SwapChainSupport.capabilities.currentTransform;
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		createInfo.presentMode = presentMode;
+		createInfo.clipped = VK_TRUE;
+		createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+		MRG_VKVALIDATE(vkCreateSwapchainKHR(device, &createInfo, nullptr, &returnSwapChain), "failed to create swapChain!");
+
+		return returnSwapChain;
+	}
+
 }  // namespace
 
 namespace MRG::Vulkan
@@ -504,6 +550,8 @@ namespace MRG::Vulkan
 			auto queueFamilies = findQueueFamilies(m_physicalDevice, m_surface);
 			vkGetDeviceQueue(m_device, queueFamilies.graphicsFamily.value(), 0, &m_graphicsQueue);
 			vkGetDeviceQueue(m_device, queueFamilies.presentFamily.value(), 0, &m_presentQueue);
+
+			m_swapChain = createSwapChain(m_physicalDevice, m_surface, m_device, data);
 		} catch (std::runtime_error e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
@@ -511,6 +559,7 @@ namespace MRG::Vulkan
 
 	Context::~Context()
 	{
+		vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
 		vkDestroyDevice(m_device, nullptr);
 
 		if constexpr (enableValidation)

@@ -24,6 +24,7 @@ namespace MRG::Vulkan
 		VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
 		VkDevice m_device;
 		VkQueue m_graphicsQueue, m_presentQueue;
+		VkSwapchainKHR m_swapChain;
 	};
 }  // namespace MRG::Vulkan
 
