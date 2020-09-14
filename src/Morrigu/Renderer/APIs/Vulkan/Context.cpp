@@ -76,7 +76,7 @@ namespace
 
 		std::vector<const char*> requiredExtensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-		if constexpr (enableValidation) {
+		if (enableValidation) {
 			requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
 
@@ -127,7 +127,7 @@ namespace
 	[[nodiscard]] VkInstance createInstance(const char* appName)
 	{
 		// this if statement is split to allow constexpr if
-		if constexpr (enableValidation) {
+		if (enableValidation) {
 			if (!checkValidationLayerSupport())
 				throw std::runtime_error("Validation layers requested but not found!");
 		}
@@ -180,7 +180,7 @@ namespace
 		createInfo.pApplicationInfo = &appInfo;
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
 		createInfo.ppEnabledExtensionNames = requiredExtensions.data();
-		if constexpr (enableValidation) {
+		if (enableValidation) {
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			createInfo.ppEnabledLayerNames = validationLayers.data();
 
@@ -537,7 +537,7 @@ namespace MRG::Vulkan
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 			data->instance = createInstance(data->title.c_str());
 
-			if constexpr (enableValidation)
+			if (enableValidation)
 				data->messenger = setupDebugMessenger(data->instance);
 
 			MRG_VKVALIDATE(glfwCreateWindowSurface(data->instance, window, nullptr, &data->surface), "failed to create window surface!");
@@ -567,7 +567,7 @@ namespace MRG::Vulkan
 		vkDestroySwapchainKHR(data->device, data->swapChain, nullptr);
 		vkDestroyDevice(data->device, nullptr);
 
-		if constexpr (enableValidation)
+		if (enableValidation)
 			destroyDebugUtilsMessengerEXT(data->instance, data->messenger, nullptr);
 
 		vkDestroySurfaceKHR(data->instance, data->surface, nullptr);
