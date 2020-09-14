@@ -16,11 +16,12 @@ namespace MRG
 
 	uint8_t Window::s_GLFWWindowCount = 0;
 
-	Window::Window(const WindowProperties& props)
+	Window::Window(Scope<WindowProperties> props)
 	{
 		MRG_PROFILE_FUNCTION();
 
-		_init(props);
+		m_properties = std::move(props);
+		_init();
 	}
 	Window::~Window()
 	{
@@ -29,13 +30,11 @@ namespace MRG
 		_shutdown();
 	}
 
-	void Window::_init(const WindowProperties& props)
+	void Window::_init()
 	{
 		MRG_PROFILE_FUNCTION();
 
-		m_properties = props;
-
-		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", props.title, props.width, props.height);
+		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", m_properties->title, m_properties->width, m_properties->height);
 
 		if (s_GLFWWindowCount == 0) {
 			MRG_PROFILE_SCOPE("glfwInit");
@@ -54,15 +53,15 @@ namespace MRG
 			if (Renderer::getAPI() == RenderingAPI::API::Vulkan)
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-			m_window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
+			m_window = glfwCreateWindow(m_properties->width, m_properties->height, m_properties->title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
 		}
 
-		glfwSetWindowUserPointer(m_window, &m_properties);
+		glfwSetWindowUserPointer(m_window, m_properties.get());
 
 		m_context = Context::create(m_window);
 
-		setVsync(props.VSync);
+		setVsync(m_properties->VSync);
 
 		// GLFW callbacks
 		glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
@@ -185,7 +184,7 @@ namespace MRG
 			m_context->swapInterval(0);
 		}
 
-		m_properties.VSync = enabled;
+		m_properties->VSync = enabled;
 	}
 
 }  // namespace MRG

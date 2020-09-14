@@ -4,6 +4,7 @@
 #include "Core/Window.h"
 #include "Debug/Instrumentor.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
+#include "Renderer/APIs/Vulkan/WindowProperties.h"
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
@@ -526,32 +527,34 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
+		m_window = window;
+
 		MRG_CORE_ASSERT(window, "Window handle is null!");
 
 		MRG_ENGINE_INFO("Using Vulkan as a rendering API. Other useful stats will follow:");
 
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
-			m_instance = createInstance(data->title.c_str());
+			data->instance = createInstance(data->title.c_str());
 
 			if constexpr (enableValidation)
-				m_messenger = setupDebugMessenger(m_instance);
+				data->messenger = setupDebugMessenger(data->instance);
 
-			MRG_VKVALIDATE(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface), "failed to create window surface!");
+			MRG_VKVALIDATE(glfwCreateWindowSurface(data->instance, window, nullptr, &data->surface), "failed to create window surface!");
 
-			m_physicalDevice = pickPhysicalDevice(m_instance, m_surface);
+			data->physicalDevice = pickPhysicalDevice(data->instance, data->surface);
 
 			VkPhysicalDeviceProperties props;
-			vkGetPhysicalDeviceProperties(m_physicalDevice, &props);
+			vkGetPhysicalDeviceProperties(data->physicalDevice, &props);
 			MRG_ENGINE_INFO(
 			  "Physical device selected: {} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringfromID(props.vendorID));
 
-			m_device = createDevice(m_physicalDevice, m_surface);
-			auto queueFamilies = findQueueFamilies(m_physicalDevice, m_surface);
-			vkGetDeviceQueue(m_device, queueFamilies.graphicsFamily.value(), 0, &m_graphicsQueue);
-			vkGetDeviceQueue(m_device, queueFamilies.presentFamily.value(), 0, &m_presentQueue);
+			data->device = createDevice(data->physicalDevice, data->surface);
+			auto queueFamilies = findQueueFamilies(data->physicalDevice, data->surface);
+			vkGetDeviceQueue(data->device, queueFamilies.graphicsFamily.value(), 0, &data->graphicsQueue);
+			vkGetDeviceQueue(data->device, queueFamilies.presentFamily.value(), 0, &data->presentQueue);
 
-			m_swapChain = createSwapChain(m_physicalDevice, m_surface, m_device, data);
+			data->swapChain = createSwapChain(data->physicalDevice, data->surface, data->device, data);
 		} catch (std::runtime_error e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
@@ -559,14 +562,16 @@ namespace MRG::Vulkan
 
 	Context::~Context()
 	{
-		vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
-		vkDestroyDevice(m_device, nullptr);
+		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(m_window));
+
+		vkDestroySwapchainKHR(data->device, data->swapChain, nullptr);
+		vkDestroyDevice(data->device, nullptr);
 
 		if constexpr (enableValidation)
-			destroyDebugUtilsMessengerEXT(m_instance, m_messenger, nullptr);
+			destroyDebugUtilsMessengerEXT(data->instance, data->messenger, nullptr);
 
-		vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-		vkDestroyInstance(m_instance, nullptr);
+		vkDestroySurfaceKHR(data->instance, data->surface, nullptr);
+		vkDestroyInstance(data->instance, nullptr);
 	}
 
 	void Context::swapBuffers()

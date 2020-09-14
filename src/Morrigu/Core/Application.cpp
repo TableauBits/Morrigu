@@ -18,7 +18,7 @@ namespace MRG
 		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists !");
 		s_instance = this;
 
-		m_window = std::make_unique<Window>(WindowProperties{"Morrigu", 1280, 720, true});
+		m_window = std::make_unique<Window>(WindowProperties::create("Morrigu", 1280, 720, true));
 		m_window->setEventCallback([this](Event& event) { onEvent(event); });
 
 		Renderer::init();

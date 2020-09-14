@@ -18,13 +18,7 @@ namespace MRG::Vulkan
 		void swapInterval(int interval) override;
 
 	private:
-		VkInstance m_instance;
-		VkDebugUtilsMessengerEXT m_messenger;
-		VkSurfaceKHR m_surface;
-		VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
-		VkDevice m_device;
-		VkQueue m_graphicsQueue, m_presentQueue;
-		VkSwapchainKHR m_swapChain;
+		GLFWwindow* m_window;
 	};
 }  // namespace MRG::Vulkan
 

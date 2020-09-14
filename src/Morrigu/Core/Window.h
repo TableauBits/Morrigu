@@ -3,6 +3,7 @@
 
 #include "Events/Event.h"
 #include "Renderer/Context.h"
+#include "Renderer/WindowProperties.h"
 
 #include <functional>
 #include <memory>
@@ -11,40 +12,31 @@
 namespace MRG
 {
 	using EventCallbackFunction = std::function<void(Event&)>;
-	struct WindowProperties
-	{
-		std::string title;
-		unsigned int width;
-		unsigned int height;
-		bool VSync;
-		EventCallbackFunction callback = [](MRG::Event&) {};
-		unsigned int keyRepeats = 0;
-	};
 
 	class Window
 	{
 	public:
-		Window(const WindowProperties& props);
+		Window(Scope<WindowProperties> props);
 		~Window();
 
 		void onUpdate();
 
-		[[nodiscard]] unsigned int getWidth() const { return m_properties.width; }
-		[[nodiscard]] unsigned int getHeight() const { return m_properties.height; }
-		[[nodiscard]] bool isVsync() const { return m_properties.VSync; }
+		[[nodiscard]] unsigned int getWidth() const { return m_properties->width; }
+		[[nodiscard]] unsigned int getHeight() const { return m_properties->height; }
+		[[nodiscard]] bool isVsync() const { return m_properties->VSync; }
 
-		void setEventCallback(const EventCallbackFunction& callback) { m_properties.callback = callback; }
+		void setEventCallback(const EventCallbackFunction& callback) { m_properties->callback = callback; }
 		void setVsync(bool enabled);
 
 		[[nodiscard]] GLFWwindow* getGLFWWindow() const { return m_window; }
 
 	private:
-		void _init(const WindowProperties& props);
+		void _init();
 		void _shutdown();
 
 		GLFWwindow* m_window;
 		Scope<Context> m_context;
-		WindowProperties m_properties;
+		Scope<WindowProperties> m_properties;
 
 		static uint8_t s_GLFWWindowCount;
 	};
