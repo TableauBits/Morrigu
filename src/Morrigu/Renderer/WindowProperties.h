@@ -21,7 +21,8 @@ namespace MRG
 		bool VSync;
 		EventCallbackFunction callback = [](Event&) {};
 		unsigned int keyRepeats = 0;
-
+		
+	protected:
 		WindowProperties(const std::string& newTitle, unsigned int newWidth, unsigned int newHeight, bool newVSync)
 		    : title(newTitle), width(newWidth), height(newHeight), VSync(newVSync)
 		{}

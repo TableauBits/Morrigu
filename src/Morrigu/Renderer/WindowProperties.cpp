@@ -9,7 +9,7 @@ namespace MRG
 	{
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
-			return createScope<WindowProperties>(title, width, height, vSync);
+			return createScope<WindowProperties>(WindowProperties{title, width, height, vSync});
 		} break;
 
 		case RenderingAPI::API::Vulkan: {
