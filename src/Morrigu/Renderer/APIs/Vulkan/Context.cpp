@@ -484,7 +484,7 @@ namespace
 		const auto extent = chooseSwapExtent(SwapChainSupport.capabilities, data);
 
 		auto imageCount = SwapChainSupport.capabilities.minImageCount + 1;
-		if (SwapChainSupport.capabilities.minImageCount > 0 && imageCount > SwapChainSupport.capabilities.maxImageCount)
+		if (SwapChainSupport.capabilities.maxImageCount > 0 && imageCount > SwapChainSupport.capabilities.maxImageCount)
 			imageCount = SwapChainSupport.capabilities.maxImageCount;
 
 		QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
