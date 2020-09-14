@@ -16,27 +16,13 @@ namespace MRG
 
 	uint8_t Window::s_GLFWWindowCount = 0;
 
-	Window::Window(Scope<WindowProperties> props)
+	GLFWWindowWrapper::GLFWWindowWrapper(WindowProperties* props)
 	{
 		MRG_PROFILE_FUNCTION();
 
-		m_properties = std::move(props);
-		_init();
-	}
-	Window::~Window()
-	{
-		MRG_PROFILE_FUNCTION();
+		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", props->title, props->width, props->height);
 
-		_shutdown();
-	}
-
-	void Window::_init()
-	{
-		MRG_PROFILE_FUNCTION();
-
-		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", m_properties->title, m_properties->width, m_properties->height);
-
-		if (s_GLFWWindowCount == 0) {
+		if (Window::s_GLFWWindowCount == 0) {
 			MRG_PROFILE_SCOPE("glfwInit");
 			MRG_ENGINE_INFO("Initializing GLFW");
 			[[maybe_unused]] auto success = glfwInit();
@@ -53,18 +39,14 @@ namespace MRG
 			if (Renderer::getAPI() == RenderingAPI::API::Vulkan)
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-			m_window = glfwCreateWindow(m_properties->width, m_properties->height, m_properties->title.c_str(), nullptr, nullptr);
-			++s_GLFWWindowCount;
+			handle = glfwCreateWindow(props->width, props->height, props->title.c_str(), nullptr, nullptr);
+			++Window::s_GLFWWindowCount;
 		}
 
-		glfwSetWindowUserPointer(m_window, m_properties.get());
-
-		m_context = Context::create(m_window);
-
-		setVsync(m_properties->VSync);
+		glfwSetWindowUserPointer(handle, props);
 
 		// GLFW callbacks
-		glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
+		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int width, int height) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 			data->width = width;
 			data->height = height;
@@ -73,7 +55,7 @@ namespace MRG
 			data->callback(resize);
 		});
 
-		glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window) {
+		glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
 			WindowCloseEvent close{};
@@ -81,7 +63,7 @@ namespace MRG
 		});
 
 		glfwSetKeyCallback(
-		  m_window,
+		  handle,
 		  [](GLFWwindow* window, int keycode, [[maybe_unused]] int scancode, [[maybe_unused]] int action, [[maybe_unused]] int mods) {
 			  const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
@@ -108,7 +90,7 @@ namespace MRG
 			  }
 		  });
 
-		glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, [[maybe_unused]] int mods) {
+		glfwSetMouseButtonCallback(handle, [](GLFWwindow* window, int button, int action, [[maybe_unused]] int mods) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
 			switch (action) {
@@ -128,21 +110,21 @@ namespace MRG
 			}
 		});
 
-		glfwSetScrollCallback(m_window, [](GLFWwindow* window, double xOffset, double yOffset) {
+		glfwSetScrollCallback(handle, [](GLFWwindow* window, double xOffset, double yOffset) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
 			MouseScrolledEvent scroll{static_cast<float>(xOffset), static_cast<float>(yOffset)};
 			data->callback(scroll);
 		});
 
-		glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double xPos, double yPos) {
+		glfwSetCursorPosCallback(handle, [](GLFWwindow* window, double xPos, double yPos) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
 			MouseMovedEvent move{static_cast<float>(xPos), static_cast<float>(yPos)};
 			data->callback(move);
 		});
 
-		glfwSetCharCallback(m_window, [](GLFWwindow* window, unsigned int codePoint) {
+		glfwSetCharCallback(handle, [](GLFWwindow* window, unsigned int codePoint) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
 			KeyTypedEvent typedChar{static_cast<KeyCode>(codePoint)};
@@ -150,20 +132,29 @@ namespace MRG
 		});
 	}
 
-	void Window::_shutdown()
+	GLFWWindowWrapper::~GLFWWindowWrapper()
 	{
 		MRG_PROFILE_FUNCTION();
 
-		glfwDestroyWindow(m_window);
+		glfwDestroyWindow(handle);
 
-		--s_GLFWWindowCount;
-		if (s_GLFWWindowCount == 0) {
+		--Window::s_GLFWWindowCount;
+		if (Window::s_GLFWWindowCount == 0) {
 			MRG_ENGINE_INFO("Terminating GLFW");
 #ifdef MRG_PLATFORM_WINDOWS
 			// For some reason, that causes an exception on linux. This is most likely a GLFW bug.
 			glfwTerminate();
 #endif
 		}
+	}
+
+	Window::Window(Scope<WindowProperties> props) : m_window(props.get())
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_properties = std::move(props);
+		m_context = Context::create(m_window.handle);
+		setVsync(m_properties->VSync);
 	}
 
 	void Window::onUpdate()

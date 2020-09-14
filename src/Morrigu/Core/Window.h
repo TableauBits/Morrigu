@@ -11,13 +11,21 @@
 
 namespace MRG
 {
+	class GLFWWindowWrapper
+	{
+	public:
+		GLFWWindowWrapper(WindowProperties* props);
+		~GLFWWindowWrapper();
+
+		GLFWwindow* handle;
+	};
+
 	using EventCallbackFunction = std::function<void(Event&)>;
 
 	class Window
 	{
 	public:
 		Window(Scope<WindowProperties> props);
-		~Window();
 
 		void onUpdate();
 
@@ -28,17 +36,15 @@ namespace MRG
 		void setEventCallback(const EventCallbackFunction& callback) { m_properties->callback = callback; }
 		void setVsync(bool enabled);
 
-		[[nodiscard]] GLFWwindow* getGLFWWindow() const { return m_window; }
+		[[nodiscard]] GLFWwindow* getGLFWWindow() const { return m_window.handle; }
 
 	private:
-		void _init();
-		void _shutdown();
-
-		GLFWwindow* m_window;
-		Scope<Context> m_context;
+		GLFWWindowWrapper m_window;
 		Scope<WindowProperties> m_properties;
+		Scope<Context> m_context;
 
 		static uint8_t s_GLFWWindowCount;
+		friend GLFWWindowWrapper::GLFWWindowWrapper(WindowProperties* props), GLFWWindowWrapper::~GLFWWindowWrapper();
 	};
 }  // namespace MRG
 
