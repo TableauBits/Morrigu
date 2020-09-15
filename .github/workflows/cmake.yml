@@ -29,7 +29,7 @@ jobs:
           #   CONAN_INSTALL_TOOL: pip3
           # MacOS configs
           - os: macos-latest
-            compiler: clang++
+            compiler: clang
             CONAN_COMPILER: clang
             compilerVersion: 10
             CONAN_INSTALL_TOOL: brew
