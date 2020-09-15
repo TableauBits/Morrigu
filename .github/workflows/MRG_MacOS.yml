@@ -72,7 +72,6 @@ jobs:
       shell: bash
       working-directory: ${{runner.workspace}}/Morrigu/build
       run: cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
-      env:
     
     - name: Build [DEBUG]
       working-directory: ${{runner.workspace}}/Morrigu/build
