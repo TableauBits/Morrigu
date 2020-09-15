@@ -44,6 +44,11 @@ jobs:
     - name: Install conan
       shell: bash
       run: ${{ matrix.CONAN_INSTALL_TOOL }} install conan
+
+    - name: add conan to path
+      if: matrix.os != 'windows-latest' 
+      shell: bash
+      run: echo "::add-path::~/.local/bin"
     
     - name: configure conan new profile
       shell: bash
