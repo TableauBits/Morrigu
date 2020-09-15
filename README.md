@@ -3,6 +3,10 @@
 ![Morrigu_logo_temp](src/Morrigu/resources/Logo_Banner_TEMP.jpg)
 
 # How to install: 
+![MRG_Ubuntu](https://github.com/Ithyx/Morrigu/workflows/MRG_Ubuntu/badge.svg)
+![MRG_Windows](https://github.com/Ithyx/Morrigu/workflows/MRG_Windows/badge.svg)
+![MRG_MacOS](https://github.com/Ithyx/Morrigu/workflows/MRG_MacOS/badge.svg)
+
 Morrigu uses CMake as build tool and Conan as packet manager. This makes the setup process relatively easy.  
 You need [CMake 3.15+](https://cmake.org/download/), and a somewhat recent version of [Conan](https://conan.io/downloads.html) (tested on 1.26.1) with the follwing remotes:
  * The [bincrafters remote](https://docs.conan.io/en/latest/uploading_packages/remotes.html#bincrafters);
