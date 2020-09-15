@@ -47,6 +47,11 @@ jobs:
       shell: bash
       run: mkdir build
 
+    - name: Installing Clang++ (mac only)
+      if: matrix.os == 'macos-latest' && matrix.compiler == 'clang'
+      shell: bash
+      run: brew install --with-clang llvm
+
     # Conan setup
     - name: Install conan
       shell: bash
