@@ -13,7 +13,7 @@ jobs:
         include:
           - compiler: clang++
             CONAN_COMPILER: apple-clang
-            CONAN_COMPILER_VERSION: 10.0
+            CONAN_COMPILER_VERSION: '10.0'
           - compiler: g++
             CONAN_COMPILER: gcc
             CONAN_COMPILER_VERSION: 9
