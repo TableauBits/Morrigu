@@ -1,59 +1,59 @@
-name: MRG_Windows
+# name: MRG_Windows
 
-on:
-  pull_request:
-    branches:
-      - main
+# on:
+#   pull_request:
+#     branches:
+#       - main
 
-jobs:
-  build:
-    runs-on: windows-latest
+# jobs:
+#   build:
+#     runs-on: windows-latest
 
-    steps:
-    - uses: actions/checkout@v2
+#     steps:
+#     - uses: actions/checkout@v2
     
-    - name: Create Build Environment
-      working-directory: ${{runner.workspace}}/Morrigu
-      shell: bash
-      run: mkdir build
+#     - name: Create Build Environment
+#       working-directory: ${{runner.workspace}}/Morrigu
+#       shell: bash
+#       run: mkdir build
 
-    # Conan setup
-    - name: Install conan
-      shell: bash
-      run: pip3 install conan
+#     # Conan setup
+#     - name: Install conan
+#       shell: bash
+#       run: pip3 install conan
     
-    - name: configure conan new profile
-      shell: bash
-      run: conan profile new default --detect
+#     - name: configure conan new profile
+#       shell: bash
+#       run: conan profile new default --detect
     
-    - name: add conan remotes
-      shell: bash
-      run: |
-        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-        conan remote add ImGui-Docking https://api.bintray.com/conan/ithyx/imgui
+#     - name: add conan remotes
+#       shell: bash
+#       run: |
+#         conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+#         conan remote add ImGui-Docking https://api.bintray.com/conan/ithyx/imgui
     
-    - name: conan install [DEBUG]
-      shell: bash
-      working-directory: ${{runner.workspace}}/Morrigu/build
-      run: conan install .. -s build_type=Debug --build=missing
+#     - name: conan install [DEBUG]
+#       shell: bash
+#       working-directory: ${{runner.workspace}}/Morrigu/build
+#       run: conan install .. -s build_type=Debug --build=missing
     
-    - name: conan install [Release]
-      shell: bash
-      working-directory: ${{runner.workspace}}/Morrigu/build
-      run: conan install .. -s build_type=Release --build=missing
+#     - name: conan install [Release]
+#       shell: bash
+#       working-directory: ${{runner.workspace}}/Morrigu/build
+#       run: conan install .. -s build_type=Release --build=missing
 
-    # Cmake setup
-    - name: Configure CMake [DEBUG]
-      shell: bash
-      working-directory: ${{runner.workspace}}/Morrigu/build
-      run: cmake ..
+#     # Cmake setup
+#     - name: Configure CMake [DEBUG]
+#       shell: bash
+#       working-directory: ${{runner.workspace}}/Morrigu/build
+#       run: cmake ..
     
-    - name: Build [DEBUG]
-      working-directory: ${{runner.workspace}}/Morrigu/build
-      shell: bash
-      run: cmake --build . --config Debug
+#     - name: Build [DEBUG]
+#       working-directory: ${{runner.workspace}}/Morrigu/build
+#       shell: bash
+#       run: cmake --build . --config Debug
     
-    - name: Build [RELEASE]
-      working-directory: ${{runner.workspace}}/Morrigu/build
-      shell: bash
-      run: cmake --build . --config Release
+#     - name: Build [RELEASE]
+#       working-directory: ${{runner.workspace}}/Morrigu/build
+#       shell: bash
+#       run: cmake --build . --config Release
