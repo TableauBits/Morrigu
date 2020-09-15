@@ -8,15 +8,6 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-    strategy:
-      matrix:
-        include:
-          - compiler: clang++
-            CONAN_COMPILER: apple-clang
-            CONAN_COMPILER_VERSION: '11.0'
-          - compiler: g++
-            CONAN_COMPILER: gcc
-            CONAN_COMPILER_VERSION: 9
 
     steps:
     - uses: actions/checkout@v2
@@ -29,7 +20,7 @@ jobs:
     # Conan setup
     - name: Install conan
       shell: bash
-      run: pip3 install conan
+      run: brew install conan
 
     - name: add conan to path
       shell: bash
@@ -38,18 +29,12 @@ jobs:
     - name: configure conan new profile
       shell: bash
       run: conan profile new default --detect
-
-    - name: configure conan C++ ABI for gcc
-      if: matrix.compiler == 'g++'
-      shell: bash
-      run: conan profile update settings.compiler.libcxx=libstdc++11 default
     
     - name: configure conan C++ compiler
       shell: bash
       run: |
-        conan profile update settings.compiler=${{ matrix.CONAN_COMPILER }} default
-        conan profile update settings.compiler.version=${{ matrix.CONAN_COMPILER_VERSION }} default
-        conan profile update env.CMAKE_CXX_COMPILER=${{ matrix.compiler }} default
+        conan profile update settings.compiler=apple-clang default
+        conan profile update settings.compiler.version=11.0 default
     
     - name: add conan remotes
       shell: bash
@@ -71,19 +56,19 @@ jobs:
     - name: Configure CMake [DEBUG]
       shell: bash
       working-directory: ${{runner.workspace}}/Morrigu/build
-      run: cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+      run: cmake .. -DCMAKE_BUILD_TYPE=Debug
     
     - name: Build [DEBUG]
       working-directory: ${{runner.workspace}}/Morrigu/build
       shell: bash
-      run: cmake --build . -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+      run: cmake --build .
     
     - name: Configure CMake [RELEASE]
       shell: bash
       working-directory: ${{runner.workspace}}/Morrigu/build
-      run: cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+      run: cmake .. -DCMAKE_BUILD_TYPE=Release
 
     - name: Build [RELEASE]
       working-directory: ${{runner.workspace}}/Morrigu/build
       shell: bash
-      run: cmake --build . -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+      run: cmake --build .
