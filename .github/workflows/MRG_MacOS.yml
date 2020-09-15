@@ -40,7 +40,7 @@ jobs:
       run: conan profile new default --detect
 
     - name: configure conan C++ ABI for gcc
-      if: matrix.compiler == 'gcc'
+      if: matrix.compiler == 'g++'
       shell: bash
       run: conan profile update settings.compiler.libcxx=libstdc++11 default
     
