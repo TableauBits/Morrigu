@@ -13,9 +13,9 @@ jobs:
     strategy:
       matrix:
         include:
-          # Windows config
-          - os: windows-latest
-            CONAN_INSTALL_TOOL: pip3
+          # # Windows config
+          # - os: windows-latest
+          #   CONAN_INSTALL_TOOL: pip3
           # # Ubuntu configs
           # - os: ubuntu-20.04
           #   compiler: clang++
@@ -27,15 +27,17 @@ jobs:
           #   CONAN_COMPILER: gcc
           #   compilerVersion: 9
           #   CONAN_INSTALL_TOOL: pip3
-          # # MacOS configs
-          # - os: macos-latest
-          #   compiler: clang
-          #   compilerVersion: 10
-          #   CONAN_INSTALL_TOOL: brew
-          # - os: macos-latest
-          #   compiler: gcc
-          #   compilerVersion: 9
-          #   CONAN_INSTALL_TOOL: brew
+          # MacOS configs
+          - os: macos-latest
+            compiler: clang++
+            CONAN_COMPILER: clang
+            compilerVersion: 10
+            CONAN_INSTALL_TOOL: brew
+          - os: macos-latest
+            compiler: g++
+            CONAN_COMPILER: gcc
+            compilerVersion: 9
+            CONAN_INSTALL_TOOL: brew
 
     steps:
     - uses: actions/checkout@v2
