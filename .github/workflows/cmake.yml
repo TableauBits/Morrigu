@@ -15,18 +15,18 @@ jobs:
         include:
           # Windows config
           - os: windows-latest
-            CONAN_INSTALL_TOOL: choco
-          # Ubuntu configs
-          - os: ubuntu-20.04
-            compiler: clang++
-            CONAN_COMPILER: clang
-            compilerVersion: 9
             CONAN_INSTALL_TOOL: pip3
-          - os: ubuntu-20.04
-            compiler: g++
-            CONAN_COMPILER: gcc
-            compilerVersion: 9
-            CONAN_INSTALL_TOOL: pip3
+          # # Ubuntu configs
+          # - os: ubuntu-20.04
+          #   compiler: clang++
+          #   CONAN_COMPILER: clang
+          #   compilerVersion: 9
+          #   CONAN_INSTALL_TOOL: pip3
+          # - os: ubuntu-20.04
+          #   compiler: g++
+          #   CONAN_COMPILER: gcc
+          #   compilerVersion: 9
+          #   CONAN_INSTALL_TOOL: pip3
           # # MacOS configs
           # - os: macos-latest
           #   compiler: clang
@@ -50,7 +50,7 @@ jobs:
       shell: bash
       run: ${{ matrix.CONAN_INSTALL_TOOL }} install conan
 
-    - name: add conan to path
+    - name: add conan to path (non-windows)
       if: matrix.os != 'windows-latest' 
       shell: bash
       run: echo "::add-path::~/.local/bin"
