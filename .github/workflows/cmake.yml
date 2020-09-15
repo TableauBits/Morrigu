@@ -37,6 +37,7 @@ jobs:
     - uses: actions/checkout@v2
     
     - name: Create Build Environment
+      working-directory: ${{runner.workspace}}
       shell: bash
       run: mkdir build
 
@@ -70,19 +71,19 @@ jobs:
     - name: conan install [DEBUG]
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: conan install .. -s build_type=Debug --build=missing
+      run: conan install ${{runner.workspace}} -s build_type=Debug --build=missing
     
     - name: conan install [Release]
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: conan install .. -s build_type=Release --build=missing
+      run: conan install ${{runner.workspace}} -s build_type=Release --build=missing
 
     # Cmake setup
     - name: Configure CMake (non-windows) [DEBUG]
       if: matrix.os != 'windows-latest'
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake .. -DCMAKE_BUILD_TYPE=Debug
+      run: cmake ${{runner.workspace}} -DCMAKE_BUILD_TYPE=Debug
       env:
         CXX: ${{ matrix.compiler }}-${{ matrix.compilerVersion }}
 
@@ -90,7 +91,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake ..
+      run: cmake ${{runner.workspace}}
     
     - name: Build (non-windows) [DEBUG]
       if: matrix.os != 'windows-latest'
