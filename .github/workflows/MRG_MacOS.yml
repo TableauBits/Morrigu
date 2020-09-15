@@ -13,8 +13,10 @@ jobs:
         include:
           - compiler: clang++
             CONAN_COMPILER: apple-clang
+            CONAN_COMPILER_VERSION: 10.0
           - compiler: g++
             CONAN_COMPILER: gcc
+            CONAN_COMPILER_VERSION: 9
 
     steps:
     - uses: actions/checkout@v2
@@ -46,7 +48,7 @@ jobs:
       shell: bash
       run: |
         conan profile update settings.compiler=${{ matrix.CONAN_COMPILER }} default
-        conan profile update settings.compiler.version=10.0 default
+        conan profile update settings.compiler.version=${{ matrix.CONAN_COMPILER_VERSION }} default
         conan profile update env.CXX=${{ matrix.compiler }} default
     
     - name: add conan remotes
