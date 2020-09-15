@@ -37,6 +37,7 @@ jobs:
     - uses: actions/checkout@v2
     
     - name: Create Build Environment
+      working-directory: ${{runner.workspace}}/Morrigu
       shell: bash
       run: mkdir build
 
@@ -73,32 +74,32 @@ jobs:
     
     - name: conan install [DEBUG]
       shell: bash
-      working-directory: ${{runner.workspace}}/Morrigu/Morrigu/build
-      run: conan install ${{runner.workspace}} -s build_type=Debug --build=missing
+      working-directory: ${{runner.workspace}}/Morrigu/build
+      run: conan install .. -s build_type=Debug --build=missing
     
     - name: conan install [Release]
       shell: bash
-      working-directory: ${{runner.workspace}}/Morrigu/Morrigu/build
-      run: conan install ${{runner.workspace}} -s build_type=Release --build=missing
+      working-directory: ${{runner.workspace}}/Morrigu/build
+      run: conan install .. -s build_type=Release --build=missing
 
     # Cmake setup
     - name: Configure CMake (non-windows) [DEBUG]
       if: matrix.os != 'windows-latest'
       shell: bash
-      working-directory: ${{runner.workspace}}/Morrigu/Morrigu/build
-      run: cmake ${{runner.workspace}} -DCMAKE_BUILD_TYPE=Debug
+      working-directory: ${{runner.workspace}}/Morrigu/build
+      run: cmake .. -DCMAKE_BUILD_TYPE=Debug
       env:
         CXX: ${{ matrix.compiler }}-${{ matrix.compilerVersion }}
 
     - name: Configure CMake (windows) [DEBUG]
       if: matrix.os == 'windows-latest'
       shell: bash
-      working-directory: ${{runner.workspace}}/Morrigu/Morrigu/build
-      run: cmake ${{runner.workspace}}
+      working-directory: ${{runner.workspace}}/Morrigu/build
+      run: cmake ..
     
     - name: Build (non-windows) [DEBUG]
       if: matrix.os != 'windows-latest'
-      working-directory: ${{runner.workspace}}/Morrigu/Morrigu/build
+      working-directory: ${{runner.workspace}}/Morrigu/build
       shell: bash
       run: cmake --build .
       env:
@@ -106,21 +107,21 @@ jobs:
     
     - name: Build (windows) [DEBUG]
       if: matrix.os == 'windows-latest'
-      working-directory: ${{runner.workspace}}/Morrigu/Morrigu/build
+      working-directory: ${{runner.workspace}}/Morrigu/build
       shell: bash
       run: cmake --build . --config Debug
     
     - name: Configure CMake (non-windows) [RELEASE]
       if: matrix.os != 'windows-latest'
       shell: bash
-      working-directory: ${{runner.workspace}}/Morrigu/Morrigu/build
+      working-directory: ${{runner.workspace}}/Morrigu/build
       run: cmake .. -DCMAKE_BUILD_TYPE=Release
       env:
         CXX: ${{ matrix.compiler }}-${{ matrix.compilerVersion }}
 
     - name: Build (non-windows) [RELEASE]
       if: matrix.os != 'windows-latest'
-      working-directory: ${{runner.workspace}}/Morrigu/Morrigu/build
+      working-directory: ${{runner.workspace}}/Morrigu/build
       shell: bash
       run: cmake --build .
       env:
@@ -128,6 +129,6 @@ jobs:
     
     - name: Build (windows) [RELEASE]
       if: matrix.os == 'windows-latest'
-      working-directory: ${{runner.workspace}}/Morrigu/Morrigu/build
+      working-directory: ${{runner.workspace}}/Morrigu/build
       shell: bash
       run: cmake --build . --config Release
