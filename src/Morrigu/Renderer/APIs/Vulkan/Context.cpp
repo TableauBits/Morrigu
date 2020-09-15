@@ -589,7 +589,7 @@ namespace MRG::Vulkan
 
 			data->swapChain = createSwapChain(data->physicalDevice, data->surface, data->device, data);
 			data->swapChain.imageViews = createimageViews(data->device, data->swapChain.images, data->swapChain.imageFormat);
-		} catch (std::runtime_error e) {
+		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
 	}

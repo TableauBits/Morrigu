@@ -59,7 +59,7 @@
         /// POSIX
         #include <signal.h>
         #define DEBUG_BREAK raise(SIGTRAP)
-    #elif
+    #else
         /// OTHERS, please write equivalent macro definition
         #define DEBUG_BREAK
     #endif
