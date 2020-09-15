@@ -37,18 +37,23 @@ jobs:
     - uses: actions/checkout@v2
     
     - name: Create Build Environment
-      run: cmake -E make_directory ${{runner.workspace}}/build
+      shell: bash
+      run: mkdir build
 
     # Conan setup
     - name: Install conan
       shell: bash
       run: sudo ${{ matrix.CONAN_INSTALL_TOOL }} install conan
     
-    - name: congure conan C++ ABI
+    - name: configure conan new profile
       shell: bash
-      run: conan profile new default --detect && conan profile update settings.compiler.libcxx=libstdc++11 default
+      run: conan profile new default --detect
+
+    - name: configure conan C++ ABI
+      shell: bash
+      run: conan profile update settings.compiler.libcxx=libstdc++11 default
     
-    - name: congure conan C++ compiler
+    - name: configure conan C++ compiler
       if: matrix.os != 'windows-latest'
       shell: bash
       run: conan profile update settings.compiler=${{ matrix.compiler }} default && conan profile update settings.compiler.version=${{ matrix.compilerVersion }} default
