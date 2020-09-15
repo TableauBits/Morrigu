@@ -14,7 +14,7 @@ jobs:
           - compiler: clang++
             CONAN_COMPILER: apple-clang
             CONAN_COMPILER_VERSION: '10.0'
-          - compiler: g++
+          - compiler: gcc
             CONAN_COMPILER: gcc
             CONAN_COMPILER_VERSION: 9
 
