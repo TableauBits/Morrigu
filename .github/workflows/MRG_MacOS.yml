@@ -46,7 +46,7 @@ jobs:
       shell: bash
       run: |
         conan profile update settings.compiler=${{ matrix.CONAN_COMPILER }} default
-        conan profile update settings.compiler.version=9 default
+        conan profile update settings.compiler.version=10.0 default
         conan profile update env.CXX=${{ matrix.compiler }} default
     
     - name: add conan remotes
