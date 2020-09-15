@@ -1,4 +1,4 @@
-name: CMake
+name: MRG_Ubuntu
 
 on:
   pull_request:

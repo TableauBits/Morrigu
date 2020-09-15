@@ -1,4 +1,4 @@
-name: CMake
+name: MRG_MacOS
 
 on:
   pull_request:
@@ -40,7 +40,6 @@ jobs:
     - name: configure conan C++ compiler
       shell: bash
       run: |
-        conan profile update settings.compiler.libcxx=libstdc++11 default
         conan profile update settings.compiler=${{ matrix.CONAN_COMPILER }} default
         conan profile update settings.compiler.version=9 default
         conan profile update env.CXX=${{ matrix.compiler }} default
