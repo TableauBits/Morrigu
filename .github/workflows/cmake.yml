@@ -58,15 +58,12 @@ jobs:
     - name: configure conan new profile
       shell: bash
       run: conan profile new default --detect
-
-    - name: configure conan C++ ABI
-      shell: bash
-      run: conan profile update settings.compiler.libcxx=libstdc++11 default
     
-    - name: configure conan C++ compiler
+    - name: configure conan C++ compiler (non-windows)
       if: matrix.os != 'windows-latest'
       shell: bash
       run: |
+        conan profile update settings.compiler.libcxx=libstdc++11 default
         conan profile update settings.compiler=${{ matrix.CONAN_COMPILER }} default
         conan profile update settings.compiler.version=${{ matrix.compilerVersion }} default
         conan profile update env.CXX=${{ matrix.compiler }}-${{ matrix.compilerVersion }} default
