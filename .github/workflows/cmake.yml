@@ -43,7 +43,7 @@ jobs:
     # Conan setup
     - name: Install conan
       shell: bash
-      run: sudo ${{ matrix.CONAN_INSTALL_TOOL }} install conan
+      run: ${{ matrix.CONAN_INSTALL_TOOL }} install conan
     
     - name: configure conan new profile
       shell: bash
@@ -65,19 +65,19 @@ jobs:
     - name: conan install [DEBUG]
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: sudo conan install $GITHUB_WORKSPACE -s build_type=Debug --build=missing
+      run: conan install .. -s build_type=Debug --build=missing
     
     - name: conan install [Release]
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: sudo conan install $GITHUB_WORKSPACE -s build_type=Release --build=missing
+      run: conan install .. -s build_type=Release --build=missing
 
     # Cmake setup
     - name: Configure CMake (non-windows) [DEBUG]
       if: matrix.os != 'windows-latest'
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Debug
+      run: cmake .. -DCMAKE_BUILD_TYPE=Debug
       env:
         CXX: ${{ matrix.compiler }}-${{ matrix.compilerVersion }}
 
@@ -85,7 +85,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE
+      run: cmake ..
     
     - name: Build (non-windows) [DEBUG]
       if: matrix.os != 'windows-latest'
@@ -105,7 +105,7 @@ jobs:
       if: matrix.os != 'windows-latest'
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Release
+      run: cmake .. -DCMAKE_BUILD_TYPE=Release
       env:
         CXX: ${{ matrix.compiler }}-${{ matrix.compilerVersion }}
 
