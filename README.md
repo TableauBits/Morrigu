@@ -1,5 +1,8 @@
 
 # Morrigu
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cff49f9511764caa9035596a418658ba)](https://app.codacy.com/manual/Ithyx/Morrigu?utm_source=github.com&utm_medium=referral&utm_content=Ithyx/Morrigu&utm_campaign=Badge_Grade_Dashboard)
+
 ![Morrigu_logo_temp](src/Morrigu/resources/Logo_Banner_TEMP.jpg)
 
 # How to install: 
