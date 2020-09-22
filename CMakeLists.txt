@@ -25,7 +25,7 @@ if (MSVC)
     target_compile_options(${TEST_PRJ_NAME} PRIVATE /permissive- /W4 /WX)
     # setting the default project in the solution
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TEST_PRJ_NAME})
-    set_property(TARGET ${TEST_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/${TEST_PRJ_NAME})
+    set_property(TARGET ${TEST_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtime)
 else()
     message("DETECTED NON MSVC COMPILER")
     # we consider that the majority of C++ compilers other than MSVC recognise the following flags,

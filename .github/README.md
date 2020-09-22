@@ -1,5 +1,5 @@
 # Morrigu
-![Morrigu_logo_temp](src/Morrigu/resources/Logo_Banner_TEMP.jpg)
+![Morrigu_logo_temp](Logo_Banner_TEMP.jpg)
 
 ## How to install 
 Morrigu uses CMake as build tool and Conan as packet manager. This makes the setup process relatively easy.  
