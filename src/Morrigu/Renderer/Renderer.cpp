@@ -7,12 +7,12 @@ namespace MRG
 {
 	Scope<Renderer::SceneData> Renderer::s_sceneData = createScope<Renderer::SceneData>();
 
-	void Renderer::init()
+	void Renderer::init(GLFWwindow* window)
 	{
 		MRG_PROFILE_FUNCTION();
 
 		RenderCommand::init();
-		Renderer2D::init();
+		Renderer2D::init(window);
 	}
 
 	void Renderer::shutdown() { Renderer2D::shutdown(); }

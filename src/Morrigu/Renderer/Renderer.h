@@ -5,12 +5,14 @@
 #include "Renderer/RenderCommand.h"
 #include "Renderer/Shader.h"
 
+#include <GLFW/glfw3.h>
+
 namespace MRG
 {
 	class Renderer
 	{
 	public:
-		static void init();
+		static void init(GLFWwindow* window);
 		static void shutdown();
 
 		static void onWindowResize(uint32_t width, uint32_t height);

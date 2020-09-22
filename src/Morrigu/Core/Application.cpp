@@ -21,7 +21,7 @@ namespace MRG
 		m_window = std::make_unique<Window>(WindowProperties::create("Morrigu", 1280, 720, true));
 		m_window->setEventCallback([this](Event& event) { onEvent(event); });
 
-		Renderer::init();
+		Renderer::init(m_window->getGLFWWindow());
 
 		m_ImGuiLayer = new ImGuiLayer{};
 		pushOverlay(m_ImGuiLayer);
