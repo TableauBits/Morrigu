@@ -74,21 +74,18 @@ namespace MRG::OpenGL
 		compile(shaderSources);
 	}
 
-	Shader::Shader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) : m_name(name)
+	Shader::~Shader() { destroy(); }
+
+	void Shader::destroy()
 	{
 		MRG_PROFILE_FUNCTION();
 
-		std::unordered_map<GLenum, std::string> sources;
-		sources[GL_VERTEX_SHADER] = vertexSrc;
-		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
-		compile(sources);
-	}
-
-	Shader::~Shader()
-	{
-		MRG_PROFILE_FUNCTION();
+		if (m_isDestroyed)
+			return;
 
 		glDeleteProgram(m_rendererID);
+
+		m_isDestroyed = true;
 	}
 
 	void Shader::bind() const

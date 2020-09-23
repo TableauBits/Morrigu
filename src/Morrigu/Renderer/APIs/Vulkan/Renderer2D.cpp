@@ -1,10 +1,16 @@
 #include "Renderer2D.h"
 
+#include "Renderer/Renderer2D.h"
+
 namespace MRG::Vulkan
 {
-	void Renderer2D::init(GLFWwindow* window) { m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window)); }
+	void Renderer2D::init()
+	{
+		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
+		m_textureShader = Shader::create("resources/shaders/texture");
+	}
 
-	void Renderer2D::shutdown() {}
+	void Renderer2D::shutdown() { m_textureShader->destroy(); }
 
 	void Renderer2D::beginScene(const OrthoCamera&) {}
 

@@ -4,6 +4,7 @@
 #include "Renderer/Shader.h"
 
 #include <glm/glm.hpp>
+#include <vulkan/vulkan.hpp>
 
 #include <cstdint>
 
@@ -12,9 +13,9 @@ namespace MRG::Vulkan
 	class Shader : public MRG::Shader
 	{
 	public:
-		Shader(const std::string& filePath, MRG::Encoding encoding);
-		Shader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+		Shader(const std::string& filePath);
 		virtual ~Shader();
+		void destroy() override;
 
 		void bind() const override;
 		void unbind() const override;
@@ -38,12 +39,8 @@ namespace MRG::Vulkan
 		void uploadUniform(const std::string& name, const glm::mat4& matrix);
 
 	private:
-		[[nodiscard]] std::string readFile(const std::string& filePath);
-		[[nodiscard]] std::unordered_map<uint64_t, std::string> preProcess(const std::string& source, Encoding encoding);
-		void compile(const std::unordered_map<uint64_t, std::string>& shaderSources);
-
-		// uint32_t m_rendererID;
 		std::string m_name;
+		VkShaderModule m_vertexShaderModule, m_fragmentShaderModule;
 	};
 }  // namespace MRG::Vulkan
 

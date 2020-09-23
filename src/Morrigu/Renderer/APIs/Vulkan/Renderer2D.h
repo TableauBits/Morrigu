@@ -4,6 +4,7 @@
 #include "Renderer/Renderer2D.h"
 
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
+#include "Renderer/Shader.h"
 
 namespace MRG::Vulkan
 {
@@ -12,7 +13,7 @@ namespace MRG::Vulkan
 	public:
 		virtual ~Renderer2D() = default;
 
-		void init(GLFWwindow* window) override;
+		void init() override;
 		void shutdown() override;
 
 		void beginScene(const OrthoCamera& camera) override;
@@ -35,6 +36,7 @@ namespace MRG::Vulkan
 
 	private:
 		WindowProperties* m_data;
+		Ref<MRG::Shader> m_textureShader;
 	};
 }  // namespace MRG::Vulkan
 

@@ -13,7 +13,7 @@ namespace MRG::OpenGL
 	public:
 		virtual ~Renderer2D() = default;
 
-		void init(GLFWwindow*) override;
+		void init() override;
 		void shutdown() override;
 
 		void beginScene(const OrthoCamera& camera) override;

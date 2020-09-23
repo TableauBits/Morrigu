@@ -7,11 +7,14 @@
 
 namespace MRG
 {
+	GLFWwindow* Renderer2D::s_windowHandle;
 	Scope<Generic2DRenderer> Renderer2D::s_renderer;
 
 	void Renderer2D::init(GLFWwindow* window)
 	{
 		MRG_PROFILE_FUNCTION();
+
+		s_windowHandle = window;
 
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
@@ -26,7 +29,7 @@ namespace MRG
 			break;
 		}
 
-		s_renderer->init(window);
+		s_renderer->init();
 	}
 
 	void Renderer2D::shutdown()

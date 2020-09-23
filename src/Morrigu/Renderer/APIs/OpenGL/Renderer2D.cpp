@@ -6,7 +6,7 @@
 
 namespace MRG::OpenGL
 {
-	void Renderer2D::init(GLFWwindow*)
+	void Renderer2D::init()
 	{
 		m_quadVertexArray = VertexArray::create();
 

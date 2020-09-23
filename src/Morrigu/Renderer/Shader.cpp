@@ -14,26 +14,7 @@ namespace MRG
 		} break;
 
 		case RenderingAPI::API::Vulkan: {
-			return createRef<Vulkan::Shader>(filePath, encoding);
-		} break;
-
-		case RenderingAPI::API::None:
-		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
-			return nullptr;
-		} break;
-		}
-	}
-
-	Ref<Shader> Shader::create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
-	{
-		switch (RenderingAPI::getAPI()) {
-		case RenderingAPI::API::OpenGL: {
-			return createRef<OpenGL::Shader>(name, vertexSrc, fragmentSrc);
-		} break;
-
-		case RenderingAPI::API::Vulkan: {
-			return createRef<Vulkan::Shader>(name, vertexSrc, fragmentSrc);
+			return createRef<Vulkan::Shader>(filePath);
 		} break;
 
 		case RenderingAPI::API::None:

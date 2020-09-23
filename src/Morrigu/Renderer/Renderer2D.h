@@ -14,7 +14,7 @@ namespace MRG
 	public:
 		virtual ~Generic2DRenderer() = default;
 
-		virtual void init(GLFWwindow* window) = 0;
+		virtual void init() = 0;
 		virtual void shutdown() = 0;
 
 		virtual void beginScene(const OrthoCamera& camera) = 0;
@@ -44,6 +44,8 @@ namespace MRG
 
 		static void beginScene(const OrthoCamera& camera);
 		static void endScene();
+
+		[[nodiscard]] static GLFWwindow* getGLFWWindow() { return s_windowHandle; }
 
 		/// Primitives
 
@@ -77,6 +79,7 @@ namespace MRG
 		                            const glm::vec4& tintColor = glm::vec4(1.0f));
 
 	private:
+		static GLFWwindow* s_windowHandle;
 		static Scope<Generic2DRenderer> s_renderer;
 	};
 }  // namespace MRG

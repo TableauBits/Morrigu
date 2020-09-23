@@ -21,6 +21,7 @@ namespace MRG
 	{
 	public:
 		virtual ~Shader() = default;
+		virtual void destroy() = 0;
 
 		virtual void bind() const = 0;
 		virtual void unbind() const = 0;
@@ -33,8 +34,10 @@ namespace MRG
 
 		[[nodiscard]] virtual const std::string& getName() const = 0;
 
-		[[nodiscard]] static Ref<Shader> create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		[[nodiscard]] static Ref<Shader> create(const std::string& filePath, Encoding encoding = Encoding::LF);
+
+	protected:
+		bool m_isDestroyed = false;
 	};
 
 	class ShaderLibrary

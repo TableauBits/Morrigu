@@ -14,8 +14,8 @@ namespace MRG::OpenGL
 	{
 	public:
 		Shader(const std::string& filePath, MRG::Encoding encoding);
-		Shader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~Shader();
+		void destroy() override;
 
 		void bind() const override;
 		void unbind() const override;
