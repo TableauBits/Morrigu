@@ -35,7 +35,7 @@ namespace MRG::OpenGL
 		auto whiteTextureData = 0xffffffff;
 		m_whiteTexture->setData(&whiteTextureData, sizeof(whiteTextureData));
 
-		m_textureShader = Shader::create("resources/shaders/texture.glsl");
+		m_textureShader = Shader::create("resources/shaders/texture");
 		m_textureShader->bind();
 		m_textureShader->upload("u_texture", 0);
 	}

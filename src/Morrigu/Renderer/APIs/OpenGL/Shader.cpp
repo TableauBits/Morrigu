@@ -61,11 +61,15 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		std::filesystem::path path{filePath};
-		MRG_CORE_ASSERT(std::filesystem::exists(path), fmt::format("File '{}' does not exist !", filePath));
-		m_name = path.stem().string();
+		std::filesystem::path shaderDir{filePath};
+		std::filesystem::path shaderFile{filePath + "/gl.glsl"};
+		MRG_CORE_ASSERT(std::filesystem::exists(shaderDir), fmt::format("Directory '{}' does not exist!", filePath));
+		MRG_CORE_ASSERT(std::filesystem::is_directory(shaderDir),
+		                fmt::format("Specified path '{}' doesn't reference a directory!", filePath));
+		MRG_CORE_ASSERT(std::filesystem::exists(shaderFile), fmt::format("Directory '{}' does not contain gl shader file!", filePath));
+		m_name = shaderDir.stem().string();
 
-		const auto source = readFile(filePath);
+		const auto source = readFile(shaderFile.string());
 		const auto shaderSources = preProcess(source, encoding);
 		compile(shaderSources);
 	}

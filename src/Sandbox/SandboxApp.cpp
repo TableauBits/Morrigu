@@ -14,7 +14,7 @@ public:
 class Sandbox : public MRG::Application
 {
 public:
-	Sandbox() { pushLayer(new Sandbox2D{}); }
+	Sandbox() { pushLayer(new VulkanSandbox{}); }
 	~Sandbox() {}
 };
 
