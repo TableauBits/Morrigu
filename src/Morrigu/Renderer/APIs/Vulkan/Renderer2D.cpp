@@ -8,7 +8,7 @@ namespace MRG::Vulkan
 	void Renderer2D::init()
 	{
 		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
-		m_textureShader = createRef<Shader>(Shader("resources/shaders/texture"));
+		m_textureShader = createRef<Shader>("resources/shaders/texture");
 
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
