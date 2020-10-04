@@ -3,8 +3,8 @@
 
 #include "Renderer/Renderer2D.h"
 
+#include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
-#include "Renderer/Shader.h"
 
 namespace MRG::Vulkan
 {
@@ -36,7 +36,7 @@ namespace MRG::Vulkan
 
 	private:
 		WindowProperties* m_data;
-		Ref<MRG::Shader> m_textureShader;
+		Ref<Shader> m_textureShader;
 	};
 }  // namespace MRG::Vulkan
 

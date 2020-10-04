@@ -1,5 +1,6 @@
 #include "Renderer2D.h"
 
+#include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/Renderer2D.h"
 
 namespace MRG::Vulkan
@@ -7,7 +8,21 @@ namespace MRG::Vulkan
 	void Renderer2D::init()
 	{
 		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
-		m_textureShader = Shader::create("resources/shaders/texture");
+		m_textureShader = createRef<Shader>(Shader("resources/shaders/texture"));
+
+		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+		vertShaderStageInfo.module = m_textureShader->m_vertexShaderModule;
+		vertShaderStageInfo.pName = "main";
+
+		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		fragShaderStageInfo.module = m_textureShader->m_fragmentShaderModule;
+		fragShaderStageInfo.pName = "main";
+
+		VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 	}
 
 	void Renderer2D::shutdown() { m_textureShader->destroy(); }

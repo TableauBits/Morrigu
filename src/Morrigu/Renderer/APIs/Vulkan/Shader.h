@@ -38,9 +38,10 @@ namespace MRG::Vulkan
 		void uploadUniform(const std::string& name, const glm::mat3& matrix);
 		void uploadUniform(const std::string& name, const glm::mat4& matrix);
 
+		VkShaderModule m_vertexShaderModule, m_fragmentShaderModule;
+
 	private:
 		std::string m_name;
-		VkShaderModule m_vertexShaderModule, m_fragmentShaderModule;
 	};
 }  // namespace MRG::Vulkan
 
