@@ -553,6 +553,14 @@ namespace
 		return imageViews;
 	}
 
+	[[nodiscard]] VkPipelineLayoutCreateInfo populatePipelineLayout()
+	{
+		VkPipelineLayoutCreateInfo pipelineCreateInfo{};
+		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+		return pipelineCreateInfo;
+	}
+
 }  // namespace
 
 namespace MRG::Vulkan
@@ -590,6 +598,10 @@ namespace MRG::Vulkan
 
 			data->swapChain = createSwapChain(data->physicalDevice, data->surface, data->device, data);
 			data->swapChain.imageViews = createimageViews(data->device, data->swapChain.images, data->swapChain.imageFormat);
+
+			const auto pipelineCreateInfo = populatePipelineLayout(); 
+			MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineCreateInfo, nullptr, &data->pipelineLayout), "failed to create pipeline layout!");
+			
 		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
@@ -598,6 +610,8 @@ namespace MRG::Vulkan
 	Context::~Context()
 	{
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(m_window));
+
+		vkDestroyPipelineLayout(data->device, data->pipelineLayout, nullptr);
 
 		for (auto imageView : data->swapChain.imageViews) vkDestroyImageView(data->device, imageView, nullptr);
 

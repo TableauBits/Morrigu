@@ -30,6 +30,7 @@ namespace MRG::Vulkan
 		VkDevice device;
 		VkQueue graphicsQueue, presentQueue;
 		SwapChain swapChain;
+		VkPipelineLayout pipelineLayout;
 	};
 }  // namespace MRG::Vulkan
 
