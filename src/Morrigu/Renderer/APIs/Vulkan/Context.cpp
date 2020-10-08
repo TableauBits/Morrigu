@@ -561,6 +561,40 @@ namespace
 		return pipelineCreateInfo;
 	}
 
+	[[nodiscard]] VkRenderPass createRenderPass(VkDevice device, VkFormat swapChainFormat)
+	{
+		VkRenderPass returnRenderPass;
+
+		VkAttachmentDescription colorAttachment{};
+		colorAttachment.format = swapChainFormat;
+		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		VkAttachmentReference colorAttachmentRef{};
+		colorAttachmentRef.attachment = 0;
+		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpass{};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1;
+		subpass.pColorAttachments = &colorAttachmentRef;
+
+		VkRenderPassCreateInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = 1;
+		renderPassInfo.pAttachments = &colorAttachment;
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.pSubpasses = &subpass;
+
+		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &returnRenderPass), "failed to create render pass!")
+		return returnRenderPass;
+	}
+
 }  // namespace
 
 namespace MRG::Vulkan
@@ -599,7 +633,9 @@ namespace MRG::Vulkan
 			data->swapChain = createSwapChain(data->physicalDevice, data->surface, data->device, data);
 			data->swapChain.imageViews = createimageViews(data->device, data->swapChain.images, data->swapChain.imageFormat);
 
-			const auto pipelineCreateInfo = populatePipelineLayout(); 
+			data->renderPass = createRenderPass(data->device, data->swapChain.imageFormat);
+
+			const auto pipelineCreateInfo = populatePipelineLayout();
 			MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineCreateInfo, nullptr, &data->pipelineLayout), "failed to create pipeline layout!");
 			
 		} catch (const std::runtime_error& e) {
@@ -612,6 +648,8 @@ namespace MRG::Vulkan
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(m_window));
 
 		vkDestroyPipelineLayout(data->device, data->pipelineLayout, nullptr);
+
+		vkDestroyRenderPass(data->device, data->renderPass, nullptr);
 
 		for (auto imageView : data->swapChain.imageViews) vkDestroyImageView(data->device, imageView, nullptr);
 
