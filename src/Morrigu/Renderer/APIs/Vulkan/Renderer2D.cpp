@@ -8,6 +8,7 @@ namespace MRG::Vulkan
 {
 	void Renderer2D::init()
 	{
+		// TODO: Add proper debug logging for selected rendering features
 		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
 		m_textureShader = createRef<Shader>("resources/shaders/texture");
 
@@ -71,7 +72,8 @@ namespace MRG::Vulkan
 
 		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 		colorBlendAttachment.blendEnable = VK_TRUE;
-		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		colorBlendAttachment.colorWriteMask =
+		  VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
@@ -84,9 +86,32 @@ namespace MRG::Vulkan
 		colorBlending.logicOpEnable = VK_FALSE;
 		colorBlending.attachmentCount = 1;
 		colorBlending.pAttachments = &colorBlendAttachment;
+
+		VkGraphicsPipelineCreateInfo pipelineInfo{};
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineInfo.stageCount = 2;
+		pipelineInfo.pStages = shaderStages;
+		pipelineInfo.pVertexInputState = &vertexInputInfo;
+		pipelineInfo.pInputAssemblyState = &inputAssembly;
+		pipelineInfo.pViewportState = &viewportState;
+		pipelineInfo.pRasterizationState = &rasterizer;
+		pipelineInfo.pMultisampleState = &multisampling;
+		pipelineInfo.pColorBlendState = &colorBlending;
+		pipelineInfo.layout = m_data->pipelineLayout;
+		pipelineInfo.renderPass = m_data->renderPass;
+		pipelineInfo.subpass = 0;
+
+		MRG_VKVALIDATE(vkCreateGraphicsPipelines(m_data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_data->graphicsPipeline),
+		               "failed to create graphics pipeline!");
+
+		MRG_ENGINE_INFO("Vulkan graphics pipeline succesfully created");
 	}
 
-	void Renderer2D::shutdown() { m_textureShader->destroy(); }
+	void Renderer2D::shutdown()
+	{
+		vkDestroyPipeline(m_data->device, m_data->graphicsPipeline, nullptr);
+		m_textureShader->destroy();
+	}
 
 	void Renderer2D::beginScene(const OrthoCamera&) {}
 

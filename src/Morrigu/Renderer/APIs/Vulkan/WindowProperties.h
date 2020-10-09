@@ -32,6 +32,7 @@ namespace MRG::Vulkan
 		SwapChain swapChain;
 		VkRenderPass renderPass;
 		VkPipelineLayout pipelineLayout;
+		VkPipeline graphicsPipeline;
 	};
 }  // namespace MRG::Vulkan
 

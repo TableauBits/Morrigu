@@ -636,8 +636,9 @@ namespace MRG::Vulkan
 			data->renderPass = createRenderPass(data->device, data->swapChain.imageFormat);
 
 			const auto pipelineCreateInfo = populatePipelineLayout();
-			MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineCreateInfo, nullptr, &data->pipelineLayout), "failed to create pipeline layout!");
-			
+			MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineCreateInfo, nullptr, &data->pipelineLayout),
+			               "failed to create pipeline layout!");
+
 		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
