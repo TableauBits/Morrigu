@@ -5,6 +5,9 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <string>
+#include <vector>
+
 namespace MRG::Vulkan
 {
 	struct SwapChain
@@ -14,6 +17,14 @@ namespace MRG::Vulkan
 		VkFormat imageFormat;
 		VkExtent2D extent;
 		std::vector<VkImageView> imageViews;
+		std::vector<VkFramebuffer> frameBuffers;
+	};
+
+	struct Pipeline
+	{
+		VkPipeline handle;
+		VkRenderPass renderPass;
+		VkPipelineLayout layout;
 	};
 
 	class WindowProperties : public MRG::WindowProperties
@@ -30,9 +41,7 @@ namespace MRG::Vulkan
 		VkDevice device;
 		VkQueue graphicsQueue, presentQueue;
 		SwapChain swapChain;
-		VkRenderPass renderPass;
-		VkPipelineLayout pipelineLayout;
-		VkPipeline graphicsPipeline;
+		Pipeline pipeline;
 	};
 }  // namespace MRG::Vulkan
 

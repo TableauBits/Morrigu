@@ -531,7 +531,7 @@ namespace
 	[[nodiscard]] std::vector<VkImageView> createimageViews(const VkDevice device, const std::vector<VkImage>& images, VkFormat imageFormat)
 	{
 		std::vector<VkImageView> imageViews(images.size());
-		for (size_t i = 0; i < images.size(); i++) {
+		for (std::size_t i = 0; i < images.size(); i++) {
 			VkImageViewCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			createInfo.image = images[i];
@@ -633,10 +633,10 @@ namespace MRG::Vulkan
 			data->swapChain = createSwapChain(data->physicalDevice, data->surface, data->device, data);
 			data->swapChain.imageViews = createimageViews(data->device, data->swapChain.images, data->swapChain.imageFormat);
 
-			data->renderPass = createRenderPass(data->device, data->swapChain.imageFormat);
+			data->pipeline.renderPass = createRenderPass(data->device, data->swapChain.imageFormat);
 
 			const auto pipelineCreateInfo = populatePipelineLayout();
-			MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineCreateInfo, nullptr, &data->pipelineLayout),
+			MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineCreateInfo, nullptr, &data->pipeline.layout),
 			               "failed to create pipeline layout!");
 
 		} catch (const std::runtime_error& e) {
@@ -648,9 +648,9 @@ namespace MRG::Vulkan
 	{
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(m_window));
 
-		vkDestroyPipelineLayout(data->device, data->pipelineLayout, nullptr);
+		vkDestroyPipelineLayout(data->device, data->pipeline.layout, nullptr);
 
-		vkDestroyRenderPass(data->device, data->renderPass, nullptr);
+		vkDestroyRenderPass(data->device, data->pipeline.renderPass, nullptr);
 
 		for (auto imageView : data->swapChain.imageViews) vkDestroyImageView(data->device, imageView, nullptr);
 

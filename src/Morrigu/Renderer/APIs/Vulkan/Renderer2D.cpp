@@ -1,27 +1,27 @@
 #include "Renderer2D.h"
 
+#include "Debug/Instrumentor.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/Renderer2D.h"
 
-namespace MRG::Vulkan
+namespace
 {
-	void Renderer2D::init()
+	[[nodiscard]] VkPipeline createPipeline(const MRG::Vulkan::WindowProperties* data, MRG::Ref<MRG::Vulkan::Shader> textureShader)
 	{
-		// TODO: Add proper debug logging for selected rendering features
-		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
-		m_textureShader = createRef<Shader>("resources/shaders/texture");
+		VkPipeline returnPipeline;
 
+		// TODO: Add proper debug logging for selected rendering features
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertShaderStageInfo.module = m_textureShader->m_vertexShaderModule;
+		vertShaderStageInfo.module = textureShader->m_vertexShaderModule;
 		vertShaderStageInfo.pName = "main";
 
 		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
 		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderStageInfo.module = m_textureShader->m_fragmentShaderModule;
+		fragShaderStageInfo.module = textureShader->m_fragmentShaderModule;
 		fragShaderStageInfo.pName = "main";
 
 		VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
@@ -39,14 +39,14 @@ namespace MRG::Vulkan
 		VkViewport viewport{};
 		viewport.x = 0;
 		viewport.y = 0;
-		viewport.width = static_cast<float>(m_data->swapChain.extent.width);
-		viewport.height = static_cast<float>(m_data->swapChain.extent.height);
+		viewport.width = static_cast<float>(data->swapChain.extent.width);
+		viewport.height = static_cast<float>(data->swapChain.extent.height);
 		viewport.minDepth = 0.f;
 		viewport.maxDepth = 1.f;
 
 		VkRect2D scissor{};
 		scissor.offset = {0, 0};
-		scissor.extent = m_data->swapChain.extent;
+		scissor.extent = data->swapChain.extent;
 
 		VkPipelineViewportStateCreateInfo viewportState{};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -97,19 +97,71 @@ namespace MRG::Vulkan
 		pipelineInfo.pRasterizationState = &rasterizer;
 		pipelineInfo.pMultisampleState = &multisampling;
 		pipelineInfo.pColorBlendState = &colorBlending;
-		pipelineInfo.layout = m_data->pipelineLayout;
-		pipelineInfo.renderPass = m_data->renderPass;
+		pipelineInfo.layout = data->pipeline.layout;
+		pipelineInfo.renderPass = data->pipeline.renderPass;
 		pipelineInfo.subpass = 0;
 
-		MRG_VKVALIDATE(vkCreateGraphicsPipelines(m_data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_data->graphicsPipeline),
+		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &returnPipeline),
 		               "failed to create graphics pipeline!");
 
-		MRG_ENGINE_INFO("Vulkan graphics pipeline succesfully created");
+		return returnPipeline;
+	}
+
+	[[nodiscard]] std::vector<VkFramebuffer> createframeBuffers(const VkDevice device,
+	                                                            const std::vector<VkImageView>& swapChainImagesViews,
+	                                                            const VkRenderPass renderPass,
+	                                                            const VkExtent2D swapChainExtent)
+	{
+		std::vector<VkFramebuffer> returnFrameBuffers(swapChainImagesViews.size());
+
+		for (std::size_t i = 0; i < swapChainImagesViews.size(); ++i) {
+			VkImageView attachments[] = {swapChainImagesViews[i]};
+
+			VkFramebufferCreateInfo framebufferInfo{};
+			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			framebufferInfo.renderPass = renderPass;
+			framebufferInfo.attachmentCount = 1;
+			framebufferInfo.pAttachments = attachments;
+			framebufferInfo.width = swapChainExtent.width;
+			framebufferInfo.height = swapChainExtent.height;
+			framebufferInfo.layers = 1;
+
+			MRG_VKVALIDATE(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &returnFrameBuffers[i]), "failed to create framebuffer!");
+		}
+
+		return returnFrameBuffers;
+	}
+
+}  // namespace
+
+namespace MRG::Vulkan
+{
+	void Renderer2D::init()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
+		m_textureShader = createRef<Shader>("resources/shaders/texture");
+
+		try {
+			m_data->pipeline.handle = createPipeline(m_data, m_textureShader);
+			MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
+
+			m_data->swapChain.frameBuffers = std::move(
+			  createframeBuffers(m_data->device, m_data->swapChain.imageViews, m_data->pipeline.renderPass, m_data->swapChain.extent));
+			MRG_ENGINE_TRACE("Framebuffers successfully created");
+		} catch (const std::runtime_error& e) {
+			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
+		}
 	}
 
 	void Renderer2D::shutdown()
 	{
-		vkDestroyPipeline(m_data->device, m_data->graphicsPipeline, nullptr);
+		MRG_PROFILE_FUNCTION();
+
+		for (auto framebuffer : m_data->swapChain.frameBuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
+
+		vkDestroyPipeline(m_data->device, m_data->pipeline.handle, nullptr);
 		m_textureShader->destroy();
 	}
 
