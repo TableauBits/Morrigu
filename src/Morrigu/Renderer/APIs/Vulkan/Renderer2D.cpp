@@ -249,13 +249,26 @@ namespace MRG::Vulkan
 
 			m_data->commandBuffers = std::move(createCommandBuffers(m_data));
 
+			m_imageAvailableSemaphores.resize(m_maxFramesInFlight);
+			m_renderFinishedSemaphores.resize(m_maxFramesInFlight);
+			m_inFlightFences.resize(m_maxFramesInFlight);
+			m_imagesInFlight.resize(m_data->swapChain.images.size(), VK_NULL_HANDLE);
+
 			VkSemaphoreCreateInfo semaphoreInfo{};
 			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-			MRG_VKVALIDATE(vkCreateSemaphore(m_data->device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphore),
-			               "failed to create semaphores!");
-			MRG_VKVALIDATE(vkCreateSemaphore(m_data->device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphore),
-			               "failed to create semaphores!");
+			VkFenceCreateInfo fenceInfo{};
+			fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+			fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+			for (std::size_t i = 0; i < m_maxFramesInFlight; ++i) {
+				MRG_VKVALIDATE(vkCreateSemaphore(m_data->device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]),
+				               "failed to create semaphores for a frame!");
+				MRG_VKVALIDATE(vkCreateSemaphore(m_data->device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]),
+				               "failed to create semaphores for a frame!");
+				MRG_VKVALIDATE(vkCreateFence(m_data->device, &fenceInfo, nullptr, &m_inFlightFences[i]),
+				               "failed to create fences for a frame!");
+			}
 		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
@@ -267,8 +280,11 @@ namespace MRG::Vulkan
 
 		vkDeviceWaitIdle(m_data->device);
 
-		vkDestroySemaphore(m_data->device, m_imageAvailableSemaphore, nullptr);
-		vkDestroySemaphore(m_data->device, m_renderFinishedSemaphore, nullptr);
+		for (std::size_t i = 0; i < m_maxFramesInFlight; ++i) {
+			vkDestroySemaphore(m_data->device, m_imageAvailableSemaphores[i], nullptr);
+			vkDestroySemaphore(m_data->device, m_renderFinishedSemaphores[i], nullptr);
+			vkDestroyFence(m_data->device, m_inFlightFences[i], nullptr);
+		}
 
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 
@@ -280,10 +296,22 @@ namespace MRG::Vulkan
 
 	void Renderer2D::beginFrame()
 	{
+		// wait for preview frames to be finished (only allow m_maxFramesInFlight)
+		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
+
 		// Acquire an image from the swapchain
 		try {
-			vkAcquireNextImageKHR(
-			  m_data->device, m_data->swapChain.handle, UINT64_MAX, m_imageAvailableSemaphore, VK_NULL_HANDLE, &m_imageIndex);
+			vkAcquireNextImageKHR(m_data->device,
+			                      m_data->swapChain.handle,
+			                      UINT64_MAX,
+			                      m_imageAvailableSemaphores[m_currentFrame],
+			                      VK_NULL_HANDLE,
+			                      &m_imageIndex);
+
+			if (m_imagesInFlight[m_imageIndex] != VK_NULL_HANDLE) {
+				vkWaitForFences(m_data->device, 1, &m_imagesInFlight[m_imageIndex], VK_TRUE, UINT64_MAX);
+			}
+			m_imagesInFlight[m_imageIndex] = m_inFlightFences[m_currentFrame];
 		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
@@ -292,7 +320,7 @@ namespace MRG::Vulkan
 	void Renderer2D::endFrame()
 	{
 		// TODO: Return the image for swapchain presentation
-		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphore};
+		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphores[m_currentFrame]};
 		VkSwapchainKHR swapChains[] = {m_data->swapChain.handle};
 
 		VkPresentInfoKHR presentInfo{};
@@ -304,6 +332,8 @@ namespace MRG::Vulkan
 		presentInfo.pImageIndices = &m_imageIndex;
 
 		vkQueuePresentKHR(m_data->presentQueue, &presentInfo);
+
+		m_currentFrame = (m_currentFrame + 1) % m_maxFramesInFlight;
 	}
 
 	void Renderer2D::beginScene(const OrthoCamera&) {}
@@ -313,8 +343,8 @@ namespace MRG::Vulkan
 	{
 		// This function is the draw call to the triangle. I know it's wierd, it's just a placeholder for now, I swear
 		// Execute the command buffer with the current image
-		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphore};
-		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphore};
+		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_currentFrame]};
+		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphores[m_currentFrame]};
 		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 		VkSubmitInfo submitInfo{};
@@ -328,7 +358,10 @@ namespace MRG::Vulkan
 		submitInfo.pSignalSemaphores = signalSempahores;
 
 		try {
-			MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE), "failed to submit draw command buffer!");
+			vkResetFences(m_data->device, 1, &m_inFlightFences[m_currentFrame]);
+
+			MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]),
+			               "failed to submit draw command buffer!");
 		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}

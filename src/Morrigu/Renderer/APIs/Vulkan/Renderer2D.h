@@ -43,7 +43,10 @@ namespace MRG::Vulkan
 		WindowProperties* m_data;
 		Ref<Shader> m_textureShader;
 		uint32_t m_imageIndex;
-		VkSemaphore m_imageAvailableSemaphore, m_renderFinishedSemaphore;
+		std::size_t m_maxFramesInFlight = 2;
+		std::vector<VkSemaphore> m_imageAvailableSemaphores, m_renderFinishedSemaphores;
+		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
+		std::size_t m_currentFrame = 0;
 	};
 }  // namespace MRG::Vulkan
 
