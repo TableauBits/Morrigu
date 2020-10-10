@@ -249,6 +249,13 @@ namespace MRG::Vulkan
 
 			m_data->commandBuffers = std::move(createCommandBuffers(m_data));
 
+			VkSemaphoreCreateInfo semaphoreInfo{};
+			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+			MRG_VKVALIDATE(vkCreateSemaphore(m_data->device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphore),
+			               "failed to create semaphores!");
+			MRG_VKVALIDATE(vkCreateSemaphore(m_data->device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphore),
+			               "failed to create semaphores!");
 		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
@@ -258,6 +265,9 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
+		vkDestroySemaphore(m_data->device, m_imageAvailableSemaphore, nullptr);
+		vkDestroySemaphore(m_data->device, m_renderFinishedSemaphore, nullptr);
+
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 
 		for (auto framebuffer : m_data->swapChain.frameBuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
@@ -266,11 +276,58 @@ namespace MRG::Vulkan
 		m_textureShader->destroy();
 	}
 
-	void Renderer2D::beginScene(const OrthoCamera&) {}
+	void Renderer2D::beginScene(const OrthoCamera&)
+	{
+		// Acquire an image from the swapchain
+		try {
+			vkAcquireNextImageKHR(
+			  m_data->device, m_data->swapChain.handle, UINT64_MAX, m_imageAvailableSemaphore, VK_NULL_HANDLE, &m_imageIndex);
+		} catch (const std::runtime_error& e) {
+			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
+		}
+	}
 
-	void Renderer2D::endScene() {}
+	void Renderer2D::endScene()
+	{
+		// TODO: Return the image for swapchain presentation
+		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphore};
+		VkSwapchainKHR swapChains[] = {m_data->swapChain.handle};
 
-	void Renderer2D::drawQuad(const glm::vec3&, const glm::vec2&, const glm::vec4&) {}
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = signalSempahores;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = swapChains;
+		presentInfo.pImageIndices = &m_imageIndex;
+
+		vkQueuePresentKHR(m_data->presentQueue, &presentInfo);
+	}
+
+	void Renderer2D::drawQuad(const glm::vec3&, const glm::vec2&, const glm::vec4&)
+	{
+		// This function is the draw call to the triangle. I know it's wierd, it's just a placeholder for now, I swear
+		// Execute the command buffer with the current image
+		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphore};
+		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphore};
+		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex];
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSempahores;
+
+		try {
+			MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE), "failed to submit draw command buffer!");
+		} catch (const std::runtime_error& e) {
+			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
+		}
+	}
 
 	void Renderer2D::drawQuad(const glm::vec3&, const glm::vec2&, const Ref<Texture2D>&, float, const glm::vec4&) {}
 

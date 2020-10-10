@@ -6,6 +6,8 @@
 #include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
 
+#include <vulkan/vulkan.hpp>
+
 namespace MRG::Vulkan
 {
 	class Renderer2D : public Generic2DRenderer
@@ -37,6 +39,8 @@ namespace MRG::Vulkan
 	private:
 		WindowProperties* m_data;
 		Ref<Shader> m_textureShader;
+		uint32_t m_imageIndex;
+		VkSemaphore m_imageAvailableSemaphore, m_renderFinishedSemaphore;
 	};
 }  // namespace MRG::Vulkan
 

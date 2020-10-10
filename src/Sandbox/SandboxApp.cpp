@@ -7,7 +7,12 @@ public:
 
 	void onAttach() override {}
 	void onDetach() override {}
-	void onUpdate(MRG::Timestep) override {}
+	void onUpdate(MRG::Timestep) override
+	{
+		MRG::Renderer2D::beginScene(MRG::OrthoCamera(0, 0, 0, 0));
+		MRG::Renderer2D::drawQuad({0, 0, 0}, {0, 0}, {0, 0, 0, 0});
+		MRG::Renderer2D::endScene();
+	}
 	void onEvent(MRG::Event&) override {}
 };
 
