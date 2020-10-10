@@ -42,6 +42,8 @@ namespace MRG::Vulkan
 		VkQueue graphicsQueue, presentQueue;
 		SwapChain swapChain;
 		Pipeline pipeline;
+		VkCommandPool commandPool;
+		std::vector<VkCommandBuffer> commandBuffers;
 	};
 }  // namespace MRG::Vulkan
 

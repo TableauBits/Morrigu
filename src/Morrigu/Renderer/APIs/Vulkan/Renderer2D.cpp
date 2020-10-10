@@ -7,6 +7,35 @@
 
 namespace
 {
+	[[nodiscard]] QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface)
+	{
+		QueueFamilyIndices indices;
+
+		uint32_t queueFamilyCount = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+		int i = 0;
+		for (const auto& queueFamily : queueFamilies) {
+			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+				indices.graphicsFamily = i;
+
+			VkBool32 presentSupport = VK_FALSE;
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+			if (presentSupport) {
+				indices.presentFamily = i;
+			}
+
+			if (indices.isComplete())
+				break;
+			++i;
+		}
+
+		return indices;
+	}
+
 	[[nodiscard]] VkPipeline createPipeline(const MRG::Vulkan::WindowProperties* data, MRG::Ref<MRG::Vulkan::Shader> textureShader)
 	{
 		VkPipeline returnPipeline;
@@ -132,6 +161,70 @@ namespace
 		return returnFrameBuffers;
 	}
 
+	[[nodiscard]] VkCommandPool createCommandPool(const VkDevice device, const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
+	{
+		VkCommandPool returnCommandPool;
+
+		const auto queueFamilyIndices = findQueueFamilies(physicalDevice, surface);
+
+		VkCommandPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+		MRG_VKVALIDATE(vkCreateCommandPool(device, &poolInfo, nullptr, &returnCommandPool), "failed to create command pool!");
+
+		return returnCommandPool;
+	}
+
+	[[nodiscard]] std::vector<VkCommandBuffer> createCommandBuffers(const MRG::Vulkan::WindowProperties* data)
+	{
+		std::vector<VkCommandBuffer> commandBuffers(data->swapChain.frameBuffers.size());
+
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = data->commandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+
+		MRG_VKVALIDATE(vkAllocateCommandBuffers(data->device, &allocInfo, commandBuffers.data()), "failed to allocate command buffers!");
+		MRG_ENGINE_TRACE("{} command buffers successfully allocated", commandBuffers.size());
+
+		for (std::size_t i = 0; i < commandBuffers.size(); ++i) {
+			VkCommandBufferBeginInfo beginInfo{};
+			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+			MRG_VKVALIDATE(vkBeginCommandBuffer(commandBuffers[i], &beginInfo), "failed to begin recording command bufer!");
+			MRG_ENGINE_TRACE("Beginning recording command buffer {}", i);
+
+			VkClearValue clearColor = {.0f, .0f, .0f, 1.f};
+			VkRenderPassBeginInfo renderPassInfo{};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassInfo.renderPass = data->pipeline.renderPass;
+			renderPassInfo.framebuffer = data->swapChain.frameBuffers[i];
+			renderPassInfo.renderArea.offset = {0, 0};
+			renderPassInfo.renderArea.extent = data->swapChain.extent;
+			renderPassInfo.clearValueCount = 1;
+			renderPassInfo.pClearValues = &clearColor;
+
+			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+			MRG_ENGINE_TRACE("\tRender pass started");
+
+			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data->pipeline.handle);
+			MRG_ENGINE_TRACE("\t\tGraphics pipeline bound");
+
+			vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+			MRG_ENGINE_TRACE("\t\tDraw call recorded");
+
+			vkCmdEndRenderPass(commandBuffers[i]);
+			MRG_ENGINE_TRACE("\tRender pass ended");
+
+			MRG_VKVALIDATE(vkEndCommandBuffer(commandBuffers[i]), "failed to record command buffer!");
+			MRG_ENGINE_TRACE("Command buffer {} successfully recorded", i);
+		}
+
+		return commandBuffers;
+	}
+
 }  // namespace
 
 namespace MRG::Vulkan
@@ -150,6 +243,12 @@ namespace MRG::Vulkan
 			m_data->swapChain.frameBuffers = std::move(
 			  createframeBuffers(m_data->device, m_data->swapChain.imageViews, m_data->pipeline.renderPass, m_data->swapChain.extent));
 			MRG_ENGINE_TRACE("Framebuffers successfully created");
+
+			m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
+			MRG_ENGINE_TRACE("Command pool successfully created");
+
+			m_data->commandBuffers = std::move(createCommandBuffers(m_data));
+
 		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
@@ -158,6 +257,8 @@ namespace MRG::Vulkan
 	void Renderer2D::shutdown()
 	{
 		MRG_PROFILE_FUNCTION();
+
+		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 
 		for (auto framebuffer : m_data->swapChain.frameBuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
 

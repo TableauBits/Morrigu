@@ -10,7 +10,6 @@
 #include <vulkan/vulkan.hpp>
 
 #include <map>
-#include <optional>
 #include <set>
 #include <vector>
 
@@ -27,20 +26,41 @@ namespace
 	static constexpr bool enableValidation = false;
 #endif
 
-	struct QueueFamilyIndices
-	{
-		std::optional<uint32_t> graphicsFamily;
-		std::optional<uint32_t> presentFamily;
-
-		[[nodiscard]] bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
-	};
-
 	struct SwapChainSupportDetails
 	{
 		VkSurfaceCapabilitiesKHR capabilities;
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
 	};
+
+	[[nodiscard]] QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface)
+	{
+		QueueFamilyIndices indices;
+
+		uint32_t queueFamilyCount = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+		int i = 0;
+		for (const auto& queueFamily : queueFamilies) {
+			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+				indices.graphicsFamily = i;
+
+			VkBool32 presentSupport = VK_FALSE;
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+			if (presentSupport) {
+				indices.presentFamily = i;
+			}
+
+			if (indices.isComplete())
+				break;
+			++i;
+		}
+
+		return indices;
+	}
 
 	[[nodiscard]] bool checkValidationLayerSupport()
 	{
@@ -223,35 +243,6 @@ namespace
 
 		MRG_VKVALIDATE(createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &returnMessenger), "failed to setup messenger!");
 		return returnMessenger;
-	}
-
-	[[nodiscard]] QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface)
-	{
-		QueueFamilyIndices indices;
-
-		uint32_t queueFamilyCount = 0;
-		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-		int i = 0;
-		for (const auto& queueFamily : queueFamilies) {
-			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-				indices.graphicsFamily = i;
-
-			VkBool32 presentSupport = VK_FALSE;
-			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-			if (presentSupport) {
-				indices.presentFamily = i;
-			}
-
-			if (indices.isComplete())
-				break;
-			++i;
-		}
-
-		return indices;
 	}
 
 	[[nodiscard]] bool checkDeviceExtensionsSupport(const VkPhysicalDevice device)
@@ -612,6 +603,7 @@ namespace MRG::Vulkan
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 			data->instance = createInstance(data->title.c_str());
+			MRG_ENGINE_INFO("Vulkan instance successfully created");
 
 			if (enableValidation)
 				data->messenger = setupDebugMessenger(data->instance);
@@ -631,11 +623,14 @@ namespace MRG::Vulkan
 			vkGetDeviceQueue(data->device, queueFamilies.presentFamily.value(), 0, &data->presentQueue);
 
 			data->swapChain = createSwapChain(data->physicalDevice, data->surface, data->device, data);
+			MRG_ENGINE_INFO("Vulkan swap chain successfully created");
 			data->swapChain.imageViews = createimageViews(data->device, data->swapChain.images, data->swapChain.imageFormat);
+			MRG_ENGINE_TRACE("Image views successfully created");
 
 			data->pipeline.renderPass = createRenderPass(data->device, data->swapChain.imageFormat);
 
 			const auto pipelineCreateInfo = populatePipelineLayout();
+			MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
 			MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineCreateInfo, nullptr, &data->pipeline.layout),
 			               "failed to create pipeline layout!");
 
