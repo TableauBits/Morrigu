@@ -18,6 +18,9 @@ namespace MRG::Vulkan
 		void init() override;
 		void shutdown() override;
 
+		void beginFrame() override;
+		void endFrame() override;
+
 		void beginScene(const OrthoCamera& camera) override;
 		void endScene() override;
 

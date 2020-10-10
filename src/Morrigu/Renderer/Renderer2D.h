@@ -17,6 +17,9 @@ namespace MRG
 		virtual void init() = 0;
 		virtual void shutdown() = 0;
 
+		virtual void beginFrame() = 0;
+		virtual void endFrame() = 0;
+
 		virtual void beginScene(const OrthoCamera& camera) = 0;
 		virtual void endScene() = 0;
 
@@ -41,6 +44,9 @@ namespace MRG
 	public:
 		static void init(GLFWwindow* window);
 		static void shutdown();
+
+		static void beginFrame();
+		static void endFrame();
 
 		static void beginScene(const OrthoCamera& camera);
 		static void endScene();

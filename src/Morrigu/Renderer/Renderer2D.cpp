@@ -39,6 +39,20 @@ namespace MRG
 		s_renderer->shutdown();
 	}
 
+	void Renderer2D::beginFrame()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->beginFrame();
+	}
+
+	void Renderer2D::endFrame()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->endFrame();
+	}
+
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
 		MRG_PROFILE_FUNCTION();

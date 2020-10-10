@@ -2,6 +2,7 @@
 
 #include "Debug/Instrumentor.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/Renderer2D.h"
 
 #include <GLFW/glfw3.h>
 
@@ -60,6 +61,8 @@ namespace MRG
 			Timestep ts = time - m_lastFrameTime;
 			m_lastFrameTime = time;
 
+			Renderer2D::beginFrame();
+
 			if (!m_minimized) {
 				MRG_PROFILE_SCOPE("LayerStack onUpdate");
 
@@ -74,6 +77,8 @@ namespace MRG
 			}
 			m_ImGuiLayer->end();
 			m_window->onUpdate();
+
+			Renderer2D::endFrame();
 		}
 	}
 

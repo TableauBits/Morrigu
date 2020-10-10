@@ -276,7 +276,7 @@ namespace MRG::Vulkan
 		m_textureShader->destroy();
 	}
 
-	void Renderer2D::beginScene(const OrthoCamera&)
+	void Renderer2D::beginFrame()
 	{
 		// Acquire an image from the swapchain
 		try {
@@ -287,7 +287,7 @@ namespace MRG::Vulkan
 		}
 	}
 
-	void Renderer2D::endScene()
+	void Renderer2D::endFrame()
 	{
 		// TODO: Return the image for swapchain presentation
 		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphore};
@@ -303,6 +303,9 @@ namespace MRG::Vulkan
 
 		vkQueuePresentKHR(m_data->presentQueue, &presentInfo);
 	}
+
+	void Renderer2D::beginScene(const OrthoCamera&) {}
+	void Renderer2D::endScene() {}
 
 	void Renderer2D::drawQuad(const glm::vec3&, const glm::vec2&, const glm::vec4&)
 	{

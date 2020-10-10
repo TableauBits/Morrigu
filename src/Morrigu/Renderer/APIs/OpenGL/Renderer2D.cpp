@@ -42,6 +42,9 @@ namespace MRG::OpenGL
 
 	void Renderer2D::shutdown() {}
 
+	void Renderer2D::beginFrame() {}
+	void Renderer2D::endFrame() {}
+
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
 		m_textureShader->bind();
