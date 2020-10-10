@@ -265,6 +265,8 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
+		vkDeviceWaitIdle(m_data->device);
+
 		vkDestroySemaphore(m_data->device, m_imageAvailableSemaphore, nullptr);
 		vkDestroySemaphore(m_data->device, m_renderFinishedSemaphore, nullptr);
 
