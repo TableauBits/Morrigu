@@ -11,6 +11,12 @@ namespace MRG::Vulkan
 		VertexArray();
 		virtual ~VertexArray();
 
+		void destroy() override
+		{
+			for (auto& vb : m_vertexBuffers) vb->destroy();
+			m_indexBuffer->destroy();
+		}
+
 		void bind() const override;
 		void unbind() const override;
 

@@ -1,6 +1,7 @@
 #include "Renderer2D.h"
 
-#include "Renderer/RenderCommand.h"
+#include "Debug/Instrumentor.h"
+#include "Renderer/RenderingAPI.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -40,9 +41,17 @@ namespace MRG::OpenGL
 		m_textureShader->upload("u_texture", 0);
 	}
 
-	void Renderer2D::shutdown() {}
+	void Renderer2D::shutdown()
+	{
+		m_textureShader->destroy();
+		m_whiteTexture->destroy();
+		m_quadVertexArray->destroy();
+	}
+
+	void Renderer2D::onWindowResize(uint32_t width, uint32_t height) { setViewport(0, 0, width, height); }
 
 	void Renderer2D::beginFrame() {}
+
 	void Renderer2D::endFrame() {}
 
 	void Renderer2D::beginScene(const OrthoCamera& camera)
@@ -55,6 +64,8 @@ namespace MRG::OpenGL
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_textureShader->upload("u_color", color);
 		m_textureShader->upload("u_tilingFactor", 1.0f);
 		m_whiteTexture->bind();
@@ -63,12 +74,15 @@ namespace MRG::OpenGL
 		m_textureShader->upload("u_transform", transform);
 
 		m_quadVertexArray->bind();
-		RenderCommand::drawIndexed(m_quadVertexArray);
+
+		drawIndexed(m_quadVertexArray);
 	}
 
 	void Renderer2D::drawQuad(
 	  const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_textureShader->upload("u_color", tintColor);
 		m_textureShader->upload("u_tilingFactor", tilingFactor);
 		texture->bind();
@@ -77,11 +91,14 @@ namespace MRG::OpenGL
 		m_textureShader->upload("u_transform", transform);
 
 		m_quadVertexArray->bind();
-		RenderCommand::drawIndexed(m_quadVertexArray);
+
+		drawIndexed(m_quadVertexArray);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_textureShader->upload("u_color", color);
 		m_textureShader->upload("u_tilingFactor", 1.0f);
 		m_whiteTexture->bind();
@@ -91,7 +108,8 @@ namespace MRG::OpenGL
 		m_textureShader->upload("u_transform", transform);
 
 		m_quadVertexArray->bind();
-		RenderCommand::drawIndexed(m_quadVertexArray);
+
+		drawIndexed(m_quadVertexArray);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
@@ -101,6 +119,8 @@ namespace MRG::OpenGL
 	                                 float tilingFactor,
 	                                 const glm::vec4& tintColor)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_textureShader->upload("u_color", tintColor);
 		m_textureShader->upload("u_tilingFactor", tilingFactor);
 		texture->bind();
@@ -110,7 +130,16 @@ namespace MRG::OpenGL
 		m_textureShader->upload("u_transform", transform);
 
 		m_quadVertexArray->bind();
-		RenderCommand::drawIndexed(m_quadVertexArray);
+
+		drawIndexed(m_quadVertexArray);
+	}
+
+	void Renderer2D::drawIndexed(const Ref<VertexArray>& vertexArray)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glDrawElements(GL_TRIANGLES, vertexArray->getIndexBuffer()->getCount(), GL_UNSIGNED_INT, nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 }  // namespace MRG::OpenGL

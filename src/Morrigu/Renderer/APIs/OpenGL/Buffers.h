@@ -11,6 +11,8 @@ namespace MRG::OpenGL
 		VertexBuffer(const float* vertices, uint32_t size);
 		~VertexBuffer() override;
 
+		void destroy() override;
+
 		void bind() const override;
 		void unbind() const override;
 
@@ -23,6 +25,8 @@ namespace MRG::OpenGL
 	public:
 		IndexBuffer(const uint32_t* vertices, uint32_t count);
 		~IndexBuffer() override;
+
+		void destroy() override;
 
 		void bind() const override;
 		void unbind() const override;

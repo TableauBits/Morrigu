@@ -2,7 +2,7 @@
 
 #include "Renderer/APIs/OpenGL/Shader.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
-#include "Renderer/Renderer.h"
+#include "Renderer/RenderingAPI.h"
 
 namespace MRG
 {
@@ -19,7 +19,7 @@ namespace MRG
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
 			return nullptr;
 		} break;
 		}

@@ -1,7 +1,6 @@
 #include "Application.h"
 
 #include "Debug/Instrumentor.h"
-#include "Renderer/Renderer.h"
 #include "Renderer/Renderer2D.h"
 
 #include <GLFW/glfw3.h>
@@ -22,7 +21,7 @@ namespace MRG
 		m_window = std::make_unique<Window>(WindowProperties::create("Morrigu", 1280, 720, true));
 		m_window->setEventCallback([this](Event& event) { onEvent(event); });
 
-		Renderer::init(m_window->getGLFWWindow());
+		Renderer2D::init(m_window->getGLFWWindow());
 
 		m_ImGuiLayer = new ImGuiLayer{};
 		pushOverlay(m_ImGuiLayer);
@@ -32,7 +31,7 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		Renderer::shutdown();
+		Renderer2D::shutdown();
 	}
 
 	void Application::onEvent(Event& event)
@@ -111,7 +110,7 @@ namespace MRG
 		}
 
 		m_minimized = false;
-		Renderer::onWindowResize(event.getWidth(), event.getHeight());
+		Renderer2D::onWindowResize(event.getWidth(), event.getHeight());
 		return false;
 	}
 }  // namespace MRG

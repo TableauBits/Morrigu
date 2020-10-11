@@ -3,13 +3,13 @@
 #include "Core/Core.h"
 #include "Renderer/APIs/OpenGL/Buffers.h"
 #include "Renderer/APIs/Vulkan/Buffers.h"
-#include "Renderer/Renderer.h"
+#include "Renderer/RenderingAPI.h"
 
 namespace MRG
 {
 	Ref<VertexBuffer> VertexBuffer::create(const float* vertices, uint32_t size)
 	{
-		switch (Renderer::getAPI()) {
+		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::VertexBuffer>(vertices, size);
 		} break;
@@ -20,7 +20,7 @@ namespace MRG
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
 			return nullptr;
 		} break;
 		}
@@ -28,7 +28,7 @@ namespace MRG
 
 	Ref<IndexBuffer> IndexBuffer::create(const uint32_t* indices, uint32_t size)
 	{
-		switch (Renderer::getAPI()) {
+		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::IndexBuffer>(indices, size);
 		} break;
@@ -39,7 +39,7 @@ namespace MRG
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
 			return nullptr;
 		} break;
 		}

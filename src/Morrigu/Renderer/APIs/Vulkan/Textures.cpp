@@ -33,12 +33,16 @@ namespace MRG::Vulkan
 		// stbi_image_free(data);
 	}
 
-	void Texture2D::setData(void*, uint32_t)
+	Texture2D::~Texture2D()
 	{
-		// MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION();
+
+		destroy();
 	}
 
-	Texture2D::~Texture2D()
+	void Texture2D::destroy() {}
+
+	void Texture2D::setData(void*, uint32_t)
 	{
 		// MRG_PROFILE_FUNCTION();
 	}

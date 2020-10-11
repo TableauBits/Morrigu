@@ -7,6 +7,27 @@
 
 namespace MRG::OpenGL
 {
+	void openGLMessageCallback(GLenum, GLenum, GLuint, GLenum severity, GLsizei, [[maybe_unused]] const GLchar* message, const void*)
+	{
+		switch (severity) {
+		case GL_DEBUG_SEVERITY_NOTIFICATION: {
+			MRG_ENGINE_TRACE(message);
+		} break;
+		case GL_DEBUG_SEVERITY_LOW: {
+			MRG_ENGINE_WARN(message);
+		} break;
+		case GL_DEBUG_SEVERITY_MEDIUM: {
+			MRG_ENGINE_ERROR(message);
+		} break;
+		case GL_DEBUG_SEVERITY_HIGH: {
+			MRG_ENGINE_FATAL(message);
+		} break;
+		default: {
+			MRG_ENGINE_INFO(message);
+		} break;
+		}
+	}
+
 	Context::Context(GLFWwindow* window) : m_window(window)
 	{
 		MRG_PROFILE_FUNCTION();
@@ -28,7 +49,18 @@ namespace MRG::OpenGL
 		glGetIntegerv(GL_MINOR_VERSION, &vMinor);
 
 		MRG_CORE_ASSERT((vMajor > 4 || (vMajor == 4 && vMinor >= 5)), "OpenGL 4.5 required !")
+
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(openGLMessageCallback, nullptr);
+
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
 #endif
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glEnable(GL_DEPTH_TEST);
 	}
 
 	void Context::swapBuffers()

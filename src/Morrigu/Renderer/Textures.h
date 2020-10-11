@@ -12,12 +12,17 @@ namespace MRG
 	public:
 		virtual ~Texture() = default;
 
+		virtual void destroy() = 0;
+
 		[[nodiscard]] virtual uint32_t getWidth() const = 0;
 		[[nodiscard]] virtual uint32_t getHeight() const = 0;
 
 		virtual void setData(void* data, uint32_t size) = 0;
 
 		virtual void bind(uint32_t slot = 0) const = 0;
+
+	protected:
+		bool m_isDestroyed = false;
 	};
 
 	class Texture2D : public Texture

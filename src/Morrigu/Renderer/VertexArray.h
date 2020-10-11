@@ -11,6 +11,8 @@ namespace MRG
 	public:
 		virtual ~VertexArray() = default;
 
+		virtual void destroy() = 0;
+
 		virtual void bind() const = 0;
 		virtual void unbind() const = 0;
 
@@ -21,6 +23,9 @@ namespace MRG
 		[[nodiscard]] virtual const Ref<IndexBuffer>& getIndexBuffer() const = 0;
 
 		[[nodiscard]] static Ref<VertexArray> create();
+
+	protected:
+		bool m_isDestroyed = false;
 	};
 }  // namespace MRG
 

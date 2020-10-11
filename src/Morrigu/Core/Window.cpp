@@ -5,7 +5,7 @@
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
-#include "Renderer/Renderer.h"
+#include "Renderer/RenderingAPI.h"
 
 namespace MRG
 {
@@ -33,10 +33,10 @@ namespace MRG
 		{
 			MRG_PROFILE_SCOPE("glfwCreateWindow")
 #ifdef MRG_DEBUG
-			if (Renderer::getAPI() == RenderingAPI::API::OpenGL)
+			if (RenderingAPI::getAPI() == RenderingAPI::API::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
-			if (Renderer::getAPI() == RenderingAPI::API::Vulkan)
+			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 			handle = glfwCreateWindow(props->width, props->height, props->title.c_str(), nullptr, nullptr);

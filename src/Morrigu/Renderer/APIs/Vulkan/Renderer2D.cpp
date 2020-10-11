@@ -294,6 +294,8 @@ namespace MRG::Vulkan
 		m_textureShader->destroy();
 	}
 
+	void Renderer2D::onWindowResize(uint32_t, uint32_t) {}
+
 	void Renderer2D::beginFrame()
 	{
 		// wait for preview frames to be finished (only allow m_maxFramesInFlight)

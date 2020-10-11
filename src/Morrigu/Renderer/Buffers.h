@@ -119,12 +119,17 @@ namespace MRG
 	public:
 		virtual ~VertexBuffer() = default;
 
+		virtual void destroy() = 0;
+
 		virtual void bind() const = 0;
 		virtual void unbind() const = 0;
 
 		BufferLayout layout;
 
 		[[nodiscard]] static Ref<VertexBuffer> create(const float* vertices, uint32_t size);
+
+	protected:
+		bool m_isDestroyed = false;
 	};
 
 	class IndexBuffer
@@ -132,11 +137,16 @@ namespace MRG
 	public:
 		virtual ~IndexBuffer() = default;
 
+		virtual void destroy() = 0;
+
 		virtual void bind() const = 0;
 		virtual void unbind() const = 0;
 		[[nodiscard]] virtual uint32_t getCount() const = 0;
 
 		[[nodiscard]] static Ref<IndexBuffer> create(const uint32_t* indices, uint32_t size);
+
+	protected:
+		bool m_isDestroyed = false;
 	};
 }  // namespace MRG
 

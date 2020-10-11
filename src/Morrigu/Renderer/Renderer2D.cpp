@@ -39,6 +39,13 @@ namespace MRG
 		s_renderer->shutdown();
 	}
 
+	void Renderer2D::onWindowResize(uint32_t width, uint32_t height)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->onWindowResize(width, height);
+	}
+
 	void Renderer2D::beginFrame()
 	{
 		MRG_PROFILE_FUNCTION();
@@ -125,5 +132,26 @@ namespace MRG
 		MRG_PROFILE_FUNCTION();
 
 		s_renderer->drawRotatedQuad(position, size, rotation, texture, tilingFactor, tintColor);
+	}
+
+	void Renderer2D::setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->setViewport(x, y, width, height);
+	}
+
+	void Renderer2D::setClearColor(const glm::vec4& color)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->setClearColor(color);
+	}
+
+	void Renderer2D::clear()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->clear();
 	}
 }  // namespace MRG

@@ -3,13 +3,13 @@
 #include "Core/Core.h"
 #include "Renderer/APIs/OpenGL/Context.h"
 #include "Renderer/APIs/Vulkan/Context.h"
-#include "Renderer/Renderer.h"
+#include "Renderer/RenderingAPI.h"
 
 namespace MRG
 {
 	Scope<Context> Context::create(GLFWwindow* window)
 	{
-		switch (Renderer::getAPI()) {
+		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createScope<OpenGL::Context>(window);
 		} break;
@@ -20,7 +20,7 @@ namespace MRG
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
 			return nullptr;
 		} break;
 		}

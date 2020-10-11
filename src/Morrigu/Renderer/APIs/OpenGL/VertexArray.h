@@ -11,6 +11,16 @@ namespace MRG::OpenGL
 		VertexArray();
 		virtual ~VertexArray();
 
+		void destroy() override
+		{
+			if (m_isDestroyed)
+				return;
+
+			for (auto& vb : m_vertexBuffers) vb->destroy();
+			m_indexBuffer->destroy();
+			m_isDestroyed = true;
+		}
+
 		void bind() const override;
 		void unbind() const override;
 

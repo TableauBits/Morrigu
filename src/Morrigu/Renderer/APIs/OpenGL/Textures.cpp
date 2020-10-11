@@ -55,6 +55,22 @@ namespace MRG::OpenGL
 		stbi_image_free(data);
 	}
 
+	Texture2D::~Texture2D()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		destroy();
+	}
+
+	void Texture2D::destroy()
+	{
+		if (m_isDestroyed)
+			return;
+
+		glDeleteTextures(1, &m_rendererID);
+		m_isDestroyed = true;
+	}
+
 	void Texture2D::setData(void* data, [[maybe_unused]] uint32_t size)
 	{
 		MRG_PROFILE_FUNCTION();
@@ -63,13 +79,6 @@ namespace MRG::OpenGL
 		MRG_CORE_ASSERT(size == m_width * m_width * bpp, "Data size is incorrect !");
 
 		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, m_dataFormat, GL_UNSIGNED_BYTE, data);
-	}
-
-	Texture2D::~Texture2D()
-	{
-		MRG_PROFILE_FUNCTION();
-
-		glDeleteTextures(1, &m_rendererID);
 	}
 
 	void Texture2D::bind(uint32_t slot) const

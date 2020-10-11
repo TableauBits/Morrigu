@@ -17,6 +17,8 @@ namespace MRG
 		virtual void init() = 0;
 		virtual void shutdown() = 0;
 
+		virtual void onWindowResize(uint32_t width, uint32_t height) = 0;
+
 		virtual void beginFrame() = 0;
 		virtual void endFrame() = 0;
 
@@ -37,6 +39,10 @@ namespace MRG
 		                             const Ref<Texture2D>& texture,
 		                             float tilingFactor = 1.0f,
 		                             const glm::vec4& tintColor = glm::vec4(1.0f)) = 0;
+
+		virtual void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
+		virtual void setClearColor(const glm::vec4& color) = 0;
+		virtual void clear() = 0;
 	};
 
 	class Renderer2D
@@ -44,6 +50,8 @@ namespace MRG
 	public:
 		static void init(GLFWwindow* window);
 		static void shutdown();
+
+		static void onWindowResize(uint32_t width, uint32_t height);
 
 		static void beginFrame();
 		static void endFrame();
@@ -83,6 +91,10 @@ namespace MRG
 		                            const Ref<Texture2D>& texture,
 		                            float tilingFactor = 1.0f,
 		                            const glm::vec4& tintColor = glm::vec4(1.0f));
+
+		static void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+		static void setClearColor(const glm::vec4& color);
+		static void clear();
 
 	private:
 		static GLFWwindow* s_windowHandle;

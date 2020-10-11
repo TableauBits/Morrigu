@@ -18,6 +18,8 @@ namespace MRG::Vulkan
 		void init() override;
 		void shutdown() override;
 
+		void onWindowResize(uint32_t width, uint32_t height) override;
+
 		void beginFrame() override;
 		void endFrame() override;
 
@@ -38,6 +40,10 @@ namespace MRG::Vulkan
 		                     const Ref<Texture2D>& texture,
 		                     float tilingFactor = 1.0f,
 		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
+
+		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
+		void setClearColor(const glm::vec4&) override {}
+		void clear() override {}
 
 	private:
 		WindowProperties* m_data;
