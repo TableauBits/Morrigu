@@ -370,7 +370,7 @@ namespace
 			MRG_VKVALIDATE(vkBeginCommandBuffer(commandBuffers[i], &beginInfo), "failed to begin recording command bufer!");
 			MRG_ENGINE_TRACE("Beginning recording command buffer {}", i);
 
-			VkClearValue clearColor = {.0f, .0f, .0f, 1.f};
+			VkClearValue clearColor = {{{.0f, .0f, .0f, 1.f}}};
 			VkRenderPassBeginInfo renderPassInfo{};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 			renderPassInfo.renderPass = data->pipeline.renderPass;
@@ -447,10 +447,10 @@ namespace
 
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
 		data->swapChain.frameBuffers =
-		  std::move(createframeBuffers(data->device, data->swapChain.imageViews, data->pipeline.renderPass, data->swapChain.extent));
+		  createframeBuffers(data->device, data->swapChain.imageViews, data->pipeline.renderPass, data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
 
-		data->commandBuffers = std::move(createCommandBuffers(data));
+		data->commandBuffers = createCommandBuffers(data);
 	}
 
 }  // namespace
@@ -478,14 +478,14 @@ namespace MRG::Vulkan
 			m_data->pipeline.handle = createPipeline(m_data, m_textureShader);
 			MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
 
-			m_data->swapChain.frameBuffers = std::move(
-			  createframeBuffers(m_data->device, m_data->swapChain.imageViews, m_data->pipeline.renderPass, m_data->swapChain.extent));
+			m_data->swapChain.frameBuffers =
+			  createframeBuffers(m_data->device, m_data->swapChain.imageViews, m_data->pipeline.renderPass, m_data->swapChain.extent);
 			MRG_ENGINE_TRACE("Framebuffers successfully created");
 
 			m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
 			MRG_ENGINE_TRACE("Command pool successfully created");
 
-			m_data->commandBuffers = std::move(createCommandBuffers(m_data));
+			m_data->commandBuffers = createCommandBuffers(m_data);
 
 			m_imageAvailableSemaphores.resize(m_maxFramesInFlight);
 			m_renderFinishedSemaphores.resize(m_maxFramesInFlight);
