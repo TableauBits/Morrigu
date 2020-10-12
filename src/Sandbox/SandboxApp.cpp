@@ -3,17 +3,22 @@
 class VulkanSandbox : public MRG::Layer
 {
 public:
-	VulkanSandbox() : Layer("Vulkan layer") {}
+	VulkanSandbox() : Layer("Vulkan layer"), m_camera(1280.f / 720.f) {}
 
 	void onAttach() override {}
 	void onDetach() override {}
-	void onUpdate(MRG::Timestep) override
+	void onUpdate(MRG::Timestep ts) override
 	{
-		// MRG::Renderer2D::beginScene(MRG::OrthoCamera(0, 0, 0, 0));
+		m_camera.onUpdate(ts);
+
+		MRG::Renderer2D::beginScene(m_camera.getCamera());
 		MRG::Renderer2D::drawQuad({0, 0, 0}, {0, 0}, {0, 0, 0, 0});
-		// MRG::Renderer2D::endScene();
+		MRG::Renderer2D::endScene();
 	}
 	void onEvent(MRG::Event&) override {}
+
+private:
+	MRG::OrthoCameraController m_camera;
 };
 
 class Sandbox : public MRG::Application
