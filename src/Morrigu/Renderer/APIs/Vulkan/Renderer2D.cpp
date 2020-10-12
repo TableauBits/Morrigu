@@ -77,6 +77,31 @@ namespace
 		return actualExtent;
 	}
 
+	[[nodiscard]] std::vector<VkImageView> createimageViews(const VkDevice device, const std::vector<VkImage>& images, VkFormat imageFormat)
+	{
+		std::vector<VkImageView> imageViews(images.size());
+		for (std::size_t i = 0; i < images.size(); i++) {
+			VkImageViewCreateInfo createInfo{};
+			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			createInfo.image = images[i];
+			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			createInfo.format = imageFormat;
+			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+			createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+			createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			createInfo.subresourceRange.baseMipLevel = 0;
+			createInfo.subresourceRange.levelCount = 1;
+			createInfo.subresourceRange.baseArrayLayer = 0;
+			createInfo.subresourceRange.layerCount = 1;
+
+			MRG_VKVALIDATE(vkCreateImageView(device, &createInfo, nullptr, &imageViews[i]), "failed to create image views!");
+		}
+
+		return imageViews;
+	}
+
 	[[nodiscard]] MRG::Vulkan::SwapChain createSwapChain(const VkPhysicalDevice physicalDevice,
 	                                                     const VkSurfaceKHR surface,
 	                                                     const VkDevice device,
@@ -128,32 +153,9 @@ namespace
 		std::vector<VkImage> images(imageCount);
 		vkGetSwapchainImagesKHR(device, handle, &imageCount, images.data());
 
-		return {handle, minImageCount, imageCount, images, surfaceFormat.format, extent, {}};
-	}
+		const auto imageViews = createimageViews(device, images, surfaceFormat.format);
 
-	[[nodiscard]] std::vector<VkImageView> createimageViews(const VkDevice device, const std::vector<VkImage>& images, VkFormat imageFormat)
-	{
-		std::vector<VkImageView> imageViews(images.size());
-		for (std::size_t i = 0; i < images.size(); i++) {
-			VkImageViewCreateInfo createInfo{};
-			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			createInfo.image = images[i];
-			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			createInfo.format = imageFormat;
-			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-			createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			createInfo.subresourceRange.baseMipLevel = 0;
-			createInfo.subresourceRange.levelCount = 1;
-			createInfo.subresourceRange.baseArrayLayer = 0;
-			createInfo.subresourceRange.layerCount = 1;
-
-			MRG_VKVALIDATE(vkCreateImageView(device, &createInfo, nullptr, &imageViews[i]), "failed to create image views!");
-		}
-
-		return imageViews;
+		return {handle, minImageCount, imageCount, images, surfaceFormat.format, extent, imageViews, {}};
 	}
 
 	[[nodiscard]] VkPipelineLayoutCreateInfo populatePipelineLayout()
@@ -397,6 +399,51 @@ namespace
 		return commandBuffers;
 	}
 
+	void cleanupSwapChain(MRG::Vulkan::WindowProperties* data)
+	{
+		for (auto framebuffer : data->swapChain.frameBuffers) vkDestroyFramebuffer(data->device, framebuffer, nullptr);
+
+		vkFreeCommandBuffers(
+		  data->device, data->commandPool, static_cast<uint32_t>(data->commandBuffers.size()), data->commandBuffers.data());
+
+		vkDestroyPipeline(data->device, data->pipeline.handle, nullptr);
+
+		vkDestroyPipelineLayout(data->device, data->pipeline.layout, nullptr);
+
+		vkDestroyRenderPass(data->device, data->pipeline.renderPass, nullptr);
+
+		for (auto imageView : data->swapChain.imageViews) vkDestroyImageView(data->device, imageView, nullptr);
+
+		vkDestroySwapchainKHR(data->device, data->swapChain.handle, nullptr);
+	}
+
+	void recreateSwapChain(MRG::Vulkan::WindowProperties* data, MRG::Ref<MRG::Vulkan::Shader> textureShader)
+	{
+		MRG_ENGINE_TRACE("Recreating swap chain");
+		MRG_ENGINE_TRACE("Waiting for device to be idle...");
+		vkDeviceWaitIdle(data->device);
+
+		cleanupSwapChain(data);
+
+		data->swapChain = createSwapChain(data->physicalDevice, data->surface, data->device, data);
+		MRG_ENGINE_INFO("Vulkan swap chain succesfully recreated");
+
+		data->pipeline.renderPass = createRenderPass(data->device, data->swapChain.imageFormat);
+
+		const auto pipelineLayoutCreateInfo = populatePipelineLayout();
+		MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineLayoutCreateInfo, nullptr, &data->pipeline.layout),
+		               "failed to recreate pipeline layout!");
+		MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
+		data->pipeline.handle = createPipeline(data, textureShader);
+
+		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
+		data->swapChain.frameBuffers =
+		  std::move(createframeBuffers(data->device, data->swapChain.imageViews, data->pipeline.renderPass, data->swapChain.extent));
+		MRG_ENGINE_TRACE("Framebuffers successfully created");
+
+		data->commandBuffers = std::move(createCommandBuffers(data));
+	}
+
 }  // namespace
 
 namespace MRG::Vulkan
@@ -411,15 +458,13 @@ namespace MRG::Vulkan
 		try {
 			m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
 			MRG_ENGINE_INFO("Vulkan swap chain successfully created");
-			m_data->swapChain.imageViews = createimageViews(m_data->device, m_data->swapChain.images, m_data->swapChain.imageFormat);
-			MRG_ENGINE_TRACE("Image views successfully created");
 
 			m_data->pipeline.renderPass = createRenderPass(m_data->device, m_data->swapChain.imageFormat);
 
-			const auto pipelineCreateInfo = populatePipelineLayout();
-			MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
-			MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineCreateInfo, nullptr, &m_data->pipeline.layout),
+			const auto pipelineLayoutCreateInfo = populatePipelineLayout();
+			MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineLayoutCreateInfo, nullptr, &m_data->pipeline.layout),
 			               "failed to create pipeline layout!");
+			MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
 
 			m_data->pipeline.handle = createPipeline(m_data, m_textureShader);
 			MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
@@ -470,19 +515,9 @@ namespace MRG::Vulkan
 			vkDestroyFence(m_data->device, m_inFlightFences[i], nullptr);
 		}
 
+		cleanupSwapChain(m_data);
+
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
-
-		for (auto framebuffer : m_data->swapChain.frameBuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
-
-		vkDestroyPipeline(m_data->device, m_data->pipeline.handle, nullptr);
-
-		vkDestroyPipelineLayout(m_data->device, m_data->pipeline.layout, nullptr);
-
-		vkDestroyRenderPass(m_data->device, m_data->pipeline.renderPass, nullptr);
-
-		for (auto imageView : m_data->swapChain.imageViews) vkDestroyImageView(m_data->device, imageView, nullptr);
-
-		vkDestroySwapchainKHR(m_data->device, m_data->swapChain.handle, nullptr);
 
 		m_textureShader->destroy();
 	}
