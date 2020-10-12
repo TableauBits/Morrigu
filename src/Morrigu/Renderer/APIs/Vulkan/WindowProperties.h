@@ -13,11 +13,19 @@ namespace MRG::Vulkan
 	struct SwapChain
 	{
 		VkSwapchainKHR handle;
+		uint32_t minImageCount;
+		uint32_t imageCount;
 		std::vector<VkImage> images;
 		VkFormat imageFormat;
 		VkExtent2D extent;
 		std::vector<VkImageView> imageViews;
 		std::vector<VkFramebuffer> frameBuffers;
+	};
+
+	struct Queue
+	{
+		VkQueue handle;
+		uint32_t index;
 	};
 
 	struct Pipeline
@@ -39,11 +47,12 @@ namespace MRG::Vulkan
 		VkSurfaceKHR surface;
 		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 		VkDevice device;
-		VkQueue graphicsQueue, presentQueue;
+		Queue graphicsQueue, presentQueue;
 		SwapChain swapChain;
 		Pipeline pipeline;
 		VkCommandPool commandPool;
 		std::vector<VkCommandBuffer> commandBuffers;
+		std::size_t currentFrame = 0;
 	};
 }  // namespace MRG::Vulkan
 

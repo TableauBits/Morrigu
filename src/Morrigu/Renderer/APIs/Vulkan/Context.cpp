@@ -486,6 +486,8 @@ namespace
 		QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 		uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
+		uint32_t minImageCount = imageCount;
+
 		VkSwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		createInfo.surface = surface;
@@ -516,7 +518,7 @@ namespace
 		std::vector<VkImage> images(imageCount);
 		vkGetSwapchainImagesKHR(device, handle, &imageCount, images.data());
 
-		return {handle, images, surfaceFormat.format, extent, {}};
+		return {handle, minImageCount, imageCount, images, surfaceFormat.format, extent, {}};
 	}
 
 	[[nodiscard]] std::vector<VkImageView> createimageViews(const VkDevice device, const std::vector<VkImage>& images, VkFormat imageFormat)
@@ -629,8 +631,10 @@ namespace MRG::Vulkan
 
 			data->device = createDevice(data->physicalDevice, data->surface);
 			auto queueFamilies = findQueueFamilies(data->physicalDevice, data->surface);
-			vkGetDeviceQueue(data->device, queueFamilies.graphicsFamily.value(), 0, &data->graphicsQueue);
-			vkGetDeviceQueue(data->device, queueFamilies.presentFamily.value(), 0, &data->presentQueue);
+			data->graphicsQueue.index = queueFamilies.graphicsFamily.value();
+			data->presentQueue.index = queueFamilies.presentFamily.value();
+			vkGetDeviceQueue(data->device, queueFamilies.graphicsFamily.value(), 0, &data->graphicsQueue.handle);
+			vkGetDeviceQueue(data->device, queueFamilies.presentFamily.value(), 0, &data->presentQueue.handle);
 
 			data->swapChain = createSwapChain(data->physicalDevice, data->surface, data->device, data);
 			MRG_ENGINE_INFO("Vulkan swap chain successfully created");

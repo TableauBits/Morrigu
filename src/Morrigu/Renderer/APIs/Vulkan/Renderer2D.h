@@ -52,7 +52,6 @@ namespace MRG::Vulkan
 		std::size_t m_maxFramesInFlight = 2;
 		std::vector<VkSemaphore> m_imageAvailableSemaphores, m_renderFinishedSemaphores;
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
-		std::size_t m_currentFrame = 0;
 	};
 }  // namespace MRG::Vulkan
 
