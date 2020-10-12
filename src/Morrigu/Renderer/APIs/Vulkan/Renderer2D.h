@@ -20,8 +20,8 @@ namespace MRG::Vulkan
 
 		void onWindowResize(uint32_t width, uint32_t height) override;
 
-		void beginFrame() override;
-		void endFrame() override;
+		bool beginFrame() override;
+		bool endFrame() override;
 
 		void beginScene(const OrthoCamera& camera) override;
 		void endScene() override;

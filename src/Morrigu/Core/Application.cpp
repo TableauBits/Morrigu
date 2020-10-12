@@ -60,7 +60,7 @@ namespace MRG
 			Timestep ts = time - m_lastFrameTime;
 			m_lastFrameTime = time;
 
-			Renderer2D::beginFrame();
+			while (!Renderer2D::beginFrame()) {}
 
 			if (!m_minimized) {
 				MRG_PROFILE_SCOPE("LayerStack onUpdate");
@@ -77,7 +77,7 @@ namespace MRG
 			m_ImGuiLayer->end();
 			m_window->onUpdate();
 
-			Renderer2D::endFrame();
+			while (!Renderer2D::endFrame()) {}
 		}
 	}
 

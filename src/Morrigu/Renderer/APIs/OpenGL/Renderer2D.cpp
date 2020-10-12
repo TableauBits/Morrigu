@@ -50,9 +50,9 @@ namespace MRG::OpenGL
 
 	void Renderer2D::onWindowResize(uint32_t width, uint32_t height) { setViewport(0, 0, width, height); }
 
-	void Renderer2D::beginFrame() {}
+	bool Renderer2D::beginFrame() { return true; }
 
-	void Renderer2D::endFrame() {}
+	bool Renderer2D::endFrame() { return true; }
 
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{

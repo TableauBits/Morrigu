@@ -19,8 +19,8 @@ namespace MRG
 
 		virtual void onWindowResize(uint32_t width, uint32_t height) = 0;
 
-		virtual void beginFrame() = 0;
-		virtual void endFrame() = 0;
+		virtual bool beginFrame() = 0;
+		virtual bool endFrame() = 0;
 
 		virtual void beginScene(const OrthoCamera& camera) = 0;
 		virtual void endScene() = 0;
@@ -53,8 +53,8 @@ namespace MRG
 
 		static void onWindowResize(uint32_t width, uint32_t height);
 
-		static void beginFrame();
-		static void endFrame();
+		static bool beginFrame();
+		static bool endFrame();
 
 		static void beginScene(const OrthoCamera& camera);
 		static void endScene();

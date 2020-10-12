@@ -46,18 +46,18 @@ namespace MRG
 		s_renderer->onWindowResize(width, height);
 	}
 
-	void Renderer2D::beginFrame()
+	bool Renderer2D::beginFrame()
 	{
 		MRG_PROFILE_FUNCTION();
 
-		s_renderer->beginFrame();
+		return s_renderer->beginFrame();
 	}
 
-	void Renderer2D::endFrame()
+	bool Renderer2D::endFrame()
 	{
 		MRG_PROFILE_FUNCTION();
 
-		s_renderer->endFrame();
+		return s_renderer->endFrame();
 	}
 
 	void Renderer2D::beginScene(const OrthoCamera& camera)

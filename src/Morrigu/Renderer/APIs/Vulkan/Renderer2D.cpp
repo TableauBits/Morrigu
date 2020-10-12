@@ -419,6 +419,15 @@ namespace
 
 	void recreateSwapChain(MRG::Vulkan::WindowProperties* data, MRG::Ref<MRG::Vulkan::Shader> textureShader)
 	{
+		int width = data->width, height = data->height;
+		while (width == 0 || height == 0) {
+			glfwGetFramebufferSize(MRG::Renderer2D::getGLFWWindow(), &width, &height);
+			glfwWaitEvents();
+		}
+
+		data->width = width;
+		data->height = height;
+
 		MRG_ENGINE_TRACE("Recreating swap chain");
 		MRG_ENGINE_TRACE("Waiting for device to be idle...");
 		vkDeviceWaitIdle(data->device);
@@ -522,21 +531,26 @@ namespace MRG::Vulkan
 		m_textureShader->destroy();
 	}
 
-	void Renderer2D::onWindowResize(uint32_t, uint32_t) {}
+	void Renderer2D::onWindowResize(uint32_t, uint32_t) { m_shouldRecreateSwapChain = true; }
 
-	void Renderer2D::beginFrame()
+	bool Renderer2D::beginFrame()
 	{
 		// wait for preview frames to be finished (only allow m_maxFramesInFlight)
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 
 		// Acquire an image from the swapchain
 		try {
-			vkAcquireNextImageKHR(m_data->device,
-			                      m_data->swapChain.handle,
-			                      UINT64_MAX,
-			                      m_imageAvailableSemaphores[m_data->currentFrame],
-			                      VK_NULL_HANDLE,
-			                      &m_imageIndex);
+			const auto result = vkAcquireNextImageKHR(m_data->device,
+			                                          m_data->swapChain.handle,
+			                                          UINT64_MAX,
+			                                          m_imageAvailableSemaphores[m_data->currentFrame],
+			                                          VK_NULL_HANDLE,
+			                                          &m_imageIndex);
+
+			if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+				recreateSwapChain(m_data, m_textureShader);
+				return false;
+			}
 
 			if (m_imagesInFlight[m_imageIndex] != VK_NULL_HANDLE) {
 				vkWaitForFences(m_data->device, 1, &m_imagesInFlight[m_imageIndex], VK_TRUE, UINT64_MAX);
@@ -545,9 +559,10 @@ namespace MRG::Vulkan
 		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
+		return true;
 	}
 
-	void Renderer2D::endFrame()
+	bool Renderer2D::endFrame()
 	{
 		// TODO: Return the image for swapchain presentation
 		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphores[m_data->currentFrame]};
@@ -561,9 +576,16 @@ namespace MRG::Vulkan
 		presentInfo.pSwapchains = swapChains;
 		presentInfo.pImageIndices = &m_imageIndex;
 
-		vkQueuePresentKHR(m_data->presentQueue.handle, &presentInfo);
+		const auto result = vkQueuePresentKHR(m_data->presentQueue.handle, &presentInfo);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_shouldRecreateSwapChain) {
+			recreateSwapChain(m_data, m_textureShader);
+			m_shouldRecreateSwapChain = false;
+		}
 
 		m_data->currentFrame = (m_data->currentFrame + 1) % m_maxFramesInFlight;
+
+		return true;
 	}
 
 	void Renderer2D::beginScene(const OrthoCamera&) {}
