@@ -1,3 +1,6 @@
+#ifndef MRG_VKHELPER
+#define MRG_VKHELPER
+
 #include <vulkan/vulkan.hpp>
 
 #include <optional>
@@ -8,10 +11,24 @@
 		throw std::runtime_error(failure_message);                                                                                         \
 	}
 
-struct QueueFamilyIndices
+namespace MRG::Vulkan
 {
-	std::optional<uint32_t> graphicsFamily;
-	std::optional<uint32_t> presentFamily;
+	struct QueueFamilyIndices
+	{
+		std::optional<uint32_t> graphicsFamily;
+		std::optional<uint32_t> presentFamily;
 
-	[[nodiscard]] bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
-};
+		[[nodiscard]] bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+	};
+
+	struct SwapChainSupportDetails
+	{
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
+	};
+
+	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice device, const VkSurfaceKHR surface);
+}  // namespace MRG::Vulkan
+
+#endif

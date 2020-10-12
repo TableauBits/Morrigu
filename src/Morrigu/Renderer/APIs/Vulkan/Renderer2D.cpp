@@ -7,9 +7,9 @@
 
 namespace
 {
-	[[nodiscard]] QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface)
+	[[nodiscard]] MRG::Vulkan::QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 	{
-		QueueFamilyIndices indices;
+		MRG::Vulkan::QueueFamilyIndices indices;
 
 		uint32_t queueFamilyCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
@@ -34,6 +34,178 @@ namespace
 		}
 
 		return indices;
+	}
+
+	[[nodiscard]] VkSurfaceFormatKHR chooseSwapFormat(const std::vector<VkSurfaceFormatKHR>& formats)
+	{
+		for (const auto& format : formats) {
+			if (format.format == VK_FORMAT_B8G8R8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+				return format;
+		}
+
+		// In case we don't find exactly what we are searching for, we just select the first one.
+		// This is guaranteed to exist because of the isDeviceSuitable check beforehand
+		// TODO: update this function to better select surface formats
+		return formats[0];
+	}
+
+	[[nodiscard]] VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes)
+	{
+		// If possible, prefer triple buffering
+		for (const auto& presentMode : presentModes) {
+			if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+				return presentMode;
+		}
+
+		// This mode is guaranteed to be present by the specs
+		return VK_PRESENT_MODE_FIFO_KHR;
+	}
+
+	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, const MRG::WindowProperties* data)
+	{
+		if (capabilities.currentExtent.width != UINT32_MAX) {
+			// We don't need to change anything in this case !
+			return capabilities.currentExtent;
+		}
+
+		// Otherwise, we have to provide the best values possible
+		VkExtent2D actualExtent{data->width, data->height};
+
+		actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+		actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+		return actualExtent;
+	}
+
+	[[nodiscard]] MRG::Vulkan::SwapChain createSwapChain(const VkPhysicalDevice physicalDevice,
+	                                                     const VkSurfaceKHR surface,
+	                                                     const VkDevice device,
+	                                                     const MRG::WindowProperties* data)
+	{
+		VkSwapchainKHR handle{};
+		MRG::Vulkan::SwapChainSupportDetails SwapChainSupport = MRG::Vulkan::querySwapChainSupport(physicalDevice, surface);
+
+		const auto surfaceFormat = chooseSwapFormat(SwapChainSupport.formats);
+		const auto presentMode = chooseSwapPresentMode(SwapChainSupport.presentModes);
+		const auto extent = chooseSwapExtent(SwapChainSupport.capabilities, data);
+
+		auto imageCount = SwapChainSupport.capabilities.minImageCount + 1;
+		if (SwapChainSupport.capabilities.maxImageCount > 0 && imageCount > SwapChainSupport.capabilities.maxImageCount)
+			imageCount = SwapChainSupport.capabilities.maxImageCount;
+
+		MRG::Vulkan::QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+		uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
+		uint32_t minImageCount = imageCount;
+
+		VkSwapchainCreateInfoKHR createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+		createInfo.surface = surface;
+		createInfo.minImageCount = imageCount;
+		createInfo.imageFormat = surfaceFormat.format;
+		createInfo.imageColorSpace = surfaceFormat.colorSpace;
+		createInfo.imageExtent = extent;
+		createInfo.imageArrayLayers = 1;
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		if (indices.graphicsFamily != indices.presentFamily) {
+			// The queues are not the same!
+			createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+			createInfo.queueFamilyIndexCount = 2;
+			createInfo.pQueueFamilyIndices = queueFamilyIndices;
+		} else {
+			// The queues are the same, no need to separated them!
+			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		}
+		createInfo.preTransform = SwapChainSupport.capabilities.currentTransform;
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		createInfo.presentMode = presentMode;
+		createInfo.clipped = VK_TRUE;
+		createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+		MRG_VKVALIDATE(vkCreateSwapchainKHR(device, &createInfo, nullptr, &handle), "failed to create swapChain!");
+
+		vkGetSwapchainImagesKHR(device, handle, &imageCount, nullptr);
+		std::vector<VkImage> images(imageCount);
+		vkGetSwapchainImagesKHR(device, handle, &imageCount, images.data());
+
+		return {handle, minImageCount, imageCount, images, surfaceFormat.format, extent, {}};
+	}
+
+	[[nodiscard]] std::vector<VkImageView> createimageViews(const VkDevice device, const std::vector<VkImage>& images, VkFormat imageFormat)
+	{
+		std::vector<VkImageView> imageViews(images.size());
+		for (std::size_t i = 0; i < images.size(); i++) {
+			VkImageViewCreateInfo createInfo{};
+			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			createInfo.image = images[i];
+			createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			createInfo.format = imageFormat;
+			createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+			createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+			createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+			createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+			createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			createInfo.subresourceRange.baseMipLevel = 0;
+			createInfo.subresourceRange.levelCount = 1;
+			createInfo.subresourceRange.baseArrayLayer = 0;
+			createInfo.subresourceRange.layerCount = 1;
+
+			MRG_VKVALIDATE(vkCreateImageView(device, &createInfo, nullptr, &imageViews[i]), "failed to create image views!");
+		}
+
+		return imageViews;
+	}
+
+	[[nodiscard]] VkPipelineLayoutCreateInfo populatePipelineLayout()
+	{
+		VkPipelineLayoutCreateInfo pipelineCreateInfo{};
+		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+		return pipelineCreateInfo;
+	}
+
+	[[nodiscard]] VkRenderPass createRenderPass(VkDevice device, VkFormat swapChainFormat)
+	{
+		VkRenderPass returnRenderPass;
+
+		VkAttachmentDescription colorAttachment{};
+		colorAttachment.format = swapChainFormat;
+		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		VkAttachmentReference colorAttachmentRef{};
+		colorAttachmentRef.attachment = 0;
+		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpass{};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1;
+		subpass.pColorAttachments = &colorAttachmentRef;
+
+		VkSubpassDependency dependency{};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		VkRenderPassCreateInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = 1;
+		renderPassInfo.pAttachments = &colorAttachment;
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.pSubpasses = &subpass;
+		renderPassInfo.dependencyCount = 1;
+		renderPassInfo.pDependencies = &dependency;
+
+		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &returnRenderPass), "failed to create render pass!")
+		return returnRenderPass;
 	}
 
 	[[nodiscard]] VkPipeline createPipeline(const MRG::Vulkan::WindowProperties* data, MRG::Ref<MRG::Vulkan::Shader> textureShader)
@@ -237,6 +409,18 @@ namespace MRG::Vulkan
 		m_textureShader = createRef<Shader>("resources/shaders/texture");
 
 		try {
+			m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
+			MRG_ENGINE_INFO("Vulkan swap chain successfully created");
+			m_data->swapChain.imageViews = createimageViews(m_data->device, m_data->swapChain.images, m_data->swapChain.imageFormat);
+			MRG_ENGINE_TRACE("Image views successfully created");
+
+			m_data->pipeline.renderPass = createRenderPass(m_data->device, m_data->swapChain.imageFormat);
+
+			const auto pipelineCreateInfo = populatePipelineLayout();
+			MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
+			MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineCreateInfo, nullptr, &m_data->pipeline.layout),
+			               "failed to create pipeline layout!");
+
 			m_data->pipeline.handle = createPipeline(m_data, m_textureShader);
 			MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
 
@@ -291,6 +475,15 @@ namespace MRG::Vulkan
 		for (auto framebuffer : m_data->swapChain.frameBuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
 
 		vkDestroyPipeline(m_data->device, m_data->pipeline.handle, nullptr);
+
+		vkDestroyPipelineLayout(m_data->device, m_data->pipeline.layout, nullptr);
+
+		vkDestroyRenderPass(m_data->device, m_data->pipeline.renderPass, nullptr);
+
+		for (auto imageView : m_data->swapChain.imageViews) vkDestroyImageView(m_data->device, imageView, nullptr);
+
+		vkDestroySwapchainKHR(m_data->device, m_data->swapChain.handle, nullptr);
+
 		m_textureShader->destroy();
 	}
 
