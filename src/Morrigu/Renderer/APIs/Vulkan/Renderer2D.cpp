@@ -456,8 +456,41 @@ namespace
 		return vertexBuffer;
 	}
 
+	[[nodiscard]] MRG::Vulkan::Buffer
+	createIndexBuffer(const MRG::Vulkan::WindowProperties* data, std::size_t bufferSize, const void* bufferData)
+	{
+		MRG::Vulkan::Buffer stagingBuffer;
+		MRG::Vulkan::createBuffer(data->device,
+		                          data->physicalDevice,
+		                          bufferSize,
+		                          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                          stagingBuffer);
+
+		void* dataPointer;
+		vkMapMemory(data->device, stagingBuffer.memoryHandle, 0, bufferSize, 0, &dataPointer);
+		memcpy(dataPointer, bufferData, bufferSize);
+		vkUnmapMemory(data->device, stagingBuffer.memoryHandle);
+		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
+
+		MRG::Vulkan::Buffer indexBuffer;
+		MRG::Vulkan::createBuffer(data->device,
+		                          data->physicalDevice,
+		                          bufferSize,
+		                          VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		                          indexBuffer);
+
+		copyBuffer(data, stagingBuffer, indexBuffer, bufferSize);
+
+		vkDestroyBuffer(data->device, stagingBuffer.handle, nullptr);
+		vkFreeMemory(data->device, stagingBuffer.memoryHandle, nullptr);
+
+		return indexBuffer;
+	}
+
 	[[nodiscard]] std::vector<VkCommandBuffer>
-	createCommandBuffers(const MRG::Vulkan::WindowProperties* data, VkBuffer vertexBuffer, uint32_t vertexCount)
+	createCommandBuffers(const MRG::Vulkan::WindowProperties* data, VkBuffer vertexBuffer, VkBuffer indexBuffer, uint32_t indexCount)
 	{
 		std::vector<VkCommandBuffer> commandBuffers(data->swapChain.frameBuffers.size());
 
@@ -498,7 +531,9 @@ namespace
 			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 			MRG_ENGINE_TRACE("\t\tVertex buffer bound");
 
-			vkCmdDraw(commandBuffers[i], vertexCount, 1, 0, 0);
+			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+
+			vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indexCount), 1, 0, 0, 0);
 			MRG_ENGINE_TRACE("\t\tDraw call recorded");
 
 			vkCmdEndRenderPass(commandBuffers[i]);
@@ -532,7 +567,8 @@ namespace
 	void recreateSwapChain(MRG::Vulkan::WindowProperties* data,
 	                       MRG::Ref<MRG::Vulkan::Shader> textureShader,
 	                       VkBuffer vertexBuffer,
-	                       uint32_t vertexCount)
+	                       VkBuffer indexBuffer,
+	                       uint32_t indexCount)
 	{
 		int width = data->width, height = data->height;
 		while (width == 0 || height == 0) {
@@ -565,7 +601,7 @@ namespace
 		  createframeBuffers(data->device, data->swapChain.imageViews, data->pipeline.renderPass, data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
 
-		data->commandBuffers = createCommandBuffers(data, vertexBuffer, vertexCount);
+		data->commandBuffers = createCommandBuffers(data, vertexBuffer, indexBuffer, indexCount);
 	}
 
 }  // namespace
@@ -579,8 +615,12 @@ namespace MRG::Vulkan
 		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
 		m_textureShader = createRef<Shader>("resources/shaders/texture");
 
-		const std::vector<Vertex> vertices = {
-		  {{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}}, {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}}, {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+		const std::vector<Vertex> vertices = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		                                      {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		                                      {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		                                      {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+
+		const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
 		try {
 			m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
@@ -603,9 +643,11 @@ namespace MRG::Vulkan
 			m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
 			MRG_ENGINE_TRACE("Command pool successfully created");
 
-			m_vertexBuffer = createVertexBuffer(m_data, sizeof(Vertex) * vertices.size(), static_cast<const void*>(vertices.data()));
+			m_vertexBuffer = createVertexBuffer(m_data, sizeof(Vertex) * vertices.size(), vertices.data());
+			m_indexBuffer = createIndexBuffer(m_data, sizeof(indices[0]) * indices.size(), indices.data());
 
-			m_data->commandBuffers = createCommandBuffers(m_data, m_vertexBuffer.handle, static_cast<uint32_t>(vertices.size()));
+			m_data->commandBuffers =
+			  createCommandBuffers(m_data, m_vertexBuffer.handle, m_indexBuffer.handle, static_cast<uint32_t>(indices.size()));
 
 			m_imageAvailableSemaphores.resize(m_maxFramesInFlight);
 			m_renderFinishedSemaphores.resize(m_maxFramesInFlight);
@@ -649,6 +691,9 @@ namespace MRG::Vulkan
 		vkDestroyBuffer(m_data->device, m_vertexBuffer.handle, nullptr);
 		vkFreeMemory(m_data->device, m_vertexBuffer.memoryHandle, nullptr);
 
+		vkDestroyBuffer(m_data->device, m_indexBuffer.handle, nullptr);
+		vkFreeMemory(m_data->device, m_indexBuffer.memoryHandle, nullptr);
+
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 
 		m_textureShader->destroy();
@@ -671,7 +716,7 @@ namespace MRG::Vulkan
 			                                          &m_imageIndex);
 
 			if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-				recreateSwapChain(m_data, m_textureShader, m_vertexBuffer.handle, 3);
+				recreateSwapChain(m_data, m_textureShader, m_vertexBuffer.handle, m_indexBuffer.handle, 6);
 				return false;
 			}
 
@@ -702,7 +747,7 @@ namespace MRG::Vulkan
 		const auto result = vkQueuePresentKHR(m_data->presentQueue.handle, &presentInfo);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_shouldRecreateSwapChain) {
-			recreateSwapChain(m_data, m_textureShader, m_vertexBuffer.handle, 3);
+			recreateSwapChain(m_data, m_textureShader, m_vertexBuffer.handle, m_indexBuffer.handle, 6);
 			m_shouldRecreateSwapChain = false;
 		}
 

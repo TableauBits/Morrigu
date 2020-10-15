@@ -54,6 +54,7 @@ namespace MRG::Vulkan
 		std::vector<VkSemaphore> m_imageAvailableSemaphores, m_renderFinishedSemaphores;
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
 		Buffer m_vertexBuffer;
+		Buffer m_indexBuffer;
 
 		bool m_shouldRecreateSwapChain = false;
 	};

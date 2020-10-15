@@ -27,6 +27,9 @@ void Sandbox2D::onUpdate(MRG::Timestep ts)
 
 	m_camera.onUpdate(ts);
 
+	if (MRG::Input::isKeyDown(MRG::Key::Space))
+		MRG_INFO("FPS: {}", 1 / ts);
+
 	{
 		MRG_PROFILE_SCOPE("Render prep");
 		MRG::Renderer2D::setClearColor(m_color);
