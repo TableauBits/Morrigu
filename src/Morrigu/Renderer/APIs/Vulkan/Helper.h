@@ -28,6 +28,12 @@ namespace MRG::Vulkan
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
+	struct Buffer
+	{
+		VkBuffer handle;
+		VkDeviceMemory memoryHandle;
+	};
+
 	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice device, const VkSurfaceKHR surface);
 
 	[[nodiscard]] uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -36,8 +42,7 @@ namespace MRG::Vulkan
 	                  VkDeviceSize size,
 	                  VkBufferUsageFlags usage,
 	                  VkMemoryPropertyFlags properties,
-	                  VkBuffer& buffer,
-	                  VkDeviceMemory& bufferMemory);
+	                  Buffer& buffer);
 }  // namespace MRG::Vulkan
 
 #endif

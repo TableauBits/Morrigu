@@ -389,27 +389,24 @@ namespace
 		return returnCommandPool;
 	}
 
-	[[nodiscard]] std::pair<VkBuffer, VkDeviceMemory>
+	[[nodiscard]] MRG::Vulkan::Buffer
 	createVertexBuffer(const VkDevice device, const VkPhysicalDevice physicalDevice, std::size_t bufferSize, const void* bufferData)
 	{
-		VkBuffer returnBuffer;
-		VkDeviceMemory returnMemory;
-
+		MRG::Vulkan::Buffer vertexBuffer;
 		MRG::Vulkan::createBuffer(device,
 		                          physicalDevice,
 		                          bufferSize,
 		                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		                          returnBuffer,
-		                          returnMemory);
+		                          vertexBuffer);
 
 		void* data;
-		vkMapMemory(device, returnMemory, 0, bufferSize, 0, &data);
+		vkMapMemory(device, vertexBuffer.memoryHandle, 0, bufferSize, 0, &data);
 		memcpy(data, bufferData, bufferSize);
-		vkUnmapMemory(device, returnMemory);
+		vkUnmapMemory(device, vertexBuffer.memoryHandle);
 		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
 
-		return {returnBuffer, returnMemory};
+		return vertexBuffer;
 	}
 
 	[[nodiscard]] std::vector<VkCommandBuffer>
@@ -559,12 +556,10 @@ namespace MRG::Vulkan
 			m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
 			MRG_ENGINE_TRACE("Command pool successfully created");
 
-			const auto [vertexBuffer, vertexBufferMemory] = createVertexBuffer(
+			m_vertexBuffer = createVertexBuffer(
 			  m_data->device, m_data->physicalDevice, sizeof(Vertex) * vertices.size(), static_cast<const void*>(vertices.data()));
-			m_vertexBuffer = vertexBuffer;
-			m_vertexBufferMemory = vertexBufferMemory;
 
-			m_data->commandBuffers = createCommandBuffers(m_data, m_vertexBuffer, static_cast<uint32_t>(vertices.size()));
+			m_data->commandBuffers = createCommandBuffers(m_data, m_vertexBuffer.handle, static_cast<uint32_t>(vertices.size()));
 
 			m_imageAvailableSemaphores.resize(m_maxFramesInFlight);
 			m_renderFinishedSemaphores.resize(m_maxFramesInFlight);
@@ -605,8 +600,8 @@ namespace MRG::Vulkan
 
 		cleanupSwapChain(m_data);
 
-		vkDestroyBuffer(m_data->device, m_vertexBuffer, nullptr);
-		vkFreeMemory(m_data->device, m_vertexBufferMemory, nullptr);
+		vkDestroyBuffer(m_data->device, m_vertexBuffer.handle, nullptr);
+		vkFreeMemory(m_data->device, m_vertexBuffer.memoryHandle, nullptr);
 
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 
@@ -630,7 +625,7 @@ namespace MRG::Vulkan
 			                                          &m_imageIndex);
 
 			if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-				recreateSwapChain(m_data, m_textureShader, m_vertexBuffer, 3);
+				recreateSwapChain(m_data, m_textureShader, m_vertexBuffer.handle, 3);
 				return false;
 			}
 
@@ -661,7 +656,7 @@ namespace MRG::Vulkan
 		const auto result = vkQueuePresentKHR(m_data->presentQueue.handle, &presentInfo);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_shouldRecreateSwapChain) {
-			recreateSwapChain(m_data, m_textureShader, m_vertexBuffer, 3);
+			recreateSwapChain(m_data, m_textureShader, m_vertexBuffer.handle, 3);
 			m_shouldRecreateSwapChain = false;
 		}
 

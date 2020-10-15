@@ -45,8 +45,7 @@ namespace MRG::Vulkan
 	                  VkDeviceSize size,
 	                  VkBufferUsageFlags usage,
 	                  VkMemoryPropertyFlags properties,
-	                  VkBuffer& buffer,
-	                  VkDeviceMemory& bufferMemory)
+	                  Buffer& buffer)
 	{
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -54,20 +53,20 @@ namespace MRG::Vulkan
 		bufferInfo.usage = usage;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		MRG_VKVALIDATE(vkCreateBuffer(device, &bufferInfo, nullptr, &buffer), "failed to create vertex buffer!");
+		MRG_VKVALIDATE(vkCreateBuffer(device, &bufferInfo, nullptr, &buffer.handle), "failed to create vertex buffer!");
 		MRG_ENGINE_TRACE("Vertex buffer succesfully created");
 
 		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+		vkGetBufferMemoryRequirements(device, buffer.handle, &memRequirements);
 
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
 
-		MRG_VKVALIDATE(vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory), "failed to allocate vertex buffer memory");
+		MRG_VKVALIDATE(vkAllocateMemory(device, &allocInfo, nullptr, &buffer.memoryHandle), "failed to allocate vertex buffer memory");
 		MRG_ENGINE_TRACE("Vertex buffer memory successfully allocated");
 
-		vkBindBufferMemory(device, buffer, bufferMemory, 0);
+		vkBindBufferMemory(device, buffer.handle, buffer.memoryHandle, 0);
 	}
 }  // namespace MRG::Vulkan
