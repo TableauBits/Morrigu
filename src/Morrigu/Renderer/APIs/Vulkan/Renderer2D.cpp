@@ -5,8 +5,42 @@
 #include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/Renderer2D.h"
 
+#include <array>
+
 namespace
 {
+	struct Vertex
+	{
+		glm::vec2 pos;
+		glm::vec3 color;
+
+		static VkVertexInputBindingDescription getBindingDescription()
+		{
+			VkVertexInputBindingDescription bindingDescription{};
+			bindingDescription.binding = 0;
+			bindingDescription.stride = sizeof(Vertex);
+			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+			return bindingDescription;
+		}
+
+		static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
+		{
+			std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[0].location = 0;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+			attributeDescriptions[1].binding = 0;
+			attributeDescriptions[1].location = 1;
+			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+			return attributeDescriptions;
+		}
+	};
+
 	[[nodiscard]] MRG::Vulkan::QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface)
 	{
 		MRG::Vulkan::QueueFamilyIndices indices;
@@ -229,10 +263,15 @@ namespace
 
 		VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
+		const auto bindingDescription = Vertex::getBindingDescription();
+		const auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
+		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+		vertexInputInfo.vertexBindingDescriptionCount = 1;
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -350,7 +389,58 @@ namespace
 		return returnCommandPool;
 	}
 
-	[[nodiscard]] std::vector<VkCommandBuffer> createCommandBuffers(const MRG::Vulkan::WindowProperties* data)
+	[[nodiscard]] uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+	{
+		VkPhysicalDeviceMemoryProperties memProperties;
+		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i) {
+			if ((typeFilter & MRG_BIT(i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+				return i;
+		}
+		throw std::runtime_error("failed to find suitable memory type!");
+	}
+
+	[[nodiscard]] std::pair<VkBuffer, VkDeviceMemory>
+	createVertexBuffer(const VkPhysicalDevice physicalDevice, VkDevice device, std::size_t bufferSize, const void* bufferData)
+	{
+		VkBuffer returnBuffer;
+		VkDeviceMemory returnMemory;
+
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = bufferSize;
+		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		MRG_VKVALIDATE(vkCreateBuffer(device, &bufferInfo, nullptr, &returnBuffer), "failed to create vertex buffer!");
+		MRG_ENGINE_TRACE("Vertex buffer succesfully created");
+
+		VkMemoryRequirements memRequirements;
+		vkGetBufferMemoryRequirements(device, returnBuffer, &memRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = findMemoryType(
+		  physicalDevice, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+		MRG_VKVALIDATE(vkAllocateMemory(device, &allocInfo, nullptr, &returnMemory), "failed to allocate vertex buffer memory");
+		MRG_ENGINE_TRACE("Vertex buffer memory successfully allocated");
+
+		vkBindBufferMemory(device, returnBuffer, returnMemory, 0);
+
+		void* data;
+		vkMapMemory(device, returnMemory, 0, bufferSize, 0, &data);
+		memcpy_s(data, bufferSize, bufferData, bufferSize);
+		vkUnmapMemory(device, returnMemory);
+		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
+
+		return {returnBuffer, returnMemory};
+	}
+
+	[[nodiscard]] std::vector<VkCommandBuffer>
+	createCommandBuffers(const MRG::Vulkan::WindowProperties* data, VkBuffer vertexBuffer, uint32_t vertexCount)
 	{
 		std::vector<VkCommandBuffer> commandBuffers(data->swapChain.frameBuffers.size());
 
@@ -386,7 +476,12 @@ namespace
 			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data->pipeline.handle);
 			MRG_ENGINE_TRACE("\t\tGraphics pipeline bound");
 
-			vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+			VkBuffer vertexBuffers[] = {vertexBuffer};
+			VkDeviceSize offsets[] = {0};
+			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
+			MRG_ENGINE_TRACE("\t\tVertex buffer bound");
+
+			vkCmdDraw(commandBuffers[i], vertexCount, 1, 0, 0);
 			MRG_ENGINE_TRACE("\t\tDraw call recorded");
 
 			vkCmdEndRenderPass(commandBuffers[i]);
@@ -417,7 +512,10 @@ namespace
 		vkDestroySwapchainKHR(data->device, data->swapChain.handle, nullptr);
 	}
 
-	void recreateSwapChain(MRG::Vulkan::WindowProperties* data, MRG::Ref<MRG::Vulkan::Shader> textureShader)
+	void recreateSwapChain(MRG::Vulkan::WindowProperties* data,
+	                       MRG::Ref<MRG::Vulkan::Shader> textureShader,
+	                       VkBuffer vertexBuffer,
+	                       uint32_t vertexCount)
 	{
 		int width = data->width, height = data->height;
 		while (width == 0 || height == 0) {
@@ -450,7 +548,7 @@ namespace
 		  createframeBuffers(data->device, data->swapChain.imageViews, data->pipeline.renderPass, data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
 
-		data->commandBuffers = createCommandBuffers(data);
+		data->commandBuffers = createCommandBuffers(data, vertexBuffer, vertexCount);
 	}
 
 }  // namespace
@@ -463,6 +561,9 @@ namespace MRG::Vulkan
 
 		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
 		m_textureShader = createRef<Shader>("resources/shaders/texture");
+
+		const std::vector<Vertex> vertices = {
+		  {{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}}, {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}}, {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
 		try {
 			m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
@@ -485,7 +586,12 @@ namespace MRG::Vulkan
 			m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
 			MRG_ENGINE_TRACE("Command pool successfully created");
 
-			m_data->commandBuffers = createCommandBuffers(m_data);
+			const auto [vertexBuffer, vertexBufferMemory] = createVertexBuffer(
+			  m_data->physicalDevice, m_data->device, sizeof(Vertex) * vertices.size(), static_cast<const void*>(vertices.data()));
+			m_vertexBuffer = vertexBuffer;
+			m_vertexBufferMemory = vertexBufferMemory;
+
+			m_data->commandBuffers = createCommandBuffers(m_data, m_vertexBuffer, static_cast<uint32_t>(vertices.size()));
 
 			m_imageAvailableSemaphores.resize(m_maxFramesInFlight);
 			m_renderFinishedSemaphores.resize(m_maxFramesInFlight);
@@ -526,6 +632,9 @@ namespace MRG::Vulkan
 
 		cleanupSwapChain(m_data);
 
+		vkDestroyBuffer(m_data->device, m_vertexBuffer, nullptr);
+		vkFreeMemory(m_data->device, m_vertexBufferMemory, nullptr);
+
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 
 		m_textureShader->destroy();
@@ -548,7 +657,7 @@ namespace MRG::Vulkan
 			                                          &m_imageIndex);
 
 			if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-				recreateSwapChain(m_data, m_textureShader);
+				recreateSwapChain(m_data, m_textureShader, m_vertexBuffer, 3);
 				return false;
 			}
 
@@ -579,7 +688,7 @@ namespace MRG::Vulkan
 		const auto result = vkQueuePresentKHR(m_data->presentQueue.handle, &presentInfo);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_shouldRecreateSwapChain) {
-			recreateSwapChain(m_data, m_textureShader);
+			recreateSwapChain(m_data, m_textureShader, m_vertexBuffer, 3);
 			m_shouldRecreateSwapChain = false;
 		}
 
