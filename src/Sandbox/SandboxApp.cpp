@@ -11,6 +11,9 @@ public:
 	{
 		m_camera.onUpdate(ts);
 
+		if (MRG::Input::isKeyDown(MRG::Key::Space))
+			MRG_INFO("FPS: {}", 1 / ts);
+
 		MRG::Renderer2D::beginScene(m_camera.getCamera());
 		MRG::Renderer2D::drawQuad({0, 0, 0}, {0, 0}, {0, 0, 0, 0});
 		MRG::Renderer2D::endScene();

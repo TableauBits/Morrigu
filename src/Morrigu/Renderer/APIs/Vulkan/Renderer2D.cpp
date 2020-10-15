@@ -389,22 +389,69 @@ namespace
 		return returnCommandPool;
 	}
 
-	[[nodiscard]] MRG::Vulkan::Buffer
-	createVertexBuffer(const VkDevice device, const VkPhysicalDevice physicalDevice, std::size_t bufferSize, const void* bufferData)
+	void copyBuffer(const MRG::Vulkan::WindowProperties* data, MRG::Vulkan::Buffer src, MRG::Vulkan::Buffer dst, VkDeviceSize size)
 	{
-		MRG::Vulkan::Buffer vertexBuffer;
-		MRG::Vulkan::createBuffer(device,
-		                          physicalDevice,
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = data->commandPool;
+		allocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		vkAllocateCommandBuffers(data->device, &allocInfo, &commandBuffer);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+		VkBufferCopy copyRegion{};
+		copyRegion.size = size;
+		vkCmdCopyBuffer(commandBuffer, src.handle, dst.handle, 1, &copyRegion);
+
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		vkQueueSubmit(data->graphicsQueue.handle, 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(data->graphicsQueue.handle);
+
+		vkFreeCommandBuffers(data->device, data->commandPool, 1, &commandBuffer);
+	}
+
+	[[nodiscard]] MRG::Vulkan::Buffer
+	createVertexBuffer(const MRG::Vulkan::WindowProperties* data, std::size_t bufferSize, const void* bufferData)
+	{
+		MRG::Vulkan::Buffer stagingBuffer;
+		MRG::Vulkan::createBuffer(data->device,
+		                          data->physicalDevice,
 		                          bufferSize,
-		                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		                          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                          stagingBuffer);
+
+		void* dataPointer;
+		vkMapMemory(data->device, stagingBuffer.memoryHandle, 0, bufferSize, 0, &dataPointer);
+		memcpy(dataPointer, bufferData, bufferSize);
+		vkUnmapMemory(data->device, stagingBuffer.memoryHandle);
+		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
+
+		MRG::Vulkan::Buffer vertexBuffer;
+		MRG::Vulkan::createBuffer(data->device,
+		                          data->physicalDevice,
+		                          bufferSize,
+		                          VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		                          vertexBuffer);
 
-		void* data;
-		vkMapMemory(device, vertexBuffer.memoryHandle, 0, bufferSize, 0, &data);
-		memcpy(data, bufferData, bufferSize);
-		vkUnmapMemory(device, vertexBuffer.memoryHandle);
-		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
+		copyBuffer(data, stagingBuffer, vertexBuffer, bufferSize);
+
+		vkDestroyBuffer(data->device, stagingBuffer.handle, nullptr);
+		vkFreeMemory(data->device, stagingBuffer.memoryHandle, nullptr);
 
 		return vertexBuffer;
 	}
@@ -556,8 +603,7 @@ namespace MRG::Vulkan
 			m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
 			MRG_ENGINE_TRACE("Command pool successfully created");
 
-			m_vertexBuffer = createVertexBuffer(
-			  m_data->device, m_data->physicalDevice, sizeof(Vertex) * vertices.size(), static_cast<const void*>(vertices.data()));
+			m_vertexBuffer = createVertexBuffer(m_data, sizeof(Vertex) * vertices.size(), static_cast<const void*>(vertices.data()));
 
 			m_data->commandBuffers = createCommandBuffers(m_data, m_vertexBuffer.handle, static_cast<uint32_t>(vertices.size()));
 
