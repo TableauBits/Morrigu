@@ -432,7 +432,7 @@ namespace
 
 		void* data;
 		vkMapMemory(device, returnMemory, 0, bufferSize, 0, &data);
-		memcpy_s(data, bufferSize, bufferData, bufferSize);
+		memcpy(data, bufferData, bufferSize);
 		vkUnmapMemory(device, returnMemory);
 		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
 
