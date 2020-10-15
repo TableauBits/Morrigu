@@ -389,46 +389,19 @@ namespace
 		return returnCommandPool;
 	}
 
-	[[nodiscard]] uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
-	{
-		VkPhysicalDeviceMemoryProperties memProperties;
-		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-
-		for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i) {
-			if ((typeFilter & MRG_BIT(i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-				return i;
-		}
-		throw std::runtime_error("failed to find suitable memory type!");
-	}
-
 	[[nodiscard]] std::pair<VkBuffer, VkDeviceMemory>
-	createVertexBuffer(const VkPhysicalDevice physicalDevice, VkDevice device, std::size_t bufferSize, const void* bufferData)
+	createVertexBuffer(const VkDevice device, const VkPhysicalDevice physicalDevice, std::size_t bufferSize, const void* bufferData)
 	{
 		VkBuffer returnBuffer;
 		VkDeviceMemory returnMemory;
 
-		VkBufferCreateInfo bufferInfo{};
-		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = bufferSize;
-		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		MRG_VKVALIDATE(vkCreateBuffer(device, &bufferInfo, nullptr, &returnBuffer), "failed to create vertex buffer!");
-		MRG_ENGINE_TRACE("Vertex buffer succesfully created");
-
-		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(device, returnBuffer, &memRequirements);
-
-		VkMemoryAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = findMemoryType(
-		  physicalDevice, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-		MRG_VKVALIDATE(vkAllocateMemory(device, &allocInfo, nullptr, &returnMemory), "failed to allocate vertex buffer memory");
-		MRG_ENGINE_TRACE("Vertex buffer memory successfully allocated");
-
-		vkBindBufferMemory(device, returnBuffer, returnMemory, 0);
+		MRG::Vulkan::createBuffer(device,
+		                          physicalDevice,
+		                          bufferSize,
+		                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                          returnBuffer,
+		                          returnMemory);
 
 		void* data;
 		vkMapMemory(device, returnMemory, 0, bufferSize, 0, &data);
@@ -587,7 +560,7 @@ namespace MRG::Vulkan
 			MRG_ENGINE_TRACE("Command pool successfully created");
 
 			const auto [vertexBuffer, vertexBufferMemory] = createVertexBuffer(
-			  m_data->physicalDevice, m_data->device, sizeof(Vertex) * vertices.size(), static_cast<const void*>(vertices.data()));
+			  m_data->device, m_data->physicalDevice, sizeof(Vertex) * vertices.size(), static_cast<const void*>(vertices.data()));
 			m_vertexBuffer = vertexBuffer;
 			m_vertexBufferMemory = vertexBufferMemory;
 

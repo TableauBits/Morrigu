@@ -29,6 +29,15 @@ namespace MRG::Vulkan
 	};
 
 	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice device, const VkSurfaceKHR surface);
+
+	[[nodiscard]] uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	void createBuffer(VkDevice device,
+	                  VkPhysicalDevice physicalDevice,
+	                  VkDeviceSize size,
+	                  VkBufferUsageFlags usage,
+	                  VkMemoryPropertyFlags properties,
+	                  VkBuffer& buffer,
+	                  VkDeviceMemory& bufferMemory);
 }  // namespace MRG::Vulkan
 
 #endif
