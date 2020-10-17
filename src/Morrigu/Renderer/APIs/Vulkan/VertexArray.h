@@ -33,8 +33,8 @@ namespace MRG::Vulkan
 
 		[[nodiscard]] const std::vector<Ref<MRG::VertexBuffer>>& getVertexBuffers() const override { return m_vertexBuffers; };
 		[[nodiscard]] const Ref<MRG::IndexBuffer>& getIndexBuffer() const override { return m_indexBuffer; };
-		[[nodiscard]] const auto getBindingDescription() const { return m_bindingDescription; }
-		[[nodiscard]] const auto getAttributeDescriptions() const { return m_attributeDescriptions; }
+		[[nodiscard]] auto getBindingDescription() const { return m_bindingDescription; }
+		[[nodiscard]] auto getAttributeDescriptions() const { return m_attributeDescriptions; }
 
 	private:
 		std::vector<Ref<MRG::VertexBuffer>> m_vertexBuffers;
