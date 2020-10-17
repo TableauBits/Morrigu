@@ -126,7 +126,8 @@ namespace MRG
 
 		BufferLayout layout;
 
-		[[nodiscard]] static Ref<VertexBuffer> create(const float* vertices, uint32_t size);
+		[[nodiscard]] static Ref<VertexBuffer> create(const void* vertices, std::size_t size);
+		[[nodiscard]] static Ref<VertexBuffer> create(const void* vertices, uint32_t size);
 
 	protected:
 		bool m_isDestroyed = false;
@@ -143,6 +144,7 @@ namespace MRG
 		virtual void unbind() const = 0;
 		[[nodiscard]] virtual uint32_t getCount() const = 0;
 
+		[[nodiscard]] static Ref<IndexBuffer> create(const uint32_t* indices, std::size_t size);
 		[[nodiscard]] static Ref<IndexBuffer> create(const uint32_t* indices, uint32_t size);
 
 	protected:

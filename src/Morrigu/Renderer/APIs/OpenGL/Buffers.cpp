@@ -6,7 +6,7 @@
 
 namespace MRG::OpenGL
 {
-	VertexBuffer::VertexBuffer(const float* vertices, uint32_t size)
+	VertexBuffer::VertexBuffer(const void* vertices, uint32_t size)
 	{
 		MRG_PROFILE_FUNCTION();
 

@@ -1,17 +1,64 @@
 #include "Buffers.h"
 
 #include "Debug/Instrumentor.h"
+#include "Renderer/Renderer2D.h"
+
+#include <GLFW/glfw3.h>
 
 namespace MRG::Vulkan
 {
-	VertexBuffer::VertexBuffer(const float*, uint32_t)
+	VertexBuffer::VertexBuffer(const void* vertices, uint32_t size)
 	{
-		// MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION();
+
+		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+		MRG::Vulkan::Buffer stagingBuffer;
+		MRG::Vulkan::createBuffer(data->device,
+		                          data->physicalDevice,
+		                          size,
+		                          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                          stagingBuffer);
+
+		void* dataPointer;
+		vkMapMemory(data->device, stagingBuffer.memoryHandle, 0, size, 0, &dataPointer);
+		memcpy(dataPointer, vertices, size);
+		vkUnmapMemory(data->device, stagingBuffer.memoryHandle);
+		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
+
+		MRG::Vulkan::createBuffer(data->device,
+		                          data->physicalDevice,
+		                          size,
+		                          VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		                          m_bufferStruct);
+
+		MRG::Vulkan::copyBuffer(data, stagingBuffer, m_bufferStruct, size);
+
+		vkDestroyBuffer(data->device, stagingBuffer.handle, nullptr);
+		vkFreeMemory(data->device, stagingBuffer.memoryHandle, nullptr);
 	}
 
 	VertexBuffer::~VertexBuffer()
 	{
-		// MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION();
+
+		destroy();
+	}
+
+	void VertexBuffer::destroy()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		if (m_isDestroyed)
+			return;
+
+		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+		vkDestroyBuffer(data->device, m_bufferStruct.handle, nullptr);
+		vkFreeMemory(data->device, m_bufferStruct.memoryHandle, nullptr);
+		m_isDestroyed = true;
 	}
 
 	void VertexBuffer::bind() const
@@ -25,14 +72,59 @@ namespace MRG::Vulkan
 
 	//===================================================================================//
 
-	IndexBuffer::IndexBuffer(const uint32_t*, uint32_t count) : m_count(count)
+	IndexBuffer::IndexBuffer(const uint32_t* indices, uint32_t count) : m_count(count)
 	{
-		// MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION();
+
+		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+		const auto bufferSize = count * sizeof(uint32_t);
+
+		MRG::Vulkan::Buffer stagingBuffer;
+		MRG::Vulkan::createBuffer(data->device,
+		                          data->physicalDevice,
+		                          bufferSize,
+		                          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                          stagingBuffer);
+
+		void* dataPointer;
+		vkMapMemory(data->device, stagingBuffer.memoryHandle, 0, bufferSize, 0, &dataPointer);
+		memcpy(dataPointer, indices, bufferSize);
+		vkUnmapMemory(data->device, stagingBuffer.memoryHandle);
+		MRG_ENGINE_TRACE("Index buffer data successfully bound and updloaded");
+
+		MRG::Vulkan::createBuffer(data->device,
+		                          data->physicalDevice,
+		                          bufferSize,
+		                          VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		                          m_bufferStruct);
+
+		copyBuffer(data, stagingBuffer, m_bufferStruct, bufferSize);
+
+		vkDestroyBuffer(data->device, stagingBuffer.handle, nullptr);
+		vkFreeMemory(data->device, stagingBuffer.memoryHandle, nullptr);
 	}
 
 	IndexBuffer::~IndexBuffer()
 	{
-		// MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION();
+
+		destroy();
+	}
+
+	void IndexBuffer::destroy()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		if (m_isDestroyed)
+			return;
+
+		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+		vkDestroyBuffer(data->device, m_bufferStruct.handle, nullptr);
+		vkFreeMemory(data->device, m_bufferStruct.memoryHandle, nullptr);
+		m_isDestroyed = true;
 	}
 
 	void IndexBuffer::bind() const

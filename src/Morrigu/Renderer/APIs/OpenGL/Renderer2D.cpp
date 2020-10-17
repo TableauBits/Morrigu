@@ -12,7 +12,7 @@ namespace MRG::OpenGL
 		m_quadVertexArray = VertexArray::create();
 
 		// clang-format off
-        float squareVertices[5 * 4] = {
+        const float squareVertices[5 * 4] = {
             -0.5f, -0.5f, 0.0f, 0.f, 0.f,
 			 0.5f, -0.5f, 0.0f, 1.f, 0.f,
 			 0.5f,  0.5f, 0.0f, 1.f, 1.f,
@@ -27,7 +27,7 @@ namespace MRG::OpenGL
 		// clang-format on
 		m_quadVertexArray->addVertexBuffer(squareVB);
 
-		uint32_t squareIndices[6] = {0, 1, 2, 2, 3, 0};
+		const uint32_t squareIndices[6] = {0, 1, 2, 2, 3, 0};
 		Ref<IndexBuffer> squareIB = IndexBuffer::create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
 
 		m_quadVertexArray->setIndexBuffer(squareIB);

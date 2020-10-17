@@ -7,7 +7,12 @@
 
 namespace MRG
 {
-	Ref<VertexBuffer> VertexBuffer::create(const float* vertices, uint32_t size)
+	Ref<VertexBuffer> VertexBuffer::create(const void* vertices, std::size_t size)
+	{
+		return VertexBuffer::create(vertices, static_cast<uint32_t>(size));
+	}
+
+	Ref<VertexBuffer> VertexBuffer::create(const void* vertices, uint32_t size)
 	{
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
@@ -24,6 +29,11 @@ namespace MRG
 			return nullptr;
 		} break;
 		}
+	}
+
+	Ref<IndexBuffer> IndexBuffer::create(const uint32_t* indices, std::size_t size)
+	{
+		return IndexBuffer::create(indices, static_cast<uint32_t>(size));
 	}
 
 	Ref<IndexBuffer> IndexBuffer::create(const uint32_t* indices, uint32_t size)

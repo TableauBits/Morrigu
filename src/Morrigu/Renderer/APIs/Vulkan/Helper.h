@@ -1,6 +1,8 @@
 #ifndef MRG_VKHELPER
 #define MRG_VKHELPER
 
+#include "Renderer/APIs/Vulkan/WindowProperties.h"
+
 #include <vulkan/vulkan.hpp>
 
 #include <optional>
@@ -43,6 +45,8 @@ namespace MRG::Vulkan
 	                  VkBufferUsageFlags usage,
 	                  VkMemoryPropertyFlags properties,
 	                  Buffer& buffer);
+
+	void copyBuffer(const MRG::Vulkan::WindowProperties* data, MRG::Vulkan::Buffer src, MRG::Vulkan::Buffer dst, VkDeviceSize size);
 }  // namespace MRG::Vulkan
 
 #endif
