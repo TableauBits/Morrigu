@@ -3,6 +3,7 @@
 #include "Debug/Instrumentor.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
+#include "Renderer/APIs/Vulkan/VertexArray.h"
 #include "Renderer/Renderer2D.h"
 
 #include <array>
@@ -14,31 +15,8 @@ namespace
 		glm::vec2 pos;
 		glm::vec3 color;
 
-		static VkVertexInputBindingDescription getBindingDescription()
-		{
-			VkVertexInputBindingDescription bindingDescription{};
-			bindingDescription.binding = 0;
-			bindingDescription.stride = sizeof(Vertex);
-			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-			return bindingDescription;
-		}
-
-		static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
-		{
-			std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
-			attributeDescriptions[0].binding = 0;
-			attributeDescriptions[0].location = 0;
-			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-			attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-			attributeDescriptions[1].binding = 0;
-			attributeDescriptions[1].location = 1;
-			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-			return attributeDescriptions;
-		}
+		static inline std::initializer_list<MRG::BufferElement> layout = {{MRG::ShaderDataType::Float2, "a_pos"},
+		                                                                  {MRG::ShaderDataType::Float3, "a_color"}};
 	};
 
 	[[nodiscard]] MRG::Vulkan::QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface)
@@ -244,7 +222,10 @@ namespace
 		return returnRenderPass;
 	}
 
-	[[nodiscard]] VkPipeline createPipeline(const MRG::Vulkan::WindowProperties* data, MRG::Ref<MRG::Vulkan::Shader> textureShader)
+	[[nodiscard]] VkPipeline createPipeline(const MRG::Vulkan::WindowProperties* data,
+	                                        MRG::Ref<MRG::Vulkan::Shader> textureShader,
+	                                        const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
+	                                        const std::vector<VkVertexInputBindingDescription>& bindingDescriptions)
 	{
 		VkPipeline returnPipeline;
 
@@ -263,15 +244,12 @@ namespace
 
 		VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-		const auto bindingDescription = Vertex::getBindingDescription();
-		const auto attributeDescriptions = Vertex::getAttributeDescriptions();
-
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
 		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-		vertexInputInfo.vertexBindingDescriptionCount = 1;
-		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+		vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -466,8 +444,7 @@ namespace
 
 	void recreateSwapChain(MRG::Vulkan::WindowProperties* data,
 	                       MRG::Ref<MRG::Vulkan::Shader> textureShader,
-	                       VkBuffer vertexBuffer,
-	                       VkBuffer indexBuffer,
+	                       MRG::Ref<MRG::Vulkan::VertexArray> vertexArray,
 	                       uint32_t indexCount)
 	{
 		int width = data->width, height = data->height;
@@ -494,14 +471,20 @@ namespace
 		MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineLayoutCreateInfo, nullptr, &data->pipeline.layout),
 		               "failed to recreate pipeline layout!");
 		MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
-		data->pipeline.handle = createPipeline(data, textureShader);
+		data->pipeline.handle =
+		  createPipeline(data, textureShader, vertexArray->getAttributeDescriptions(), {vertexArray->getBindingDescription()});
 
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
 		data->swapChain.frameBuffers =
 		  createframeBuffers(data->device, data->swapChain.imageViews, data->pipeline.renderPass, data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
 
-		data->commandBuffers = createCommandBuffers(data, vertexBuffer, indexBuffer, indexCount);
+		// Dear god I'm so sorry for this
+		data->commandBuffers =
+		  createCommandBuffers(data,
+		                       std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(vertexArray->getVertexBuffers()[0])->getHandle(),
+		                       std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(vertexArray->getIndexBuffer())->getHandle(),
+		                       indexCount);
 	}
 
 }  // namespace
@@ -528,26 +511,36 @@ namespace MRG::Vulkan
 
 			m_data->pipeline.renderPass = createRenderPass(m_data->device, m_data->swapChain.imageFormat);
 
+			m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
+			MRG_ENGINE_TRACE("Command pool successfully created");
+
+			const auto vertexBuffer = createRef<VertexBuffer>(vertices.data(), static_cast<uint32_t>(sizeof(Vertex) * vertices.size()));
+			vertexBuffer->layout = Vertex::layout;
+
+			const auto indexBuffer = createRef<IndexBuffer>(indices.data(), static_cast<uint32_t>(indices.size()));
+
+			m_vertexArray = createRef<VertexArray>();
+			m_vertexArray->addVertexBuffer(vertexBuffer);
+			m_vertexArray->setIndexBuffer(indexBuffer);
+
 			const auto pipelineLayoutCreateInfo = populatePipelineLayout();
 			MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineLayoutCreateInfo, nullptr, &m_data->pipeline.layout),
 			               "failed to create pipeline layout!");
 			MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
 
-			m_data->pipeline.handle = createPipeline(m_data, m_textureShader);
+			m_data->pipeline.handle =
+			  createPipeline(m_data,
+			                 m_textureShader,
+			                 std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getAttributeDescriptions(),
+			                 {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getBindingDescription()});
 			MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
 
 			m_data->swapChain.frameBuffers =
 			  createframeBuffers(m_data->device, m_data->swapChain.imageViews, m_data->pipeline.renderPass, m_data->swapChain.extent);
 			MRG_ENGINE_TRACE("Framebuffers successfully created");
 
-			m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
-			MRG_ENGINE_TRACE("Command pool successfully created");
-
-			m_vertexBuffer = createRef<VertexBuffer>(vertices.data(), static_cast<uint32_t>(sizeof(Vertex) * vertices.size()));
-			m_indexBuffer = createRef<IndexBuffer>(indices.data(), static_cast<uint32_t>(sizeof(indices[0]) * indices.size()));
-
 			m_data->commandBuffers =
-			  createCommandBuffers(m_data, m_vertexBuffer->getHandle(), m_indexBuffer->getHandle(), static_cast<uint32_t>(indices.size()));
+			  createCommandBuffers(m_data, vertexBuffer->getHandle(), indexBuffer->getHandle(), indexBuffer->getCount());
 
 			m_imageAvailableSemaphores.resize(m_maxFramesInFlight);
 			m_renderFinishedSemaphores.resize(m_maxFramesInFlight);
@@ -588,12 +581,9 @@ namespace MRG::Vulkan
 
 		cleanupSwapChain(m_data);
 
-		// TODO: BUFFER DESTRUCTION
-		m_indexBuffer->destroy();
-		m_vertexBuffer->destroy();
-
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 
+		m_vertexArray->destroy();
 		m_textureShader->destroy();
 	}
 
@@ -614,7 +604,7 @@ namespace MRG::Vulkan
 			                                          &m_imageIndex);
 
 			if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-				recreateSwapChain(m_data, m_textureShader, m_vertexBuffer->getHandle(), m_indexBuffer->getHandle(), 6);
+				recreateSwapChain(m_data, m_textureShader, m_vertexArray, m_vertexArray->getIndexBuffer()->getCount());
 				return false;
 			}
 
@@ -645,7 +635,7 @@ namespace MRG::Vulkan
 		const auto result = vkQueuePresentKHR(m_data->presentQueue.handle, &presentInfo);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_shouldRecreateSwapChain) {
-			recreateSwapChain(m_data, m_textureShader, m_vertexBuffer->getHandle(), m_indexBuffer->getHandle(), 6);
+			recreateSwapChain(m_data, m_textureShader, m_vertexArray, m_vertexArray->getIndexBuffer()->getCount());
 			m_shouldRecreateSwapChain = false;
 		}
 

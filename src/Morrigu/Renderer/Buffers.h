@@ -55,7 +55,7 @@ namespace MRG
 		bool isNormalized;
 
 		BufferElement() = default;
-		BufferElement(ShaderDataType bufferType, const std::string& bufferName, bool normalized = false)
+		BufferElement(ShaderDataType bufferType, const char* bufferName, bool normalized = false)
 		    : name(bufferName), type(bufferType), size(ShaderDataTypeSize(bufferType)), offset(0), isNormalized(normalized)
 		{}
 
@@ -93,7 +93,7 @@ namespace MRG
 	{
 	public:
 		BufferLayout() = default;
-		BufferLayout(const std::initializer_list<BufferElement>& elements) : m_elements(elements)
+		BufferLayout(const std::initializer_list<BufferElement> elements) : m_elements(elements)
 		{
 			std::size_t offset = 0;
 			for (auto& element : m_elements) {

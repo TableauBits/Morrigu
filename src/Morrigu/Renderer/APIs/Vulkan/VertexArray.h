@@ -1,7 +1,10 @@
 #ifndef MRG_VULKAN_IMPL_VERTEXARRAY
 #define MRG_VULKAN_IMPL_VERTEXARRAY
 
+#include "Renderer/APIs/Vulkan/Buffers.h"
 #include "Renderer/VertexArray.h"
+
+#include <vulkan/vulkan.hpp>
 
 namespace MRG::Vulkan
 {
@@ -13,8 +16,13 @@ namespace MRG::Vulkan
 
 		void destroy() override
 		{
+			if (m_isDestroyed)
+				return;
+
 			for (auto& vb : m_vertexBuffers) vb->destroy();
 			m_indexBuffer->destroy();
+
+			m_isDestroyed = true;
 		}
 
 		void bind() const override;
@@ -25,11 +33,14 @@ namespace MRG::Vulkan
 
 		[[nodiscard]] const std::vector<Ref<MRG::VertexBuffer>>& getVertexBuffers() const override { return m_vertexBuffers; };
 		[[nodiscard]] const Ref<MRG::IndexBuffer>& getIndexBuffer() const override { return m_indexBuffer; };
+		[[nodiscard]] const auto getBindingDescription() const { return m_bindingDescription; }
+		[[nodiscard]] const auto getAttributeDescriptions() const { return m_attributeDescriptions; }
 
 	private:
-		// uint32_t m_rendererID;
 		std::vector<Ref<MRG::VertexBuffer>> m_vertexBuffers;
 		Ref<MRG::IndexBuffer> m_indexBuffer;
+		VkVertexInputBindingDescription m_bindingDescription{};
+		std::vector<VkVertexInputAttributeDescription> m_attributeDescriptions;
 	};
 }  // namespace MRG::Vulkan
 

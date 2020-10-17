@@ -3,9 +3,9 @@
 
 #include "Renderer/Renderer2D.h"
 
-#include "Renderer/APIs/Vulkan/Buffers.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
+#include "Renderer/APIs/Vulkan/VertexArray.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
 
 #include <vulkan/vulkan.hpp>
@@ -54,8 +54,7 @@ namespace MRG::Vulkan
 		std::size_t m_maxFramesInFlight = 2;
 		std::vector<VkSemaphore> m_imageAvailableSemaphores, m_renderFinishedSemaphores;
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
-		Ref<VertexBuffer> m_vertexBuffer;
-		Ref<IndexBuffer> m_indexBuffer;
+		Ref<VertexArray> m_vertexArray;
 
 		bool m_shouldRecreateSwapChain = false;
 	};
