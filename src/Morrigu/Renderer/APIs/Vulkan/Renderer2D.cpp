@@ -1,10 +1,10 @@
 #include "Renderer2D.h"
 
+#include "Core/GLMIncludeHelper.h"
 #include "Debug/Instrumentor.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/APIs/Vulkan/VertexArray.h"
-#include "Renderer/Renderer2D.h"
 
 #include <array>
 
@@ -170,10 +170,32 @@ namespace
 		return {handle, minImageCount, imageCount, images, surfaceFormat.format, extent, imageViews, {}};
 	}
 
-	[[nodiscard]] VkPipelineLayoutCreateInfo populatePipelineLayout()
+	[[nodiscard]] VkDescriptorSetLayout createDescriptorSetLayout(const VkDevice device)
+	{
+		VkDescriptorSetLayout returnLayout;
+
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = 1;
+		layoutInfo.pBindings = &uboLayoutBinding;
+
+		MRG_VKVALIDATE(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &returnLayout), "failed to create descriptor set layout!");
+
+		return returnLayout;
+	}
+
+	[[nodiscard]] VkPipelineLayoutCreateInfo populatePipelineLayout(const VkDescriptorSetLayout* descriptorSetLayout)
 	{
 		VkPipelineLayoutCreateInfo pipelineCreateInfo{};
 		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineCreateInfo.setLayoutCount = 1;
+		pipelineCreateInfo.pSetLayouts = descriptorSetLayout;
 
 		return pipelineCreateInfo;
 	}
@@ -282,7 +304,7 @@ namespace
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1.0f;
 		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizer.depthBiasEnable = VK_FALSE;
 
 		VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -352,6 +374,77 @@ namespace
 		return returnFrameBuffers;
 	}
 
+	[[nodiscard]] std::vector<MRG::Vulkan::Buffer> createUniformBuffers(const MRG::Vulkan::WindowProperties* data)
+	{
+		std::vector<MRG::Vulkan::Buffer> returnBuffers(data->swapChain.imageCount);
+
+		VkDeviceSize bufferSize = sizeof(MRG::Vulkan::UniformBufferObject);
+
+		for (std::size_t i = 0; i < data->swapChain.imageCount; ++i) {
+			MRG::Vulkan::createBuffer(data->device,
+			                          data->physicalDevice,
+			                          bufferSize,
+			                          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			                          returnBuffers[i]);
+		}
+
+		return returnBuffers;
+	}
+
+	[[nodiscard]] VkDescriptorPool createDescriptorPool(const MRG::Vulkan::WindowProperties* data)
+	{
+		VkDescriptorPool descriptorPool;
+
+		VkDescriptorPoolSize poolSize{};
+		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSize.descriptorCount = data->swapChain.imageCount;
+
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = 1;
+		poolInfo.pPoolSizes = &poolSize;
+		poolInfo.maxSets = data->swapChain.imageCount;
+
+		MRG_VKVALIDATE(vkCreateDescriptorPool(data->device, &poolInfo, nullptr, &descriptorPool), "failed to create descriptor pool!");
+
+		return descriptorPool;
+	}
+
+	[[nodiscard]] std::vector<VkDescriptorSet> createDescriptorSets(const MRG::Vulkan::WindowProperties* data)
+	{
+		std::vector<VkDescriptorSet> descriptorSets(data->swapChain.imageCount);
+
+		std::vector<VkDescriptorSetLayout> layout(data->swapChain.imageCount, data->descriptorSetLayout);
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = data->descriptorPool;
+		allocInfo.descriptorSetCount = data->swapChain.imageCount;
+		allocInfo.pSetLayouts = layout.data();
+
+		MRG_VKVALIDATE(vkAllocateDescriptorSets(data->device, &allocInfo, descriptorSets.data()), "failed to allocate descriptor sets!");
+
+		for (std::size_t i = 0; i < data->swapChain.imageCount; ++i) {
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = data->uniformBuffers[i].handle;
+			bufferInfo.offset = 0;
+			bufferInfo.range = sizeof(MRG::Vulkan::UniformBufferObject);
+
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = descriptorSets[i];
+			descriptorWrite.dstBinding = 0;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &bufferInfo;
+
+			vkUpdateDescriptorSets(data->device, 1, &descriptorWrite, 0, nullptr);
+		}
+
+		return descriptorSets;
+	}
+
 	[[nodiscard]] VkCommandPool createCommandPool(const VkDevice device, const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
 	{
 		VkCommandPool returnCommandPool;
@@ -410,6 +503,11 @@ namespace
 			MRG_ENGINE_TRACE("\t\tVertex buffer bound");
 
 			vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+			MRG_ENGINE_TRACE("\t\tIndex buffer bound");
+
+			vkCmdBindDescriptorSets(
+			  commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, data->pipeline.layout, 0, 1, &data->descriptorSets[i], 0, nullptr);
+			MRG_ENGINE_TRACE("\t\tDescriptor set bound");
 
 			vkCmdDrawIndexed(commandBuffers[i], indexCount, 1, 0, 0, 0);
 			MRG_ENGINE_TRACE("\t\tDraw call recorded");
@@ -440,6 +538,13 @@ namespace
 		for (auto imageView : data->swapChain.imageViews) vkDestroyImageView(data->device, imageView, nullptr);
 
 		vkDestroySwapchainKHR(data->device, data->swapChain.handle, nullptr);
+
+		for (const auto& uniformBuffer : data->uniformBuffers) {
+			vkDestroyBuffer(data->device, uniformBuffer.handle, nullptr);
+			vkFreeMemory(data->device, uniformBuffer.memoryHandle, nullptr);
+		}
+
+		vkDestroyDescriptorPool(data->device, data->descriptorPool, nullptr);
 	}
 
 	void recreateSwapChain(MRG::Vulkan::WindowProperties* data,
@@ -467,7 +572,7 @@ namespace
 
 		data->pipeline.renderPass = createRenderPass(data->device, data->swapChain.imageFormat);
 
-		const auto pipelineLayoutCreateInfo = populatePipelineLayout();
+		const auto pipelineLayoutCreateInfo = populatePipelineLayout(&data->descriptorSetLayout);
 		MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineLayoutCreateInfo, nullptr, &data->pipeline.layout),
 		               "failed to recreate pipeline layout!");
 		MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
@@ -478,6 +583,11 @@ namespace
 		data->swapChain.frameBuffers =
 		  createframeBuffers(data->device, data->swapChain.imageViews, data->pipeline.renderPass, data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
+
+		data->uniformBuffers = createUniformBuffers(data);
+
+		data->descriptorPool = createDescriptorPool(data);
+		data->descriptorSets = createDescriptorSets(data);
 
 		// Dear god I'm so sorry for this
 		data->commandBuffers =
@@ -498,9 +608,9 @@ namespace MRG::Vulkan
 		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
 		m_textureShader = createRef<Shader>("resources/shaders/texture");
 
-		const std::vector<Vertex> vertices = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		                                      {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-		                                      {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		const std::vector<Vertex> vertices = {{{-0.5f, -0.5f}, {0.1, 0.1, 0.1}},
+		                                      {{0.5f, -0.5f}, {0.1f, 0.1f, 0.1f}},
+		                                      {{0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
 		                                      {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
 
 		const std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0};
@@ -523,7 +633,9 @@ namespace MRG::Vulkan
 			m_vertexArray->addVertexBuffer(vertexBuffer);
 			m_vertexArray->setIndexBuffer(indexBuffer);
 
-			const auto pipelineLayoutCreateInfo = populatePipelineLayout();
+			m_data->descriptorSetLayout = createDescriptorSetLayout(m_data->device);
+
+			const auto pipelineLayoutCreateInfo = populatePipelineLayout(&m_data->descriptorSetLayout);
 			MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineLayoutCreateInfo, nullptr, &m_data->pipeline.layout),
 			               "failed to create pipeline layout!");
 			MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
@@ -539,13 +651,17 @@ namespace MRG::Vulkan
 			  createframeBuffers(m_data->device, m_data->swapChain.imageViews, m_data->pipeline.renderPass, m_data->swapChain.extent);
 			MRG_ENGINE_TRACE("Framebuffers successfully created");
 
+			m_data->uniformBuffers = createUniformBuffers(m_data);
+
+			m_data->descriptorPool = createDescriptorPool(m_data);
+			m_data->descriptorSets = createDescriptorSets(m_data);
+
 			m_data->commandBuffers =
 			  createCommandBuffers(m_data, vertexBuffer->getHandle(), indexBuffer->getHandle(), indexBuffer->getCount());
 
 			m_imageAvailableSemaphores.resize(m_maxFramesInFlight);
-			m_renderFinishedSemaphores.resize(m_maxFramesInFlight);
 			m_inFlightFences.resize(m_maxFramesInFlight);
-			m_imagesInFlight.resize(m_data->swapChain.images.size(), VK_NULL_HANDLE);
+			m_imagesInFlight.resize(m_data->swapChain.imageCount, VK_NULL_HANDLE);
 
 			VkSemaphoreCreateInfo semaphoreInfo{};
 			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -556,8 +672,6 @@ namespace MRG::Vulkan
 
 			for (std::size_t i = 0; i < m_maxFramesInFlight; ++i) {
 				MRG_VKVALIDATE(vkCreateSemaphore(m_data->device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]),
-				               "failed to create semaphores for a frame!");
-				MRG_VKVALIDATE(vkCreateSemaphore(m_data->device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]),
 				               "failed to create semaphores for a frame!");
 				MRG_VKVALIDATE(vkCreateFence(m_data->device, &fenceInfo, nullptr, &m_inFlightFences[i]),
 				               "failed to create fences for a frame!");
@@ -575,16 +689,17 @@ namespace MRG::Vulkan
 
 		for (std::size_t i = 0; i < m_maxFramesInFlight; ++i) {
 			vkDestroySemaphore(m_data->device, m_imageAvailableSemaphores[i], nullptr);
-			vkDestroySemaphore(m_data->device, m_renderFinishedSemaphores[i], nullptr);
 			vkDestroyFence(m_data->device, m_inFlightFences[i], nullptr);
 		}
 
 		cleanupSwapChain(m_data);
 
-		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
+		vkDestroyDescriptorSetLayout(m_data->device, m_data->descriptorSetLayout, nullptr);
 
 		m_vertexArray->destroy();
 		m_textureShader->destroy();
+
+		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 	}
 
 	void Renderer2D::onWindowResize(uint32_t, uint32_t) { m_shouldRecreateSwapChain = true; }
@@ -621,7 +736,7 @@ namespace MRG::Vulkan
 	bool Renderer2D::endFrame()
 	{
 		// TODO: Return the image for swapchain presentation
-		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphores[m_data->currentFrame]};
+		VkSemaphore signalSempahores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
 		VkSwapchainKHR swapChains[] = {m_data->swapChain.handle};
 
 		VkPresentInfoKHR presentInfo{};
@@ -644,15 +759,20 @@ namespace MRG::Vulkan
 		return true;
 	}
 
-	void Renderer2D::beginScene(const OrthoCamera&) {}
-	void Renderer2D::endScene() {}
-
-	void Renderer2D::drawQuad(const glm::vec3&, const glm::vec2&, const glm::vec4&)
+	void Renderer2D::beginScene(const OrthoCamera& OrthoCamera)
 	{
-		// This function is the draw call to the triangle. I know it's wierd, it's just a placeholder for now, I swear
-		// Execute the command buffer with the current image
+		m_batchedDrawCalls.clear();
+		m_ubo.viewProjection = OrthoCamera.getProjectionViewMatrix();
+	}
+
+	void Renderer2D::endScene()
+	{
+		// If no batched calls are present, we can immediatly return. This guarantees the presence of a first element
+		if (m_batchedDrawCalls.empty())
+			return;
+
 		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
-		VkSemaphore signalSempahores[] = {m_renderFinishedSemaphores[m_data->currentFrame]};
+		VkSemaphore signalSempahores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
 		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 		VkSubmitInfo submitInfo{};
@@ -666,18 +786,40 @@ namespace MRG::Vulkan
 		submitInfo.pSignalSemaphores = signalSempahores;
 
 		try {
-			vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
+			for (const auto& drawCall : m_batchedDrawCalls) {
+				// Execute the command buffer with the current image
+				vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
+				vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
 
-			MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
-			               "failed to submit draw command buffer!");
+				// Uploads the ubo to the shaders
+				m_ubo.transform = drawCall.transform;
+				void* uniformDataPointer;
+				vkMapMemory(m_data->device, m_data->uniformBuffers[m_imageIndex].memoryHandle, 0, sizeof(m_ubo), 0, &uniformDataPointer);
+				memcpy(uniformDataPointer, &m_ubo, sizeof(m_ubo));
+				vkUnmapMemory(m_data->device, m_data->uniformBuffers[m_imageIndex].memoryHandle);
+
+				MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
+				               "failed to submit draw command buffer!");
+			}
 		} catch (const std::runtime_error& e) {
 			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
 		}
 	}
 
+	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4&)
+	{
+		m_batchedDrawCalls.emplace_back(DrawCallType::Quad,
+		                                glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}));
+	}
+
 	void Renderer2D::drawQuad(const glm::vec3&, const glm::vec2&, const Ref<Texture2D>&, float, const glm::vec4&) {}
 
-	void Renderer2D::drawRotatedQuad(const glm::vec3&, const glm::vec2&, float, const glm::vec4&) {}
+	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4&)
+	{
+		m_batchedDrawCalls.emplace_back(DrawCallType::Quad,
+		                                glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *
+		                                  glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}));
+	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3&, const glm::vec2&, float, const Ref<Texture2D>&, float, const glm::vec4&) {}
 }  // namespace MRG::Vulkan

@@ -1,9 +1,8 @@
 #include "Renderer2D.h"
 
+#include "Core/GLMIncludeHelper.h"
 #include "Debug/Instrumentor.h"
 #include "Renderer/RenderingAPI.h"
-
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace MRG::OpenGL
 {

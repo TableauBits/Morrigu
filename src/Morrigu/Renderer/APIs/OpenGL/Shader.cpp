@@ -1,13 +1,9 @@
 #include "Shader.h"
 
 #include "Core/Core.h"
+#include "Core/GLMIncludeHelper.h"
 #include "Core/Warnings.h"
 #include "Debug/Instrumentor.h"
-
-DISABLE_WARNING_PUSH
-DISABLE_WARNING_NONSTANDARD_EXTENSION
-#include <glm/gtc/type_ptr.hpp>
-DISABLE_WARNING_POP
 
 #include <array>
 #include <filesystem>

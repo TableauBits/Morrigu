@@ -1,12 +1,11 @@
 #ifndef MRG_CLASS_CAMERACONTROLLER
 #define MRG_CLASS_CAMERACONTROLLER
 
+#include "Core/GLMIncludeHelper.h"
 #include "Core/Timestep.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/MouseEvent.h"
 #include "Renderer/OrthoCamera.h"
-
-#include <glm/glm.hpp>
 
 namespace MRG
 {

@@ -12,6 +12,27 @@
 
 namespace MRG::Vulkan
 {
+	struct UniformBufferObject
+	{
+		alignas(16) glm::mat4 viewProjection;
+		alignas(16) glm::mat4 transform;
+	};
+
+	enum class DrawCallType
+	{
+		Quad = 0,
+		TexturedQuad
+	};
+
+	struct SceneDrawCallInfo
+	{
+		// This can be removed if working in C++20
+		SceneDrawCallInfo(DrawCallType type, glm::mat4 transform) : type(type), transform(transform) {}
+
+		DrawCallType type;
+		glm::mat4 transform;
+	};
+
 	class Renderer2D : public Generic2DRenderer
 	{
 	public:
@@ -44,7 +65,7 @@ namespace MRG::Vulkan
 		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
-		void setClearColor(const glm::vec4&) override {}
+		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
 		void clear() override {}
 
 	private:
@@ -52,9 +73,14 @@ namespace MRG::Vulkan
 		Ref<Shader> m_textureShader;
 		uint32_t m_imageIndex;
 		std::size_t m_maxFramesInFlight = 2;
-		std::vector<VkSemaphore> m_imageAvailableSemaphores, m_renderFinishedSemaphores;
+		std::vector<VkSemaphore> m_imageAvailableSemaphores;
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
 		Ref<VertexArray> m_vertexArray;
+
+		UniformBufferObject m_ubo{};
+
+		std::vector<SceneDrawCallInfo> m_batchedDrawCalls;
+		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
 
 		bool m_shouldRecreateSwapChain = false;
 	};

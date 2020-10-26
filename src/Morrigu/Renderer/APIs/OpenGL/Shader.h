@@ -1,10 +1,10 @@
 #ifndef MRG_OPENGL_IMPL_SHADER
 #define MRG_OPENGL_IMPL_SHADER
 
+#include "Core/GLMIncludeHelper.h"
 #include "Renderer/Shader.h"
 
 #include <glad/glad.h>
-#include <glm/glm.hpp>
 
 #include <cstdint>
 

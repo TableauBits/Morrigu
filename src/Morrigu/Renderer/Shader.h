@@ -2,8 +2,7 @@
 #define MRG_CLASS_SHADER
 
 #include "Core/Core.h"
-
-#include <glm/glm.hpp>
+#include "Core/GLMIncludeHelper.h"
 
 #include <string>
 #include <unordered_map>

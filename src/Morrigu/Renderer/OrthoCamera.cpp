@@ -1,19 +1,17 @@
 #include "OrthoCamera.h"
 
-#include "Core/Warnings.h"
 #include "Debug/Instrumentor.h"
-
-DISABLE_WARNING_PUSH
-DISABLE_WARNING_CONSTEXPR_IF
-#include <glm/gtc/matrix_transform.hpp>
-DISABLE_WARNING_POP
+#include "Renderer/RenderingAPI.h"
 
 namespace MRG
 {
 	OrthoCamera::OrthoCamera(float left, float right, float bottom, float top)
-	    : m_projectionMatrix(glm::ortho(left, right, bottom, top)), m_viewMatrix(1.0f)
+	    : m_projectionMatrix(glm::ortho(left, right, bottom, top, -1.f, 1.f)), m_viewMatrix(1.0f)
 	{
 		MRG_PROFILE_FUNCTION();
+
+		if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
+			m_projectionMatrix[1][1] *= -1;
 
 		m_projectionViewMatrix = m_projectionMatrix * m_viewMatrix;
 	}
@@ -23,6 +21,9 @@ namespace MRG
 		MRG_PROFILE_FUNCTION();
 
 		m_projectionMatrix = glm::ortho(left, right, bottom, top, -1.f, 1.f);
+		if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
+			m_projectionMatrix[1][1] *= -1;
+
 		m_projectionViewMatrix = m_projectionMatrix * m_viewMatrix;
 	}
 

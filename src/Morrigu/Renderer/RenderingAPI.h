@@ -3,8 +3,6 @@
 
 #include "Renderer/VertexArray.h"
 
-#include <glm/glm.hpp>
-
 namespace MRG
 {
 	class RenderingAPI

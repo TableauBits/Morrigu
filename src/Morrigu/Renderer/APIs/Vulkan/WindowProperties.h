@@ -35,6 +35,12 @@ namespace MRG::Vulkan
 		VkPipelineLayout layout;
 	};
 
+	struct Buffer
+	{
+		VkBuffer handle;
+		VkDeviceMemory memoryHandle;
+	};
+
 	class WindowProperties : public MRG::WindowProperties
 	{
 	public:
@@ -49,10 +55,14 @@ namespace MRG::Vulkan
 		VkDevice device;
 		Queue graphicsQueue, presentQueue;
 		SwapChain swapChain;
+		VkDescriptorSetLayout descriptorSetLayout;
 		Pipeline pipeline;
 		VkCommandPool commandPool;
 		std::vector<VkCommandBuffer> commandBuffers;
 		std::size_t currentFrame = 0;
+		std::vector<Buffer> uniformBuffers;
+		VkDescriptorPool descriptorPool;
+		std::vector<VkDescriptorSet> descriptorSets;
 	};
 }  // namespace MRG::Vulkan
 

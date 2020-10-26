@@ -3,7 +3,6 @@
 
 #include "Renderer/Shader.h"
 
-#include <glm/glm.hpp>
 #include <vulkan/vulkan.hpp>
 
 #include <cstdint>

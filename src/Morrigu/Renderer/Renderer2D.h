@@ -1,11 +1,11 @@
 #ifndef MRG_CLASS_RENDERER2D
 #define MRG_CLASS_RENDERER2D
 
+#include "Core/GLMIncludeHelper.h"
 #include "Renderer/OrthoCamera.h"
 #include "Renderer/Textures.h"
 
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 
 namespace MRG
 {
