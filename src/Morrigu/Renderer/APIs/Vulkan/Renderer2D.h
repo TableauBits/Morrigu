@@ -15,7 +15,11 @@ namespace MRG::Vulkan
 	struct UniformBufferObject
 	{
 		alignas(16) glm::mat4 viewProjection;
-		alignas(16) glm::mat4 transform;
+	};
+
+	struct PushConstants
+	{
+		glm::mat4 transform;
 	};
 
 	enum class DrawCallType
@@ -78,6 +82,7 @@ namespace MRG::Vulkan
 		Ref<VertexArray> m_vertexArray;
 
 		UniformBufferObject m_ubo{};
+		std::vector<PushConstants> m_pushConstants{};
 
 		std::vector<SceneDrawCallInfo> m_batchedDrawCalls;
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};

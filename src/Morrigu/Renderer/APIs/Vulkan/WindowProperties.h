@@ -63,6 +63,7 @@ namespace MRG::Vulkan
 		std::vector<Buffer> uniformBuffers;
 		VkDescriptorPool descriptorPool;
 		std::vector<VkDescriptorSet> descriptorSets;
+		VkPushConstantRange pushConstantRanges;
 	};
 }  // namespace MRG::Vulkan
 
