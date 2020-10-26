@@ -70,7 +70,6 @@ namespace MRG::Vulkan
 
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
 		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
-		void clear() override {}
 
 	private:
 		WindowProperties* m_data;

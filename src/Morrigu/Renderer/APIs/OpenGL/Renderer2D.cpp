@@ -49,7 +49,11 @@ namespace MRG::OpenGL
 
 	void Renderer2D::onWindowResize(uint32_t width, uint32_t height) { setViewport(0, 0, width, height); }
 
-	bool Renderer2D::beginFrame() { return true; }
+	bool Renderer2D::beginFrame()
+	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		return true;
+	}
 
 	bool Renderer2D::endFrame() { return true; }
 

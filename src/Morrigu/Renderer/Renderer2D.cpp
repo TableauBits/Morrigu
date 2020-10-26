@@ -147,11 +147,4 @@ namespace MRG
 
 		s_renderer->setClearColor(color);
 	}
-
-	void Renderer2D::clear()
-	{
-		MRG_PROFILE_FUNCTION();
-
-		s_renderer->clear();
-	}
 }  // namespace MRG

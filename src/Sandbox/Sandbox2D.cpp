@@ -23,7 +23,6 @@ void Sandbox2D::onUpdate(MRG::Timestep ts)
 	{
 		MRG_PROFILE_SCOPE("Render prep");
 		MRG::Renderer2D::setClearColor(m_color);
-		MRG::Renderer2D::clear();
 	}
 
 	{
