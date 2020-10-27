@@ -22,6 +22,9 @@ namespace MRG::Vulkan
 
 		void bind(uint32_t slot = 0) const override;
 
+		[[nodiscard]] const VkImageView getImageView() const { return m_imageView; };
+		[[nodiscard]] const VkSampler getSampler() const { return m_sampler; };
+
 	private:
 		VkImage m_imageHandle;
 		VkDeviceMemory m_memoryHandle;

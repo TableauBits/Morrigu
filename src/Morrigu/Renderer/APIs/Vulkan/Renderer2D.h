@@ -3,6 +3,7 @@
 
 #include "Renderer/Renderer2D.h"
 
+#include "Renderer/APIs/Vulkan/DescriptorAllocator.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/APIs/Vulkan/Textures.h"
@@ -11,30 +12,12 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <optional>
+
 namespace MRG::Vulkan
 {
-	struct UniformBufferObject
-	{
-		alignas(16) glm::mat4 viewProjection;
-	};
-
 	struct PushConstants
 	{
-		glm::mat4 transform;
-	};
-
-	enum class DrawCallType
-	{
-		Quad = 0,
-		TexturedQuad
-	};
-
-	struct SceneDrawCallInfo
-	{
-		// This can be removed if working in C++20
-		SceneDrawCallInfo(DrawCallType type, glm::mat4 transform) : type(type), transform(transform) {}
-
-		DrawCallType type;
 		glm::mat4 transform;
 	};
 
@@ -81,9 +64,11 @@ namespace MRG::Vulkan
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
 		Ref<VertexArray> m_vertexArray;
 		Ref<Texture2D> m_whiteTexture;
+		std::vector<DescriptorAllocator> m_allocators;
 
 		UniformBufferObject m_ubo{};
 		std::vector<PushConstants> m_pushConstants{};
+		std::vector<VkDescriptorSet> m_descriptorSets{};
 
 		std::vector<SceneDrawCallInfo> m_batchedDrawCalls;
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
