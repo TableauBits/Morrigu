@@ -40,7 +40,23 @@ namespace MRG::Vulkan
 	                  VkMemoryPropertyFlags properties,
 	                  Buffer& buffer);
 
+	[[nodiscard]] VkCommandBuffer beginSingleTimeCommand(const MRG::Vulkan::WindowProperties* data);
+	void endSingleTimeCommand(const MRG::Vulkan::WindowProperties* data, VkCommandBuffer commandBuffer);
 	void copyBuffer(const MRG::Vulkan::WindowProperties* data, MRG::Vulkan::Buffer src, MRG::Vulkan::Buffer dst, VkDeviceSize size);
+
+	void createImage(VkPhysicalDevice physicalDevice,
+	                 VkDevice device,
+	                 uint32_t width,
+	                 uint32_t height,
+	                 VkFormat format,
+	                 VkImageTiling tiling,
+	                 VkImageUsageFlags usage,
+	                 VkMemoryPropertyFlags properties,
+	                 VkImage& image,
+	                 VkDeviceMemory& imageMemory);
+	void transitionImageLayout(
+	  const MRG::Vulkan::WindowProperties* data, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+	void copyBufferToImage(const MRG::Vulkan::WindowProperties* data, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 }  // namespace MRG::Vulkan
 
 #endif

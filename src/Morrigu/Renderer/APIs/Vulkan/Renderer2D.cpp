@@ -591,6 +591,8 @@ namespace MRG::Vulkan
 
 			const auto indexBuffer = createRef<IndexBuffer>(indices.data(), static_cast<uint32_t>(indices.size()));
 
+			m_whiteTexture = createRef<Texture2D>("resources/textures/Checkerboard.png");
+
 			m_vertexArray = createRef<VertexArray>();
 			m_vertexArray->addVertexBuffer(vertexBuffer);
 			m_vertexArray->setIndexBuffer(indexBuffer);
@@ -661,6 +663,8 @@ namespace MRG::Vulkan
 
 		m_vertexArray->destroy();
 		m_textureShader->destroy();
+
+		m_whiteTexture->destroy();
 
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 	}
@@ -819,7 +823,7 @@ namespace MRG::Vulkan
 		                                glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}));
 	}
 
-	void Renderer2D::drawQuad(const glm::vec3&, const glm::vec2&, const Ref<Texture2D>&, float, const glm::vec4&) {}
+	void Renderer2D::drawQuad(const glm::vec3&, const glm::vec2&, const Ref<MRG::Texture2D>&, float, const glm::vec4&) {}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4&)
 	{
@@ -828,5 +832,5 @@ namespace MRG::Vulkan
 		                                  glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}));
 	}
 
-	void Renderer2D::drawRotatedQuad(const glm::vec3&, const glm::vec2&, float, const Ref<Texture2D>&, float, const glm::vec4&) {}
+	void Renderer2D::drawRotatedQuad(const glm::vec3&, const glm::vec2&, float, const Ref<MRG::Texture2D>&, float, const glm::vec4&) {}
 }  // namespace MRG::Vulkan

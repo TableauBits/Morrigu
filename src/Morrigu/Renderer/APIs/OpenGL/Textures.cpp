@@ -1,8 +1,8 @@
 #include "Textures.h"
 
 #include "Debug/Instrumentor.h"
+#include "Renderer/ImageLoader.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 namespace MRG::OpenGL
@@ -29,15 +29,14 @@ namespace MRG::OpenGL
 		MRG_PROFILE_FUNCTION();
 
 		int width, height, channels;
-		stbi_set_flip_vertically_on_load(1);
-		const auto data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+		const auto data = ImageLoader::loadFromFile(path.c_str(), &width, &height, &channels, STBI_rgb_alpha, true);
 		MRG_CORE_ASSERT(data, fmt::format("Failed to load file '{}'", path));
 
 		m_width = width;
 		m_height = height;
 
-		m_internalFormat = channels == 4 ? GL_RGBA8 : (channels == 3 ? GL_RGB8 : 0);
-		m_dataFormat = channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : 0);
+		m_internalFormat = GL_RGBA8;
+		m_dataFormat = GL_RGBA;
 
 		MRG_CORE_ASSERT(m_internalFormat & m_dataFormat, "File format not supported !");
 

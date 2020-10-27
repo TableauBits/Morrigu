@@ -1,6 +1,7 @@
 #ifndef MRG_VULKAN_IMPL_TEXTURES
 #define MRG_VULKAN_IMPL_TEXTURES
 
+#include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/Textures.h"
 
 namespace MRG::Vulkan
@@ -22,9 +23,9 @@ namespace MRG::Vulkan
 		void bind(uint32_t slot = 0) const override;
 
 	private:
+		VkImage m_imageHandle;
+		VkDeviceMemory m_memoryHandle;
 		uint32_t m_width, m_height;
-		// uint32_t m_rendererID;
-		uint64_t m_internalFormat, m_dataFormat;
 	};
 }  // namespace MRG::Vulkan
 

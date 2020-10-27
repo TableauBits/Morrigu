@@ -5,6 +5,7 @@
 
 #include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
+#include "Renderer/APIs/Vulkan/Textures.h"
 #include "Renderer/APIs/Vulkan/VertexArray.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
 
@@ -56,7 +57,7 @@ namespace MRG::Vulkan
 		void drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color) override;
 		void drawQuad(const glm::vec3& position,
 		              const glm::vec2& size,
-		              const Ref<Texture2D>& texture,
+		              const Ref<MRG::Texture2D>& texture,
 		              float tilingFactor = 1.0f,
 		              const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
@@ -64,7 +65,7 @@ namespace MRG::Vulkan
 		void drawRotatedQuad(const glm::vec3& position,
 		                     const glm::vec2& size,
 		                     float rotation,
-		                     const Ref<Texture2D>& texture,
+		                     const Ref<MRG::Texture2D>& texture,
 		                     float tilingFactor = 1.0f,
 		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
@@ -79,6 +80,7 @@ namespace MRG::Vulkan
 		std::vector<VkSemaphore> m_imageAvailableSemaphores;
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
 		Ref<VertexArray> m_vertexArray;
+		Ref<Texture2D> m_whiteTexture;
 
 		UniformBufferObject m_ubo{};
 		std::vector<PushConstants> m_pushConstants{};
