@@ -19,7 +19,7 @@ namespace MRG::Vulkan
 		MRG_PROFILE_FUNCTION();
 
 		int width, height, channels;
-		const auto pixels = ImageLoader::loadFromFile(path.c_str(), &width, &height, &channels, 0, false);
+		const auto pixels = ImageLoader::loadFromFile(path.c_str(), &width, &height, &channels, STBI_rgb_alpha, false);
 		MRG_CORE_ASSERT(pixels, fmt::format("Failed to load file '{}'", path));
 
 		m_width = static_cast<uint32_t>(width);
