@@ -65,6 +65,28 @@ namespace MRG::Vulkan
 
 		vkDestroyBuffer(windowData->device, stagingBuffer.handle, nullptr);
 		vkFreeMemory(windowData->device, stagingBuffer.memoryHandle, nullptr);
+
+		m_imageView = createImageView(windowData->device, m_imageHandle, VK_FORMAT_R8G8B8A8_SRGB);
+
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_NEAREST;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = 16.f;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.f;
+		samplerInfo.minLod = 0.f;
+		samplerInfo.maxLod = 0.f;
+
+		MRG_VKVALIDATE(vkCreateSampler(windowData->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!");
 	}
 
 	Texture2D::~Texture2D()
@@ -80,6 +102,9 @@ namespace MRG::Vulkan
 			return;
 
 		const auto windowData = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+		vkDestroySampler(windowData->device, m_sampler, nullptr);
+		vkDestroyImageView(windowData->device, m_imageView, nullptr);
 
 		vkDestroyImage(windowData->device, m_imageHandle, nullptr);
 		vkFreeMemory(windowData->device, m_memoryHandle, nullptr);

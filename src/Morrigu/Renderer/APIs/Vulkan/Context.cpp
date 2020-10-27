@@ -266,6 +266,8 @@ namespace
 	{
 		if (!features.geometryShader)
 			return false;
+		if (!features.samplerAnisotropy)
+			return false;
 		if (!findQueueFamilies(device, surface).isComplete())
 			return false;
 		if (!checkDeviceExtensionsSupport(device))
@@ -376,6 +378,7 @@ namespace
 		// TODO: Come back to this to select advanced device features
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		deviceFeatures.geometryShader = VK_TRUE;
+		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

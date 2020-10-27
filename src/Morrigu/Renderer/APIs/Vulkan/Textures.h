@@ -25,6 +25,8 @@ namespace MRG::Vulkan
 	private:
 		VkImage m_imageHandle;
 		VkDeviceMemory m_memoryHandle;
+		VkImageView m_imageView;
+		VkSampler m_sampler;
 		uint32_t m_width, m_height;
 	};
 }  // namespace MRG::Vulkan
