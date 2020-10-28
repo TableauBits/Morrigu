@@ -46,7 +46,8 @@ namespace MRG::Vulkan
 	}
 
 	[[nodiscard]] std::vector<VkDescriptorSet> DescriptorAllocator::requestDescriptorSets(const std::vector<SceneDrawCallInfo>& sceneInfo,
-	                                                                                      uint32_t imageIndex)
+	                                                                                      uint32_t imageIndex,
+	                                                                                      Ref<Texture2D> defaultTexture)
 	{
 		if (sceneInfo.size() == 0)
 			return {};
@@ -71,8 +72,10 @@ namespace MRG::Vulkan
 			VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			// TODO: Value_or for white texture
-			imageInfo.imageView = sceneInfo[i].texture.value().first;
-			imageInfo.sampler = sceneInfo[i].texture.value().second;
+			imageInfo.imageView =
+			  sceneInfo[i].texture.value_or(std::make_pair<VkImageView, VkSampler>(defaultTexture->getImageView(), {})).first;
+			imageInfo.sampler =
+			  sceneInfo[i].texture.value_or(std::make_pair<VkImageView, VkSampler>({}, defaultTexture->getSampler())).second;
 
 			std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

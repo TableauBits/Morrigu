@@ -44,8 +44,8 @@ namespace MRG::Vulkan
 			for (const auto& pool : m_pools) vkDestroyDescriptorPool(m_data->device, pool, nullptr);
 		}
 
-		[[nodiscard]] std::vector<VkDescriptorSet> requestDescriptorSets(const std::vector<SceneDrawCallInfo>& sceneInfo,
-		                                                                 uint32_t imageIndex);
+		[[nodiscard]] std::vector<VkDescriptorSet>
+		requestDescriptorSets(const std::vector<SceneDrawCallInfo>& sceneInfo, uint32_t imageIndex, Ref<Texture2D> defaultTexture);
 
 		static const uint32_t MAX_POOL_SIZE = 50u;
 

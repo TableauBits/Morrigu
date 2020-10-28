@@ -112,9 +112,70 @@ namespace MRG::Vulkan
 		m_isDestroyed = true;
 	}
 
-	void Texture2D::setData(void*, uint32_t)
+	void Texture2D::setData(void* pixels, uint32_t size)
 	{
-		// MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION();
+
+		MRG_CORE_ASSERT(size == m_width * m_width * 4, "Data size is incorrect !");
+
+		const auto windowData = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+		Buffer stagingBuffer;
+		createBuffer(windowData->device,
+		             windowData->physicalDevice,
+		             size,
+		             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		             stagingBuffer);
+
+		void* data;
+		vkMapMemory(windowData->device, stagingBuffer.memoryHandle, 0, size, 0, &data);
+		memcpy(data, pixels, static_cast<std::size_t>(size));
+		vkUnmapMemory(windowData->device, stagingBuffer.memoryHandle);
+
+		createImage(windowData->physicalDevice,
+		            windowData->device,
+		            m_width,
+		            m_height,
+		            VK_FORMAT_R8G8B8A8_SRGB,
+		            VK_IMAGE_TILING_OPTIMAL,
+		            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		            m_imageHandle,
+		            m_memoryHandle);
+
+		transitionImageLayout(
+		  windowData, m_imageHandle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		copyBufferToImage(windowData, stagingBuffer.handle, m_imageHandle, m_width, m_height);
+		transitionImageLayout(windowData,
+		                      m_imageHandle,
+		                      VK_FORMAT_R8G8B8A8_SRGB,
+		                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		vkDestroyBuffer(windowData->device, stagingBuffer.handle, nullptr);
+		vkFreeMemory(windowData->device, stagingBuffer.memoryHandle, nullptr);
+
+		m_imageView = createImageView(windowData->device, m_imageHandle, VK_FORMAT_R8G8B8A8_SRGB);
+
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_NEAREST;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = 16.f;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.f;
+		samplerInfo.minLod = 0.f;
+		samplerInfo.maxLod = 0.f;
+
+		MRG_VKVALIDATE(vkCreateSampler(windowData->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!");
 	}
 
 	void Texture2D::bind(uint32_t) const

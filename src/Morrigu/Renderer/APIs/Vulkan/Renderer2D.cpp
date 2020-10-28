@@ -532,7 +532,9 @@ namespace MRG::Vulkan
 
 			const auto indexBuffer = createRef<IndexBuffer>(indices.data(), static_cast<uint32_t>(indices.size()));
 
-			m_whiteTexture = createRef<Texture2D>("resources/textures/Checkerboard.png");
+			m_whiteTexture = createRef<Texture2D>(1, 1);
+			auto whiteTextureData = 0xffffffff;
+			m_whiteTexture->setData(&whiteTextureData, sizeof(whiteTextureData));
 
 			m_vertexArray = createRef<VertexArray>();
 			m_vertexArray->addVertexBuffer(vertexBuffer);
@@ -727,7 +729,7 @@ namespace MRG::Vulkan
 
 		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
 
-		m_descriptorSets = m_allocators[m_imageIndex].requestDescriptorSets(m_batchedDrawCalls, m_imageIndex);
+		m_descriptorSets = m_allocators[m_imageIndex].requestDescriptorSets(m_batchedDrawCalls, m_imageIndex, m_whiteTexture);
 		m_pushConstants.resize(m_batchedDrawCalls.size());
 		for (std::size_t i = 0; i < m_batchedDrawCalls.size(); ++i) {
 			m_pushConstants[i].transform = m_batchedDrawCalls[i].transform;
