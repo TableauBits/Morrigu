@@ -24,17 +24,20 @@ namespace MRG::Vulkan
 
 	struct SceneDrawCallInfo
 	{
-		SceneDrawCallInfo(DrawCallType type, glm::mat4 transform) : type(type), transform(transform), tiling(1.f) {}
-		SceneDrawCallInfo(DrawCallType type, glm::mat4 transform, Ref<MRG::Texture2D> tex, float tiling)
+		SceneDrawCallInfo(DrawCallType type, glm::mat4 transform, glm::vec4 color)
+		    : type(type), transform(transform), tiling(1.f), color(color)
+		{}
+		SceneDrawCallInfo(DrawCallType type, glm::mat4 transform, Ref<MRG::Texture2D> tex, float tiling, glm::vec4 color)
 		    : type(type), transform(transform),
 		      texture({std::static_pointer_cast<Texture2D>(tex)->getImageView(), std::static_pointer_cast<Texture2D>(tex)->getSampler()}),
-		      tiling(tiling)
+		      tiling(tiling), color(color)
 		{}
 
 		DrawCallType type;
 		glm::mat4 transform;
 		std::optional<std::pair<VkImageView, VkSampler>> texture;
 		float tiling;
+		glm::vec4 color;
 	};
 
 	class DescriptorAllocator

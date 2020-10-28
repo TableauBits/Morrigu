@@ -734,6 +734,7 @@ namespace MRG::Vulkan
 		for (std::size_t i = 0; i < m_batchedDrawCalls.size(); ++i) {
 			m_pushConstants[i].transform = m_batchedDrawCalls[i].transform;
 			m_pushConstants[i].tilingFactor = m_batchedDrawCalls[i].tiling;
+			m_pushConstants[i].color = m_batchedDrawCalls[i].color;
 
 			vkCmdBindDescriptorSets(m_data->commandBuffers[m_imageIndex],
 			                        VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -762,26 +763,28 @@ namespace MRG::Vulkan
 		               "failed to submit draw command buffer!");
 	}
 
-	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4&)
+	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		m_batchedDrawCalls.emplace_back(DrawCallType::Quad,
-		                                glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}));
+		m_batchedDrawCalls.emplace_back(
+		  DrawCallType::Quad, glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}), color);
 	}
 
 	void Renderer2D::drawQuad(
-	  const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4&)
+	  const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& color)
 	{
 		m_batchedDrawCalls.emplace_back(DrawCallType::TexturedQuad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}),
 		                                texture,
-		                                tilingFactor);
+		                                tilingFactor,
+		                                color);
 	}
 
-	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4&)
+	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
 		m_batchedDrawCalls.emplace_back(DrawCallType::Quad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *
-		                                  glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}));
+		                                  glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}),
+		                                color);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
@@ -789,12 +792,13 @@ namespace MRG::Vulkan
 	                                 float rotation,
 	                                 const Ref<MRG::Texture2D>& texture,
 	                                 float tilingFactor,
-	                                 const glm::vec4&)
+	                                 const glm::vec4& color)
 	{
 		m_batchedDrawCalls.emplace_back(DrawCallType::TexturedQuad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *
 		                                  glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}),
 		                                texture,
-		                                tilingFactor);
+		                                tilingFactor,
+		                                color);
 	}
 }  // namespace MRG::Vulkan

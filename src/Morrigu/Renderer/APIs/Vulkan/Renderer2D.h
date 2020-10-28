@@ -19,6 +19,7 @@ namespace MRG::Vulkan
 	struct PushConstants
 	{
 		glm::mat4 transform;
+		glm::vec4 color;
 		float tilingFactor;
 	};
 
