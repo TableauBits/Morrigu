@@ -733,6 +733,7 @@ namespace MRG::Vulkan
 		m_pushConstants.resize(m_batchedDrawCalls.size());
 		for (std::size_t i = 0; i < m_batchedDrawCalls.size(); ++i) {
 			m_pushConstants[i].transform = m_batchedDrawCalls[i].transform;
+			m_pushConstants[i].tilingFactor = m_batchedDrawCalls[i].tiling;
 
 			vkCmdBindDescriptorSets(m_data->commandBuffers[m_imageIndex],
 			                        VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -767,11 +768,13 @@ namespace MRG::Vulkan
 		                                glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}));
 	}
 
-	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float, const glm::vec4&)
+	void Renderer2D::drawQuad(
+	  const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4&)
 	{
 		m_batchedDrawCalls.emplace_back(DrawCallType::TexturedQuad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}),
-		                                texture);
+		                                texture,
+		                                tilingFactor);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4&)
@@ -781,12 +784,17 @@ namespace MRG::Vulkan
 		                                  glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}));
 	}
 
-	void Renderer2D::drawRotatedQuad(
-	  const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<MRG::Texture2D>& texture, float, const glm::vec4&)
+	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
+	                                 const glm::vec2& size,
+	                                 float rotation,
+	                                 const Ref<MRG::Texture2D>& texture,
+	                                 float tilingFactor,
+	                                 const glm::vec4&)
 	{
 		m_batchedDrawCalls.emplace_back(DrawCallType::TexturedQuad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *
 		                                  glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}),
-		                                texture);
+		                                texture,
+		                                tilingFactor);
 	}
 }  // namespace MRG::Vulkan

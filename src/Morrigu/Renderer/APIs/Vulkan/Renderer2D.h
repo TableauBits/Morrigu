@@ -19,6 +19,7 @@ namespace MRG::Vulkan
 	struct PushConstants
 	{
 		glm::mat4 transform;
+		float tilingFactor;
 	};
 
 	class Renderer2D : public Generic2DRenderer
