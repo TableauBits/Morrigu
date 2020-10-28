@@ -21,7 +21,8 @@ namespace MRG
 		[[nodiscard]] const OrthoCamera& getCamera() const { return m_camera; }
 
 		float zoomFactor = 1.f;
-		float movementSpeed = 5.f, rotationSpeed = 180.f;
+		float movementSpeed = 1.f, rotationSpeed = 180.f;
+
 		bool isRotatable;
 
 	private:
@@ -33,6 +34,7 @@ namespace MRG
 
 		glm::vec3 m_position = {0.f, 0.f, 0.f};
 		float m_rotation = 0.f;
+		float m_transationFactor = 5.f;
 	};
 
 }  // namespace MRG

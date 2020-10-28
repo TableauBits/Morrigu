@@ -9,6 +9,7 @@ public:
 	{
 		m_checkerboard = MRG::Texture2D::create("resources/textures/Checkerboard.png");
 		m_character = MRG::Texture2D::create("resources/textures/Character.png");
+		m_camera.movementSpeed = 2.f;
 	}
 	void onDetach() override {}
 	void onUpdate(MRG::Timestep ts) override

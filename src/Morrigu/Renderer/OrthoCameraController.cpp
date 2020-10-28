@@ -15,23 +15,23 @@ namespace MRG
 		MRG_PROFILE_FUNCTION();
 
 		if (MRG::Input::isKeyDown(MRG_KEY_W)) {
-			m_position.x += -std::sin(glm::radians(m_rotation)) * movementSpeed * ts;
-			m_position.y += std::cos(glm::radians(m_rotation)) * movementSpeed * ts;
+			m_position.x += -std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
+			m_position.y += std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
 		if (MRG::Input::isKeyDown(MRG_KEY_A)) {
-			m_position.x -= std::cos(glm::radians(m_rotation)) * movementSpeed * ts;
-			m_position.y -= std::sin(glm::radians(m_rotation)) * movementSpeed * ts;
+			m_position.x -= std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
+			m_position.y -= std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
 		if (MRG::Input::isKeyDown(MRG_KEY_S)) {
-			m_position.x -= -std::sin(glm::radians(m_rotation)) * movementSpeed * ts;
-			m_position.y -= std::cos(glm::radians(m_rotation)) * movementSpeed * ts;
+			m_position.x -= -std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
+			m_position.y -= std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
 		if (MRG::Input::isKeyDown(MRG_KEY_D)) {
-			m_position.x += std::cos(glm::radians(m_rotation)) * movementSpeed * ts;
-			m_position.y += std::sin(glm::radians(m_rotation)) * movementSpeed * ts;
+			m_position.x += std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
+			m_position.y += std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
 		m_camera.setPosition(m_position);
@@ -50,7 +50,7 @@ namespace MRG
 			m_camera.setRotation(m_rotation);
 		}
 
-		movementSpeed = zoomFactor;
+		m_transationFactor = zoomFactor * movementSpeed;
 	}
 
 	void OrthoCameraController::onEvent(Event& event)
