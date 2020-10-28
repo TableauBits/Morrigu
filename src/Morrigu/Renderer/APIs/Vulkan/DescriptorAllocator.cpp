@@ -8,7 +8,6 @@ namespace MRG::Vulkan
 	{
 		m_data = data;
 
-		m_pools.clear();
 		createDescriptorPool();
 	}
 

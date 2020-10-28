@@ -47,6 +47,9 @@ namespace MRG::Vulkan
 		void shutdown()
 		{
 			for (const auto& pool : m_pools) vkDestroyDescriptorPool(m_data->device, pool, nullptr);
+
+			m_pools.clear();
+			m_descriptorSets.clear();
 		}
 
 		[[nodiscard]] std::vector<VkDescriptorSet>
