@@ -6,6 +6,9 @@
 #include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/APIs/Vulkan/VertexArray.h"
 
+#include <ImGui/bindings/imgui_impl_vulkan.h>
+#include <imgui.h>
+
 #include <array>
 
 namespace
@@ -645,38 +648,6 @@ namespace MRG::Vulkan
 
 	bool Renderer2D::endFrame()
 	{
-		// TODO: Return the image for swapchain presentation
-		VkSemaphore signalSempahores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
-		VkSwapchainKHR swapChains[] = {m_data->swapChain.handle};
-
-		VkPresentInfoKHR presentInfo{};
-		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = signalSempahores;
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = swapChains;
-		presentInfo.pImageIndices = &m_imageIndex;
-
-		const auto result = vkQueuePresentKHR(m_data->presentQueue.handle, &presentInfo);
-
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_shouldRecreateSwapChain) {
-			recreateSwapChain(m_data, m_textureShader, m_vertexArray, m_allocators);
-			m_shouldRecreateSwapChain = false;
-		}
-
-		m_data->currentFrame = (m_data->currentFrame + 1) % m_maxFramesInFlight;
-
-		return true;
-	}
-
-	void Renderer2D::beginScene(const OrthoCamera& OrthoCamera)
-	{
-		m_batchedDrawCalls.clear();
-		m_ubo.viewProjection = OrthoCamera.getProjectionViewMatrix();
-	}
-
-	void Renderer2D::endScene()
-	{
 		// Execute the command buffer with the current image
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
@@ -755,13 +726,52 @@ namespace MRG::Vulkan
 			vkCmdDrawIndexed(m_data->commandBuffers[m_imageIndex], indexBuffer->getCount(), 1, 0, 0, 0);
 		}
 
+		auto& io = ImGui::GetIO();
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_data->commandBuffers[m_imageIndex]);
+
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+			const auto contextBkp = glfwGetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			glfwMakeContextCurrent(contextBkp);
+		}
+
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex]);
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex]), "failed to record command buffer!");
 
 		MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
 		               "failed to submit draw command buffer!");
+
+		VkSwapchainKHR swapChains[] = {m_data->swapChain.handle};
+
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = signalSempahores;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = swapChains;
+		presentInfo.pImageIndices = &m_imageIndex;
+
+		const auto result = vkQueuePresentKHR(m_data->presentQueue.handle, &presentInfo);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_shouldRecreateSwapChain) {
+			recreateSwapChain(m_data, m_textureShader, m_vertexArray, m_allocators);
+			m_shouldRecreateSwapChain = false;
+		}
+
+		m_data->currentFrame = (m_data->currentFrame + 1) % m_maxFramesInFlight;
+
+		return true;
 	}
+
+	void Renderer2D::beginScene(const OrthoCamera& OrthoCamera)
+	{
+		m_batchedDrawCalls.clear();
+		m_ubo.viewProjection = OrthoCamera.getProjectionViewMatrix();
+	}
+
+	void Renderer2D::endScene() {}
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
