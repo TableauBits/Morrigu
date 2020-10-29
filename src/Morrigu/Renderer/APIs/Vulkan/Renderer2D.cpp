@@ -95,7 +95,9 @@ namespace
 	[[nodiscard]] std::vector<VkImageView> createimageViews(const VkDevice device, const std::vector<VkImage>& images, VkFormat imageFormat)
 	{
 		std::vector<VkImageView> imageViews(images.size());
-		for (std::size_t i = 0; i < images.size(); i++) { imageViews[i] = MRG::Vulkan::createImageView(device, images[i], imageFormat); }
+		for (std::size_t i = 0; i < images.size(); i++) {
+			imageViews[i] = MRG::Vulkan::createImageView(device, images[i], imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+		}
 
 		return imageViews;
 	}
@@ -208,7 +210,34 @@ namespace
 		return pipelineCreateInfo;
 	}
 
-	[[nodiscard]] VkRenderPass createRenderPass(VkDevice device, VkFormat swapChainFormat)
+	VkFormat findSupportedFormat(const VkPhysicalDevice physicalDevice,
+	                             const std::vector<VkFormat>& candidates,
+	                             VkImageTiling tiling,
+	                             VkFormatFeatureFlags features)
+	{
+		for (const auto& format : candidates) {
+			VkFormatProperties props;
+			vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
+
+			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
+				return format;
+			else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
+				return format;
+		}
+
+		MRG_ASSERT(false, "failed to find a supported format!");
+		return VK_FORMAT_MAX_ENUM;
+	}
+
+	auto findDepthFormat(const VkPhysicalDevice physicalDevice)
+	{
+		return findSupportedFormat(physicalDevice,
+		                           {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+		                           VK_IMAGE_TILING_OPTIMAL,
+		                           VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+	}
+
+	[[nodiscard]] VkRenderPass createRenderPass(const VkPhysicalDevice physicalDevice, VkDevice device, VkFormat swapChainFormat)
 	{
 		VkRenderPass returnRenderPass;
 
@@ -222,14 +251,29 @@ namespace
 		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+		VkAttachmentDescription depthAttachment{};
+		depthAttachment.format = findDepthFormat(physicalDevice);
+		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 		VkAttachmentReference colorAttachmentRef{};
 		colorAttachmentRef.attachment = 0;
 		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depthAttachmentRef{};
+		depthAttachmentRef.attachment = 1;
+		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkSubpassDescription subpass{};
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colorAttachmentRef;
+		subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
 		VkSubpassDependency dependency{};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -239,10 +283,11 @@ namespace
 		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+		std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
 		VkRenderPassCreateInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = 1;
-		renderPassInfo.pAttachments = &colorAttachment;
+		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+		renderPassInfo.pAttachments = attachments.data();
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
 		renderPassInfo.dependencyCount = 1;
@@ -320,6 +365,14 @@ namespace
 		multisampling.sampleShadingEnable = VK_FALSE;
 		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
+		VkPipelineDepthStencilStateCreateInfo depthStencil{};
+		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencil.depthTestEnable = VK_TRUE;
+		depthStencil.depthWriteEnable = VK_TRUE;
+		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencil.depthBoundsTestEnable = VK_FALSE;
+		depthStencil.stencilTestEnable = VK_FALSE;
+
 		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 		colorBlendAttachment.blendEnable = VK_TRUE;
 		colorBlendAttachment.colorWriteMask =
@@ -346,6 +399,7 @@ namespace
 		pipelineInfo.pViewportState = &viewportState;
 		pipelineInfo.pRasterizationState = &rasterizer;
 		pipelineInfo.pMultisampleState = &multisampling;
+		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.layout = data->pipeline.layout;
 		pipelineInfo.renderPass = data->pipeline.renderPass;
@@ -359,19 +413,20 @@ namespace
 
 	[[nodiscard]] std::vector<VkFramebuffer> createframeBuffers(const VkDevice device,
 	                                                            const std::vector<VkImageView>& swapChainImagesViews,
+	                                                            const VkImageView depthImageView,
 	                                                            const VkRenderPass renderPass,
 	                                                            const VkExtent2D swapChainExtent)
 	{
 		std::vector<VkFramebuffer> returnFrameBuffers(swapChainImagesViews.size());
 
 		for (std::size_t i = 0; i < swapChainImagesViews.size(); ++i) {
-			VkImageView attachments[] = {swapChainImagesViews[i]};
+			std::array<VkImageView, 2> attachments = {swapChainImagesViews[i], depthImageView};
 
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 			framebufferInfo.renderPass = renderPass;
-			framebufferInfo.attachmentCount = 1;
-			framebufferInfo.pAttachments = attachments;
+			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebufferInfo.pAttachments = attachments.data();
 			framebufferInfo.width = swapChainExtent.width;
 			framebufferInfo.height = swapChainExtent.height;
 			framebufferInfo.layers = 1;
@@ -432,8 +487,33 @@ namespace
 		return commandBuffers;
 	}
 
+	[[nodiscard]] MRG::Vulkan::DepthBuffer createDepthBuffer(MRG::Vulkan::WindowProperties* data)
+	{
+		MRG::Vulkan::DepthBuffer depthBuffer;
+
+		const auto depthFormat = findDepthFormat(data->physicalDevice);
+
+		MRG::Vulkan::createImage(data->physicalDevice,
+		                         data->device,
+		                         data->swapChain.extent.width,
+		                         data->swapChain.extent.height,
+		                         depthFormat,
+		                         VK_IMAGE_TILING_OPTIMAL,
+		                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		                         depthBuffer.depthImage,
+		                         depthBuffer.memoryHandle);
+		depthBuffer.imageView = MRG::Vulkan::createImageView(data->device, depthBuffer.depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+		return depthBuffer;
+	}
+
 	void cleanupSwapChain(MRG::Vulkan::WindowProperties* data, std::vector<MRG::Vulkan::DescriptorAllocator>& allocators)
 	{
+		vkDestroyImageView(data->device, data->swapChain.depthBuffer.imageView, nullptr);
+		vkDestroyImage(data->device, data->swapChain.depthBuffer.depthImage, nullptr);
+		vkFreeMemory(data->device, data->swapChain.depthBuffer.memoryHandle, nullptr);
+
 		for (auto framebuffer : data->swapChain.frameBuffers) vkDestroyFramebuffer(data->device, framebuffer, nullptr);
 
 		vkFreeCommandBuffers(
@@ -480,7 +560,7 @@ namespace
 		data->swapChain = createSwapChain(data->physicalDevice, data->surface, data->device, data);
 		MRG_ENGINE_INFO("Vulkan swap chain succesfully recreated");
 
-		data->pipeline.renderPass = createRenderPass(data->device, data->swapChain.imageFormat);
+		data->pipeline.renderPass = createRenderPass(data->physicalDevice, data->device, data->swapChain.imageFormat);
 
 		const auto pipelineLayoutCreateInfo = populatePipelineLayout(&data->descriptorSetLayout, &data->pushConstantRanges);
 		MRG_VKVALIDATE(vkCreatePipelineLayout(data->device, &pipelineLayoutCreateInfo, nullptr, &data->pipeline.layout),
@@ -489,9 +569,14 @@ namespace
 		data->pipeline.handle =
 		  createPipeline(data, textureShader, vertexArray->getAttributeDescriptions(), {vertexArray->getBindingDescription()});
 
+		data->swapChain.depthBuffer = createDepthBuffer(data);
+
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
-		data->swapChain.frameBuffers =
-		  createframeBuffers(data->device, data->swapChain.imageViews, data->pipeline.renderPass, data->swapChain.extent);
+		data->swapChain.frameBuffers = createframeBuffers(data->device,
+		                                                  data->swapChain.imageViews,
+		                                                  data->swapChain.depthBuffer.imageView,
+		                                                  data->pipeline.renderPass,
+		                                                  data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
 
 		data->uniformBuffers = createUniformBuffers(data);
@@ -525,7 +610,7 @@ namespace MRG::Vulkan
 			m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
 			MRG_ENGINE_INFO("Vulkan swap chain successfully created");
 
-			m_data->pipeline.renderPass = createRenderPass(m_data->device, m_data->swapChain.imageFormat);
+			m_data->pipeline.renderPass = createRenderPass(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
 
 			m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
 			MRG_ENGINE_TRACE("Command pool successfully created");
@@ -559,8 +644,13 @@ namespace MRG::Vulkan
 			                 {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getBindingDescription()});
 			MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
 
-			m_data->swapChain.frameBuffers =
-			  createframeBuffers(m_data->device, m_data->swapChain.imageViews, m_data->pipeline.renderPass, m_data->swapChain.extent);
+			m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
+
+			m_data->swapChain.frameBuffers = createframeBuffers(m_data->device,
+			                                                    m_data->swapChain.imageViews,
+			                                                    m_data->swapChain.depthBuffer.imageView,
+			                                                    m_data->pipeline.renderPass,
+			                                                    m_data->swapChain.extent);
 			MRG_ENGINE_TRACE("Framebuffers successfully created");
 
 			m_data->uniformBuffers = createUniformBuffers(m_data);
@@ -679,15 +769,18 @@ namespace MRG::Vulkan
 
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex], &beginInfo), "failed to begin recording command bufer!");
 
-		VkClearValue clearColor = {{{m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a}}};
+		std::array<VkClearValue, 2> clearColors{};
+		clearColors[0].color = {m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a};
+		clearColors[1].depthStencil = {1.f, 0};
+
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = m_data->pipeline.renderPass;
 		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex];
 		renderPassInfo.renderArea.offset = {0, 0};
 		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
-		renderPassInfo.clearValueCount = 1;
-		renderPassInfo.pClearValues = &clearColor;
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());
+		renderPassInfo.pClearValues = clearColors.data();
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 

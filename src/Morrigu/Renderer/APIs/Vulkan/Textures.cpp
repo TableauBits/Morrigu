@@ -66,7 +66,7 @@ namespace MRG::Vulkan
 		vkDestroyBuffer(windowData->device, stagingBuffer.handle, nullptr);
 		vkFreeMemory(windowData->device, stagingBuffer.memoryHandle, nullptr);
 
-		m_imageView = createImageView(windowData->device, m_imageHandle, VK_FORMAT_R8G8B8A8_SRGB);
+		m_imageView = createImageView(windowData->device, m_imageHandle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -155,7 +155,7 @@ namespace MRG::Vulkan
 		vkDestroyBuffer(windowData->device, stagingBuffer.handle, nullptr);
 		vkFreeMemory(windowData->device, stagingBuffer.memoryHandle, nullptr);
 
-		m_imageView = createImageView(windowData->device, m_imageHandle, VK_FORMAT_R8G8B8A8_SRGB);
+		m_imageView = createImageView(windowData->device, m_imageHandle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

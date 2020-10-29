@@ -10,6 +10,13 @@
 
 namespace MRG::Vulkan
 {
+	struct DepthBuffer
+	{
+		VkImage depthImage;
+		VkDeviceMemory memoryHandle;
+		VkImageView imageView;
+	};
+
 	struct SwapChain
 	{
 		VkSwapchainKHR handle;
@@ -20,6 +27,7 @@ namespace MRG::Vulkan
 		VkExtent2D extent;
 		std::vector<VkImageView> imageViews;
 		std::vector<VkFramebuffer> frameBuffers;
+		DepthBuffer depthBuffer;
 	};
 
 	struct Queue

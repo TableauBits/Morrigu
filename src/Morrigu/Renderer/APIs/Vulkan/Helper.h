@@ -58,7 +58,7 @@ namespace MRG::Vulkan
 	  const MRG::Vulkan::WindowProperties* data, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 	void copyBufferToImage(const MRG::Vulkan::WindowProperties* data, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
-	[[nodiscard]] VkImageView createImageView(const VkDevice device, VkImage image, VkFormat format);
+	[[nodiscard]] VkImageView createImageView(const VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 }  // namespace MRG::Vulkan
 
 #endif
