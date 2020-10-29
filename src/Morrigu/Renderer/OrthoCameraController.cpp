@@ -6,8 +6,8 @@
 namespace MRG
 {
 	OrthoCameraController::OrthoCameraController(float aspectRatio, bool rotation)
-	    : m_aspectRatio(aspectRatio), m_camera(-m_aspectRatio * zoomFactor, m_aspectRatio * zoomFactor, -zoomFactor, zoomFactor),
-	      isRotatable(rotation)
+	    : isRotatable(rotation), m_aspectRatio(aspectRatio),
+	      m_camera(-m_aspectRatio * zoomFactor, m_aspectRatio * zoomFactor, -zoomFactor, zoomFactor)
 	{}
 
 	void OrthoCameraController::onUpdate(Timestep ts)
