@@ -23,6 +23,10 @@ if (MSVC)
     # although the codebase is in C++17, so the compiler you're using is probably supporting it :p
     target_compile_options(${MAIN_PRJ_NAME} PRIVATE /permissive- /W4 /WX)
     target_compile_options(${TEST_PRJ_NAME} PRIVATE /permissive- /W4 /WX)
+
+    # this line removes the console from the windows build. You probably want to uncomment this for a release build.
+    ## target_link_options(${TEST_PRJ_NAME} PRIVATE /SUBSYSTEM:windows /ENTRY:mainCRTStartup)
+    
     # setting the default project in the solution
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TEST_PRJ_NAME})
     set_property(TARGET ${TEST_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtime)

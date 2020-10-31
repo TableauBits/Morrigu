@@ -77,7 +77,6 @@ namespace MRG::Vulkan
 
 			VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			// TODO: Value_or for white texture
 			imageInfo.imageView =
 			  sceneInfo[i].texture.value_or(std::make_pair<VkImageView, VkSampler>(defaultTexture->getImageView(), {})).first;
 			imageInfo.sampler =
