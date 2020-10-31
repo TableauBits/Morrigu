@@ -9,10 +9,7 @@
 
 namespace MRG::Vulkan
 {
-	Texture2D::Texture2D(uint32_t width, uint32_t height) : m_width(width), m_height(height)
-	{
-		// MRG_PROFILE_FUNCTION();
-	}
+	Texture2D::Texture2D(uint32_t width, uint32_t height) : m_width(width), m_height(height) { MRG_PROFILE_FUNCTION(); }
 
 	Texture2D::Texture2D(const std::string& path)
 	{

@@ -139,6 +139,8 @@ namespace
 
 	[[nodiscard]] VkInstance createInstance(const char* appName)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		// this if statement is split to allow constexpr if
 		if (enableValidation) {
 			if (!checkValidationLayerSupport())
@@ -212,6 +214,8 @@ namespace
 	                                                    const VkAllocationCallbacks* pAllocator,
 	                                                    VkDebugUtilsMessengerEXT* pDebugMessenger)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 		if (func != nullptr)
 			return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
@@ -357,6 +361,8 @@ namespace
 
 	[[nodiscard]] VkDevice createDevice(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		VkDevice returnDevice;
 
 		MRG::Vulkan::QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
@@ -443,6 +449,8 @@ namespace MRG::Vulkan
 
 	Context::~Context()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(m_window));
 
 		vkDestroyDevice(data->device, nullptr);

@@ -72,6 +72,8 @@ namespace MRG::Vulkan
 
 	void Shader::destroy()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		if (m_isDestroyed)
 			return;
 

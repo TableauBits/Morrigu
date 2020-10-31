@@ -709,6 +709,8 @@ namespace MRG::Vulkan
 
 	bool Renderer2D::beginFrame()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		// wait for preview frames to be finished (only allow m_maxFramesInFlight)
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 
@@ -738,6 +740,8 @@ namespace MRG::Vulkan
 
 	bool Renderer2D::endFrame()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		// Execute the command buffer with the current image
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
@@ -860,6 +864,8 @@ namespace MRG::Vulkan
 
 	void Renderer2D::beginScene(const OrthoCamera& OrthoCamera)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_batchedDrawCalls.clear();
 		m_ubo.viewProjection = OrthoCamera.getProjectionViewMatrix();
 	}
@@ -868,6 +874,8 @@ namespace MRG::Vulkan
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_batchedDrawCalls.emplace_back(
 		  DrawCallType::Quad, glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}), color);
 	}
@@ -875,6 +883,8 @@ namespace MRG::Vulkan
 	void Renderer2D::drawQuad(
 	  const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& color)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_batchedDrawCalls.emplace_back(DrawCallType::TexturedQuad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}),
 		                                texture,
@@ -884,6 +894,8 @@ namespace MRG::Vulkan
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_batchedDrawCalls.emplace_back(DrawCallType::Quad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *
 		                                  glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}),
@@ -897,6 +909,8 @@ namespace MRG::Vulkan
 	                                 float tilingFactor,
 	                                 const glm::vec4& color)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_batchedDrawCalls.emplace_back(DrawCallType::TexturedQuad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *
 		                                  glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}),

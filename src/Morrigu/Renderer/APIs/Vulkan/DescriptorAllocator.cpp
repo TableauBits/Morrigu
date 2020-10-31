@@ -1,11 +1,14 @@
 #include "DescriptorAllocator.h"
 
+#include "Debug/Instrumentor.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
 
 namespace MRG::Vulkan
 {
 	void DescriptorAllocator::init(const MRG::Vulkan::WindowProperties* data)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_data = data;
 
 		createDescriptorPool();
@@ -13,6 +16,8 @@ namespace MRG::Vulkan
 
 	void DescriptorAllocator::createDescriptorPool()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		VkDescriptorPool descriptorPool;
 
 		std::array<VkDescriptorPoolSize, 2> poolSizes{};
@@ -48,6 +53,8 @@ namespace MRG::Vulkan
 	                                                                                      uint32_t imageIndex,
 	                                                                                      Ref<Texture2D> defaultTexture)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		if (sceneInfo.size() == 0)
 			return {};
 

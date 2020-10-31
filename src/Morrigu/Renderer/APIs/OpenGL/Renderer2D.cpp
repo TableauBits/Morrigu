@@ -8,6 +8,8 @@ namespace MRG::OpenGL
 {
 	void Renderer2D::init()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_quadVertexArray = VertexArray::create();
 
 		// clang-format off
@@ -42,6 +44,8 @@ namespace MRG::OpenGL
 
 	void Renderer2D::shutdown()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_textureShader->destroy();
 		m_whiteTexture->destroy();
 		m_quadVertexArray->destroy();
@@ -51,19 +55,28 @@ namespace MRG::OpenGL
 
 	bool Renderer2D::beginFrame()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		return true;
 	}
 
-	bool Renderer2D::endFrame() { return true; }
+	bool Renderer2D::endFrame()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		return true;
+	}
 
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		m_textureShader->bind();
 		m_textureShader->upload("u_viewProjection", camera.getProjectionViewMatrix());
 	}
 
-	void Renderer2D::endScene() {}
+	void Renderer2D::endScene() { MRG_PROFILE_FUNCTION(); }
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{

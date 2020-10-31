@@ -49,6 +49,7 @@ namespace MRG::Vulkan
 
 		// TODO ?
 	}
+
 	VertexArray::~VertexArray()
 	{
 		MRG_PROFILE_FUNCTION();
