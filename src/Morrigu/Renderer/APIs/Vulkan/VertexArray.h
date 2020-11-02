@@ -2,9 +2,8 @@
 #define MRG_VULKAN_IMPL_VERTEXARRAY
 
 #include "Renderer/APIs/Vulkan/Buffers.h"
+#include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
 #include "Renderer/VertexArray.h"
-
-#include <vulkan/vulkan.hpp>
 
 namespace MRG::Vulkan
 {

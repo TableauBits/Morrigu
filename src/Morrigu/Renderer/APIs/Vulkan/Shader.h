@@ -1,9 +1,8 @@
 #ifndef MRG_VULKAN_IMPL_SHADER
 #define MRG_VULKAN_IMPL_SHADER
 
+#include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
 #include "Renderer/Shader.h"
-
-#include <vulkan/vulkan.hpp>
 
 #include <cstdint>
 

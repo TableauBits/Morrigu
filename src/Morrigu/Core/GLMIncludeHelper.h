@@ -1,5 +1,5 @@
-#ifndef MRG_GLM_INCLUDE_HELPER
-#define MRG_GLM_INCLUDE_HELPER
+#ifndef MRG_HELPER_GLM
+#define MRG_HELPER_GLM
 
 #include "Core/Warnings.h"
 

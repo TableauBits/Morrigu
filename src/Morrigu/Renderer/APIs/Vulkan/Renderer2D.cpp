@@ -774,7 +774,7 @@ namespace MRG::Vulkan
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex], &beginInfo), "failed to begin recording command bufer!");
 
 		std::array<VkClearValue, 2> clearColors{};
-		clearColors[0].color = {m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a};
+		clearColors[0].color = {{m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a}};
 		clearColors[1].depthStencil = {1.f, 0};
 
 		VkRenderPassBeginInfo renderPassInfo{};

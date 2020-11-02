@@ -1,9 +1,8 @@
 #ifndef MRG_VKHELPER
 #define MRG_VKHELPER
 
+#include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
-
-#include <vulkan/vulkan.hpp>
 
 #include <optional>
 #include <stdexcept>

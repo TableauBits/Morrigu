@@ -3,9 +3,8 @@
 
 #include "Core/GLMIncludeHelper.h"
 #include "Renderer/APIs/Vulkan/Textures.h"
+#include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
-
-#include <vulkan/vulkan.hpp>
 
 #include <vector>
 

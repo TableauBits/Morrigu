@@ -2,10 +2,9 @@
 #define MRG_VULKAN_IMPL_BUFFERS
 
 #include "Renderer/APIs/Vulkan/Helper.h"
+#include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
 #include "Renderer/Buffers.h"
-
-#include <vulkan/vulkan.hpp>
 
 namespace MRG::Vulkan
 {

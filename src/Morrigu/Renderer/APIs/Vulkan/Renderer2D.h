@@ -10,8 +10,6 @@
 #include "Renderer/APIs/Vulkan/VertexArray.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
 
-#include <vulkan/vulkan.hpp>
-
 #include <optional>
 
 namespace MRG::Vulkan

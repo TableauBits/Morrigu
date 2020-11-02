@@ -4,7 +4,6 @@
 #include "Renderer/Context.h"
 
 #include <GLFW/glfw3.h>
-#include <vulkan/vulkan.hpp>
 
 namespace MRG::Vulkan
 {

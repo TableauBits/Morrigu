@@ -4,10 +4,10 @@
 #include "Core/Window.h"
 #include "Debug/Instrumentor.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
+#include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
 
 #include <GLFW/glfw3.h>
-#include <vulkan/vulkan.hpp>
 
 #include <map>
 #include <set>

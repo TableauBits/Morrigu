@@ -1,9 +1,8 @@
 #ifndef MRG_VULKAN_IMPL_WINDOWPROPERTIES
 #define MRG_VULKAN_IMPL_WINDOWPROPERTIES
 
+#include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
 #include "Renderer/WindowProperties.h"
-
-#include <vulkan/vulkan.hpp>
 
 #include <string>
 #include <vector>
