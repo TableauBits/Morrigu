@@ -268,8 +268,6 @@ namespace
 
 	[[nodiscard]] bool isDeviceSuitable(const VkPhysicalDevice device, const VkSurfaceKHR surface, const VkPhysicalDeviceFeatures features)
 	{
-		if (!features.geometryShader)
-			return false;
 		if (!features.samplerAnisotropy)
 			return false;
 		if (!findQueueFamilies(device, surface).isComplete())
@@ -383,7 +381,6 @@ namespace
 
 		// TODO: Come back to this to select advanced device features
 		VkPhysicalDeviceFeatures deviceFeatures{};
-		deviceFeatures.geometryShader = VK_TRUE;
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
 		VkDeviceCreateInfo createInfo{};
