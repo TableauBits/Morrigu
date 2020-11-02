@@ -39,7 +39,6 @@ else()
 endif()
 
 # Finding and adding vulkan to the list of libraries
-# In the end, vulkan won't be mandatory, but it is for now.
 find_package(Vulkan REQUIRED)
 set(CONAN_LIBS_DEBUG ${CONAN_LIBS_DEBUG} ${Vulkan_LIBRARIES})
 set(CONAN_LIBS_RELEASE ${CONAN_LIBS_RELEASE} ${Vulkan_LIBRARIES})

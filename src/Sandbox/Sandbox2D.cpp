@@ -17,10 +17,9 @@ void Sandbox2D::onUpdate(MRG::Timestep ts)
 {
 	MRG_PROFILE_FUNCTION();
 
-	m_camera.onUpdate(ts);
+	m_fps = 1 / ts;
 
-	if (MRG::Input::isKeyDown(MRG::Key::Space))
-		MRG_INFO("FPS: {}", 1 / ts);
+	m_camera.onUpdate(ts);
 
 	{
 		MRG_PROFILE_SCOPE("Render prep");
@@ -41,8 +40,11 @@ void Sandbox2D::onImGuiRender()
 {
 	MRG_PROFILE_FUNCTION();
 
-	ImGui::Begin("Settings");
-	ImGui::ColorEdit4("Shader color:", glm::value_ptr(m_color));
+	const auto color = (m_fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
+
+	ImGui::Begin("Debug");
+	ImGui::TextColored(color, "Current FPS: %04.2f", m_fps);
+	ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
 	ImGui::End();
 }
 

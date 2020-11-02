@@ -1,38 +1,89 @@
 # Morrigu
-![Morrigu_logo_temp](Logo_Banner_TEMP.jpg)
 
-## How to install 
-Morrigu uses CMake as build tool and Conan as packet manager. This makes the setup process relatively easy.  
-You need [CMake 3.18.2+](https://cmake.org/download/), and a somewhat recent version of [Conan](https://conan.io/downloads.html) (tested on 1.26.1) with the follwing remotes:
-* The [bincrafters remote](https://docs.conan.io/en/latest/uploading_packages/remotes.html#bincrafters);
-* A [personal remote](https://bintray.com/ithyx/imgui) that contains a ImGui docking recipe.
+<div style="text-align:center">
+<img src="TEMP_logo.svg" alt="MRG Logo (Temp)" width="250" height="250">
+<br>
+<img src="https://github.com/Ithyx/Morrigu/workflows/MRG_Ubuntu/badge.svg">
+<img src="https://github.com/Ithyx/Morrigu/workflows/MRG_Windows/badge.svg">
+<img src="https://github.com/Ithyx/Morrigu/workflows/MRG_MacOS/badge.svg">
 
-To install a remote, follow the instructions that appear when you click "SET ME UP!" on bintray (or the conan doc to install the bincrafters remote). You do not have to login to anything to use these remotes.
+Morrigu is a barebone and cross-platform 2D game engine written in C++, and provides an abstracted renderer allowing you to write code once to render to either OpenGL or Vulkan. This is a hobby project, and if, for some reason, you consider using this for anything serious, I highly advice against it.
 
-Morrigu uses the `cmake_multi` conan generator, so you should be able to install both Debug and Release versions of the dependencies and use both without having to switch context. To make an "out of source build", the steps are then simply:
+Here's a little showcase:
+
+<img src="MRG_Showcase.gif">
+</div>
+
+# Installation
+## Requirements
+To get up and running with Morrigu, you will need the following:
+* A C++17 compiler (tested on MSVC, Clang and GCC);
+* An installed and properly set up version of [Conan](https://conan.io/) (see [here](https://github.com/Ithyx/Morrigu/wiki/Setting-up-Conan) for initial set-up guide);
+* A somewhat recent [CMake](https://cmake.org/) version (tested on 3.18.2, but versions a bit older should work);
+* The [Vulkan SDK](https://vulkan.lunarg.com/sdk/home) (the newest version available).
+
+## Compiling
+Morrigu is compiled as a static library, and should be linked against by another application. To debug and provide examples, this repository includes a "Sandbox" project, and a `CMakeLists.txt` to go along. To compile everything (while making an out of source build), run the following commands:
+### MSVC
 ```bash
 mkdir build
 cd build
 conan install .. -s build_type=Debug --build=missing
 conan install .. -s build_type=Release --build=missing
-cmake -G "<GENERATOR>" .. [-DCMAKE_BUILD_TYPE={Debug|Release}]
+cmake ..
+cmake --build . --config <CONFIG>
 ```
-Where `<GENERATOR>` is a [CMake generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html) supported by the version you are using. Not providing a `G` flag should fall back to a default value (defined by your cmake installation). IMPORTANT: Unless the generator you are trying to build for does support multi-configuration environment (Visual Studio, Xcode), you will have to tell cmake which version you would like to build, and you will HAVE to put in the part in square brackets in the command above.
+and replace `<CONFIG>` with the configuration you want, either `Debug` or `Release`.
 
-To actually build, you can use the tool that cmake generated for, or use the universal build interface provided by cmake :
+### GCC/Clang (Unix makefiles)
 ```bash
-cmake --build . [--config <CONFIG>]
+mkdir build
+cd build
+conan install .. -s build_type=Debug --build=missing
+conan install .. -s build_type=Release --build=missing
+cmake .. -DCMAKE_BUILD_TYPE=<CONFIG>
+cmake --build .
 ```
-If your generator of choice supports multi-configuration environments , you need to specify the `<CONFIG>` param. It is either `Debug` or `Release`. You don't need to specify anything here otherwise.
+and replace `<CONFIG>` with the configuration you want, either `Debug` or `Release`.
 
-Note: The `conan install` lines of the script might not need the `--build=missing` option to build necessary packages from source as debug or release if you already have installed that version before. It is also important to note that you HAVE to install both versions of the dependencies to be able to use CMake.
+### Vulkan shaders
+To get the vulkan renderer working, you will have to to launch the `compile.sh` script located in `runtime/resources/shaders` to compile the Vulkan shaders.
 
-If you are building spdlog and/or fmt make sure to setup your conan for a GCC version newer than 5.0. From [conan's getting started](https://docs.conan.io/en/latest/getting_started.html):
-```bash
-conan profile new default --detect  # Generates default profile detecting GCC and sets old ABI
-conan profile update settings.compiler.libcxx=libstdc++11 default  # Sets libcxx to C++11 ABI
-```
+If it helps you going, you can take a look at my [MSVC tasks](https://gist.github.com/Ithyx/6b81d75ad732ce785a198ecedc047fd8) for VS Code.
 
-Another important note: This project uses the `filesystem` standard library. While this is part of C++17, GCC-6 and more importantly GCC-7, which are considered C++17 compliant, do not recognize the `<filesystem>` header (instead it's `<experimental/filesystem>` + a special compile flag). Thus, if you want to modify the source code, go ahead, but I will only support GCC-8 and above.
+### Launching
+To use the compiled executable, you have to set the working directory to the `runtime` folder of this repo.
 
-The minimal CMake version is also quite recent (the newest at time of writing), but it doesn't have to be. The only new feature that we use is the "[FindVulkan](https://cmake.org/cmake/help/latest/module/FindVulkan.html)" CMake module. If you want to build this project without having the necessary CMake version, you will have to specify the location of the vulkan SDK on your system (you need to specify the `lib` and `include` folder).
+Again, my VS Code launch configurations for MSVC are [here](https://gist.github.com/Ithyx/2cfc6da6c287797316535a4399beacdc) if it helps you.
+
+# Usage
+## Example code
+The showcase you can see at the top of this `README` was obtained with [this code](https://gist.github.com/Ithyx/e0d4a085033d6665cbb9f0fa72589611).
+
+## Changing rendering API
+Changing the rendering API between OpenGL and Vulkan is currently done by changing the value of the `RenderingAPI::s_API` in the file `src/Morrigu/Renderer/RenderingAPI.cpp`.
+A more user-friendly method is on the roadmap.
+
+## Known bugs
+A list of currently known bugs is maintained [here, on the wiki](https://github.com/Ithyx/Morrigu/wiki/Currently-known-bugs), if you want to take a look.
+
+# Support
+If you encounter a problem, feel free to create an issue. There is currently no template, so go wild (but not too wild, please). As this is a hobby project, I can't guarantee that I'll be able to respond quickly or even be able to fix your issue at all, but I'd be very glad to try and help you.
+
+# Roadmap
+Here are a few features and impovements that I would like to have in this engine at some point (not in order):
+* Quaternion-based Rotation;
+* Better rendering API switching (with conditional code compilation);
+* Native and LUA scripting;
+* Entity-component system;
+* Graphical Editor;
+* Maybe a 3D renderer (in the far future).
+
+# Contributing
+I am not not currently open to contribution, although that is subject to change. However, if you feel like this could help the project more stable or more portable, feel free to open a pull request anyways. No template nor guarantee once again.
+
+# Acknowledgments
+* This engine's architecture is based on [The Cherno's Hazel engine](https://github.com/TheCherno/Hazel);
+* The Vulkan renderer was made thanks to [vulkan tutorial](https://vulkan-tutorial.com);
+* The current (and temporary) repository logo, at the top of this `README`, is made by [Freepik](https://www.flaticon.com/authors/freepik) from [FlatIcon](https://www.flaticon.com/).
+
