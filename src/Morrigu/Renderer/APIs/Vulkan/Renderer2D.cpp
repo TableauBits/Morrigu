@@ -155,7 +155,7 @@ namespace
 
 		const auto imageViews = createimageViews(device, images, surfaceFormat.format);
 
-		return {handle, minImageCount, imageCount, images, surfaceFormat.format, extent, imageViews, {}};
+		return {handle, minImageCount, imageCount, images, surfaceFormat.format, extent, imageViews, {}, {}};
 	}
 
 	[[nodiscard]] VkDescriptorSetLayout createDescriptorSetLayout(const VkDevice device)
