@@ -12,6 +12,7 @@ Morrigu is a barebone and cross-platform 2D game engine written in C++, and prov
 <br>
 Here's a little showcase:
 <br>
+<br>
 <img src="MRG_Showcase.gif">
 </p>
 
