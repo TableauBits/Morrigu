@@ -18,6 +18,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    # Installing the Vulkan SDK
+    - name: Install Vulkan SDK
+      shell: bash
+      run: sudo apt install vulkan-sdk
     
     - name: Create Build Environment
       working-directory: ${{runner.workspace}}/Morrigu
