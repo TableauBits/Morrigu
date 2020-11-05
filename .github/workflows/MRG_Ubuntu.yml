@@ -40,7 +40,7 @@ jobs:
 
     - name: add conan to path
       shell: bash
-      run: echo "::add-path::~/.local/bin"
+      run: echo "~/.local/bin" >> $GITHUB_PATH
     
     - name: configure conan new profile
       shell: bash
