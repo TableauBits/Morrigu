@@ -15,7 +15,7 @@ jobs:
     # Installing the Vulkan SDK
     - name: Install Vulkan SDK
       shell: bash
-      run: sudo apt install vulkan-sdk
+      run: choco install vulkan-sdk
     
     - name: Create Build Environment
       working-directory: ${{runner.workspace}}/Morrigu
