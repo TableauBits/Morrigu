@@ -23,13 +23,13 @@ namespace MRG::Vulkan
 
 	struct SceneDrawCallInfo
 	{
-		SceneDrawCallInfo(DrawCallType type, glm::mat4 transform, glm::vec4 color)
-		    : type(type), transform(transform), tiling(1.f), color(color)
+		SceneDrawCallInfo(DrawCallType drawType, glm::mat4 drawTransform, glm::vec4 drawColor)
+		    : type(drawType), transform(drawTransform), tiling(1.f), color(drawColor)
 		{}
-		SceneDrawCallInfo(DrawCallType type, glm::mat4 transform, Ref<MRG::Texture2D> tex, float tiling, glm::vec4 color)
-		    : type(type), transform(transform),
+		SceneDrawCallInfo(DrawCallType drawType, glm::mat4 drawTransform, Ref<MRG::Texture2D> tex, float drawTiling, glm::vec4 drawColor)
+		    : type(drawType), transform(drawTransform),
 		      texture({std::static_pointer_cast<Texture2D>(tex)->getImageView(), std::static_pointer_cast<Texture2D>(tex)->getSampler()}),
-		      tiling(tiling), color(color)
+		      tiling(drawTiling), color(drawColor)
 		{}
 
 		DrawCallType type;
