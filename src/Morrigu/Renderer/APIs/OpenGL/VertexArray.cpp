@@ -48,7 +48,7 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		glDeleteVertexArrays(1, &m_rendererID);
+		destroy();
 	}
 
 	void VertexArray::bind() const

@@ -1,15 +1,5 @@
 #include "Sandbox2D.h"
 
-#include "Core/Warnings.h"
-
-// This is very temporary. I don't know how to properly deal with that for now,
-// so this will have to do.
-DISABLE_WARNING_PUSH
-DISABLE_WARNING_NONSTANDARD_EXTENSION
-#include <glm/gtc/type_ptr.hpp>
-DISABLE_WARNING_POP
-#include <glm/gtc/matrix_transform.hpp>
-
 Sandbox2D::Sandbox2D() : MRG::Layer("Sandbox 2D"), m_camera(1280.f / 720.f) {}
 
 void Sandbox2D::onAttach()
@@ -17,6 +7,8 @@ void Sandbox2D::onAttach()
 	MRG_PROFILE_FUNCTION();
 
 	m_checkerboard = MRG::Texture2D::create("resources/textures/Checkerboard.png");
+	m_character = MRG::Texture2D::create("resources/textures/Character.png");
+	m_camera.movementSpeed = 2.f;
 }
 
 void Sandbox2D::onDetach() { MRG_PROFILE_FUNCTION(); }
@@ -25,20 +17,21 @@ void Sandbox2D::onUpdate(MRG::Timestep ts)
 {
 	MRG_PROFILE_FUNCTION();
 
+	m_fps = 1 / ts;
+
 	m_camera.onUpdate(ts);
 
 	{
 		MRG_PROFILE_SCOPE("Render prep");
-		MRG::RenderCommand::setClearColor(m_color);
-		MRG::RenderCommand::clear();
+		MRG::Renderer2D::setClearColor(m_color);
 	}
 
 	{
 		MRG_PROFILE_SCOPE("Render draw");
 		MRG::Renderer2D::beginScene(m_camera.getCamera());
 		MRG::Renderer2D::drawRotatedQuad({-1.f, 0.f}, {0.8f, 0.8f}, glm::radians(-45.f), {0.8f, 0.2f, 0.3f, 1.f});
-		MRG::Renderer2D::drawQuad({0.5f, -0.5f}, {0.5f, 0.75f}, {0.2f, 0.3f, 0.8f, 1.f});
 		MRG::Renderer2D::drawQuad({0.f, 0.f, -0.1f}, {10.f, 10.f}, m_checkerboard, 10.f);
+		MRG::Renderer2D::drawQuad({0.5f, -0.5f}, {1.f, 1.f}, m_character, 1.f);
 		MRG::Renderer2D::endScene();
 	}
 }
@@ -47,8 +40,11 @@ void Sandbox2D::onImGuiRender()
 {
 	MRG_PROFILE_FUNCTION();
 
-	ImGui::Begin("Settings");
-	ImGui::ColorEdit4("Shader color:", glm::value_ptr(m_color));
+	const auto color = (m_fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
+
+	ImGui::Begin("Debug");
+	ImGui::TextColored(color, "Current FPS: %04.2f", m_fps);
+	ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
 	ImGui::End();
 }
 

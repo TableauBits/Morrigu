@@ -16,10 +16,8 @@ public:
 private:
 	MRG::OrthoCameraController m_camera;
 
-	// temp, should not be here
-	MRG::Ref<MRG::VertexArray> m_vertexArray;
-	MRG::Ref<MRG::Shader> m_shader;
-	MRG::Ref<MRG::Texture2D> m_checkerboard;
+	MRG::Ref<MRG::Texture2D> m_checkerboard, m_character;
 
 	glm::vec4 m_color = {0.1f, 0.1f, 0.1f, 1.0f};
+	float m_fps = 0;
 };

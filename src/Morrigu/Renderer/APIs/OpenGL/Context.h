@@ -13,6 +13,7 @@ namespace MRG::OpenGL
 		Context(GLFWwindow* window);
 
 		void swapBuffers() override;
+		void swapInterval(int interval) override;
 
 	private:
 		GLFWwindow* m_window;

@@ -5,3 +5,4 @@ src/Morrigu/Vendor/ImGui/bindings
 imgui.ini
 *.json
 *.log
+*.spv

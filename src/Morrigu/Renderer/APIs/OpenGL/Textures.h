@@ -14,6 +14,8 @@ namespace MRG::OpenGL
 		Texture2D(const std::string& path);
 		virtual ~Texture2D();
 
+		void destroy() override;
+
 		[[nodiscard]] uint32_t getWidth() const override { return m_width; };
 		[[nodiscard]] uint32_t getHeight() const override { return m_height; };
 

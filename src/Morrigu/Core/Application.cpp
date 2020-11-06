@@ -1,7 +1,7 @@
 #include "Application.h"
 
 #include "Debug/Instrumentor.h"
-#include "Renderer/Renderer.h"
+#include "Renderer/Renderer2D.h"
 
 #include <GLFW/glfw3.h>
 
@@ -18,10 +18,10 @@ namespace MRG
 		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists !");
 		s_instance = this;
 
-		m_window = std::make_unique<Window>(WindowProperties{"Morrigu", 1280, 720, true});
+		m_window = std::make_unique<Window>(WindowProperties::create("Morrigu", 1280, 720, false));
 		m_window->setEventCallback([this](Event& event) { onEvent(event); });
 
-		Renderer::init();
+		Renderer2D::init(m_window->getGLFWWindow());
 
 		m_ImGuiLayer = new ImGuiLayer{};
 		pushOverlay(m_ImGuiLayer);
@@ -31,7 +31,7 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		Renderer::shutdown();
+		Renderer2D::shutdown();
 	}
 
 	void Application::onEvent(Event& event)
@@ -60,6 +60,8 @@ namespace MRG
 			Timestep ts = time - m_lastFrameTime;
 			m_lastFrameTime = time;
 
+			while (!Renderer2D::beginFrame()) {}
+
 			if (!m_minimized) {
 				MRG_PROFILE_SCOPE("LayerStack onUpdate");
 
@@ -74,6 +76,8 @@ namespace MRG
 			}
 			m_ImGuiLayer->end();
 			m_window->onUpdate();
+
+			while (!Renderer2D::endFrame()) {}
 		}
 	}
 
@@ -106,7 +110,7 @@ namespace MRG
 		}
 
 		m_minimized = false;
-		Renderer::onWindowResize(event.getWidth(), event.getHeight());
+		Renderer2D::onWindowResize(event.getWidth(), event.getHeight());
 		return false;
 	}
 }  // namespace MRG

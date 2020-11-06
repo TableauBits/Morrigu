@@ -55,7 +55,7 @@ namespace MRG
 		bool isNormalized;
 
 		BufferElement() = default;
-		BufferElement(ShaderDataType bufferType, const std::string& bufferName, bool normalized = false)
+		BufferElement(ShaderDataType bufferType, const char* bufferName, bool normalized = false)
 		    : name(bufferName), type(bufferType), size(ShaderDataTypeSize(bufferType)), offset(0), isNormalized(normalized)
 		{}
 
@@ -93,7 +93,7 @@ namespace MRG
 	{
 	public:
 		BufferLayout() = default;
-		BufferLayout(const std::initializer_list<BufferElement>& elements) : m_elements(elements)
+		BufferLayout(const std::initializer_list<BufferElement> elements) : m_elements(elements)
 		{
 			std::size_t offset = 0;
 			for (auto& element : m_elements) {
@@ -119,12 +119,18 @@ namespace MRG
 	public:
 		virtual ~VertexBuffer() = default;
 
+		virtual void destroy() = 0;
+
 		virtual void bind() const = 0;
 		virtual void unbind() const = 0;
 
 		BufferLayout layout;
 
-		[[nodiscard]] static Ref<VertexBuffer> create(const float* vertices, uint32_t size);
+		[[nodiscard]] static Ref<VertexBuffer> create(const void* vertices, std::size_t size);
+		[[nodiscard]] static Ref<VertexBuffer> create(const void* vertices, uint32_t size);
+
+	protected:
+		bool m_isDestroyed = false;
 	};
 
 	class IndexBuffer
@@ -132,11 +138,17 @@ namespace MRG
 	public:
 		virtual ~IndexBuffer() = default;
 
+		virtual void destroy() = 0;
+
 		virtual void bind() const = 0;
 		virtual void unbind() const = 0;
 		[[nodiscard]] virtual uint32_t getCount() const = 0;
 
+		[[nodiscard]] static Ref<IndexBuffer> create(const uint32_t* indices, std::size_t size);
 		[[nodiscard]] static Ref<IndexBuffer> create(const uint32_t* indices, uint32_t size);
+
+	protected:
+		bool m_isDestroyed = false;
 	};
 }  // namespace MRG
 

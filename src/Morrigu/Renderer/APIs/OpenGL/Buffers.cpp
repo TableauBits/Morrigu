@@ -6,7 +6,7 @@
 
 namespace MRG::OpenGL
 {
-	VertexBuffer::VertexBuffer(const float* vertices, uint32_t size)
+	VertexBuffer::VertexBuffer(const void* vertices, uint32_t size)
 	{
 		MRG_PROFILE_FUNCTION();
 
@@ -19,7 +19,16 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
+		destroy();
+	}
+
+	void VertexBuffer::destroy()
+	{
+		if (m_isDestroyed)
+			return;
+
 		glDeleteBuffers(1, &m_rendererID);
+		m_isDestroyed = true;
 	}
 
 	void VertexBuffer::bind() const
@@ -50,7 +59,16 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
+		destroy();
+	}
+
+	void IndexBuffer::destroy()
+	{
+		if (m_isDestroyed)
+			return;
+
 		glDeleteBuffers(1, &m_rendererID);
+		m_isDestroyed = true;
 	}
 
 	void IndexBuffer::bind() const

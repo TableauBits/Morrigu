@@ -1,77 +1,78 @@
 #include "Renderer2D.h"
 
 #include "Debug/Instrumentor.h"
-#include "Renderer/APIs/OpenGL/Shader.h"
-#include "Renderer/RenderCommand.h"
-#include "Renderer/Shader.h"
-#include "Renderer/VertexArray.h"
-
-#include <glm/gtc/matrix_transform.hpp>
+#include "Renderer/APIs/OpenGL/Renderer2D.h"
+#include "Renderer/APIs/Vulkan/Renderer2D.h"
+#include "Renderer/RenderingAPI.h"
 
 namespace MRG
 {
-	struct Renderer2DStorage
-	{
-		Ref<VertexArray> quadVertexArray;
-		Ref<Shader> textureShader;
-		Ref<Texture2D> whiteTexture;
-	};
+	GLFWwindow* Renderer2D::s_windowHandle;
+	Scope<Generic2DRenderer> Renderer2D::s_renderer;
 
-	static Renderer2DStorage* s_data;
-
-	void Renderer2D::init()
+	void Renderer2D::init(GLFWwindow* window)
 	{
 		MRG_PROFILE_FUNCTION();
 
-		s_data = new Renderer2DStorage;
-		s_data->quadVertexArray = VertexArray::create();
+		s_windowHandle = window;
 
-		// clang-format off
-        float squareVertices[5 * 4] = {
-            -0.5f, -0.5f, 0.0f, 0.f, 0.f,
-			 0.5f, -0.5f, 0.0f, 1.f, 0.f,
-			 0.5f,  0.5f, 0.0f, 1.f, 1.f,
-			-0.5f,  0.5f, 0.0f, 0.f, 1.f
-        };
+		switch (RenderingAPI::getAPI()) {
+		case RenderingAPI::API::OpenGL: {
+			s_renderer = createScope<OpenGL::Renderer2D>();
+		} break;
 
-		Ref<VertexBuffer> squareVB = VertexBuffer::create(squareVertices, sizeof(squareVertices));
-        squareVB->layout = {
-            { ShaderDataType::Float3, "a_position" },
-			{ ShaderDataType::Float2, "a_texCoord" }
-        };
-		// clang-format on
-		s_data->quadVertexArray->addVertexBuffer(squareVB);
+		case RenderingAPI::API::Vulkan: {
+			s_renderer = createScope<Vulkan::Renderer2D>();
+		} break;
 
-		uint32_t squareIndices[6] = {0, 1, 2, 2, 3, 0};
-		Ref<IndexBuffer> squareIB = IndexBuffer::create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
+		default:
+			break;
+		}
 
-		s_data->quadVertexArray->setIndexBuffer(squareIB);
-
-		s_data->whiteTexture = Texture2D::create(1, 1);
-		auto whiteTextureData = 0xffffffff;
-		s_data->whiteTexture->setData(&whiteTextureData, sizeof(whiteTextureData));
-
-		s_data->textureShader = Shader::create("resources/shaders/texture.glsl");
-		s_data->textureShader->bind();
-		s_data->textureShader->upload("u_texture", 0);
+		s_renderer->init();
 	}
 
 	void Renderer2D::shutdown()
 	{
 		MRG_PROFILE_FUNCTION();
 
-		delete s_data;
+		s_renderer->shutdown();
+	}
+
+	void Renderer2D::onWindowResize(uint32_t width, uint32_t height)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->onWindowResize(width, height);
+	}
+
+	bool Renderer2D::beginFrame()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		return s_renderer->beginFrame();
+	}
+
+	bool Renderer2D::endFrame()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		return s_renderer->endFrame();
 	}
 
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
 		MRG_PROFILE_FUNCTION();
 
-		s_data->textureShader->bind();
-		s_data->textureShader->upload("u_viewProjection", camera.getProjectionViewMatrix());
+		s_renderer->beginScene(camera);
 	}
 
-	void Renderer2D::endScene() { MRG_PROFILE_FUNCTION(); }
+	void Renderer2D::endScene()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->endScene();
+	}
 
 	void Renderer2D::drawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 	{
@@ -82,15 +83,7 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		s_data->textureShader->upload("u_color", color);
-		s_data->textureShader->upload("u_tilingFactor", 1.0f);
-		s_data->whiteTexture->bind();
-
-		glm::mat4 transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
-		s_data->textureShader->upload("u_transform", transform);
-
-		s_data->quadVertexArray->bind();
-		RenderCommand::drawIndexed(s_data->quadVertexArray);
+		s_renderer->drawQuad(position, size, color);
 	}
 
 	void Renderer2D::drawQuad(
@@ -104,15 +97,7 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		s_data->textureShader->upload("u_color", tintColor);
-		s_data->textureShader->upload("u_tilingFactor", tilingFactor);
-		texture->bind();
-
-		glm::mat4 transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
-		s_data->textureShader->upload("u_transform", transform);
-
-		s_data->quadVertexArray->bind();
-		RenderCommand::drawIndexed(s_data->quadVertexArray);
+		s_renderer->drawQuad(position, size, texture, tilingFactor, tintColor);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
@@ -124,16 +109,7 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		s_data->textureShader->upload("u_color", color);
-		s_data->textureShader->upload("u_tilingFactor", 1.0f);
-		s_data->whiteTexture->bind();
-
-		glm::mat4 transform = glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *
-		                      glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
-		s_data->textureShader->upload("u_transform", transform);
-
-		s_data->quadVertexArray->bind();
-		RenderCommand::drawIndexed(s_data->quadVertexArray);
+		s_renderer->drawRotatedQuad(position, size, rotation, color);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec2& position,
@@ -155,15 +131,20 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		s_data->textureShader->upload("u_color", tintColor);
-		s_data->textureShader->upload("u_tilingFactor", tilingFactor);
-		texture->bind();
+		s_renderer->drawRotatedQuad(position, size, rotation, texture, tilingFactor, tintColor);
+	}
 
-		glm::mat4 transform = glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *
-		                      glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
-		s_data->textureShader->upload("u_transform", transform);
+	void Renderer2D::setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+	{
+		MRG_PROFILE_FUNCTION();
 
-		s_data->quadVertexArray->bind();
-		RenderCommand::drawIndexed(s_data->quadVertexArray);
+		s_renderer->setViewport(x, y, width, height);
+	}
+
+	void Renderer2D::setClearColor(const glm::vec4& color)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->setClearColor(color);
 	}
 }  // namespace MRG

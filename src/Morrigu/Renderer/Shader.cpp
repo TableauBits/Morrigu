@@ -1,7 +1,8 @@
 #include "Shader.h"
 
 #include "Renderer/APIs/OpenGL/Shader.h"
-#include "Renderer/Renderer.h"
+#include "Renderer/APIs/Vulkan/Shader.h"
+#include "Renderer/RenderingAPI.h"
 
 namespace MRG
 {
@@ -12,24 +13,13 @@ namespace MRG
 			return createRef<OpenGL::Shader>(filePath, encoding);
 		} break;
 
-		case RenderingAPI::API::None:
-		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
-			return nullptr;
-		} break;
-		}
-	}
-
-	Ref<Shader> Shader::create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
-	{
-		switch (RenderingAPI::getAPI()) {
-		case RenderingAPI::API::OpenGL: {
-			return createRef<OpenGL::Shader>(name, vertexSrc, fragmentSrc);
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::Shader>(filePath);
 		} break;
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
 			return nullptr;
 		} break;
 		}

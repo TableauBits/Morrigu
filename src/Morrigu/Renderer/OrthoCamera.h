@@ -1,7 +1,7 @@
 #ifndef MRG_CLASS_ORTHOCAMERA
 #define MRG_CLASS_ORTHOCAMERA
 
-#include <glm/glm.hpp>
+#include "Core/GLMIncludeHelper.h"
 
 namespace MRG
 {

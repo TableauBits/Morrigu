@@ -1,13 +1,9 @@
 #include "Shader.h"
 
 #include "Core/Core.h"
+#include "Core/GLMIncludeHelper.h"
 #include "Core/Warnings.h"
 #include "Debug/Instrumentor.h"
-
-DISABLE_WARNING_PUSH
-DISABLE_WARNING_NONSTANDARD_EXTENSION
-#include <glm/gtc/type_ptr.hpp>
-DISABLE_WARNING_POP
 
 #include <array>
 #include <filesystem>
@@ -61,30 +57,31 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		std::filesystem::path path{filePath};
-		MRG_CORE_ASSERT(std::filesystem::exists(path), fmt::format("File '{}' does not exist !", filePath));
-		m_name = path.stem().string();
+		std::filesystem::path shaderDir{filePath};
+		std::filesystem::path shaderFile{filePath + "/gl.glsl"};
+		MRG_CORE_ASSERT(std::filesystem::exists(shaderDir), fmt::format("Directory '{}' does not exist!", filePath));
+		MRG_CORE_ASSERT(std::filesystem::is_directory(shaderDir),
+		                fmt::format("Specified path '{}' doesn't reference a directory!", filePath));
+		MRG_CORE_ASSERT(std::filesystem::exists(shaderFile), fmt::format("Directory '{}' does not contain gl shader file!", filePath));
+		m_name = shaderDir.stem().string();
 
-		const auto source = readFile(filePath);
+		const auto source = readFile(shaderFile.string());
 		const auto shaderSources = preProcess(source, encoding);
 		compile(shaderSources);
 	}
 
-	Shader::Shader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) : m_name(name)
+	Shader::~Shader() { destroy(); }
+
+	void Shader::destroy()
 	{
 		MRG_PROFILE_FUNCTION();
 
-		std::unordered_map<GLenum, std::string> sources;
-		sources[GL_VERTEX_SHADER] = vertexSrc;
-		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
-		compile(sources);
-	}
-
-	Shader::~Shader()
-	{
-		MRG_PROFILE_FUNCTION();
+		if (m_isDestroyed)
+			return;
 
 		glDeleteProgram(m_rendererID);
+
+		m_isDestroyed = true;
 	}
 
 	void Shader::bind() const

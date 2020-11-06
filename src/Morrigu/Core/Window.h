@@ -3,6 +3,7 @@
 
 #include "Events/Event.h"
 #include "Renderer/Context.h"
+#include "Renderer/WindowProperties.h"
 
 #include <functional>
 #include <memory>
@@ -10,43 +11,40 @@
 
 namespace MRG
 {
-	using EventCallbackFunction = std::function<void(Event&)>;
-	struct WindowProperties
+	class GLFWWindowWrapper
 	{
-		std::string title;
-		unsigned int width;
-		unsigned int height;
-		bool VSync;
-		EventCallbackFunction callback = [](MRG::Event&) {};
-		unsigned int keyRepeats = 0;
+	public:
+		GLFWWindowWrapper(WindowProperties* props);
+		~GLFWWindowWrapper();
+
+		GLFWwindow* handle;
 	};
+
+	using EventCallbackFunction = std::function<void(Event&)>;
 
 	class Window
 	{
 	public:
-		Window(const WindowProperties& props);
-		~Window();
+		Window(Scope<WindowProperties> props);
 
 		void onUpdate();
 
-		[[nodiscard]] unsigned int getWidth() const { return m_properties.width; }
-		[[nodiscard]] unsigned int getHeight() const { return m_properties.height; }
-		[[nodiscard]] bool isVsync() const { return m_properties.VSync; }
+		[[nodiscard]] unsigned int getWidth() const { return m_properties->width; }
+		[[nodiscard]] unsigned int getHeight() const { return m_properties->height; }
+		[[nodiscard]] bool isVsync() const { return m_properties->VSync; }
 
-		void setEventCallback(const EventCallbackFunction& callback) { m_properties.callback = callback; }
+		void setEventCallback(const EventCallbackFunction& callback) { m_properties->callback = callback; }
 		void setVsync(bool enabled);
 
-		[[nodiscard]] GLFWwindow* getGLFWWindow() const { return m_window; }
+		[[nodiscard]] GLFWwindow* getGLFWWindow() const { return m_window.handle; }
 
 	private:
-		void _init(const WindowProperties& props);
-		void _shutdown();
-
-		GLFWwindow* m_window;
+		GLFWWindowWrapper m_window;
+		Scope<WindowProperties> m_properties;
 		Scope<Context> m_context;
-		WindowProperties m_properties;
 
 		static uint8_t s_GLFWWindowCount;
+		friend GLFWWindowWrapper::GLFWWindowWrapper(WindowProperties* props), GLFWWindowWrapper::~GLFWWindowWrapper();
 	};
 }  // namespace MRG
 

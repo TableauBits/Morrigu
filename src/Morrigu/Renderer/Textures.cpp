@@ -1,7 +1,8 @@
 #include "Textures.h"
 
 #include "Renderer/APIs/OpenGL/Textures.h"
-#include "Renderer/Renderer.h"
+#include "Renderer/APIs/Vulkan/Textures.h"
+#include "Renderer/RenderingAPI.h"
 
 namespace MRG
 {
@@ -12,9 +13,13 @@ namespace MRG
 			return createRef<OpenGL::Texture2D>(width, height);
 		} break;
 
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::Texture2D>(width, height);
+		} break;
+
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
 			return nullptr;
 		} break;
 		}
@@ -27,9 +32,13 @@ namespace MRG
 			return createRef<OpenGL::Texture2D>(path);
 		} break;
 
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::Texture2D>(path);
+		} break;
+
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", Renderer::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
 			return nullptr;
 		} break;
 		}
