@@ -2,4 +2,4 @@
 * text=auto
 
 # Enforce git to keep LF encoding for shader files.
-src/Sandbox/resources/shaders/* text eol=lf
+runtime/resources/shaders/* text eol=lf
