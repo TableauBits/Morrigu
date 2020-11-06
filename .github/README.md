@@ -4,8 +4,6 @@
 <img src="TEMP_logo.svg" alt="MRG Logo (Temp)" width="250" height="250">
 <br>
 <img src="https://github.com/Ithyx/Morrigu/workflows/MRG_Ubuntu/badge.svg">
-<img src="https://github.com/Ithyx/Morrigu/workflows/MRG_Windows/badge.svg">
-<img src="https://github.com/Ithyx/Morrigu/workflows/MRG_MacOS/badge.svg">
 <br>
 Morrigu is a barebone and cross-platform 2D game engine written in C++, and provides an abstracted renderer allowing you to write code once to render to either OpenGL or Vulkan. This is a hobby project, and if, for some reason, you consider using this for anything serious, I highly advice against it.
 <br>
