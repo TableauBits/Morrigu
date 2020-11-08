@@ -87,6 +87,7 @@ namespace MRG
 
 		m_layerStack.pushLayer(newLayer);
 	}
+
 	void Application::pushOverlay(Layer* newOverlay)
 	{
 		MRG_PROFILE_FUNCTION();
