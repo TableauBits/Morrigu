@@ -124,15 +124,18 @@ namespace MRG
 		virtual void bind() const = 0;
 		virtual void unbind() const = 0;
 
+		virtual void setData(const void* data, uint32_t size) = 0;
+
 		BufferLayout layout;
 
-		[[nodiscard]] static Ref<VertexBuffer> create(const void* vertices, std::size_t size);
+		[[nodiscard]] static Ref<VertexBuffer> create(uint32_t size);
 		[[nodiscard]] static Ref<VertexBuffer> create(const void* vertices, uint32_t size);
 
 	protected:
 		bool m_isDestroyed = false;
 	};
 
+	// 32-bits Index buffers only for now
 	class IndexBuffer
 	{
 	public:
@@ -144,8 +147,7 @@ namespace MRG
 		virtual void unbind() const = 0;
 		[[nodiscard]] virtual uint32_t getCount() const = 0;
 
-		[[nodiscard]] static Ref<IndexBuffer> create(const uint32_t* indices, std::size_t size);
-		[[nodiscard]] static Ref<IndexBuffer> create(const uint32_t* indices, uint32_t size);
+		[[nodiscard]] static Ref<IndexBuffer> create(const uint32_t* indices, uint32_t count);
 
 	protected:
 		bool m_isDestroyed = false;

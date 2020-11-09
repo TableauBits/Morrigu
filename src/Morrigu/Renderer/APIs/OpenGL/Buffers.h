@@ -8,6 +8,7 @@ namespace MRG::OpenGL
 	class VertexBuffer : public MRG::VertexBuffer
 	{
 	public:
+		VertexBuffer(uint32_t size);
 		VertexBuffer(const void* vertices, uint32_t size);
 		~VertexBuffer() override;
 
@@ -15,6 +16,8 @@ namespace MRG::OpenGL
 
 		void bind() const override;
 		void unbind() const override;
+
+		void setData(const void* data, uint32_t size) override;
 
 	private:
 		uint32_t m_rendererID;

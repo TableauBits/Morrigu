@@ -7,9 +7,23 @@
 
 namespace MRG
 {
-	Ref<VertexBuffer> VertexBuffer::create(const void* vertices, std::size_t size)
+	Ref<VertexBuffer> VertexBuffer::create(uint32_t size)
 	{
-		return VertexBuffer::create(vertices, static_cast<uint32_t>(size));
+		switch (RenderingAPI::getAPI()) {
+		case RenderingAPI::API::OpenGL: {
+			return createRef<OpenGL::VertexBuffer>(size);
+		} break;
+
+		case RenderingAPI::API::Vulkan: {
+			return createRef<Vulkan::VertexBuffer>(size);
+		} break;
+
+		case RenderingAPI::API::None:
+		default: {
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
+			return nullptr;
+		} break;
+		}
 	}
 
 	Ref<VertexBuffer> VertexBuffer::create(const void* vertices, uint32_t size)
@@ -31,20 +45,15 @@ namespace MRG
 		}
 	}
 
-	Ref<IndexBuffer> IndexBuffer::create(const uint32_t* indices, std::size_t size)
-	{
-		return IndexBuffer::create(indices, static_cast<uint32_t>(size));
-	}
-
-	Ref<IndexBuffer> IndexBuffer::create(const uint32_t* indices, uint32_t size)
+	Ref<IndexBuffer> IndexBuffer::create(const uint32_t* indices, uint32_t count)
 	{
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
-			return createRef<OpenGL::IndexBuffer>(indices, size);
+			return createRef<OpenGL::IndexBuffer>(indices, count);
 		} break;
 
 		case RenderingAPI::API::Vulkan: {
-			return createRef<Vulkan::IndexBuffer>(indices, size);
+			return createRef<Vulkan::IndexBuffer>(indices, count);
 		} break;
 
 		case RenderingAPI::API::None:
