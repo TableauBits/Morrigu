@@ -103,11 +103,11 @@ namespace MRG
 			}
 		}
 
-		[[nodiscard]] inline auto getStride() const { return m_stride; }
-		[[nodiscard]] inline auto getElements() const { return m_elements; }
+		[[nodiscard]] auto getStride() const { return m_stride; }
+		[[nodiscard]] auto getElements() const { return m_elements; }
 
-		[[nodiscard]] inline auto begin() const { return m_elements.begin(); }
-		[[nodiscard]] inline auto end() const { return m_elements.end(); }
+		[[nodiscard]] auto begin() const { return m_elements.begin(); }
+		[[nodiscard]] auto end() const { return m_elements.end(); }
 
 	private:
 		std::vector<BufferElement> m_elements;
