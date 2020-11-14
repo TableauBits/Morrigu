@@ -529,11 +529,6 @@ namespace
 
 		vkDestroySwapchainKHR(data->device, data->swapChain.handle, nullptr);
 
-		for (const auto& uniformBuffer : data->uniformBuffers) {
-			vkDestroyBuffer(data->device, uniformBuffer.handle, nullptr);
-			vkFreeMemory(data->device, uniformBuffer.memoryHandle, nullptr);
-		}
-
 		for (auto& allocator : allocators) { allocator.shutdown(); }
 	}
 
@@ -578,8 +573,6 @@ namespace
 		                                                  data->pipeline.renderPass,
 		                                                  data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
-
-		data->uniformBuffers = createUniformBuffers(data);
 
 		for (auto& allocator : allocators) { allocator.init(data); }
 
@@ -652,8 +645,6 @@ namespace MRG::Vulkan
 			                                                    m_data->pipeline.renderPass,
 			                                                    m_data->swapChain.extent);
 			MRG_ENGINE_TRACE("Framebuffers successfully created");
-
-			m_data->uniformBuffers = createUniformBuffers(m_data);
 
 			m_allocators.resize(m_data->swapChain.imageCount);
 			for (auto& allocator : m_allocators) { allocator.init(m_data); }
@@ -746,12 +737,6 @@ namespace MRG::Vulkan
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
 
-		// Uploads the ubo to the shaders
-		void* uniformDataPointer;
-		vkMapMemory(m_data->device, m_data->uniformBuffers[m_imageIndex].memoryHandle, 0, sizeof(m_ubo), 0, &uniformDataPointer);
-		memcpy(uniformDataPointer, &m_ubo, sizeof(m_ubo));
-		vkUnmapMemory(m_data->device, m_data->uniformBuffers[m_imageIndex].memoryHandle);
-
 		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
 		VkSemaphore signalSempahores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
 		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
@@ -797,10 +782,10 @@ namespace MRG::Vulkan
 
 		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
 
-		m_descriptorSets = m_allocators[m_imageIndex].requestDescriptorSets(m_batchedDrawCalls, m_imageIndex, m_whiteTexture);
+		m_descriptorSets = m_allocators[m_imageIndex].requestDescriptorSets(m_batchedDrawCalls, m_whiteTexture);
 		m_pushConstants.resize(m_batchedDrawCalls.size());
 		for (std::size_t i = 0; i < m_batchedDrawCalls.size(); ++i) {
-			m_pushConstants[i].transform = m_batchedDrawCalls[i].transform;
+			m_pushConstants[i].transform = m_modelMatrix * m_batchedDrawCalls[i].transform;
 			m_pushConstants[i].tilingFactor = m_batchedDrawCalls[i].tiling;
 			m_pushConstants[i].color = m_batchedDrawCalls[i].color;
 
@@ -867,7 +852,7 @@ namespace MRG::Vulkan
 		MRG_PROFILE_FUNCTION();
 
 		m_batchedDrawCalls.clear();
-		m_ubo.viewProjection = OrthoCamera.getProjectionViewMatrix();
+		m_modelMatrix = OrthoCamera.getProjectionViewMatrix();
 	}
 
 	void Renderer2D::endScene() {}

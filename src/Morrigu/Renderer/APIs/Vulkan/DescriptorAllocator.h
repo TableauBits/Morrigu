@@ -51,8 +51,8 @@ namespace MRG::Vulkan
 			m_descriptorSets.clear();
 		}
 
-		[[nodiscard]] std::vector<VkDescriptorSet>
-		requestDescriptorSets(const std::vector<SceneDrawCallInfo>& sceneInfo, uint32_t imageIndex, Ref<Texture2D> defaultTexture);
+		[[nodiscard]] std::vector<VkDescriptorSet> requestDescriptorSets(const std::vector<SceneDrawCallInfo>& sceneInfo,
+		                                                                 Ref<Texture2D> defaultTexture);
 
 		static const uint32_t MAX_POOL_SIZE = 50u;
 

@@ -66,7 +66,7 @@ namespace MRG::Vulkan
 		Ref<Texture2D> m_whiteTexture;
 		std::vector<DescriptorAllocator> m_allocators;
 
-		UniformBufferObject m_ubo{};
+		glm::mat4 m_modelMatrix;
 		std::vector<PushConstants> m_pushConstants{};
 		std::vector<VkDescriptorSet> m_descriptorSets{};
 

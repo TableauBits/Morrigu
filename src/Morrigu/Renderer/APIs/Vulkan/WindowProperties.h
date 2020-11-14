@@ -67,7 +67,6 @@ namespace MRG::Vulkan
 		VkCommandPool commandPool;
 		std::vector<VkCommandBuffer> commandBuffers;
 		std::size_t currentFrame = 0;
-		std::vector<Buffer> uniformBuffers;
 		VkPushConstantRange pushConstantRanges;
 		VkDescriptorPool ImGuiPool;
 	};

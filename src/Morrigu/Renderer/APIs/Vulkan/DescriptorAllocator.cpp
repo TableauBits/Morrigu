@@ -50,7 +50,6 @@ namespace MRG::Vulkan
 	}
 
 	[[nodiscard]] std::vector<VkDescriptorSet> DescriptorAllocator::requestDescriptorSets(const std::vector<SceneDrawCallInfo>& sceneInfo,
-	                                                                                      uint32_t imageIndex,
 	                                                                                      Ref<Texture2D> defaultTexture)
 	{
 		MRG_PROFILE_FUNCTION();
@@ -70,11 +69,6 @@ namespace MRG::Vulkan
 		// Next, update the needed descriptor sets and add them to a return list
 		std::vector<VkDescriptorSet> returnedDescriptors(sceneInfo.size());
 		for (std::size_t i = 0; i < sceneInfo.size(); ++i) {
-			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = m_data->uniformBuffers[imageIndex].handle;
-			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof(MRG::Vulkan::UniformBufferObject);
-
 			VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			imageInfo.imageView =
@@ -82,22 +76,15 @@ namespace MRG::Vulkan
 			imageInfo.sampler =
 			  sceneInfo[i].texture.value_or(std::make_pair<VkImageView, VkSampler>({}, defaultTexture->getSampler())).second;
 
-			std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrites[0].dstSet = m_descriptorSets[i / MAX_POOL_SIZE][i % MAX_POOL_SIZE];
-			descriptorWrites[0].dstBinding = 0;
+			descriptorWrites[0].dstBinding = 1;
 			descriptorWrites[0].dstArrayElement = 0;
-			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			descriptorWrites[0].descriptorCount = 1;
-			descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-			descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[1].dstSet = m_descriptorSets[i / MAX_POOL_SIZE][i % MAX_POOL_SIZE];
-			descriptorWrites[1].dstBinding = 1;
-			descriptorWrites[1].dstArrayElement = 0;
-			descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptorWrites[1].descriptorCount = 1;
-			descriptorWrites[1].pImageInfo = &imageInfo;
+			descriptorWrites[0].pImageInfo = &imageInfo;
 
 			vkUpdateDescriptorSets(m_data->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 
