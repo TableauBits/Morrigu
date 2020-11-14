@@ -45,11 +45,20 @@ namespace MRG::OpenGL
 		void setClearColor(const glm::vec4& color) override { glClearColor(color.r, color.g, color.b, color.a); }
 
 	private:
-		void drawIndexed(const Ref<VertexArray>& vertexArray);
+		void drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0);
+
+		const uint32_t m_maxQuads = 10000;
+		const uint32_t m_maxVertices = 4 * m_maxQuads;
+		const uint32_t m_maxIndices = 6 * m_maxQuads;
 
 		Ref<MRG::VertexArray> m_quadVertexArray;
+		Ref<MRG::VertexBuffer> m_quadVertexBuffer;
 		Ref<MRG::Shader> m_textureShader;
 		Ref<MRG::Texture2D> m_whiteTexture;
+
+		uint32_t m_quadIndexCount = 0;
+		QuadVertex* m_qvbBase = nullptr;
+		QuadVertex* m_qvbPtr = nullptr;
 	};
 }  // namespace MRG::OpenGL
 

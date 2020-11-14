@@ -12,26 +12,35 @@ namespace MRG::OpenGL
 
 		m_quadVertexArray = VertexArray::create();
 
+		m_quadVertexBuffer = VertexBuffer::create(m_maxVertices * sizeof(QuadVertex));
 		// clang-format off
-        const float squareVertices[5 * 4] = {
-            -0.5f, -0.5f, 0.0f, 0.f, 0.f,
-			 0.5f, -0.5f, 0.0f, 1.f, 0.f,
-			 0.5f,  0.5f, 0.0f, 1.f, 1.f,
-			-0.5f,  0.5f, 0.0f, 0.f, 1.f
-        };
-
-		Ref<VertexBuffer> squareVB = VertexBuffer::create(squareVertices, sizeof(squareVertices));
-        squareVB->layout = {
+        m_quadVertexBuffer->layout = {
             { ShaderDataType::Float3, "a_position" },
+			{ ShaderDataType::Float4, "a_color" },
 			{ ShaderDataType::Float2, "a_texCoord" }
         };
 		// clang-format on
-		m_quadVertexArray->addVertexBuffer(squareVB);
+		m_quadVertexArray->addVertexBuffer(m_quadVertexBuffer);
 
-		const uint32_t squareIndices[6] = {0, 1, 2, 2, 3, 0};
-		Ref<IndexBuffer> squareIB = IndexBuffer::create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
+		m_qvbBase = new QuadVertex[m_maxVertices];
+		uint32_t* quadIndices = new uint32_t[m_maxIndices];
 
-		m_quadVertexArray->setIndexBuffer(squareIB);
+		uint32_t offset = 0;
+		for (uint32_t i = 0; i < m_maxIndices; i += 6) {
+			quadIndices[i + 0] = offset + 0;
+			quadIndices[i + 1] = offset + 1;
+			quadIndices[i + 2] = offset + 2;
+
+			quadIndices[i + 3] = offset + 2;
+			quadIndices[i + 4] = offset + 3;
+			quadIndices[i + 5] = offset + 0;
+
+			offset += 4;
+		}
+
+		Ref<IndexBuffer> quadIB = IndexBuffer::create(quadIndices, m_maxIndices);
+		m_quadVertexArray->setIndexBuffer(quadIB);
+		delete[] quadIndices;
 
 		m_whiteTexture = Texture2D::create(1, 1);
 		auto whiteTextureData = 0xffffffff;
@@ -74,24 +83,46 @@ namespace MRG::OpenGL
 
 		m_textureShader->bind();
 		m_textureShader->upload("u_viewProjection", camera.getProjectionViewMatrix());
+
+		m_quadIndexCount = 0;
+		m_qvbPtr = m_qvbBase;
 	}
 
-	void Renderer2D::endScene() { MRG_PROFILE_FUNCTION(); }
+	void Renderer2D::endScene()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		uint32_t dataSize = static_cast<uint32_t>((uint8_t*)m_qvbPtr - (uint8_t*)m_qvbBase);
+		m_quadVertexBuffer->setData(m_qvbBase, dataSize);
+
+		drawIndexed(m_quadVertexArray, m_quadIndexCount);
+	}
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
 		MRG_PROFILE_FUNCTION();
 
-		m_textureShader->upload("u_color", color);
-		m_textureShader->upload("u_tilingFactor", 1.0f);
-		m_whiteTexture->bind();
+		m_qvbPtr->position = position;
+		m_qvbPtr->color = color;
+		m_qvbPtr->texCoord = {0.f, 0.f};
+		++m_qvbPtr;
 
-		glm::mat4 transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
-		m_textureShader->upload("u_transform", transform);
+		m_qvbPtr->position = {position.x + size.x, position.y, 0.f};
+		m_qvbPtr->color = color;
+		m_qvbPtr->texCoord = {1.f, 0.f};
+		++m_qvbPtr;
 
-		m_quadVertexArray->bind();
+		m_qvbPtr->position = {position.x + size.x, position.y + size.y, 0.f};
+		m_qvbPtr->color = color;
+		m_qvbPtr->texCoord = {1.f, 1.f};
+		++m_qvbPtr;
 
-		drawIndexed(m_quadVertexArray);
+		m_qvbPtr->position = {position.x, position.y + size.y, 0.f};
+		m_qvbPtr->color = color;
+		m_qvbPtr->texCoord = {0.f, 1.f};
+		++m_qvbPtr;
+
+		m_quadIndexCount += 6;
 	}
 
 	void Renderer2D::drawQuad(
@@ -150,11 +181,13 @@ namespace MRG::OpenGL
 		drawIndexed(m_quadVertexArray);
 	}
 
-	void Renderer2D::drawIndexed(const Ref<VertexArray>& vertexArray)
+	void Renderer2D::drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count)
 	{
 		MRG_PROFILE_FUNCTION();
 
-		glDrawElements(GL_TRIANGLES, vertexArray->getIndexBuffer()->getCount(), GL_UNSIGNED_INT, nullptr);
+		const auto indexCount = count ? count : vertexArray->getIndexBuffer()->getCount();
+
+		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
