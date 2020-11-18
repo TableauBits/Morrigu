@@ -14,6 +14,8 @@ namespace MRG::OpenGL
 		Texture2D(const std::string& path);
 		virtual ~Texture2D();
 
+		bool operator==(const Texture& other) const override { return m_rendererID == ((OpenGL::Texture2D&)other).m_rendererID; }
+
 		void destroy() override;
 
 		[[nodiscard]] uint32_t getWidth() const override { return m_width; };

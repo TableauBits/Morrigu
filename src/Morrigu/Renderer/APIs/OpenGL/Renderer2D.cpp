@@ -17,7 +17,9 @@ namespace MRG::OpenGL
         m_quadVertexBuffer->layout = {
             { ShaderDataType::Float3, "a_position" },
 			{ ShaderDataType::Float4, "a_color" },
-			{ ShaderDataType::Float2, "a_texCoord" }
+			{ ShaderDataType::Float2, "a_texCoord" },
+			{ ShaderDataType::Float, "a_texIndex" },
+			{ ShaderDataType::Float, "a_tilingFactor" }
         };
 		// clang-format on
 		m_quadVertexArray->addVertexBuffer(m_quadVertexBuffer);
@@ -46,9 +48,14 @@ namespace MRG::OpenGL
 		auto whiteTextureData = 0xffffffff;
 		m_whiteTexture->setData(&whiteTextureData, sizeof(whiteTextureData));
 
+		int32_t samplers[m_maxTextureSlots];
+		for (auto i = 0; i < m_maxTextureSlots; ++i) samplers[i] = i;
+
 		m_textureShader = Shader::create("resources/shaders/texture");
 		m_textureShader->bind();
-		m_textureShader->upload("u_texture", 0);
+		m_textureShader->upload("u_textures", samplers, m_maxTextureSlots);
+
+		m_textureSlots[0] = m_whiteTexture;
 	}
 
 	void Renderer2D::shutdown()
@@ -86,6 +93,8 @@ namespace MRG::OpenGL
 
 		m_quadIndexCount = 0;
 		m_qvbPtr = m_qvbBase;
+
+		m_textureSlotindex = 1;
 	}
 
 	void Renderer2D::endScene()
@@ -95,31 +104,42 @@ namespace MRG::OpenGL
 		uint32_t dataSize = static_cast<uint32_t>((uint8_t*)m_qvbPtr - (uint8_t*)m_qvbBase);
 		m_quadVertexBuffer->setData(m_qvbBase, dataSize);
 
-		drawIndexed(m_quadVertexArray, m_quadIndexCount);
+		flush();
 	}
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
 		MRG_PROFILE_FUNCTION();
 
+		const float texIndex = 0.0f;
+		const float tilingFactor = 1.0f;
+
 		m_qvbPtr->position = position;
 		m_qvbPtr->color = color;
 		m_qvbPtr->texCoord = {0.f, 0.f};
+		m_qvbPtr->texIndex = texIndex;
+		m_qvbPtr->tilingFactor = tilingFactor;
 		++m_qvbPtr;
 
 		m_qvbPtr->position = {position.x + size.x, position.y, 0.f};
 		m_qvbPtr->color = color;
 		m_qvbPtr->texCoord = {1.f, 0.f};
+		m_qvbPtr->texIndex = texIndex;
+		m_qvbPtr->tilingFactor = tilingFactor;
 		++m_qvbPtr;
 
 		m_qvbPtr->position = {position.x + size.x, position.y + size.y, 0.f};
 		m_qvbPtr->color = color;
 		m_qvbPtr->texCoord = {1.f, 1.f};
+		m_qvbPtr->texIndex = texIndex;
+		m_qvbPtr->tilingFactor = tilingFactor;
 		++m_qvbPtr;
 
 		m_qvbPtr->position = {position.x, position.y + size.y, 0.f};
 		m_qvbPtr->color = color;
 		m_qvbPtr->texCoord = {0.f, 1.f};
+		m_qvbPtr->texIndex = texIndex;
+		m_qvbPtr->tilingFactor = tilingFactor;
 		++m_qvbPtr;
 
 		m_quadIndexCount += 6;
@@ -130,16 +150,49 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		m_textureShader->upload("u_color", tintColor);
-		m_textureShader->upload("u_tilingFactor", tilingFactor);
-		texture->bind();
+		float texIndex = 0.f;
+		for (uint32_t i = 0; i < m_textureSlotindex; ++i) {
+			if (*m_textureSlots[i].get() == *texture.get()) {
+				texIndex = static_cast<float>(i);
+				break;
+			}
+		}
 
-		glm::mat4 transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
-		m_textureShader->upload("u_transform", transform);
+		if (texIndex == 0.f) {
+			texIndex = static_cast<float>(m_textureSlotindex);
+			m_textureSlots[m_textureSlotindex] = texture;
+			++m_textureSlotindex;
+		}
 
-		m_quadVertexArray->bind();
+		m_qvbPtr->position = position;
+		m_qvbPtr->color = tintColor;
+		m_qvbPtr->texCoord = {0.f, 0.f};
+		m_qvbPtr->texIndex = texIndex;
+		m_qvbPtr->tilingFactor = tilingFactor;
+		++m_qvbPtr;
 
-		drawIndexed(m_quadVertexArray);
+		m_qvbPtr->position = {position.x + size.x, position.y, 0.f};
+		m_qvbPtr->color = tintColor;
+		m_qvbPtr->texCoord = {1.f, 0.f};
+		m_qvbPtr->texIndex = texIndex;
+		m_qvbPtr->tilingFactor = tilingFactor;
+		++m_qvbPtr;
+
+		m_qvbPtr->position = {position.x + size.x, position.y + size.y, 0.f};
+		m_qvbPtr->color = tintColor;
+		m_qvbPtr->texCoord = {1.f, 1.f};
+		m_qvbPtr->texIndex = texIndex;
+		m_qvbPtr->tilingFactor = tilingFactor;
+		++m_qvbPtr;
+
+		m_qvbPtr->position = {position.x, position.y + size.y, 0.f};
+		m_qvbPtr->color = tintColor;
+		m_qvbPtr->texCoord = {0.f, 1.f};
+		m_qvbPtr->texIndex = texIndex;
+		m_qvbPtr->tilingFactor = tilingFactor;
+		++m_qvbPtr;
+
+		m_quadIndexCount += 6;
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
@@ -179,6 +232,13 @@ namespace MRG::OpenGL
 		m_quadVertexArray->bind();
 
 		drawIndexed(m_quadVertexArray);
+	}
+
+	void Renderer2D::flush()
+	{
+		for (uint32_t i = 0; i < m_textureSlotindex; ++i) m_textureSlots[i]->bind(i);
+
+		drawIndexed(m_quadVertexArray, m_quadIndexCount);
 	}
 
 	void Renderer2D::drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count)

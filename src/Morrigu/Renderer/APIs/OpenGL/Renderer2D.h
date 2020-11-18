@@ -6,6 +6,7 @@
 #include "Renderer/Renderer2D.h"
 #include "Renderer/Shader.h"
 
+#include <array>
 #include <glad/glad.h>
 
 namespace MRG::OpenGL
@@ -45,11 +46,13 @@ namespace MRG::OpenGL
 		void setClearColor(const glm::vec4& color) override { glClearColor(color.r, color.g, color.b, color.a); }
 
 	private:
+		void flush();
 		void drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0);
 
 		const uint32_t m_maxQuads = 10000;
 		const uint32_t m_maxVertices = 4 * m_maxQuads;
 		const uint32_t m_maxIndices = 6 * m_maxQuads;
+		static const uint32_t m_maxTextureSlots = 32;
 
 		Ref<MRG::VertexArray> m_quadVertexArray;
 		Ref<MRG::VertexBuffer> m_quadVertexBuffer;
@@ -59,6 +62,8 @@ namespace MRG::OpenGL
 		uint32_t m_quadIndexCount = 0;
 		QuadVertex* m_qvbBase = nullptr;
 		QuadVertex* m_qvbPtr = nullptr;
+		std::array<Ref<Texture2D>, m_maxTextureSlots> m_textureSlots;
+		std::size_t m_textureSlotindex = 1;
 	};
 }  // namespace MRG::OpenGL
 

@@ -14,6 +14,8 @@ namespace MRG
 		glm::vec3 position;
 		glm::vec4 color;
 		glm::vec2 texCoord;
+		float texIndex;
+		float tilingFactor;
 	};
 
 	class Generic2DRenderer

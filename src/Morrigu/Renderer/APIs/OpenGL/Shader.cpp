@@ -98,6 +98,7 @@ namespace MRG::OpenGL
 	}
 
 	void Shader::upload(const std::string& name, int value) { uploadUniform(name, value); }
+	void Shader::upload(const std::string& name, int* value, std::size_t count) { uploadUniform(name, value, count); }
 	void Shader::upload(const std::string& name, float value) { uploadUniform(name, value); }
 	void Shader::upload(const std::string& name, const glm::vec3& value) { uploadUniform(name, value); }
 	void Shader::upload(const std::string& name, const glm::vec4& value) { uploadUniform(name, value); }
@@ -109,6 +110,14 @@ namespace MRG::OpenGL
 
 		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
 		glUniform1i(location, value);
+	}
+
+	void Shader::uploadUniform(const std::string& name, int* value, std::size_t count)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		GLint location = glGetUniformLocation(m_rendererID, name.c_str());
+		glUniform1iv(location, static_cast<uint32_t>(count), value);
 	}
 
 	void Shader::uploadUniform(const std::string& name, float value)
