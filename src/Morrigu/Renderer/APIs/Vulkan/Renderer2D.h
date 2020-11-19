@@ -55,6 +55,9 @@ namespace MRG::Vulkan
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
 		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
 
+		void resetStats() override { m_stats = {}; };
+		RenderingStatistics getStats() const override { return m_stats; };
+
 	private:
 		WindowProperties* m_data;
 		Ref<Shader> m_textureShader;
@@ -74,6 +77,8 @@ namespace MRG::Vulkan
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
 
 		bool m_shouldRecreateSwapChain = false;
+
+		RenderingStatistics m_stats;
 	};
 }  // namespace MRG::Vulkan
 

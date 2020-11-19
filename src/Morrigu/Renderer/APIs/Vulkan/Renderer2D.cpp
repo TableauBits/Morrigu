@@ -705,6 +705,8 @@ namespace MRG::Vulkan
 		// wait for preview frames to be finished (only allow m_maxFramesInFlight)
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 
+		m_batchedDrawCalls.clear();
+
 		// Acquire an image from the swapchain
 		try {
 			const auto result = vkAcquireNextImageKHR(m_data->device,
@@ -806,6 +808,7 @@ namespace MRG::Vulkan
 			                   &m_pushConstants[i]);
 
 			vkCmdDrawIndexed(m_data->commandBuffers[m_imageIndex], indexBuffer->getCount(), 1, 0, 0, 0);
+			++m_stats.drawCalls;
 		}
 
 		auto& io = ImGui::GetIO();
@@ -851,7 +854,6 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
-		m_batchedDrawCalls.clear();
 		m_modelMatrix = OrthoCamera.getProjectionViewMatrix();
 	}
 
@@ -861,6 +863,8 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
+		++m_stats.quadCount;
+
 		m_batchedDrawCalls.emplace_back(
 		  DrawCallType::Quad, glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}), color);
 	}
@@ -869,6 +873,8 @@ namespace MRG::Vulkan
 	  const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& color)
 	{
 		MRG_PROFILE_FUNCTION();
+
+		++m_stats.quadCount;
 
 		m_batchedDrawCalls.emplace_back(DrawCallType::TexturedQuad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}),
@@ -880,6 +886,8 @@ namespace MRG::Vulkan
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
 		MRG_PROFILE_FUNCTION();
+
+		++m_stats.quadCount;
 
 		m_batchedDrawCalls.emplace_back(DrawCallType::Quad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *
@@ -895,6 +903,8 @@ namespace MRG::Vulkan
 	                                 const glm::vec4& color)
 	{
 		MRG_PROFILE_FUNCTION();
+
+		++m_stats.quadCount;
 
 		m_batchedDrawCalls.emplace_back(DrawCallType::TexturedQuad,
 		                                glm::translate(glm::mat4{1.f}, position) * glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f}) *

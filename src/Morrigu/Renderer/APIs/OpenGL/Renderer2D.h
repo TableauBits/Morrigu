@@ -45,13 +45,17 @@ namespace MRG::OpenGL
 		void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override { glViewport(x, y, width, height); }
 		void setClearColor(const glm::vec4& color) override { glClearColor(color.r, color.g, color.b, color.a); }
 
+		void resetStats() override;
+		RenderingStatistics getStats() const override;
+
 	private:
 		void flush();
+		void flushAndReset();
 		void drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0);
 
-		const uint32_t m_maxQuads = 10000;
-		const uint32_t m_maxVertices = 4 * m_maxQuads;
-		const uint32_t m_maxIndices = 6 * m_maxQuads;
+		static const uint32_t m_maxQuads = 20000;
+		static const uint32_t m_maxVertices = 4 * m_maxQuads;
+		static const uint32_t m_maxIndices = 6 * m_maxQuads;
 		static const uint32_t m_maxTextureSlots = 32;
 
 		Ref<MRG::VertexArray> m_quadVertexArray;
@@ -64,6 +68,9 @@ namespace MRG::OpenGL
 		QuadVertex* m_qvbPtr = nullptr;
 		std::array<Ref<Texture2D>, m_maxTextureSlots> m_textureSlots;
 		std::size_t m_textureSlotindex = 1;
+		glm::vec4 m_quadVertexPositions[4];
+
+		RenderingStatistics m_stats;
 	};
 }  // namespace MRG::OpenGL
 

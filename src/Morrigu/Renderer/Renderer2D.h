@@ -18,6 +18,15 @@ namespace MRG
 		float tilingFactor;
 	};
 
+	struct RenderingStatistics
+	{
+		uint32_t drawCalls = 0;
+		uint32_t quadCount = 0;
+
+		auto getVertexCount() const { return quadCount * 4; }
+		auto getIndexCount() const { return quadCount * 6; }
+	};
+
 	class Generic2DRenderer
 	{
 	public:
@@ -51,6 +60,9 @@ namespace MRG
 
 		virtual void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 		virtual void setClearColor(const glm::vec4& color) = 0;
+
+		virtual void resetStats() = 0;
+		virtual RenderingStatistics getStats() const = 0;
 	};
 
 	class Renderer2D
@@ -102,6 +114,9 @@ namespace MRG
 
 		static void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 		static void setClearColor(const glm::vec4& color);
+
+		static void resetStats();
+		static RenderingStatistics getStats();
 
 	private:
 		static GLFWwindow* s_windowHandle;
