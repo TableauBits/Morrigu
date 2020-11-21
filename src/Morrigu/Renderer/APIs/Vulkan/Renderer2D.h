@@ -3,7 +3,6 @@
 
 #include "Renderer/Renderer2D.h"
 
-#include "Renderer/APIs/Vulkan/DescriptorAllocator.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/APIs/Vulkan/Textures.h"
@@ -16,9 +15,7 @@ namespace MRG::Vulkan
 {
 	struct PushConstants
 	{
-		glm::mat4 transform;
-		glm::vec4 color;
-		float tilingFactor;
+		glm::mat4 viewProjection;
 	};
 
 	class Renderer2D : public Generic2DRenderer
@@ -59,6 +56,11 @@ namespace MRG::Vulkan
 		RenderingStatistics getStats() const override { return m_stats; };
 
 	private:
+		void cleanupSwapChain();
+		void recreateSwapChain();
+		void updateDescriptor();
+		void flushAndReset();
+
 		WindowProperties* m_data;
 		Ref<Shader> m_textureShader;
 		uint32_t m_imageIndex;
@@ -67,16 +69,19 @@ namespace MRG::Vulkan
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
 		Ref<VertexArray> m_vertexArray;
 		Ref<Texture2D> m_whiteTexture;
-		std::vector<DescriptorAllocator> m_allocators;
-
-		glm::mat4 m_modelMatrix;
-		std::vector<PushConstants> m_pushConstants{};
-		std::vector<VkDescriptorSet> m_descriptorSets{};
-
-		std::vector<SceneDrawCallInfo> m_batchedDrawCalls;
-		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
-
+		VkDescriptorPool m_descriptorPool;
+		std::vector<VkDescriptorSet> m_descriptorSets;
 		bool m_shouldRecreateSwapChain = false;
+
+		PushConstants m_modelMatrix;
+		uint32_t m_quadIndexCount = 0;
+		QuadVertex* m_qvbBase = nullptr;
+		QuadVertex* m_qvbPtr = nullptr;
+		std::array<Ref<Texture2D>, m_maxTextureSlots> m_textureSlots;
+		std::size_t m_textureSlotindex = 1;
+		glm::vec4 m_quadVertexPositions[4];
+
+		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
 
 		RenderingStatistics m_stats;
 	};

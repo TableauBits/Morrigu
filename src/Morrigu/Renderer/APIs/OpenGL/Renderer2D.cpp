@@ -13,15 +13,7 @@ namespace MRG::OpenGL
 		m_quadVertexArray = VertexArray::create();
 
 		m_quadVertexBuffer = VertexBuffer::create(m_maxVertices * sizeof(QuadVertex));
-		// clang-format off
-        m_quadVertexBuffer->layout = {
-            { ShaderDataType::Float3, "a_position" },
-			{ ShaderDataType::Float4, "a_color" },
-			{ ShaderDataType::Float2, "a_texCoord" },
-			{ ShaderDataType::Float, "a_texIndex" },
-			{ ShaderDataType::Float, "a_tilingFactor" }
-        };
-		// clang-format on
+		m_quadVertexBuffer->layout = QuadVertex::layout;
 		m_quadVertexArray->addVertexBuffer(m_quadVertexBuffer);
 
 		m_qvbBase = new QuadVertex[m_maxVertices];

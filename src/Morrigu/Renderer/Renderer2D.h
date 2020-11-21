@@ -2,6 +2,7 @@
 #define MRG_CLASS_RENDERER2D
 
 #include "Core/GLMIncludeHelper.h"
+#include "Renderer/Buffers.h"
 #include "Renderer/OrthoCamera.h"
 #include "Renderer/Textures.h"
 
@@ -16,6 +17,12 @@ namespace MRG
 		glm::vec2 texCoord;
 		float texIndex;
 		float tilingFactor;
+
+		static inline std::initializer_list<MRG::BufferElement> layout = {{MRG::ShaderDataType::Float3, "a_position"},
+		                                                                  {MRG::ShaderDataType::Float4, "a_color"},
+		                                                                  {MRG::ShaderDataType::Float2, "a_texCoord"},
+		                                                                  {MRG::ShaderDataType::Float, "a_texIndex"},
+		                                                                  {MRG::ShaderDataType::Float, "a_tilingFactor"}};
 	};
 
 	struct RenderingStatistics
@@ -63,6 +70,12 @@ namespace MRG
 
 		virtual void resetStats() = 0;
 		virtual RenderingStatistics getStats() const = 0;
+
+	protected:
+		static const uint32_t m_maxQuads = 20000;
+		static const uint32_t m_maxVertices = 4 * m_maxQuads;
+		static const uint32_t m_maxIndices = 6 * m_maxQuads;
+		static const uint32_t m_maxTextureSlots = 32;
 	};
 
 	class Renderer2D

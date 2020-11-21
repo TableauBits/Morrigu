@@ -53,11 +53,6 @@ namespace MRG::OpenGL
 		void flushAndReset();
 		void drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0);
 
-		static const uint32_t m_maxQuads = 20000;
-		static const uint32_t m_maxVertices = 4 * m_maxQuads;
-		static const uint32_t m_maxIndices = 6 * m_maxQuads;
-		static const uint32_t m_maxTextureSlots = 32;
-
 		Ref<MRG::VertexArray> m_quadVertexArray;
 		Ref<MRG::VertexBuffer> m_quadVertexBuffer;
 		Ref<MRG::Shader> m_textureShader;

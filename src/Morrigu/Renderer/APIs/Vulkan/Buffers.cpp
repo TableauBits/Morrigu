@@ -39,7 +39,6 @@ namespace MRG::Vulkan
 		vkMapMemory(data->device, stagingBuffer.memoryHandle, 0, size, 0, &dataPointer);
 		memcpy(dataPointer, vertices, size);
 		vkUnmapMemory(data->device, stagingBuffer.memoryHandle);
-		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
 
 		MRG::Vulkan::createBuffer(data->device,
 		                          data->physicalDevice,
@@ -100,14 +99,6 @@ namespace MRG::Vulkan
 		vkMapMemory(windowData->device, stagingBuffer.memoryHandle, 0, size, 0, &dataPointer);
 		memcpy(dataPointer, data, size);
 		vkUnmapMemory(windowData->device, stagingBuffer.memoryHandle);
-		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
-
-		MRG::Vulkan::createBuffer(windowData->device,
-		                          windowData->physicalDevice,
-		                          size,
-		                          VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		                          m_bufferStruct);
 
 		MRG::Vulkan::copyBuffer(windowData, stagingBuffer, m_bufferStruct, size);
 
