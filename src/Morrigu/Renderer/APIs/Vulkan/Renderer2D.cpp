@@ -641,7 +641,7 @@ namespace MRG::Vulkan
 			offset += 4;
 		}
 
-		const auto indexBuffer = createRef<IndexBuffer>(quadIndices, m_maxIndices);
+		const auto indexBuffer = createRef<IndexBuffer>(quadIndices, Generic2DRenderer::m_maxIndices);
 		m_vertexArray->setIndexBuffer(indexBuffer);
 		delete[] quadIndices;
 
