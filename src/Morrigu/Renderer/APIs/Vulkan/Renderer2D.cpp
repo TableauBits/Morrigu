@@ -228,29 +228,73 @@ namespace
 		                           VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 	}
 
-	[[nodiscard]] VkRenderPass createRenderPass(const VkPhysicalDevice physicalDevice, VkDevice device, VkFormat swapChainFormat)
+	[[nodiscard]] std::array<VkRenderPass, 3>
+	createRenderPasses(const VkPhysicalDevice physicalDevice, VkDevice device, VkFormat swapChainFormat)
 	{
-		VkRenderPass returnRenderPass;
+		/// We need 3 render passes:
+		// - A clearing render pass, meant to be used once each frame, at the beginning;
+		// - A rendering render pass, that will be used once per scene (or batch), and will flush a batch;
+		// - An ImGui render pass to ensure that it's drawn last.
+		std::array<VkRenderPass, 3> renderpasses{};
 
-		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = swapChainFormat;
-		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		std::array<VkAttachmentDescription, 3> colorAttachments{};
+		colorAttachments[0].format = swapChainFormat;
+		colorAttachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		VkAttachmentDescription depthAttachment{};
-		depthAttachment.format = findDepthFormat(physicalDevice);
-		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		colorAttachments[1].format = swapChainFormat;
+		colorAttachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		colorAttachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachments[1].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachments[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		colorAttachments[2].format = swapChainFormat;
+		colorAttachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		colorAttachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachments[2].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachments[2].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		// The clearing subpass needs to clear the z buffer, and the rendering subpass needs to load it instead.
+		// ImGui doesn't care
+		std::array<VkAttachmentDescription, 3> depthAttachments{};
+		const auto format = findDepthFormat(physicalDevice);
+		depthAttachments[0].format = format;
+		depthAttachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachments[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		depthAttachments[1].format = format;
+		depthAttachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		depthAttachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachments[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthAttachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		depthAttachments[2].format = format;
+		depthAttachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachments[2].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachments[2].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthAttachments[2].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentReference colorAttachmentRef{};
 		colorAttachmentRef.attachment = 0;
@@ -274,26 +318,30 @@ namespace
 		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-		std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+		std::array<VkAttachmentDescription, 2> attachments;
 		VkRenderPassCreateInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-		renderPassInfo.pAttachments = attachments.data();
-		renderPassInfo.subpassCount = 1;
-		renderPassInfo.pSubpasses = &subpass;
-		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &dependency;
 
-		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &returnRenderPass), "failed to create render pass!")
-		return returnRenderPass;
+		for (std::size_t i = 0; i < 3; ++i) {
+			attachments = {colorAttachments[i], depthAttachments[i]};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+			renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			renderPassInfo.pAttachments = attachments.data();
+			renderPassInfo.subpassCount = 1;
+			renderPassInfo.pSubpasses = &subpass;
+			renderPassInfo.dependencyCount = 1;
+			renderPassInfo.pDependencies = &dependency;
+			MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[i]), "failed to create render passes!");
+		}
+
+		return renderpasses;
 	}
 
-	[[nodiscard]] VkPipeline createPipeline(const MRG::Vulkan::WindowProperties* data,
-	                                        MRG::Ref<MRG::Vulkan::Shader> textureShader,
-	                                        const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
-	                                        const std::vector<VkVertexInputBindingDescription>& bindingDescriptions)
+	[[nodiscard]] std::array<VkPipeline, 3> createPipelines(const MRG::Vulkan::WindowProperties* data,
+	                                                        MRG::Ref<MRG::Vulkan::Shader> textureShader,
+	                                                        const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
+	                                                        const std::vector<VkVertexInputBindingDescription>& bindingDescriptions)
 	{
-		VkPipeline returnPipeline;
+		std::array<VkPipeline, 3> pipelines;
 
 		// TODO: Add proper debug logging for selected rendering features
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -382,6 +430,7 @@ namespace
 		colorBlending.pAttachments = &colorBlendAttachment;
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
+
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = 2;
 		pipelineInfo.pStages = shaderStages;
@@ -392,40 +441,74 @@ namespace
 		pipelineInfo.pMultisampleState = &multisampling;
 		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.pColorBlendState = &colorBlending;
-		pipelineInfo.layout = data->pipeline.layout;
-		pipelineInfo.renderPass = data->pipeline.renderPass;
+		pipelineInfo.layout = data->clearingPipeline.layout;
+		pipelineInfo.renderPass = data->clearingPipeline.renderPass;
 		pipelineInfo.subpass = 0;
-
-		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &returnPipeline),
+		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[0]),
 		               "failed to create graphics pipeline!");
 
-		return returnPipeline;
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineInfo.stageCount = 2;
+		pipelineInfo.pStages = shaderStages;
+		pipelineInfo.pVertexInputState = &vertexInputInfo;
+		pipelineInfo.pInputAssemblyState = &inputAssembly;
+		pipelineInfo.pViewportState = &viewportState;
+		pipelineInfo.pRasterizationState = &rasterizer;
+		pipelineInfo.pMultisampleState = &multisampling;
+		pipelineInfo.pDepthStencilState = &depthStencil;
+		pipelineInfo.pColorBlendState = &colorBlending;
+		pipelineInfo.layout = data->renderingPipeline.layout;
+		pipelineInfo.renderPass = data->renderingPipeline.renderPass;
+		pipelineInfo.subpass = 0;
+		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[1]),
+		               "failed to create graphics pipeline!");
+
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineInfo.stageCount = 2;
+		pipelineInfo.pStages = shaderStages;
+		pipelineInfo.pVertexInputState = &vertexInputInfo;
+		pipelineInfo.pInputAssemblyState = &inputAssembly;
+		pipelineInfo.pViewportState = &viewportState;
+		pipelineInfo.pRasterizationState = &rasterizer;
+		pipelineInfo.pMultisampleState = &multisampling;
+		pipelineInfo.pDepthStencilState = &depthStencil;
+		pipelineInfo.pColorBlendState = &colorBlending;
+		pipelineInfo.layout = data->ImGuiPipeline.layout;
+		pipelineInfo.renderPass = data->ImGuiPipeline.renderPass;
+		pipelineInfo.subpass = 0;
+		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[2]),
+		               "failed to create graphics pipeline!");
+
+		return pipelines;
 	}
 
-	[[nodiscard]] std::vector<VkFramebuffer> createframeBuffers(const VkDevice device,
-	                                                            const std::vector<VkImageView>& swapChainImagesViews,
-	                                                            const VkImageView depthImageView,
-	                                                            const VkRenderPass renderPass,
-	                                                            const VkExtent2D swapChainExtent)
+	[[nodiscard]] std::vector<std::array<VkFramebuffer, 3>> createframeBuffers(const VkDevice device,
+	                                                                           const std::vector<VkImageView>& swapChainImagesViews,
+	                                                                           const VkImageView depthImageView,
+	                                                                           const std::array<VkRenderPass, 3>& renderPasses,
+	                                                                           const VkExtent2D swapChainExtent)
 	{
-		std::vector<VkFramebuffer> returnFrameBuffers(swapChainImagesViews.size());
+		std::vector<std::array<VkFramebuffer, 3>> frameBuffers(swapChainImagesViews.size());
 
 		for (std::size_t i = 0; i < swapChainImagesViews.size(); ++i) {
 			std::array<VkImageView, 2> attachments = {swapChainImagesViews[i], depthImageView};
 
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.renderPass = renderPass;
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferInfo.pAttachments = attachments.data();
 			framebufferInfo.width = swapChainExtent.width;
 			framebufferInfo.height = swapChainExtent.height;
 			framebufferInfo.layers = 1;
 
-			MRG_VKVALIDATE(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &returnFrameBuffers[i]), "failed to create framebuffer!");
+			for (std::size_t j = 0; j < 3; ++j) {
+				framebufferInfo.renderPass = renderPasses[j];
+				MRG_VKVALIDATE(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &frameBuffers[i][j]),
+				               "failed to create framebuffer!");
+			}
 		}
 
-		return returnFrameBuffers;
+		return frameBuffers;
 	}
 
 	[[nodiscard]] VkCommandPool createCommandPool(const VkDevice device, const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
@@ -526,7 +609,10 @@ namespace MRG::Vulkan
 		m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
 		MRG_ENGINE_INFO("Vulkan swap chain successfully created");
 
-		m_data->pipeline.renderPass = createRenderPass(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
+		auto [clearingRP, renderingRP, ImGuiRP] = createRenderPasses(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
+		m_data->clearingPipeline.renderPass = clearingRP;
+		m_data->renderingPipeline.renderPass = renderingRP;
+		m_data->ImGuiPipeline.renderPass = ImGuiRP;
 
 		m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
 		MRG_ENGINE_TRACE("Command pool successfully created");
@@ -577,24 +663,32 @@ namespace MRG::Vulkan
 		m_data->pushConstantRanges = populatePushConstantsRanges();
 
 		const auto pipelineLayoutCreateInfo = populatePipelineLayout(&m_data->descriptorSetLayout, &m_data->pushConstantRanges);
-		MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineLayoutCreateInfo, nullptr, &m_data->pipeline.layout),
+		VkPipelineLayout layout;
+		MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineLayoutCreateInfo, nullptr, &layout),
 		               "failed to create pipeline layout!");
+		m_data->clearingPipeline.layout = layout;
+		m_data->renderingPipeline.layout = layout;
+		m_data->ImGuiPipeline.layout = layout;
 		MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
 
-		m_data->pipeline.handle =
-		  createPipeline(m_data,
-		                 m_textureShader,
-		                 std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getAttributeDescriptions(),
-		                 {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getBindingDescription()});
+		auto [clearingPipeline, renderingPipeline, ImGuiPipeline] =
+		  createPipelines(m_data,
+		                  m_textureShader,
+		                  std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getAttributeDescriptions(),
+		                  {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getBindingDescription()});
+		m_data->clearingPipeline.handle = clearingPipeline;
+		m_data->renderingPipeline.handle = renderingPipeline;
+		m_data->ImGuiPipeline.handle = ImGuiPipeline;
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 
-		m_data->swapChain.frameBuffers = createframeBuffers(m_data->device,
-		                                                    m_data->swapChain.imageViews,
-		                                                    m_data->swapChain.depthBuffer.imageView,
-		                                                    m_data->pipeline.renderPass,
-		                                                    m_data->swapChain.extent);
+		m_data->swapChain.frameBuffers =
+		  createframeBuffers(m_data->device,
+		                     m_data->swapChain.imageViews,
+		                     m_data->swapChain.depthBuffer.imageView,
+		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiPipeline.renderPass},
+		                     m_data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
 
 		m_data->commandBuffers = allocateCommandBuffers(m_data);
@@ -672,36 +766,7 @@ namespace MRG::Vulkan
 		}
 		m_imagesInFlight[m_imageIndex] = m_inFlightFences[m_data->currentFrame];
 
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex], 0);
-
-		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex], &beginInfo), "failed to begin recording command bufer!");
-
-		std::array<VkClearValue, 2> clearColors{};
-		clearColors[0].color = {{m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a}};
-		clearColors[1].depthStencil = {1.f, 0};
-
-		VkRenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_data->pipeline.renderPass;
-		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex];
-		renderPassInfo.renderArea.offset = {0, 0};
-		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
-		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());
-		renderPassInfo.pClearValues = clearColors.data();
-
-		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->pipeline.handle);
-
-		VkBuffer vertexBuffers[] = {std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle()};
-		VkDeviceSize offsets[] = {0};
-		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
-		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex], 0, 1, vertexBuffers, offsets);
-
-		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
+		clear(m_clearColor);
 
 		return true;
 	}
@@ -718,6 +783,21 @@ namespace MRG::Vulkan
 		VkSemaphore signalSempahores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
 		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex], 0);
+
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex], &beginInfo), "failed to begin recording command bufer!");
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_data->ImGuiPipeline.renderPass;
+		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][2];
+		renderPassInfo.renderArea.offset = {0, 0};
+		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.clearValueCount = 0;
+
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
@@ -727,6 +807,10 @@ namespace MRG::Vulkan
 		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex];
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSempahores;
+
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->ImGuiPipeline.handle);
 
 		auto& io = ImGui::GetIO();
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_data->commandBuffers[m_imageIndex]);
@@ -771,6 +855,32 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex], 0);
+
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex], &beginInfo), "failed to begin recording command bufer!");
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
+		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][1];
+		renderPassInfo.renderArea.offset = {0, 0};
+		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.clearValueCount = 0;
+
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+
+		VkBuffer vertexBuffers[] = {std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle()};
+		VkDeviceSize offsets[] = {0};
+		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
+		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex], 0, 1, vertexBuffers, offsets);
+
+		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
+
 		m_modelMatrix.viewProjection = OrthoCamera.getProjectionViewMatrix();
 
 		m_quadIndexCount = 0;
@@ -783,15 +893,13 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
-		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
-
 		uint32_t dataSize = static_cast<uint32_t>((uint8_t*)m_qvbPtr - (uint8_t*)m_qvbBase);
 		m_vertexArray->getVertexBuffers()[0]->setData(m_qvbBase, dataSize);
 
 		updateDescriptor();
 
 		vkCmdPushConstants(m_data->commandBuffers[m_imageIndex],
-		                   m_data->pipeline.layout,
+		                   m_data->renderingPipeline.layout,
 		                   VK_SHADER_STAGE_VERTEX_BIT,
 		                   0,
 		                   sizeof(PushConstants),
@@ -799,7 +907,7 @@ namespace MRG::Vulkan
 
 		vkCmdBindDescriptorSets(m_data->commandBuffers[m_imageIndex],
 		                        VK_PIPELINE_BIND_POINT_GRAPHICS,
-		                        m_data->pipeline.layout,
+		                        m_data->renderingPipeline.layout,
 		                        0,
 		                        1,
 		                        &m_descriptorSets[m_imageIndex],
@@ -808,6 +916,27 @@ namespace MRG::Vulkan
 
 		vkCmdDrawIndexed(m_data->commandBuffers[m_imageIndex], m_quadIndexCount, 1, 0, 0, 0);
 		++m_stats.drawCalls;
+
+		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
+		VkSemaphore signalSempahores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
+		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex];
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSempahores;
+
+		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex]);
+
+		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex]), "failed to record command buffer!");
+
+		MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
+		               "failed to submit draw command buffer!");
 	}
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -1016,22 +1145,79 @@ namespace MRG::Vulkan
 		++m_stats.quadCount;
 	}
 
+	void Renderer2D::clear(const glm::vec4& color)
+	{
+		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex], 0);
+
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex], &beginInfo), "failed to begin recording command bufer!");
+
+		std::array<VkClearValue, 2> clearColors{};
+		clearColors[0].color = {{color.r, color.g, color.b, color.a}};
+		clearColors[1].depthStencil = {1.f, 0};
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_data->clearingPipeline.renderPass;
+		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][0];
+		renderPassInfo.renderArea.offset = {0, 0};
+		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());
+		renderPassInfo.pClearValues = clearColors.data();
+
+		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
+		VkSemaphore signalSempahores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
+		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex];
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSempahores;
+
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->clearingPipeline.handle);
+
+		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex]);
+
+		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex]), "failed to record command buffer!");
+
+		MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
+		               "failed to submit draw command buffer!");
+	}
+
 	void Renderer2D::cleanupSwapChain()
 	{
 		vkDestroyImageView(m_data->device, m_data->swapChain.depthBuffer.imageView, nullptr);
 		vkDestroyImage(m_data->device, m_data->swapChain.depthBuffer.depthImage, nullptr);
 		vkFreeMemory(m_data->device, m_data->swapChain.depthBuffer.memoryHandle, nullptr);
 
-		for (auto framebuffer : m_data->swapChain.frameBuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
+		for (auto framebuffers : m_data->swapChain.frameBuffers) {
+			for (auto framebuffer : framebuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
+		}
 
 		vkFreeCommandBuffers(
 		  m_data->device, m_data->commandPool, static_cast<uint32_t>(m_data->commandBuffers.size()), m_data->commandBuffers.data());
 
-		vkDestroyPipeline(m_data->device, m_data->pipeline.handle, nullptr);
+		vkDestroyPipeline(m_data->device, m_data->clearingPipeline.handle, nullptr);
+		vkDestroyPipeline(m_data->device, m_data->renderingPipeline.handle, nullptr);
+		vkDestroyPipeline(m_data->device, m_data->ImGuiPipeline.handle, nullptr);
 
-		vkDestroyPipelineLayout(m_data->device, m_data->pipeline.layout, nullptr);
+		// All 3 pipelines have the same VkLayout handle, so destroying only one is necessary
+		vkDestroyPipelineLayout(m_data->device, m_data->clearingPipeline.layout, nullptr);
 
-		vkDestroyRenderPass(m_data->device, m_data->pipeline.renderPass, nullptr);
+		vkDestroyRenderPass(m_data->device, m_data->clearingPipeline.renderPass, nullptr);
+		vkDestroyRenderPass(m_data->device, m_data->renderingPipeline.renderPass, nullptr);
+		vkDestroyRenderPass(m_data->device, m_data->ImGuiPipeline.renderPass, nullptr);
 
 		for (auto imageView : m_data->swapChain.imageViews) vkDestroyImageView(m_data->device, imageView, nullptr);
 
@@ -1060,23 +1246,37 @@ namespace MRG::Vulkan
 		m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
 		MRG_ENGINE_INFO("Vulkan swap chain succesfully recreated");
 
-		m_data->pipeline.renderPass = createRenderPass(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
+		auto [clearingRP, renderingRP, ImGuiRP] = createRenderPasses(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
+		m_data->clearingPipeline.renderPass = clearingRP;
+		m_data->renderingPipeline.renderPass = renderingRP;
+		m_data->ImGuiPipeline.renderPass = ImGuiRP;
 
 		const auto pipelineLayoutCreateInfo = populatePipelineLayout(&m_data->descriptorSetLayout, &m_data->pushConstantRanges);
-		MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineLayoutCreateInfo, nullptr, &m_data->pipeline.layout),
-		               "failed to recreate pipeline layout!");
+		VkPipelineLayout layout;
+		MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineLayoutCreateInfo, nullptr, &layout),
+		               "failed to create pipeline layout!");
+		m_data->clearingPipeline.layout = layout;
+		m_data->renderingPipeline.layout = layout;
+		m_data->ImGuiPipeline.layout = layout;
 		MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
-		m_data->pipeline.handle =
-		  createPipeline(m_data, m_textureShader, m_vertexArray->getAttributeDescriptions(), {m_vertexArray->getBindingDescription()});
+		auto [clearingPipeline, renderingPipeline, ImGuiPipeline] =
+		  createPipelines(m_data,
+		                  m_textureShader,
+		                  std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getAttributeDescriptions(),
+		                  {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getBindingDescription()});
+		m_data->clearingPipeline.handle = clearingPipeline;
+		m_data->renderingPipeline.handle = renderingPipeline;
+		m_data->ImGuiPipeline.handle = ImGuiPipeline;
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
-		m_data->swapChain.frameBuffers = createframeBuffers(m_data->device,
-		                                                    m_data->swapChain.imageViews,
-		                                                    m_data->swapChain.depthBuffer.imageView,
-		                                                    m_data->pipeline.renderPass,
-		                                                    m_data->swapChain.extent);
+		m_data->swapChain.frameBuffers =
+		  createframeBuffers(m_data->device,
+		                     m_data->swapChain.imageViews,
+		                     m_data->swapChain.depthBuffer.imageView,
+		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiPipeline.renderPass},
+		                     m_data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
 
 		auto [pool, descriptors] = createDescriptorPool(m_data, m_maxTextureSlots);

@@ -55,6 +55,8 @@ namespace MRG::Vulkan
 		void resetStats() override { m_stats = {}; };
 		RenderingStatistics getStats() const override { return m_stats; };
 
+		void clear(const glm::vec4& color);  // TODO: OVERRIDE
+
 	private:
 		void cleanupSwapChain();
 		void recreateSwapChain();
