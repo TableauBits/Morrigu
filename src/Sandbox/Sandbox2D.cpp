@@ -1,6 +1,6 @@
 #include "Sandbox2D.h"
 
-Sandbox2D::Sandbox2D() : MRG::Layer("Sandbox 2D"), m_camera(1280.f / 720.f, true) {}
+Sandbox2D::Sandbox2D() : MRG::Layer("Sandbox 2D"), m_camera(1280.f / 720.f) {}
 
 void Sandbox2D::onAttach()
 {
@@ -17,7 +17,7 @@ void Sandbox2D::onUpdate(MRG::Timestep ts)
 {
 	MRG_PROFILE_FUNCTION();
 
-	m_fps = 1 / ts;
+	m_frameTime = ts;
 
 	m_camera.onUpdate(ts);
 
@@ -57,7 +57,8 @@ void Sandbox2D::onImGuiRender()
 {
 	MRG_PROFILE_FUNCTION();
 
-	const auto color = (m_fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
+	const auto fps = 1 / m_frameTime;
+	const auto color = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
 	const auto stats = MRG::Renderer2D::getStats();
 
 	ImGui::Begin("Debug");
@@ -67,7 +68,7 @@ void Sandbox2D::onImGuiRender()
 	ImGui::Text("Vertices: %d", stats.getVertexCount());
 	ImGui::Text("Indices: %d", stats.getIndexCount());
 	ImGui::Separator();
-	ImGui::TextColored(color, "Current FPS: %04.2f", m_fps);
+	ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
 	ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
 	ImGui::End();
 }

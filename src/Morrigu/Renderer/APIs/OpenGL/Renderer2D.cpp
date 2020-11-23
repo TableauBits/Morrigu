@@ -48,11 +48,6 @@ namespace MRG::OpenGL
 		m_textureShader->upload("u_textures", samplers, m_maxTextureSlots);
 
 		m_textureSlots[0] = m_whiteTexture;
-
-		m_quadVertexPositions[0] = {-0.5f, -0.5f, 0.0f, 1.f};
-		m_quadVertexPositions[1] = {0.5f, -0.5f, 0.0f, 1.f};
-		m_quadVertexPositions[2] = {0.5f, 0.5f, 0.0f, 1.f};
-		m_quadVertexPositions[3] = {-0.5f, 0.5f, 0.0f, 1.f};
 	}
 
 	void Renderer2D::shutdown()
@@ -62,6 +57,8 @@ namespace MRG::OpenGL
 		m_textureShader->destroy();
 		m_whiteTexture->destroy();
 		m_quadVertexArray->destroy();
+
+		delete[] m_qvbBase;
 	}
 
 	void Renderer2D::onWindowResize(uint32_t width, uint32_t height) { setViewport(0, 0, width, height); }
@@ -108,41 +105,22 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (m_quadIndexCount >= m_maxIndices)
-			flushAndReset();
-
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
 
+		if (m_quadIndexCount >= m_maxIndices)
+			flushAndReset();
+
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
 
-		m_qvbPtr->position = transform * m_quadVertexPositions[0];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[1];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[2];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[3];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
+		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
+			m_qvbPtr->position = transform * m_quadVertexPositions[i];
+			m_qvbPtr->color = color;
+			m_qvbPtr->texCoord = m_textureCoordinates[i];
+			m_qvbPtr->texIndex = texIndex;
+			m_qvbPtr->tilingFactor = tilingFactor;
+			++m_qvbPtr;
+		}
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
@@ -165,6 +143,9 @@ namespace MRG::OpenGL
 		}
 
 		if (texIndex == 0.f) {
+			if (m_textureSlotindex >= m_maxTextureSlots)
+				flushAndReset();
+
 			texIndex = static_cast<float>(m_textureSlotindex);
 			m_textureSlots[m_textureSlotindex] = texture;
 			++m_textureSlotindex;
@@ -172,33 +153,14 @@ namespace MRG::OpenGL
 
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
 
-		m_qvbPtr->position = transform * m_quadVertexPositions[0];
-		m_qvbPtr->color = tintColor;
-		m_qvbPtr->texCoord = {0.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[1];
-		m_qvbPtr->color = tintColor;
-		m_qvbPtr->texCoord = {1.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[2];
-		m_qvbPtr->color = tintColor;
-		m_qvbPtr->texCoord = {1.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[3];
-		m_qvbPtr->color = tintColor;
-		m_qvbPtr->texCoord = {0.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
+		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
+			m_qvbPtr->position = transform * m_quadVertexPositions[i];
+			m_qvbPtr->color = tintColor;
+			m_qvbPtr->texCoord = m_textureCoordinates[i];
+			m_qvbPtr->texIndex = texIndex;
+			m_qvbPtr->tilingFactor = tilingFactor;
+			++m_qvbPtr;
+		}
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
@@ -208,42 +170,23 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (m_quadIndexCount >= m_maxIndices)
-			flushAndReset();
-
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
+
+		if (m_quadIndexCount >= m_maxIndices)
+			flushAndReset();
 
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
-		m_qvbPtr->position = transform * m_quadVertexPositions[0];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[1];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[2];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[3];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
+		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
+			m_qvbPtr->position = transform * m_quadVertexPositions[i];
+			m_qvbPtr->color = color;
+			m_qvbPtr->texCoord = m_textureCoordinates[i];
+			m_qvbPtr->texIndex = texIndex;
+			m_qvbPtr->tilingFactor = tilingFactor;
+			++m_qvbPtr;
+		}
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
@@ -270,6 +213,9 @@ namespace MRG::OpenGL
 		}
 
 		if (texIndex == 0.f) {
+			if (m_textureSlotindex >= m_maxTextureSlots)
+				flushAndReset();
+
 			texIndex = static_cast<float>(m_textureSlotindex);
 			m_textureSlots[m_textureSlotindex] = texture;
 			++m_textureSlotindex;
@@ -278,33 +224,14 @@ namespace MRG::OpenGL
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
-		m_qvbPtr->position = transform * m_quadVertexPositions[0];
-		m_qvbPtr->color = tintColor;
-		m_qvbPtr->texCoord = {0.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[1];
-		m_qvbPtr->color = tintColor;
-		m_qvbPtr->texCoord = {1.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[2];
-		m_qvbPtr->color = tintColor;
-		m_qvbPtr->texCoord = {1.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[3];
-		m_qvbPtr->color = tintColor;
-		m_qvbPtr->texCoord = {0.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
+		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
+			m_qvbPtr->position = transform * m_quadVertexPositions[i];
+			m_qvbPtr->color = tintColor;
+			m_qvbPtr->texCoord = m_textureCoordinates[i];
+			m_qvbPtr->texIndex = texIndex;
+			m_qvbPtr->tilingFactor = tilingFactor;
+			++m_qvbPtr;
+		}
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;

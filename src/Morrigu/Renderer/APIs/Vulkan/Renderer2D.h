@@ -76,12 +76,6 @@ namespace MRG::Vulkan
 		bool m_shouldRecreateSwapChain = false;
 
 		PushConstants m_modelMatrix;
-		uint32_t m_quadIndexCount = 0;
-		QuadVertex* m_qvbBase = nullptr;
-		QuadVertex* m_qvbPtr = nullptr;
-		std::array<Ref<Texture2D>, m_maxTextureSlots> m_textureSlots;
-		std::size_t m_textureSlotindex = 1;
-		glm::vec4 m_quadVertexPositions[4];
 
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
 

@@ -651,11 +651,6 @@ namespace MRG::Vulkan
 
 		m_textureSlots[0] = m_whiteTexture;
 
-		m_quadVertexPositions[0] = {-0.5f, -0.5f, 0.0f, 1.f};
-		m_quadVertexPositions[1] = {0.5f, -0.5f, 0.0f, 1.f};
-		m_quadVertexPositions[2] = {0.5f, 0.5f, 0.0f, 1.f};
-		m_quadVertexPositions[3] = {-0.5f, 0.5f, 0.0f, 1.f};
-
 		m_data->descriptorSetLayout = createDescriptorSetLayout(m_data->device, m_maxTextureSlots);
 
 		auto [pool, descriptors] = createDescriptorPool(m_data, m_maxTextureSlots);
@@ -739,6 +734,8 @@ namespace MRG::Vulkan
 		}
 
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
+
+		delete[] m_qvbBase;
 	}
 
 	void Renderer2D::onWindowResize(uint32_t, uint32_t) { m_shouldRecreateSwapChain = true; }
@@ -854,7 +851,7 @@ namespace MRG::Vulkan
 		return true;
 	}
 
-	void Renderer2D::beginScene(const OrthoCamera& OrthoCamera)
+	void Renderer2D::beginScene(const OrthoCamera& orthoCamera)
 	{
 		MRG_PROFILE_FUNCTION();
 
@@ -888,7 +885,7 @@ namespace MRG::Vulkan
 
 		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
 
-		m_modelMatrix.viewProjection = OrthoCamera.getProjectionViewMatrix();
+		m_modelMatrix.viewProjection = orthoCamera.getProjectionViewMatrix();
 
 		m_quadIndexCount = 0;
 		m_qvbPtr = m_qvbBase;
@@ -950,41 +947,22 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (m_quadIndexCount >= m_maxIndices)
-			flushAndReset();
-
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
 
+		if (m_quadIndexCount >= m_maxIndices)
+			flushAndReset();
+
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
 
-		m_qvbPtr->position = transform * m_quadVertexPositions[0];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[1];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[2];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[3];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
+		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
+			m_qvbPtr->position = transform * m_quadVertexPositions[i];
+			m_qvbPtr->color = color;
+			m_qvbPtr->texCoord = m_textureCoordinates[i];
+			m_qvbPtr->texIndex = texIndex;
+			m_qvbPtr->tilingFactor = tilingFactor;
+			++m_qvbPtr;
+		}
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
@@ -1007,40 +985,24 @@ namespace MRG::Vulkan
 		}
 
 		if (texIndex == 0.f) {
+			if (m_textureSlotindex >= m_maxTextureSlots)
+				flushAndReset();
+
 			texIndex = static_cast<float>(m_textureSlotindex);
-			m_textureSlots[m_textureSlotindex] = std::static_pointer_cast<MRG::Vulkan::Texture2D>(texture);
+			m_textureSlots[m_textureSlotindex] = texture;
 			++m_textureSlotindex;
 		}
 
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
 
-		m_qvbPtr->position = transform * m_quadVertexPositions[0];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[1];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[2];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[3];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
+		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
+			m_qvbPtr->position = transform * m_quadVertexPositions[i];
+			m_qvbPtr->color = color;
+			m_qvbPtr->texCoord = m_textureCoordinates[i];
+			m_qvbPtr->texIndex = texIndex;
+			m_qvbPtr->tilingFactor = tilingFactor;
+			++m_qvbPtr;
+		}
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
@@ -1050,42 +1012,23 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (m_quadIndexCount >= m_maxIndices)
-			flushAndReset();
-
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
+
+		if (m_quadIndexCount >= m_maxIndices)
+			flushAndReset();
 
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
-		m_qvbPtr->position = transform * m_quadVertexPositions[0];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[1];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[2];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[3];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
+		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
+			m_qvbPtr->position = transform * m_quadVertexPositions[i];
+			m_qvbPtr->color = color;
+			m_qvbPtr->texCoord = m_textureCoordinates[i];
+			m_qvbPtr->texIndex = texIndex;
+			m_qvbPtr->tilingFactor = tilingFactor;
+			++m_qvbPtr;
+		}
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
@@ -1112,41 +1055,25 @@ namespace MRG::Vulkan
 		}
 
 		if (texIndex == 0.f) {
+			if (m_textureSlotindex >= m_maxTextureSlots)
+				flushAndReset();
+
 			texIndex = static_cast<float>(m_textureSlotindex);
-			m_textureSlots[m_textureSlotindex] = std::static_pointer_cast<MRG::Vulkan::Texture2D>(texture);
+			m_textureSlots[m_textureSlotindex] = texture;
 			++m_textureSlotindex;
 		}
 
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
-		m_qvbPtr->position = transform * m_quadVertexPositions[0];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[1];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 0.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[2];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {1.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
-
-		m_qvbPtr->position = transform * m_quadVertexPositions[3];
-		m_qvbPtr->color = color;
-		m_qvbPtr->texCoord = {0.f, 1.f};
-		m_qvbPtr->texIndex = texIndex;
-		m_qvbPtr->tilingFactor = tilingFactor;
-		++m_qvbPtr;
+		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
+			m_qvbPtr->position = transform * m_quadVertexPositions[i];
+			m_qvbPtr->color = color;
+			m_qvbPtr->texCoord = m_textureCoordinates[i];
+			m_qvbPtr->texIndex = texIndex;
+			m_qvbPtr->tilingFactor = tilingFactor;
+			++m_qvbPtr;
+		}
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
@@ -1154,6 +1081,8 @@ namespace MRG::Vulkan
 
 	void Renderer2D::clear(const glm::vec4& color)
 	{
+		MRG_PROFILE_FUNCTION();
+
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
 
@@ -1206,6 +1135,8 @@ namespace MRG::Vulkan
 
 	void Renderer2D::cleanupSwapChain()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		vkDestroyImageView(m_data->device, m_data->swapChain.depthBuffer.imageView, nullptr);
 		vkDestroyImage(m_data->device, m_data->swapChain.depthBuffer.depthImage, nullptr);
 		vkFreeMemory(m_data->device, m_data->swapChain.depthBuffer.memoryHandle, nullptr);
@@ -1237,6 +1168,8 @@ namespace MRG::Vulkan
 
 	void Renderer2D::recreateSwapChain()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		int width = m_data->width, height = m_data->height;
 		while (width == 0 || height == 0) {
 			glfwGetFramebufferSize(MRG::Renderer2D::getGLFWWindow(), &width, &height);
@@ -1297,11 +1230,16 @@ namespace MRG::Vulkan
 
 	void Renderer2D::updateDescriptor()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		VkDescriptorImageInfo imageInfos[m_maxTextureSlots]{};
 		for (uint32_t i = 0; i < m_maxTextureSlots; ++i) {
 			imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfos[i].imageView = (i < m_textureSlotindex) ? m_textureSlots[i]->getImageView() : m_textureSlots[0]->getImageView();
-			imageInfos[i].sampler = (i < m_textureSlotindex) ? m_textureSlots[i]->getSampler() : m_textureSlots[0]->getSampler();
+			imageInfos[i].imageView = (i < m_textureSlotindex)
+			                            ? std::static_pointer_cast<Vulkan::Texture2D>(m_textureSlots[i])->getImageView()
+			                            : std::static_pointer_cast<Vulkan::Texture2D>(m_textureSlots[0])->getImageView();
+			imageInfos[i].sampler = (i < m_textureSlotindex) ? std::static_pointer_cast<Vulkan::Texture2D>(m_textureSlots[i])->getSampler()
+			                                                 : std::static_pointer_cast<Vulkan::Texture2D>(m_textureSlots[0])->getSampler();
 		}
 
 		std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
@@ -1319,10 +1257,43 @@ namespace MRG::Vulkan
 
 	void Renderer2D::flushAndReset()
 	{
+		MRG_PROFILE_FUNCTION();
+
 		endScene();
+
+		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
+		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][1], 0);
+
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][1], &beginInfo),
+		               "failed to begin recording command bufer!");
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
+		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][1];
+		renderPassInfo.renderArea.offset = {0, 0};
+		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.clearValueCount = 0;
+
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+
+		VkBuffer vertexBuffers[] = {std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle()};
+		VkDeviceSize offsets[] = {0};
+		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
+		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, vertexBuffers, offsets);
+
+		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
 
 		m_quadIndexCount = 0;
 		m_qvbPtr = m_qvbBase;
+
 		m_textureSlotindex = 1;
 	}
 }  // namespace MRG::Vulkan

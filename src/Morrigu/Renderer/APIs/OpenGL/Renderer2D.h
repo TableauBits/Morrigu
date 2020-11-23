@@ -58,13 +58,6 @@ namespace MRG::OpenGL
 		Ref<MRG::Shader> m_textureShader;
 		Ref<MRG::Texture2D> m_whiteTexture;
 
-		uint32_t m_quadIndexCount = 0;
-		QuadVertex* m_qvbBase = nullptr;
-		QuadVertex* m_qvbPtr = nullptr;
-		std::array<Ref<Texture2D>, m_maxTextureSlots> m_textureSlots;
-		std::size_t m_textureSlotindex = 1;
-		glm::vec4 m_quadVertexPositions[4];
-
 		RenderingStatistics m_stats;
 	};
 }  // namespace MRG::OpenGL

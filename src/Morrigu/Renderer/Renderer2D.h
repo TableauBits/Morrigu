@@ -8,6 +8,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include <array>
+
 namespace MRG
 {
 	struct QuadVertex
@@ -72,10 +74,21 @@ namespace MRG
 		virtual RenderingStatistics getStats() const = 0;
 
 	protected:
-		static const uint32_t m_maxQuads = 20000;
+		static const uint32_t m_maxQuads = 10000;
 		static const uint32_t m_maxVertices = 4 * m_maxQuads;
 		static const uint32_t m_maxIndices = 6 * m_maxQuads;
 		static const uint32_t m_maxTextureSlots = 32;
+
+		const std::size_t m_quadVertexCount = 4;
+		const glm::vec4 m_quadVertexPositions[4] = {
+		  {-0.5f, -0.5f, 0.0f, 1.f}, {0.5f, -0.5f, 0.0f, 1.f}, {0.5f, 0.5f, 0.0f, 1.f}, {-0.5f, 0.5f, 0.0f, 1.f}};
+		const glm::vec2 m_textureCoordinates[4] = {{0.f, 0.f}, {1.f, 0.f}, {1.f, 1.f}, {0.f, 1.f}};
+
+		uint32_t m_quadIndexCount = 0;
+		QuadVertex* m_qvbBase = nullptr;
+		QuadVertex* m_qvbPtr = nullptr;
+		std::array<Ref<Texture2D>, m_maxTextureSlots> m_textureSlots;
+		std::size_t m_textureSlotindex = 1;
 	};
 
 	class Renderer2D
