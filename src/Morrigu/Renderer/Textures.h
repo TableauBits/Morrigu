@@ -14,6 +14,8 @@ namespace MRG
 
 		virtual void destroy() = 0;
 
+		virtual bool operator==(const Texture& other) const = 0;
+
 		[[nodiscard]] virtual uint32_t getWidth() const = 0;
 		[[nodiscard]] virtual uint32_t getHeight() const = 0;
 

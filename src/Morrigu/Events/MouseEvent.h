@@ -13,8 +13,8 @@ namespace MRG
 	public:
 		MouseMovedEvent(float x, float y) : m_mouseX(x), m_mouseY(y) {}
 
-		[[nodiscard]] inline float getX() const { return m_mouseX; }
-		[[nodiscard]] inline float getY() const { return m_mouseY; }
+		[[nodiscard]] float getX() const { return m_mouseX; }
+		[[nodiscard]] float getY() const { return m_mouseY; }
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -35,8 +35,8 @@ namespace MRG
 	public:
 		MouseScrolledEvent(float x, float y) : m_mouseX(x), m_mouseY(y) {}
 
-		[[nodiscard]] inline float getX() const { return m_mouseX; }
-		[[nodiscard]] inline float getY() const { return m_mouseY; }
+		[[nodiscard]] float getX() const { return m_mouseX; }
+		[[nodiscard]] float getY() const { return m_mouseY; }
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -55,7 +55,7 @@ namespace MRG
 	class MouseButtonEvent : public Event
 	{
 	public:
-		[[nodiscard]] inline MouseCode getMouseButton() const { return m_button; }
+		[[nodiscard]] MouseCode getMouseButton() const { return m_button; }
 
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 

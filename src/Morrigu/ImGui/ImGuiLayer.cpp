@@ -81,7 +81,7 @@ namespace MRG
 			init_info.MinImageCount = data->swapChain.minImageCount;
 			init_info.ImageCount = data->swapChain.imageCount;
 
-			ImGui_ImplVulkan_Init(&init_info, data->pipeline.renderPass);
+			ImGui_ImplVulkan_Init(&init_info, data->ImGuiPipeline.renderPass);
 
 			auto commandBuffer = Vulkan::beginSingleTimeCommand(data);
 			ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
@@ -121,6 +121,13 @@ namespace MRG
 
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
+	}
+
+	void ImGuiLayer::onEvent(Event& event)
+	{
+		auto& io = ImGui::GetIO();
+		event.handled |= event.isInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+		event.handled |= event.isInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
 	}
 
 	void ImGuiLayer::begin()

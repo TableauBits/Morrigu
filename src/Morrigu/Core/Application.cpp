@@ -43,9 +43,9 @@ namespace MRG
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) -> bool { return onWindowResize(resizeEvent); });
 
 		for (auto it = m_layerStack.rbegin(); it != m_layerStack.rend(); ++it) {
-			(*it)->onEvent(event);
 			if (event.handled)
 				break;
+			(*it)->onEvent(event);
 		}
 	}
 
@@ -87,6 +87,7 @@ namespace MRG
 
 		m_layerStack.pushLayer(newLayer);
 	}
+
 	void Application::pushOverlay(Layer* newOverlay)
 	{
 		MRG_PROFILE_FUNCTION();

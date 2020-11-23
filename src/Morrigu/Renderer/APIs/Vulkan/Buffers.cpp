@@ -7,6 +7,20 @@
 
 namespace MRG::Vulkan
 {
+	VertexBuffer::VertexBuffer(uint32_t size)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+		MRG::Vulkan::createBuffer(data->device,
+		                          data->physicalDevice,
+		                          size,
+		                          VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		                          m_bufferStruct);
+	}
+
 	VertexBuffer::VertexBuffer(const void* vertices, uint32_t size)
 	{
 		MRG_PROFILE_FUNCTION();
@@ -25,7 +39,6 @@ namespace MRG::Vulkan
 		vkMapMemory(data->device, stagingBuffer.memoryHandle, 0, size, 0, &dataPointer);
 		memcpy(dataPointer, vertices, size);
 		vkUnmapMemory(data->device, stagingBuffer.memoryHandle);
-		MRG_ENGINE_TRACE("Vertex buffer data successfully bound and updloaded");
 
 		MRG::Vulkan::createBuffer(data->device,
 		                          data->physicalDevice,
@@ -68,6 +81,29 @@ namespace MRG::Vulkan
 	void VertexBuffer::unbind() const
 	{
 		// MRG_PROFILE_FUNCTION();
+	}
+
+	void VertexBuffer::setData(const void* data, uint32_t size)
+	{
+		const auto windowData = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+		MRG::Vulkan::Buffer stagingBuffer;
+		MRG::Vulkan::createBuffer(windowData->device,
+		                          windowData->physicalDevice,
+		                          size,
+		                          VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		                          stagingBuffer);
+
+		void* dataPointer;
+		vkMapMemory(windowData->device, stagingBuffer.memoryHandle, 0, size, 0, &dataPointer);
+		memcpy(dataPointer, data, size);
+		vkUnmapMemory(windowData->device, stagingBuffer.memoryHandle);
+
+		MRG::Vulkan::copyBuffer(windowData, stagingBuffer, m_bufferStruct, size);
+
+		vkDestroyBuffer(windowData->device, stagingBuffer.handle, nullptr);
+		vkFreeMemory(windowData->device, stagingBuffer.memoryHandle, nullptr);
 	}
 
 	//===================================================================================//

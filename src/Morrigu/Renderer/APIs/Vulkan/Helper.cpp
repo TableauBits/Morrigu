@@ -54,7 +54,6 @@ namespace MRG::Vulkan
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		MRG_VKVALIDATE(vkCreateBuffer(device, &bufferInfo, nullptr, &buffer.handle), "failed to create vertex buffer!");
-		MRG_ENGINE_TRACE("Vertex buffer succesfully created");
 
 		VkMemoryRequirements memRequirements;
 		vkGetBufferMemoryRequirements(device, buffer.handle, &memRequirements);
@@ -65,7 +64,6 @@ namespace MRG::Vulkan
 		allocInfo.memoryTypeIndex = findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
 
 		MRG_VKVALIDATE(vkAllocateMemory(device, &allocInfo, nullptr, &buffer.memoryHandle), "failed to allocate vertex buffer memory");
-		MRG_ENGINE_TRACE("Vertex buffer memory successfully allocated");
 
 		vkBindBufferMemory(device, buffer.handle, buffer.memoryHandle, 0);
 	}

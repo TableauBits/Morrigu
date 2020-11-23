@@ -20,7 +20,7 @@ namespace MRG
 		virtual void onEvent(Event& event) = 0;
 		virtual void onImGuiRender() {}
 
-		[[nodiscard]] inline const std::string getName() const { return m_name; }
+		[[nodiscard]] const std::string getName() const { return m_name; }
 
 	protected:
 		std::string m_name;

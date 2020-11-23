@@ -2,13 +2,40 @@
 #define MRG_CLASS_RENDERER2D
 
 #include "Core/GLMIncludeHelper.h"
+#include "Renderer/Buffers.h"
 #include "Renderer/OrthoCamera.h"
 #include "Renderer/Textures.h"
 
 #include <GLFW/glfw3.h>
 
+#include <array>
+
 namespace MRG
 {
+	struct QuadVertex
+	{
+		glm::vec3 position;
+		glm::vec4 color;
+		glm::vec2 texCoord;
+		float texIndex;
+		float tilingFactor;
+
+		static inline std::initializer_list<MRG::BufferElement> layout = {{MRG::ShaderDataType::Float3, "a_position"},
+		                                                                  {MRG::ShaderDataType::Float4, "a_color"},
+		                                                                  {MRG::ShaderDataType::Float2, "a_texCoord"},
+		                                                                  {MRG::ShaderDataType::Float, "a_texIndex"},
+		                                                                  {MRG::ShaderDataType::Float, "a_tilingFactor"}};
+	};
+
+	struct RenderingStatistics
+	{
+		uint32_t drawCalls = 0;
+		uint32_t quadCount = 0;
+
+		auto getVertexCount() const { return quadCount * 4; }
+		auto getIndexCount() const { return quadCount * 6; }
+	};
+
 	class Generic2DRenderer
 	{
 	public:
@@ -42,6 +69,26 @@ namespace MRG
 
 		virtual void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 		virtual void setClearColor(const glm::vec4& color) = 0;
+
+		virtual void resetStats() = 0;
+		virtual RenderingStatistics getStats() const = 0;
+
+		static const uint32_t maxQuads = 10000;
+		static const uint32_t maxVertices = 4 * maxQuads;
+		static const uint32_t maxIndices = 6 * maxQuads;
+		static const uint32_t maxTextureSlots = 32;
+
+	protected:
+		const std::size_t m_quadVertexCount = 4;
+		const glm::vec4 m_quadVertexPositions[4] = {
+		  {-0.5f, -0.5f, 0.0f, 1.f}, {0.5f, -0.5f, 0.0f, 1.f}, {0.5f, 0.5f, 0.0f, 1.f}, {-0.5f, 0.5f, 0.0f, 1.f}};
+		const glm::vec2 m_textureCoordinates[4] = {{0.f, 0.f}, {1.f, 0.f}, {1.f, 1.f}, {0.f, 1.f}};
+
+		uint32_t m_quadIndexCount = 0;
+		QuadVertex* m_qvbBase = nullptr;
+		QuadVertex* m_qvbPtr = nullptr;
+		std::array<Ref<Texture2D>, maxTextureSlots> m_textureSlots;
+		std::size_t m_textureSlotindex = 1;
 	};
 
 	class Renderer2D
@@ -93,6 +140,9 @@ namespace MRG
 
 		static void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 		static void setClearColor(const glm::vec4& color);
+
+		static void resetStats();
+		static RenderingStatistics getStats();
 
 	private:
 		static GLFWwindow* s_windowHandle;

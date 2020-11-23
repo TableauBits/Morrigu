@@ -63,7 +63,7 @@ namespace MRG
 		virtual int getCategoryFlags() const = 0;
 		virtual std::string toString() const { return getName(); }
 
-		[[nodiscard]] inline bool isInCategory(EventCategory category) { return getCategoryFlags() & category; }
+		[[nodiscard]] bool isInCategory(EventCategory category) { return getCategoryFlags() & category; }
 	};
 
 	class EventDispatcher

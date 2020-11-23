@@ -76,7 +76,7 @@ namespace MRG
 
 	void Renderer2D::drawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 	{
-		drawQuad(glm::vec3(position, 1.0f), size, color);
+		drawQuad(glm::vec3(position, 0.0f), size, color);
 	}
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -89,7 +89,7 @@ namespace MRG
 	void Renderer2D::drawQuad(
 	  const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		drawQuad(glm::vec3(position, 1.0f), size, texture, tilingFactor, tintColor);
+		drawQuad(glm::vec3(position, 0.0f), size, texture, tilingFactor, tintColor);
 	}
 
 	void Renderer2D::drawQuad(
@@ -102,7 +102,7 @@ namespace MRG
 
 	void Renderer2D::drawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
-		drawRotatedQuad(glm::vec3(position, 1.0f), size, rotation, color);
+		drawRotatedQuad(glm::vec3(position, 0.0f), size, rotation, color);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
@@ -119,7 +119,7 @@ namespace MRG
 	                                 float tilingFactor,
 	                                 const glm::vec4& tintColor)
 	{
-		drawRotatedQuad(glm::vec3(position, 1.0f), size, rotation, texture, tilingFactor, tintColor);
+		drawRotatedQuad(glm::vec3(position, 0.0f), size, rotation, texture, tilingFactor, tintColor);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
@@ -146,5 +146,19 @@ namespace MRG
 		MRG_PROFILE_FUNCTION();
 
 		s_renderer->setClearColor(color);
+	}
+
+	void Renderer2D::resetStats()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->resetStats();
+	}
+
+	RenderingStatistics Renderer2D::getStats()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		return s_renderer->getStats();
 	}
 }  // namespace MRG

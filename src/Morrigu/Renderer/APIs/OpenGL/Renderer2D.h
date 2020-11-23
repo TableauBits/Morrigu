@@ -6,6 +6,7 @@
 #include "Renderer/Renderer2D.h"
 #include "Renderer/Shader.h"
 
+#include <array>
 #include <glad/glad.h>
 
 namespace MRG::OpenGL
@@ -44,12 +45,20 @@ namespace MRG::OpenGL
 		void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override { glViewport(x, y, width, height); }
 		void setClearColor(const glm::vec4& color) override { glClearColor(color.r, color.g, color.b, color.a); }
 
+		void resetStats() override;
+		RenderingStatistics getStats() const override;
+
 	private:
-		void drawIndexed(const Ref<VertexArray>& vertexArray);
+		void flush();
+		void flushAndReset();
+		void drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0);
 
 		Ref<MRG::VertexArray> m_quadVertexArray;
+		Ref<MRG::VertexBuffer> m_quadVertexBuffer;
 		Ref<MRG::Shader> m_textureShader;
 		Ref<MRG::Texture2D> m_whiteTexture;
+
+		RenderingStatistics m_stats;
 	};
 }  // namespace MRG::OpenGL
 

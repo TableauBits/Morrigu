@@ -89,18 +89,9 @@ namespace MRG::Vulkan
 	void Shader::unbind() const {}
 
 	void Shader::upload(const std::string&, int) {}
+	void Shader::upload(const std::string&, int*, std::size_t) {}
 	void Shader::upload(const std::string&, float) {}
 	void Shader::upload(const std::string&, const glm::vec3&) {}
 	void Shader::upload(const std::string&, const glm::vec4&) {}
 	void Shader::upload(const std::string&, const glm::mat4&) {}
-
-	void Shader::uploadUniform(const std::string&, int) {}
-
-	void Shader::uploadUniform(const std::string&, float) {}
-	void Shader::uploadUniform(const std::string&, const glm::vec2&) {}
-	void Shader::uploadUniform(const std::string&, const glm::vec3&) {}
-	void Shader::uploadUniform(const std::string&, const glm::vec4&) {}
-
-	void Shader::uploadUniform(const std::string&, const glm::mat3&) {}
-	void Shader::uploadUniform(const std::string&, const glm::mat4&) {}
 }  // namespace MRG::Vulkan

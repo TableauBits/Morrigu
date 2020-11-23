@@ -25,7 +25,7 @@ namespace MRG::Vulkan
 		VkFormat imageFormat;
 		VkExtent2D extent;
 		std::vector<VkImageView> imageViews;
-		std::vector<VkFramebuffer> frameBuffers;
+		std::vector<std::array<VkFramebuffer, 3>> frameBuffers;
 		DepthBuffer depthBuffer;
 	};
 
@@ -63,11 +63,12 @@ namespace MRG::Vulkan
 		Queue graphicsQueue, presentQueue;
 		SwapChain swapChain;
 		VkDescriptorSetLayout descriptorSetLayout;
-		Pipeline pipeline;
+		Pipeline clearingPipeline;
+		Pipeline renderingPipeline;
+		Pipeline ImGuiPipeline;
 		VkCommandPool commandPool;
-		std::vector<VkCommandBuffer> commandBuffers;
+		std::vector<std::array<VkCommandBuffer, 3>> commandBuffers;
 		std::size_t currentFrame = 0;
-		std::vector<Buffer> uniformBuffers;
 		VkPushConstantRange pushConstantRanges;
 		VkDescriptorPool ImGuiPool;
 	};

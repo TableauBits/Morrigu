@@ -11,7 +11,7 @@ namespace MRG
 	class KeyEvent : public Event
 	{
 	public:
-		[[nodiscard]] inline KeyCode getKeyCode() const { return m_keyCode; }
+		[[nodiscard]] KeyCode getKeyCode() const { return m_keyCode; }
 
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 
@@ -26,7 +26,7 @@ namespace MRG
 	public:
 		KeyPressedEvent(KeyCode keyCode, unsigned int repeatCount) : KeyEvent(keyCode), m_repeatCount(repeatCount) {}
 
-		[[nodiscard]] inline unsigned int getRepeatCount() const { return m_repeatCount; }
+		[[nodiscard]] unsigned int getRepeatCount() const { return m_repeatCount; }
 		[[nodiscard]] std::string toString() const override
 		{
 			std::stringstream ss;

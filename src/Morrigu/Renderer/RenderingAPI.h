@@ -14,7 +14,7 @@ namespace MRG
 			OpenGL,
 			Vulkan
 		};
-		[[nodiscard]] inline static auto getAPI() { return s_API; }
+		[[nodiscard]] static auto getAPI() { return s_API; }
 
 	private:
 		static API s_API;

@@ -6,6 +6,15 @@
 
 namespace MRG::OpenGL
 {
+	VertexBuffer::VertexBuffer(uint32_t size)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glCreateBuffers(1, &m_rendererID);
+		glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
+		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+	}
+
 	VertexBuffer::VertexBuffer(const void* vertices, uint32_t size)
 	{
 		MRG_PROFILE_FUNCTION();
@@ -37,11 +46,20 @@ namespace MRG::OpenGL
 
 		glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
 	}
+
 	void VertexBuffer::unbind() const
 	{
 		MRG_PROFILE_FUNCTION();
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void VertexBuffer::setData(const void* data, uint32_t size)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 	}
 
 	//===================================================================================//

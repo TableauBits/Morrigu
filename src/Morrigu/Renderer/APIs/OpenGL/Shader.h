@@ -21,6 +21,7 @@ namespace MRG::OpenGL
 		void unbind() const override;
 
 		void upload(const std::string& name, int value) override;
+		void upload(const std::string& name, int* value, std::size_t count) override;
 		void upload(const std::string& name, float value) override;
 		void upload(const std::string& name, const glm::vec3& value) override;
 		void upload(const std::string& name, const glm::vec4& value) override;
@@ -29,6 +30,7 @@ namespace MRG::OpenGL
 		[[nodiscard]] const std::string& getName() const override { return m_name; }
 
 		void uploadUniform(const std::string& name, int value);
+		void uploadUniform(const std::string& name, int* value, std::size_t count);
 
 		void uploadUniform(const std::string& name, float value);
 		void uploadUniform(const std::string& name, const glm::vec2& value);
