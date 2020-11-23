@@ -641,7 +641,7 @@ namespace MRG::Vulkan
 			offset += 4;
 		}
 
-		const auto indexBuffer = createRef<IndexBuffer>(quadIndices, maxIndices);
+		const auto indexBuffer = std::static_pointer_cast<Vulkan::IndexBuffer>(IndexBuffer::create(quadIndices, maxIndices));
 		m_vertexArray->setIndexBuffer(indexBuffer);
 		delete[] quadIndices;
 
