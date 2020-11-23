@@ -243,6 +243,9 @@ namespace MRG::OpenGL
 
 	void Renderer2D::flush()
 	{
+		if (m_quadIndexCount == 0)
+			return;
+
 		for (uint32_t i = 0; i < m_textureSlotindex; ++i) m_textureSlots[i]->bind(i);
 
 		drawIndexed(m_quadVertexArray, m_quadIndexCount);

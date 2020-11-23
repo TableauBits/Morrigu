@@ -897,6 +897,29 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
+		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
+		VkSemaphore signalSempahores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
+		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex][1];
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSempahores;
+
+		if (m_quadIndexCount == 0) {
+			vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
+
+			MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][1]), "failed to record command buffer!");
+			MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
+			               "failed to submit draw command buffer!");
+			return;
+		}
+
 		uint32_t dataSize = static_cast<uint32_t>((uint8_t*)m_qvbPtr - (uint8_t*)m_qvbBase);
 		m_vertexArray->getVertexBuffers()[0]->setData(m_qvbBase, dataSize);
 
@@ -920,20 +943,6 @@ namespace MRG::Vulkan
 
 		vkCmdDrawIndexed(m_data->commandBuffers[m_imageIndex][1], m_quadIndexCount, 1, 0, 0, 0);
 		++m_stats.drawCalls;
-
-		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
-		VkSemaphore signalSempahores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
-		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = waitSemaphores;
-		submitInfo.pWaitDstStageMask = waitStages;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex][1];
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = signalSempahores;
 
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
 
