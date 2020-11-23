@@ -41,7 +41,7 @@ namespace MRG::OpenGL
 		m_whiteTexture->setData(&whiteTextureData, sizeof(whiteTextureData));
 
 		int32_t samplers[m_maxTextureSlots];
-		for (auto i = 0; i < m_maxTextureSlots; ++i) samplers[i] = i;
+		for (uint32_t i = 0; i < m_maxTextureSlots; ++i) samplers[i] = i;
 
 		m_textureShader = Shader::create("resources/shaders/texture");
 		m_textureShader->bind();
