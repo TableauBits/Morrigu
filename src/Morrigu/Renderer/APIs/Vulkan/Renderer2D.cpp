@@ -527,17 +527,19 @@ namespace
 		return returnCommandPool;
 	}
 
-	[[nodiscard]] std::vector<VkCommandBuffer> allocateCommandBuffers(const MRG::Vulkan::WindowProperties* data)
+	[[nodiscard]] std::vector<std::array<VkCommandBuffer, 3>> allocateCommandBuffers(const MRG::Vulkan::WindowProperties* data)
 	{
-		std::vector<VkCommandBuffer> commandBuffers(data->swapChain.frameBuffers.size());
+		std::vector<std::array<VkCommandBuffer, 3>> commandBuffers(data->swapChain.frameBuffers.size());
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.commandPool = data->commandPool;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+		allocInfo.commandBufferCount = 3;
 
-		MRG_VKVALIDATE(vkAllocateCommandBuffers(data->device, &allocInfo, commandBuffers.data()), "failed to allocate command buffers!");
+		for (std::size_t i = 0; i < commandBuffers.size(); ++i)
+			MRG_VKVALIDATE(vkAllocateCommandBuffers(data->device, &allocInfo, commandBuffers[i].data()),
+			               "failed to allocate command buffers!");
 		MRG_ENGINE_TRACE("{} command buffers successfully allocated", commandBuffers.size());
 
 		return commandBuffers;
@@ -786,9 +788,10 @@ namespace MRG::Vulkan
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex], 0);
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][2], 0);
 
-		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex], &beginInfo), "failed to begin recording command bufer!");
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][2], &beginInfo),
+		               "failed to begin recording command bufer!");
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -804,16 +807,16 @@ namespace MRG::Vulkan
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex];
+		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex][2];
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSempahores;
 
-		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][2], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->ImGuiPipeline.handle);
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][2], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->ImGuiPipeline.handle);
 
 		auto& io = ImGui::GetIO();
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_data->commandBuffers[m_imageIndex]);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_data->commandBuffers[m_imageIndex][2]);
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			const auto contextBkp = glfwGetCurrentContext();
@@ -822,9 +825,9 @@ namespace MRG::Vulkan
 			glfwMakeContextCurrent(contextBkp);
 		}
 
-		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex]);
+		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][2]);
 
-		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex]), "failed to record command buffer!");
+		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][2]), "failed to record command buffer!");
 
 		MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
 		               "failed to submit draw command buffer!");
@@ -855,12 +858,16 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
+		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
+		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
+
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex], 0);
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][1], 0);
 
-		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex], &beginInfo), "failed to begin recording command bufer!");
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][1], &beginInfo),
+		               "failed to begin recording command bufer!");
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -870,16 +877,16 @@ namespace MRG::Vulkan
 		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
 		renderPassInfo.clearValueCount = 0;
 
-		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
 
 		VkBuffer vertexBuffers[] = {std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle()};
 		VkDeviceSize offsets[] = {0};
 		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
-		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex], 0, 1, vertexBuffers, offsets);
+		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, vertexBuffers, offsets);
 
-		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
 
 		m_modelMatrix.viewProjection = OrthoCamera.getProjectionViewMatrix();
 
@@ -898,14 +905,14 @@ namespace MRG::Vulkan
 
 		updateDescriptor();
 
-		vkCmdPushConstants(m_data->commandBuffers[m_imageIndex],
+		vkCmdPushConstants(m_data->commandBuffers[m_imageIndex][1],
 		                   m_data->renderingPipeline.layout,
 		                   VK_SHADER_STAGE_VERTEX_BIT,
 		                   0,
 		                   sizeof(PushConstants),
 		                   &m_modelMatrix);
 
-		vkCmdBindDescriptorSets(m_data->commandBuffers[m_imageIndex],
+		vkCmdBindDescriptorSets(m_data->commandBuffers[m_imageIndex][1],
 		                        VK_PIPELINE_BIND_POINT_GRAPHICS,
 		                        m_data->renderingPipeline.layout,
 		                        0,
@@ -914,7 +921,7 @@ namespace MRG::Vulkan
 		                        0,
 		                        nullptr);
 
-		vkCmdDrawIndexed(m_data->commandBuffers[m_imageIndex], m_quadIndexCount, 1, 0, 0, 0);
+		vkCmdDrawIndexed(m_data->commandBuffers[m_imageIndex][1], m_quadIndexCount, 1, 0, 0, 0);
 		++m_stats.drawCalls;
 
 		VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_data->currentFrame]};
@@ -927,13 +934,13 @@ namespace MRG::Vulkan
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex];
+		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex][1];
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSempahores;
 
-		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex]);
+		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
 
-		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex]), "failed to record command buffer!");
+		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][1]), "failed to record command buffer!");
 
 		MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
 		               "failed to submit draw command buffer!");
@@ -1148,13 +1155,15 @@ namespace MRG::Vulkan
 	void Renderer2D::clear(const glm::vec4& color)
 	{
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
+		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
 
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex], 0);
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][0], 0);
 
-		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex], &beginInfo), "failed to begin recording command bufer!");
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][0], &beginInfo),
+		               "failed to begin recording command bufer!");
 
 		std::array<VkClearValue, 2> clearColors{};
 		clearColors[0].color = {{color.r, color.g, color.b, color.a}};
@@ -1179,17 +1188,17 @@ namespace MRG::Vulkan
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex];
+		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex][0];
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSempahores;
 
-		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][0], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->clearingPipeline.handle);
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][0], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->clearingPipeline.handle);
 
-		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex]);
+		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][0]);
 
-		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex]), "failed to record command buffer!");
+		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][0]), "failed to record command buffer!");
 
 		MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
 		               "failed to submit draw command buffer!");
@@ -1205,8 +1214,8 @@ namespace MRG::Vulkan
 			for (auto framebuffer : framebuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
 		}
 
-		vkFreeCommandBuffers(
-		  m_data->device, m_data->commandPool, static_cast<uint32_t>(m_data->commandBuffers.size()), m_data->commandBuffers.data());
+		for (std::size_t i = 0; i < m_data->commandBuffers.size(); ++i)
+			vkFreeCommandBuffers(m_data->device, m_data->commandPool, 3, m_data->commandBuffers[i].data());
 
 		vkDestroyPipeline(m_data->device, m_data->clearingPipeline.handle, nullptr);
 		vkDestroyPipeline(m_data->device, m_data->renderingPipeline.handle, nullptr);

@@ -67,7 +67,7 @@ namespace MRG::Vulkan
 		Pipeline renderingPipeline;
 		Pipeline ImGuiPipeline;
 		VkCommandPool commandPool;
-		std::vector<VkCommandBuffer> commandBuffers;
+		std::vector<std::array<VkCommandBuffer, 3>> commandBuffers;
 		std::size_t currentFrame = 0;
 		VkPushConstantRange pushConstantRanges;
 		VkDescriptorPool ImGuiPool;
