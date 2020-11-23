@@ -123,6 +123,13 @@ namespace MRG
 		ImGui::DestroyContext();
 	}
 
+	void ImGuiLayer::onEvent(Event& event)
+	{
+		auto& io = ImGui::GetIO();
+		event.handled |= event.isInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+		event.handled |= event.isInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+	}
+
 	void ImGuiLayer::begin()
 	{
 		MRG_PROFILE_FUNCTION();
