@@ -73,12 +73,12 @@ namespace MRG
 		virtual void resetStats() = 0;
 		virtual RenderingStatistics getStats() const = 0;
 
-	protected:
-		static const uint32_t m_maxQuads = 10000;
-		static const uint32_t m_maxVertices = 4 * m_maxQuads;
-		static const uint32_t m_maxIndices = 6 * m_maxQuads;
-		static const uint32_t m_maxTextureSlots = 32;
+		static const uint32_t maxQuads = 10000;
+		static const uint32_t maxVertices = 4 * maxQuads;
+		static const uint32_t maxIndices = 6 * maxQuads;
+		static const uint32_t maxTextureSlots = 32;
 
+	protected:
 		const std::size_t m_quadVertexCount = 4;
 		const glm::vec4 m_quadVertexPositions[4] = {
 		  {-0.5f, -0.5f, 0.0f, 1.f}, {0.5f, -0.5f, 0.0f, 1.f}, {0.5f, 0.5f, 0.0f, 1.f}, {-0.5f, 0.5f, 0.0f, 1.f}};
@@ -87,7 +87,7 @@ namespace MRG
 		uint32_t m_quadIndexCount = 0;
 		QuadVertex* m_qvbBase = nullptr;
 		QuadVertex* m_qvbPtr = nullptr;
-		std::array<Ref<Texture2D>, m_maxTextureSlots> m_textureSlots;
+		std::array<Ref<Texture2D>, maxTextureSlots> m_textureSlots;
 		std::size_t m_textureSlotindex = 1;
 	};
 

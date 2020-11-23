@@ -12,15 +12,15 @@ namespace MRG::OpenGL
 
 		m_quadVertexArray = VertexArray::create();
 
-		m_quadVertexBuffer = VertexBuffer::create(m_maxVertices * sizeof(QuadVertex));
+		m_quadVertexBuffer = VertexBuffer::create(maxVertices * sizeof(QuadVertex));
 		m_quadVertexBuffer->layout = QuadVertex::layout;
 		m_quadVertexArray->addVertexBuffer(m_quadVertexBuffer);
 
-		m_qvbBase = new QuadVertex[m_maxVertices];
-		uint32_t* quadIndices = new uint32_t[m_maxIndices];
+		m_qvbBase = new QuadVertex[maxVertices];
+		uint32_t* quadIndices = new uint32_t[maxIndices];
 
 		uint32_t offset = 0;
-		for (uint32_t i = 0; i < m_maxIndices; i += 6) {
+		for (uint32_t i = 0; i < maxIndices; i += 6) {
 			quadIndices[i + 0] = offset + 0;
 			quadIndices[i + 1] = offset + 1;
 			quadIndices[i + 2] = offset + 2;
@@ -32,7 +32,7 @@ namespace MRG::OpenGL
 			offset += 4;
 		}
 
-		Ref<IndexBuffer> quadIB = IndexBuffer::create(quadIndices, m_maxIndices);
+		Ref<IndexBuffer> quadIB = IndexBuffer::create(quadIndices, maxIndices);
 		m_quadVertexArray->setIndexBuffer(quadIB);
 		delete[] quadIndices;
 
@@ -40,12 +40,12 @@ namespace MRG::OpenGL
 		auto whiteTextureData = 0xffffffff;
 		m_whiteTexture->setData(&whiteTextureData, sizeof(whiteTextureData));
 
-		int32_t samplers[m_maxTextureSlots];
-		for (uint32_t i = 0; i < m_maxTextureSlots; ++i) samplers[i] = i;
+		int32_t samplers[maxTextureSlots];
+		for (uint32_t i = 0; i < maxTextureSlots; ++i) samplers[i] = i;
 
 		m_textureShader = Shader::create("resources/shaders/texture");
 		m_textureShader->bind();
-		m_textureShader->upload("u_textures", samplers, m_maxTextureSlots);
+		m_textureShader->upload("u_textures", samplers, maxTextureSlots);
 
 		m_textureSlots[0] = m_whiteTexture;
 	}
@@ -108,7 +108,7 @@ namespace MRG::OpenGL
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
 
-		if (m_quadIndexCount >= m_maxIndices)
+		if (m_quadIndexCount >= maxIndices)
 			flushAndReset();
 
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
@@ -131,7 +131,7 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (m_quadIndexCount >= m_maxIndices)
+		if (m_quadIndexCount >= maxIndices)
 			flushAndReset();
 
 		float texIndex = 0.f;
@@ -143,7 +143,7 @@ namespace MRG::OpenGL
 		}
 
 		if (texIndex == 0.f) {
-			if (m_textureSlotindex >= m_maxTextureSlots)
+			if (m_textureSlotindex >= maxTextureSlots)
 				flushAndReset();
 
 			texIndex = static_cast<float>(m_textureSlotindex);
@@ -173,7 +173,7 @@ namespace MRG::OpenGL
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
 
-		if (m_quadIndexCount >= m_maxIndices)
+		if (m_quadIndexCount >= maxIndices)
 			flushAndReset();
 
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
@@ -201,7 +201,7 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (m_quadIndexCount >= m_maxIndices)
+		if (m_quadIndexCount >= maxIndices)
 			flushAndReset();
 
 		float texIndex = 0.f;
@@ -213,7 +213,7 @@ namespace MRG::OpenGL
 		}
 
 		if (texIndex == 0.f) {
-			if (m_textureSlotindex >= m_maxTextureSlots)
+			if (m_textureSlotindex >= maxTextureSlots)
 				flushAndReset();
 
 			texIndex = static_cast<float>(m_textureSlotindex);

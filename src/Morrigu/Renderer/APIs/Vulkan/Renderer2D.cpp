@@ -621,15 +621,15 @@ namespace MRG::Vulkan
 
 		m_vertexArray = createRef<VertexArray>();
 
-		const auto vertexBuffer = createRef<VertexBuffer>(static_cast<uint32_t>(m_maxVertices * sizeof(QuadVertex)));
+		const auto vertexBuffer = createRef<VertexBuffer>(static_cast<uint32_t>(maxVertices * sizeof(QuadVertex)));
 		vertexBuffer->layout = QuadVertex::layout;
 		m_vertexArray->addVertexBuffer(vertexBuffer);
 
-		m_qvbBase = new QuadVertex[m_maxVertices];
-		uint32_t* quadIndices = new uint32_t[m_maxIndices];
+		m_qvbBase = new QuadVertex[maxVertices];
+		uint32_t* quadIndices = new uint32_t[maxIndices];
 
 		uint32_t offset = 0;
-		for (uint32_t i = 0; i < m_maxIndices; i += 6) {
+		for (uint32_t i = 0; i < maxIndices; i += 6) {
 			quadIndices[i + 0] = offset + 0;
 			quadIndices[i + 1] = offset + 1;
 			quadIndices[i + 2] = offset + 2;
@@ -641,7 +641,7 @@ namespace MRG::Vulkan
 			offset += 4;
 		}
 
-		const auto indexBuffer = createRef<IndexBuffer>(quadIndices, Generic2DRenderer::m_maxIndices);
+		const auto indexBuffer = createRef<IndexBuffer>(quadIndices, maxIndices);
 		m_vertexArray->setIndexBuffer(indexBuffer);
 		delete[] quadIndices;
 
@@ -651,9 +651,9 @@ namespace MRG::Vulkan
 
 		m_textureSlots[0] = m_whiteTexture;
 
-		m_data->descriptorSetLayout = createDescriptorSetLayout(m_data->device, m_maxTextureSlots);
+		m_data->descriptorSetLayout = createDescriptorSetLayout(m_data->device, maxTextureSlots);
 
-		auto [pool, descriptors] = createDescriptorPool(m_data, m_maxTextureSlots);
+		auto [pool, descriptors] = createDescriptorPool(m_data, maxTextureSlots);
 		m_descriptorPool = pool;
 		m_descriptorSets = descriptors;
 
@@ -959,7 +959,7 @@ namespace MRG::Vulkan
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
 
-		if (m_quadIndexCount >= m_maxIndices)
+		if (m_quadIndexCount >= maxIndices)
 			flushAndReset();
 
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
@@ -982,7 +982,7 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (m_quadIndexCount >= m_maxIndices)
+		if (m_quadIndexCount >= maxIndices)
 			flushAndReset();
 
 		float texIndex = 0.f;
@@ -994,7 +994,7 @@ namespace MRG::Vulkan
 		}
 
 		if (texIndex == 0.f) {
-			if (m_textureSlotindex >= m_maxTextureSlots)
+			if (m_textureSlotindex >= maxTextureSlots)
 				flushAndReset();
 
 			texIndex = static_cast<float>(m_textureSlotindex);
@@ -1024,7 +1024,7 @@ namespace MRG::Vulkan
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
 
-		if (m_quadIndexCount >= m_maxIndices)
+		if (m_quadIndexCount >= maxIndices)
 			flushAndReset();
 
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
@@ -1052,7 +1052,7 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (m_quadIndexCount >= m_maxIndices)
+		if (m_quadIndexCount >= maxIndices)
 			flushAndReset();
 
 		float texIndex = 0.f;
@@ -1064,7 +1064,7 @@ namespace MRG::Vulkan
 		}
 
 		if (texIndex == 0.f) {
-			if (m_textureSlotindex >= m_maxTextureSlots)
+			if (m_textureSlotindex >= maxTextureSlots)
 				flushAndReset();
 
 			texIndex = static_cast<float>(m_textureSlotindex);
@@ -1230,7 +1230,7 @@ namespace MRG::Vulkan
 		                     m_data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created");
 
-		auto [pool, descriptors] = createDescriptorPool(m_data, m_maxTextureSlots);
+		auto [pool, descriptors] = createDescriptorPool(m_data, maxTextureSlots);
 		m_descriptorPool = pool;
 		m_descriptorSets = descriptors;
 
@@ -1241,8 +1241,8 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
-		VkDescriptorImageInfo imageInfos[m_maxTextureSlots]{};
-		for (uint32_t i = 0; i < m_maxTextureSlots; ++i) {
+		VkDescriptorImageInfo imageInfos[maxTextureSlots]{};
+		for (uint32_t i = 0; i < maxTextureSlots; ++i) {
 			imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			imageInfos[i].imageView = (i < m_textureSlotindex)
 			                            ? std::static_pointer_cast<Vulkan::Texture2D>(m_textureSlots[i])->getImageView()
@@ -1258,7 +1258,7 @@ namespace MRG::Vulkan
 		descriptorWrites[0].dstBinding = 1;
 		descriptorWrites[0].dstArrayElement = 0;
 		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[0].descriptorCount = m_maxTextureSlots;
+		descriptorWrites[0].descriptorCount = maxTextureSlots;
 		descriptorWrites[0].pImageInfo = imageInfos;
 
 		vkUpdateDescriptorSets(m_data->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
