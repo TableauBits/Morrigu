@@ -18,7 +18,7 @@
     #define DISABLE_WARNING_NONSTANDARD_EXTENSION   // no warning equivalent ?
     #define DISABLE_WARNING_CONSTEXPR_IF            // no warning equivalent ?
     #define DISABLE_WARNING_SHADOW                  DISABLE_WARNING(-Wshadow)
-    #define DISABLE_WARNING_GREATER_SIZE_CAST
+    #define DISABLE_WARNING_GREATER_SIZE_CAST       DISABLE_WARNING(-Wint-to-void-pointer-cast)
     
 #else
     // please define the warning supression macros specific to you compiler here
