@@ -5,6 +5,7 @@
 #include "Renderer/Renderer2D.h"
 
 #include <GLFW/glfw3.h>
+#include <Vendor/ImGui/bindings/imgui_impl_vulkan.h>
 #include <stb_image.h>
 
 namespace MRG::Vulkan
@@ -107,6 +108,15 @@ namespace MRG::Vulkan
 		vkFreeMemory(windowData->device, m_memoryHandle, nullptr);
 
 		m_isDestroyed = true;
+	}
+
+	ImTextureID Texture2D::getImTextureID()
+	{
+		if (m_ImTextureID == nullptr) {
+			m_ImTextureID = ImGui_ImplVulkan_AddTexture(m_sampler, m_imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+
+		return m_ImTextureID;
 	}
 
 	void Texture2D::setData(void* pixels, uint32_t size)

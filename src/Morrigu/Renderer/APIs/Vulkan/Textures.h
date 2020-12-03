@@ -17,6 +17,7 @@ namespace MRG::Vulkan
 
 		[[nodiscard]] uint32_t getWidth() const override { return m_width; };
 		[[nodiscard]] uint32_t getHeight() const override { return m_height; };
+		[[nodiscard]] ImTextureID getImTextureID() override;
 
 		bool operator==(const Texture& other) const override { return m_imageHandle == ((Vulkan::Texture2D&)other).m_imageHandle; }
 
@@ -28,6 +29,8 @@ namespace MRG::Vulkan
 		[[nodiscard]] VkSampler getSampler() const { return m_sampler; };
 
 	private:
+		ImTextureID m_ImTextureID = nullptr;
+
 		VkImage m_imageHandle;
 		VkDeviceMemory m_memoryHandle;
 		VkImageView m_imageView;

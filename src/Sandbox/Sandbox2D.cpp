@@ -57,19 +57,23 @@ void Sandbox2D::onImGuiRender()
 {
 	MRG_PROFILE_FUNCTION();
 
-	const auto fps = 1 / m_frameTime;
-	const auto color = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
-	const auto stats = MRG::Renderer2D::getStats();
+	// const auto fps = 1 / m_frameTime;
+	// const auto color = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
+	// const auto stats = MRG::Renderer2D::getStats();
 
-	ImGui::Begin("Debug");
-	ImGui::Text("Renderer2D stats:");
-	ImGui::Text("Draw calls: %d", stats.drawCalls);
-	ImGui::Text("Quads: %d", stats.quadCount);
-	ImGui::Text("Vertices: %d", stats.getVertexCount());
-	ImGui::Text("Indices: %d", stats.getIndexCount());
-	ImGui::Separator();
-	ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
-	ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
+	// ImGui::Begin("Debug");
+	// ImGui::Text("Renderer2D stats:");
+	// ImGui::Text("Draw calls: %d", stats.drawCalls);
+	// ImGui::Text("Quads: %d", stats.quadCount);
+	// ImGui::Text("Vertices: %d", stats.getVertexCount());
+	// ImGui::Text("Indices: %d", stats.getIndexCount());
+	// ImGui::Separator();
+	// ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
+	// ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
+	// ImGui::End();
+
+	ImGui::Begin("TexTest");
+	ImGui::Image(m_character->getImTextureID(), {256, 256});
 	ImGui::End();
 }
 

@@ -49,6 +49,22 @@ namespace MRG
 		}
 	}
 
+	void Application::pushLayer(Layer* newLayer)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_layerStack.pushLayer(newLayer);
+	}
+
+	void Application::pushOverlay(Layer* newOverlay)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_layerStack.pushOverlay(newOverlay);
+	}
+
+	void Application::close() { m_running = false; }
+
 	void Application::run()
 	{
 		MRG_PROFILE_FUNCTION();
@@ -79,20 +95,6 @@ namespace MRG
 
 			while (!Renderer2D::endFrame()) {}
 		}
-	}
-
-	void Application::pushLayer(Layer* newLayer)
-	{
-		MRG_PROFILE_FUNCTION();
-
-		m_layerStack.pushLayer(newLayer);
-	}
-
-	void Application::pushOverlay(Layer* newOverlay)
-	{
-		MRG_PROFILE_FUNCTION();
-
-		m_layerStack.pushOverlay(newOverlay);
 	}
 
 	bool Application::onWindowClose([[maybe_unused]] WindowCloseEvent& event)

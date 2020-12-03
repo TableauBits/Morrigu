@@ -7,6 +7,7 @@
     #define DISABLE_WARNING_NONSTANDARD_EXTENSION   DISABLE_WARNING(4201)
     #define DISABLE_WARNING_CONSTEXPR_IF            DISABLE_WARNING(4127)
     #define DISABLE_WARNING_SHADOW                  // no warning equivalent
+    #define DISABLE_WARNING_GREATER_SIZE_CAST       DISABLE_WARNING(4312)
     
 #elif defined(__GNUC__) || defined(__clang__)
     #define DO_PRAGMA(X) _Pragma(#X)
@@ -17,6 +18,7 @@
     #define DISABLE_WARNING_NONSTANDARD_EXTENSION   // no warning equivalent ?
     #define DISABLE_WARNING_CONSTEXPR_IF            // no warning equivalent ?
     #define DISABLE_WARNING_SHADOW                  DISABLE_WARNING(-Wshadow)
+    #define DISABLE_WARNING_GREATER_SIZE_CAST
     
 #else
     // please define the warning supression macros specific to you compiler here
@@ -27,6 +29,7 @@
     #define DISABLE_WARNING_NONSTANDARD_EXTENSION
     #define DISABLE_WARNING_CONSTEXPR_IF
     #define DISABLE_WARNING_SHADOW
+    #define DISABLE_WARNING_GREATER_SIZE_CAST
  
 #endif
 // clang-format on

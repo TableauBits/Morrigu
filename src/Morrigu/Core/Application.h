@@ -22,6 +22,8 @@ namespace MRG
 		void pushLayer(Layer* newLayer);
 		void pushOverlay(Layer* newOverlay);
 
+		void close();
+
 		[[nodiscard]] Window& getWindow() const { return *m_window; }
 		[[nodiscard]] static Application& get() { return *s_instance; }
 
