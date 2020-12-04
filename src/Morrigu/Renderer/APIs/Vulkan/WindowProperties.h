@@ -51,7 +51,7 @@ namespace MRG::Vulkan
 	class WindowProperties : public MRG::WindowProperties
 	{
 	public:
-		WindowProperties(const std::string& newTitle, unsigned int newWidth, unsigned int newHeight, bool newVSync)
+		WindowProperties(const char* newTitle, unsigned int newWidth, unsigned int newHeight, bool newVSync)
 		    : MRG::WindowProperties{newTitle, newWidth, newHeight, newVSync}
 		{}
 

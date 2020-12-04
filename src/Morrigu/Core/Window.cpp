@@ -39,7 +39,7 @@ namespace MRG
 			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-			handle = glfwCreateWindow(props->width, props->height, props->title.c_str(), nullptr, nullptr);
+			handle = glfwCreateWindow(props->width, props->height, props->title, nullptr, nullptr);
 			++Window::s_GLFWWindowCount;
 		}
 

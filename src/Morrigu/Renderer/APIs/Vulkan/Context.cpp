@@ -413,7 +413,7 @@ namespace MRG::Vulkan
 
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
-			data->instance = createInstance(data->title.c_str());
+			data->instance = createInstance(data->title);
 			MRG_ENGINE_INFO("Vulkan instance successfully created");
 
 			if (enableValidation)
