@@ -134,6 +134,13 @@ namespace MRG
 		s_renderer->drawRotatedQuad(position, size, rotation, texture, tilingFactor, tintColor);
 	}
 
+	void Renderer2D::setRenderTarget(Ref<Texture2D> renderTarget)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->setRenderTarget(renderTarget);
+	}
+
 	void Renderer2D::setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 	{
 		MRG_PROFILE_FUNCTION();
@@ -146,6 +153,13 @@ namespace MRG
 		MRG_PROFILE_FUNCTION();
 
 		s_renderer->setClearColor(color);
+	}
+
+	void Renderer2D::clear()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->clear();
 	}
 
 	void Renderer2D::resetStats()

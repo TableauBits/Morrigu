@@ -18,6 +18,8 @@ namespace MRG::Vulkan
 		[[nodiscard]] uint32_t getWidth() const override { return m_width; };
 		[[nodiscard]] uint32_t getHeight() const override { return m_height; };
 		[[nodiscard]] ImTextureID getImTextureID() override;
+		[[nodiscard]] VkImage getHandle() { return m_imageHandle; }
+		[[nodiscard]] VkFormat getFormat() { return VK_FORMAT_R8G8B8A8_UNORM; }
 
 		bool operator==(const Texture& other) const override { return m_imageHandle == ((Vulkan::Texture2D&)other).m_imageHandle; }
 

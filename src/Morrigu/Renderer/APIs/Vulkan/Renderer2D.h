@@ -49,13 +49,13 @@ namespace MRG::Vulkan
 		                     float tilingFactor = 1.0f,
 		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
+		void setRenderTarget(Ref<MRG::Texture2D> renderTarget) override;
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
 		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
+		void clear() override;
 
 		void resetStats() override { m_stats = {}; };
 		RenderingStatistics getStats() const override { return m_stats; };
-
-		void clear(const glm::vec4& color);  // TODO: OVERRIDE
 
 	private:
 		void cleanupSwapChain();
@@ -78,6 +78,7 @@ namespace MRG::Vulkan
 		PushConstants m_modelMatrix;
 
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
+		Ref<Texture2D> m_renderTarget;
 
 		RenderingStatistics m_stats;
 	};

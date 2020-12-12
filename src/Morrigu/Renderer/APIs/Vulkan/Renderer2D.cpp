@@ -122,7 +122,7 @@ namespace
 		createInfo.imageColorSpace = surfaceFormat.colorSpace;
 		createInfo.imageExtent = extent;
 		createInfo.imageArrayLayers = 1;
-		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		if (indices.graphicsFamily != indices.presentFamily) {
 			// The queues are not the same!
 			createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -733,6 +733,10 @@ namespace MRG::Vulkan
 				texture->destroy();
 		}
 
+		if (m_renderTarget != nullptr) {
+			m_renderTarget->destroy();
+		}
+
 		vkDestroyCommandPool(m_data->device, m_data->commandPool, nullptr);
 
 		delete[] m_qvbBase;
@@ -765,7 +769,7 @@ namespace MRG::Vulkan
 		}
 		m_imagesInFlight[m_imageIndex] = m_inFlightFences[m_data->currentFrame];
 
-		clear(m_clearColor);
+		// clear();
 
 		return true;
 	}
@@ -946,6 +950,121 @@ namespace MRG::Vulkan
 
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
 
+		if (m_renderTarget != nullptr) {
+			VkPipelineStageFlags sourceStage1, destinationStage1;
+			VkImageMemoryBarrier barrier1{};
+			barrier1.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier1.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			barrier1.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			barrier1.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier1.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier1.image = m_data->swapChain.images[m_imageIndex];
+			barrier1.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			barrier1.subresourceRange.baseMipLevel = 0;
+			barrier1.subresourceRange.levelCount = 1;
+			barrier1.subresourceRange.baseArrayLayer = 0;
+			barrier1.subresourceRange.layerCount = 1;
+			barrier1.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			barrier1.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+			sourceStage1 = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			destinationStage1 = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+			vkCmdPipelineBarrier(
+			  m_data->commandBuffers[m_imageIndex][1], sourceStage1, destinationStage1, 0, 0, nullptr, 0, nullptr, 1, &barrier1);
+
+			VkPipelineStageFlags sourceStage2, destinationStage2;
+			VkImageMemoryBarrier barrier2{};
+			barrier2.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier2.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			barrier2.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier2.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier2.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier2.image = m_renderTarget->getHandle();
+			barrier2.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			barrier2.subresourceRange.baseMipLevel = 0;
+			barrier2.subresourceRange.levelCount = 1;
+			barrier2.subresourceRange.baseArrayLayer = 0;
+			barrier2.subresourceRange.layerCount = 1;
+			barrier2.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			barrier2.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+			sourceStage2 = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			destinationStage2 = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+			vkCmdPipelineBarrier(
+			  m_data->commandBuffers[m_imageIndex][1], sourceStage2, destinationStage2, 0, 0, nullptr, 0, nullptr, 1, &barrier2);
+
+			VkImageBlit region{};
+			region.srcOffsets[0] = {0, 0, 0};
+			region.srcOffsets[1] = {
+			  static_cast<int32_t>(m_data->swapChain.extent.width), static_cast<int32_t>(m_data->swapChain.extent.height), 1};
+			region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			region.srcSubresource.mipLevel = 0;
+			region.srcSubresource.baseArrayLayer = 0;
+			region.srcSubresource.layerCount = 1;
+
+			region.dstOffsets[0] = {0, 0, 0};
+			region.dstOffsets[1] = {static_cast<int32_t>(m_renderTarget->getWidth()), static_cast<int32_t>(m_renderTarget->getHeight()), 1};
+			region.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			region.dstSubresource.mipLevel = 0;
+			region.dstSubresource.baseArrayLayer = 0;
+			region.dstSubresource.layerCount = 1;
+
+			vkCmdBlitImage(m_data->commandBuffers[m_imageIndex][1],
+			               m_data->swapChain.images[m_imageIndex],
+			               VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			               m_renderTarget->getHandle(),
+			               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			               1,
+			               &region,
+			               VK_FILTER_LINEAR);
+
+			VkPipelineStageFlags sourceStage3, destinationStage3;
+			VkImageMemoryBarrier barrier3{};
+			barrier3.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier3.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			barrier3.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			barrier3.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier3.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier3.image = m_data->swapChain.images[m_imageIndex];
+			barrier3.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			barrier3.subresourceRange.baseMipLevel = 0;
+			barrier3.subresourceRange.levelCount = 1;
+			barrier3.subresourceRange.baseArrayLayer = 0;
+			barrier3.subresourceRange.layerCount = 1;
+			barrier3.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			barrier3.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+			sourceStage3 = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			destinationStage3 = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+			vkCmdPipelineBarrier(
+			  m_data->commandBuffers[m_imageIndex][1], sourceStage3, destinationStage3, 0, 0, nullptr, 0, nullptr, 1, &barrier3);
+
+			VkPipelineStageFlags sourceStage4, destinationStage4;
+			VkImageMemoryBarrier barrier4{};
+			barrier4.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier4.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			barrier4.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			barrier4.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier4.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier4.image = m_renderTarget->getHandle();
+			barrier4.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			barrier4.subresourceRange.baseMipLevel = 0;
+			barrier4.subresourceRange.levelCount = 1;
+			barrier4.subresourceRange.baseArrayLayer = 0;
+			barrier4.subresourceRange.layerCount = 1;
+			barrier4.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier4.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+			sourceStage4 = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			destinationStage4 = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+			vkCmdPipelineBarrier(
+			  m_data->commandBuffers[m_imageIndex][1], sourceStage4, destinationStage4, 0, 0, nullptr, 0, nullptr, 1, &barrier4);
+		}
+
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][1]), "failed to record command buffer!");
 
 		MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
@@ -1088,7 +1207,14 @@ namespace MRG::Vulkan
 		++m_stats.quadCount;
 	}
 
-	void Renderer2D::clear(const glm::vec4& color)
+	void Renderer2D::setRenderTarget(Ref<MRG::Texture2D> renderTarget)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_renderTarget = std::static_pointer_cast<Texture2D>(renderTarget);
+	}
+
+	void Renderer2D::clear()
 	{
 		MRG_PROFILE_FUNCTION();
 
@@ -1104,7 +1230,7 @@ namespace MRG::Vulkan
 		               "failed to begin recording command bufer!");
 
 		std::array<VkClearValue, 2> clearColors{};
-		clearColors[0].color = {{color.r, color.g, color.b, color.a}};
+		clearColors[0].color = {{m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a}};
 		clearColors[1].depthStencil = {1.f, 0};
 
 		VkRenderPassBeginInfo renderPassInfo{};

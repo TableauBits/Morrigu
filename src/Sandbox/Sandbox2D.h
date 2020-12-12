@@ -20,4 +20,7 @@ private:
 
 	glm::vec4 m_color = {0.1f, 0.1f, 0.1f, 1.0f};
 	MRG::Timestep m_frameTime;
+
+	// temp
+	MRG::Ref<MRG::Texture2D> m_renderTarget;
 };
