@@ -216,7 +216,7 @@ namespace
 				return format;
 		}
 
-		MRG_ASSERT(false, "failed to find a supported format!");
+		MRG_CORE_ASSERT(false, "failed to find a supported format!");
 		return VK_FORMAT_MAX_ENUM;
 	}
 
@@ -482,7 +482,7 @@ namespace
 		return pipelines;
 	}
 
-	[[nodiscard]] std::vector<std::array<VkFramebuffer, 3>> createframeBuffers(const VkDevice device,
+	[[nodiscard]] std::vector<std::array<VkFramebuffer, 3>> createFramebuffers(const VkDevice device,
 	                                                                           const std::vector<VkImageView>& swapChainImagesViews,
 	                                                                           const VkImageView depthImageView,
 	                                                                           const std::array<VkRenderPass, 3>& renderPasses,
@@ -545,9 +545,9 @@ namespace
 		return commandBuffers;
 	}
 
-	[[nodiscard]] MRG::Vulkan::DepthBuffer createDepthBuffer(MRG::Vulkan::WindowProperties* data)
+	[[nodiscard]] MRG::Vulkan::LightVulkanImage createDepthBuffer(MRG::Vulkan::WindowProperties* data)
 	{
-		MRG::Vulkan::DepthBuffer depthBuffer;
+		MRG::Vulkan::LightVulkanImage depthBuffer;
 
 		const auto depthFormat = findDepthFormat(data->physicalDevice);
 
@@ -559,9 +559,9 @@ namespace
 		                         VK_IMAGE_TILING_OPTIMAL,
 		                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 		                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		                         depthBuffer.depthImage,
+		                         depthBuffer.handle,
 		                         depthBuffer.memoryHandle);
-		depthBuffer.imageView = MRG::Vulkan::createImageView(data->device, depthBuffer.depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+		depthBuffer.imageView = MRG::Vulkan::createImageView(data->device, depthBuffer.handle, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
 		return depthBuffer;
 	}
@@ -681,7 +681,7 @@ namespace MRG::Vulkan
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 
 		m_data->swapChain.frameBuffers =
-		  createframeBuffers(m_data->device,
+		  createFramebuffers(m_data->device,
 		                     m_data->swapChain.imageViews,
 		                     m_data->swapChain.depthBuffer.imageView,
 		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiPipeline.renderPass},
@@ -1273,7 +1273,7 @@ namespace MRG::Vulkan
 		MRG_PROFILE_FUNCTION();
 
 		vkDestroyImageView(m_data->device, m_data->swapChain.depthBuffer.imageView, nullptr);
-		vkDestroyImage(m_data->device, m_data->swapChain.depthBuffer.depthImage, nullptr);
+		vkDestroyImage(m_data->device, m_data->swapChain.depthBuffer.handle, nullptr);
 		vkFreeMemory(m_data->device, m_data->swapChain.depthBuffer.memoryHandle, nullptr);
 
 		for (auto framebuffers : m_data->swapChain.frameBuffers) {
@@ -1349,7 +1349,7 @@ namespace MRG::Vulkan
 
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created");
 		m_data->swapChain.frameBuffers =
-		  createframeBuffers(m_data->device,
+		  createFramebuffers(m_data->device,
 		                     m_data->swapChain.imageViews,
 		                     m_data->swapChain.depthBuffer.imageView,
 		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiPipeline.renderPass},

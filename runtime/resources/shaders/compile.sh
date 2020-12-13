@@ -16,3 +16,5 @@ for D in *; do
         "${VULKAN_SDK}/bin/glslc" "${D}/vk.frag" -o "${D}/frag.spv"
     fi
 done
+
+echo "Script is done. If no output was given before this line, then compilation was successful."

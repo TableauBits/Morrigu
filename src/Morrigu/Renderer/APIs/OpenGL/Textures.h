@@ -21,6 +21,7 @@ namespace MRG::OpenGL
 
 		[[nodiscard]] uint32_t getWidth() const override { return m_width; };
 		[[nodiscard]] uint32_t getHeight() const override { return m_height; };
+		[[nodiscard]] uint32_t getHandle() const { return m_rendererID; }
 		[[nodiscard]] ImTextureID getImTextureID() override
 		{
 			DISABLE_WARNING_PUSH;

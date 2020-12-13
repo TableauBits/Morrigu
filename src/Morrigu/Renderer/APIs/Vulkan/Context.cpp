@@ -174,7 +174,7 @@ namespace
 			}
 			if (!isSupported) {
 				MRG_ENGINE_ERROR("\t{} (NO VERSION FOUND) [NOT SUPPORTED]", requiredExtensions[i]);
-				MRG_ASSERT(false, "Required extension not supported by hardware!");
+				MRG_CORE_ASSERT(false, "Required extension not supported by hardware!");
 			}
 		}
 		MRG_ENGINE_INFO("All required extensions have been found.");
