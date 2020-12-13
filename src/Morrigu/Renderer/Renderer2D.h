@@ -3,6 +3,7 @@
 
 #include "Core/GLMIncludeHelper.h"
 #include "Renderer/Buffers.h"
+#include "Renderer/Framebuffer.h"
 #include "Renderer/OrthoCamera.h"
 #include "Renderer/Textures.h"
 
@@ -67,7 +68,7 @@ namespace MRG
 		                             float tilingFactor = 1.0f,
 		                             const glm::vec4& tintColor = glm::vec4(1.0f)) = 0;
 
-		virtual void setRenderTarget(Ref<Texture2D> renderTarget) = 0;
+		virtual void setRenderTarget(Ref<Framebuffer> renderTarget) = 0;
 		virtual void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 		virtual void setClearColor(const glm::vec4& color) = 0;
 		virtual void clear() = 0;
@@ -140,7 +141,7 @@ namespace MRG
 		                            float tilingFactor = 1.0f,
 		                            const glm::vec4& tintColor = glm::vec4(1.0f));
 
-		static void setRenderTarget(Ref<Texture2D> renderTarget);
+		static void setRenderTarget(Ref<Framebuffer> renderTarget);
 		static void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 		static void setClearColor(const glm::vec4& color);
 		static void clear();

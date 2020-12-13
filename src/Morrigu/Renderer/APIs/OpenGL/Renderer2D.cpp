@@ -127,7 +127,7 @@ namespace MRG::OpenGL
 	}
 
 	void Renderer2D::drawQuad(
-	  const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	  const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		MRG_PROFILE_FUNCTION();
 
@@ -195,7 +195,7 @@ namespace MRG::OpenGL
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
 	                                 const glm::vec2& size,
 	                                 float rotation,
-	                                 const Ref<Texture2D>& texture,
+	                                 const Ref<MRG::Texture2D>& texture,
 	                                 float tilingFactor,
 	                                 const glm::vec4& tintColor)
 	{
@@ -236,6 +236,8 @@ namespace MRG::OpenGL
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
 	}
+
+	void Renderer2D::setRenderTarget(Ref<MRG::Framebuffer> renderTarget) { std::static_pointer_cast<Framebuffer>(renderTarget)->bind(); }
 
 	void Renderer2D::resetStats() { m_stats = {}; }
 

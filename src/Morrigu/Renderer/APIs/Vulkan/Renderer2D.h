@@ -3,6 +3,7 @@
 
 #include "Renderer/Renderer2D.h"
 
+#include "Renderer/APIs/Vulkan/Framebuffer.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/APIs/Vulkan/Textures.h"
@@ -49,7 +50,7 @@ namespace MRG::Vulkan
 		                     float tilingFactor = 1.0f,
 		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
-		void setRenderTarget(Ref<MRG::Texture2D> renderTarget) override;
+		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
 		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
 		void clear() override;
@@ -78,7 +79,7 @@ namespace MRG::Vulkan
 		PushConstants m_modelMatrix;
 
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
-		Ref<Texture2D> m_renderTarget;
+		Ref<Framebuffer> m_renderTarget;
 
 		RenderingStatistics m_stats;
 	};

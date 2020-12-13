@@ -9,7 +9,7 @@ void Sandbox2D::onAttach()
 	m_checkerboard = MRG::Texture2D::create("resources/textures/Checkerboard.png");
 	m_camera.movementSpeed = 2.f;
 
-	m_renderTarget = MRG::Texture2D::create(1280, 720);
+	m_renderTarget = MRG::Framebuffer::create({1280, 720});
 	MRG::Renderer2D::setRenderTarget(m_renderTarget);
 }
 
@@ -129,7 +129,7 @@ void Sandbox2D::onImGuiRender()
 	ImGui::Separator();
 	ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
 	ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
-	ImGui::Image(m_renderTarget->getImTextureID(), ImVec2{1280, 720});
+	ImGui::Image(m_renderTarget->getImTextureID(), ImVec2{1280, 720}, {0, 1}, {1, 0});
 	ImGui::End();
 
 	// ImGui::End();

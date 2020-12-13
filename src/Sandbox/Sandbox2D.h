@@ -22,5 +22,5 @@ private:
 	MRG::Timestep m_frameTime;
 
 	// temp
-	MRG::Ref<MRG::Texture2D> m_renderTarget;
+	MRG::Ref<MRG::Framebuffer> m_renderTarget;
 };

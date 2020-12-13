@@ -134,7 +134,7 @@ namespace MRG
 		s_renderer->drawRotatedQuad(position, size, rotation, texture, tilingFactor, tintColor);
 	}
 
-	void Renderer2D::setRenderTarget(Ref<Texture2D> renderTarget)
+	void Renderer2D::setRenderTarget(Ref<Framebuffer> renderTarget)
 	{
 		MRG_PROFILE_FUNCTION();
 
