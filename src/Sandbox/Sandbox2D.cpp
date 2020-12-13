@@ -129,7 +129,7 @@ void Sandbox2D::onImGuiRender()
 	ImGui::Separator();
 	ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
 	ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
-	ImGui::Image(m_renderTarget->getImTextureID(), ImVec2{1280, 720}, {0, 1}, {1, 0});
+	ImGui::Image(m_renderTarget->getImTextureID(), ImVec2{1280, 720}, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
 	ImGui::End();
 
 	// ImGui::End();

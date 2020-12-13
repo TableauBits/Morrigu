@@ -27,12 +27,14 @@ namespace MRG::OpenGL
 			return (ImTextureID)m_colorAttachment;
 			DISABLE_WARNING_POP;
 		}
+		[[nodiscard]] const std::array<ImVec2, 2> getUVMapping() const override { return m_UVMapping; }
 
 		[[nodiscard]] virtual const FramebufferSpecification& getSpecification() const override { return m_specification; }
 		[[nodiscard]] uint32_t getHandle() { return m_rendererID; }
 
 	private:
 		uint32_t m_rendererID;
+		std::array<ImVec2, 2> m_UVMapping = {ImVec2{0, 1}, ImVec2{1, 0}};
 		uint32_t m_colorAttachment, m_depthAttachment;
 	};
 

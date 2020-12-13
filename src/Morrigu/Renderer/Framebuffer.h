@@ -5,6 +5,7 @@
 
 #include <imgui.h>
 
+#include <array>
 #include <cstdint>
 
 namespace MRG
@@ -25,12 +26,14 @@ namespace MRG
 
 		[[nodiscard]] virtual ImTextureID getImTextureID() = 0;
 		[[nodiscard]] virtual const FramebufferSpecification& getSpecification() const = 0;
+		
+		[[nodiscard]] virtual const std::array<ImVec2, 2> getUVMapping() const = 0;
 
 		[[nodiscard]] static Ref<Framebuffer> create(const FramebufferSpecification& spec);
 
 	protected:
 		FramebufferSpecification m_specification;
-		bool m_isDestroyed;
+		bool m_isDestroyed = false;
 	};
 
 }  // namespace MRG

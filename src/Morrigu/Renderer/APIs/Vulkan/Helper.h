@@ -53,8 +53,8 @@ namespace MRG::Vulkan
 	                 VkMemoryPropertyFlags properties,
 	                 VkImage& image,
 	                 VkDeviceMemory& imageMemory);
-	void transitionImageLayout(
-	  const MRG::Vulkan::WindowProperties* data, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+	void transitionImageLayout(const MRG::Vulkan::WindowProperties* data, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+	void transitionImageLayoutInline(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 	void copyBufferToImage(const MRG::Vulkan::WindowProperties* data, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
 	[[nodiscard]] VkImageView createImageView(const VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);

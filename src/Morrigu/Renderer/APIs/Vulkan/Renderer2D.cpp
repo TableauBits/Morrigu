@@ -232,7 +232,7 @@ namespace
 	createRenderPasses(const VkPhysicalDevice physicalDevice, VkDevice device, VkFormat swapChainFormat)
 	{
 		/// We need 3 render passes:
-		// - A clearing render pass, meant to be used once each frame, at the beginning;
+		// - A clearing render pass
 		// - A rendering render pass, that will be used once per scene (or batch), and will flush a batch;
 		// - An ImGui render pass to ensure that it's drawn last.
 		std::array<VkRenderPass, 3> renderpasses{};
@@ -244,7 +244,7 @@ namespace
 		colorAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		colorAttachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		colorAttachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		colorAttachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 		colorAttachments[1].format = swapChainFormat;
@@ -275,7 +275,7 @@ namespace
 		depthAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		depthAttachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		depthAttachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachments[0].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		depthAttachments[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		depthAttachments[1].format = format;
@@ -447,35 +447,13 @@ namespace
 		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[0]),
 		               "failed to create graphics pipeline!");
 
-		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipelineInfo.stageCount = 2;
-		pipelineInfo.pStages = shaderStages;
-		pipelineInfo.pVertexInputState = &vertexInputInfo;
-		pipelineInfo.pInputAssemblyState = &inputAssembly;
-		pipelineInfo.pViewportState = &viewportState;
-		pipelineInfo.pRasterizationState = &rasterizer;
-		pipelineInfo.pMultisampleState = &multisampling;
-		pipelineInfo.pDepthStencilState = &depthStencil;
-		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.layout = data->renderingPipeline.layout;
 		pipelineInfo.renderPass = data->renderingPipeline.renderPass;
-		pipelineInfo.subpass = 0;
 		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[1]),
 		               "failed to create graphics pipeline!");
 
-		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipelineInfo.stageCount = 2;
-		pipelineInfo.pStages = shaderStages;
-		pipelineInfo.pVertexInputState = &vertexInputInfo;
-		pipelineInfo.pInputAssemblyState = &inputAssembly;
-		pipelineInfo.pViewportState = &viewportState;
-		pipelineInfo.pRasterizationState = &rasterizer;
-		pipelineInfo.pMultisampleState = &multisampling;
-		pipelineInfo.pDepthStencilState = &depthStencil;
-		pipelineInfo.pColorBlendState = &colorBlending;
 		pipelineInfo.layout = data->ImGuiPipeline.layout;
 		pipelineInfo.renderPass = data->ImGuiPipeline.renderPass;
-		pipelineInfo.subpass = 0;
 		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[2]),
 		               "failed to create graphics pipeline!");
 
@@ -562,6 +540,31 @@ namespace
 		                         depthBuffer.handle,
 		                         depthBuffer.memoryHandle);
 		depthBuffer.imageView = MRG::Vulkan::createImageView(data->device, depthBuffer.handle, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+		const auto commandBuffer = beginSingleTimeCommand(data);
+
+		VkPipelineStageFlags sourceStage, destinationStage;
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = depthBuffer.handle;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+		vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+		endSingleTimeCommand(data, commandBuffer);
 
 		return depthBuffer;
 	}
@@ -769,7 +772,8 @@ namespace MRG::Vulkan
 		}
 		m_imagesInFlight[m_imageIndex] = m_inFlightFences[m_data->currentFrame];
 
-		// clear();
+		transitionImageLayout(
+		  m_data, m_data->swapChain.images[m_imageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 		return true;
 	}
@@ -875,10 +879,16 @@ namespace MRG::Vulkan
 		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
 		renderPassInfo.framebuffer =
 		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][1] : m_renderTarget->getHandle();
-		// renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][1];
 		renderPassInfo.renderArea.offset = {0, 0};
 		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
 		renderPassInfo.clearValueCount = 0;
+
+		if (m_renderTarget != nullptr) {
+			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][1],
+			                            m_renderTarget->getColorAttachment(),
+			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		}
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -920,6 +930,13 @@ namespace MRG::Vulkan
 		if (m_quadIndexCount == 0) {
 			vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
 
+			if (m_renderTarget != nullptr) {
+				transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][1],
+				                            m_renderTarget->getColorAttachment(),
+				                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+
 			MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][1]), "failed to record command buffer!");
 			MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
 			               "failed to submit draw command buffer!");
@@ -951,6 +968,13 @@ namespace MRG::Vulkan
 		++m_stats.drawCalls;
 
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
+
+		if (m_renderTarget != nullptr) {
+			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][1],
+			                            m_renderTarget->getColorAttachment(),
+			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][1]), "failed to record command buffer!");
 
@@ -1125,7 +1149,6 @@ namespace MRG::Vulkan
 		renderPassInfo.renderPass = m_data->clearingPipeline.renderPass;
 		renderPassInfo.framebuffer =
 		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][0] : m_renderTarget->getHandle();
-		// renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][0];
 		renderPassInfo.renderArea.offset = {0, 0};
 		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
 		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());
@@ -1145,11 +1168,25 @@ namespace MRG::Vulkan
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSempahores;
 
+		if (m_renderTarget != nullptr) {
+			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][0],
+			                            m_renderTarget->getColorAttachment(),
+			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		}
+
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][0], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][0], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->clearingPipeline.handle);
 
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][0]);
+
+		if (m_renderTarget != nullptr) {
+			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][0],
+			                            m_renderTarget->getColorAttachment(),
+			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][0]), "failed to record command buffer!");
 

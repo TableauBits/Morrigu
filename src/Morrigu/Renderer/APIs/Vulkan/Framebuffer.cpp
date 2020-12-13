@@ -18,18 +18,17 @@ namespace MRG::Vulkan
 		            data->device,
 		            m_specification.width,
 		            m_specification.height,
-		            VK_FORMAT_B8G8R8A8_UNORM,
+		            data->swapChain.imageFormat,
 		            VK_IMAGE_TILING_OPTIMAL,
 		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		            m_colorAttachment.handle,
 		            m_colorAttachment.memoryHandle);
 
-		transitionImageLayout(
-		  data, m_colorAttachment.handle, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		transitionImageLayout(data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_colorAttachment.imageView =
-		  createImageView(data->device, m_colorAttachment.handle, VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+		  createImageView(data->device, m_colorAttachment.handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -68,7 +67,7 @@ namespace MRG::Vulkan
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.image = m_depthAttachment.handle;

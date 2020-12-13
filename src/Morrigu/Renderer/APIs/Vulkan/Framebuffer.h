@@ -17,15 +17,17 @@ namespace MRG::Vulkan
 
 		void invalidate();
 
-		[[nodiscard]] virtual ImTextureID getImTextureID() override;
-		[[nodiscard]] virtual const FramebufferSpecification& getSpecification() const override { return m_specification; }
+		[[nodiscard]] ImTextureID getImTextureID() override;
+		[[nodiscard]] const FramebufferSpecification& getSpecification() const override { return m_specification; }
+		[[nodiscard]] const std::array<ImVec2, 2> getUVMapping() const override { return m_UVMapping; }
 		[[nodiscard]] const VkFramebuffer getHandle() { return m_handle; }
+		[[nodiscard]] const VkImage getColorAttachment() { return m_colorAttachment.handle; }
 
 	private:
 		ImTextureID m_ImTextureID = nullptr;
-
+		std::array<ImVec2, 2> m_UVMapping = {ImVec2{0, 0}, ImVec2{1, 1}};
 		VkFramebuffer m_handle;
-		LightVulkanImage m_depthAttachment, m_colorAttachment;
+		LightVulkanImage m_colorAttachment, m_depthAttachment;
 		VkSampler m_sampler;
 	};
 

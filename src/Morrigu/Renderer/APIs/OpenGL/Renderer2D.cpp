@@ -58,6 +58,11 @@ namespace MRG::OpenGL
 		m_whiteTexture->destroy();
 		m_quadVertexArray->destroy();
 
+		for (const auto& texture : m_textureSlots) {
+			if (texture != nullptr)
+				texture->destroy();
+		}
+
 		delete[] m_qvbBase;
 	}
 

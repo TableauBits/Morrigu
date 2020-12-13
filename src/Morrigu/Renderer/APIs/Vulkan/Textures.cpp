@@ -27,13 +27,8 @@ namespace MRG::Vulkan
 		            m_imageHandle,
 		            m_memoryHandle);
 
-		transitionImageLayout(
-		  windowData, m_imageHandle, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		transitionImageLayout(windowData,
-		                      m_imageHandle,
-		                      VK_FORMAT_R8G8B8A8_UNORM,
-		                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		transitionImageLayout(windowData, m_imageHandle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		transitionImageLayout(windowData, m_imageHandle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_imageView = createImageView(windowData->device, m_imageHandle, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -140,14 +135,9 @@ namespace MRG::Vulkan
 		            m_imageHandle,
 		            m_memoryHandle);
 
-		transitionImageLayout(
-		  windowData, m_imageHandle, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		transitionImageLayout(windowData, m_imageHandle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		copyBufferToImage(windowData, stagingBuffer.handle, m_imageHandle, m_width, m_height);
-		transitionImageLayout(windowData,
-		                      m_imageHandle,
-		                      VK_FORMAT_R8G8B8A8_UNORM,
-		                      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		transitionImageLayout(windowData, m_imageHandle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		vkDestroyBuffer(windowData->device, stagingBuffer.handle, nullptr);
 		vkFreeMemory(windowData->device, stagingBuffer.memoryHandle, nullptr);
