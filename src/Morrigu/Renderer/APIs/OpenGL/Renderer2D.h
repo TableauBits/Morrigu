@@ -46,6 +46,9 @@ namespace MRG::OpenGL
 		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
 		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
+		void resetRenderTarget() override;
+		[[nodiscard]] Ref<MRG::Framebuffer> getRenderTarget() const override { return m_framebuffer; }
+
 		void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override { glViewport(x, y, width, height); }
 		void setClearColor(const glm::vec4& color) override { glClearColor(color.r, color.g, color.b, color.a); }
 		void clear() override { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
@@ -65,7 +68,7 @@ namespace MRG::OpenGL
 
 		RenderingStatistics m_stats;
 
-		uint32_t m_framebufferID;
+		Ref<Framebuffer> m_framebuffer = nullptr;
 	};
 }  // namespace MRG::OpenGL
 

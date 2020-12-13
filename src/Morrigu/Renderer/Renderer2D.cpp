@@ -141,6 +141,20 @@ namespace MRG
 		s_renderer->setRenderTarget(renderTarget);
 	}
 
+	void Renderer2D::resetRenderTarget()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->resetRenderTarget();
+	}
+
+	[[nodiscard]] Ref<Framebuffer> Renderer2D::getRenderTarget()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		return s_renderer->getRenderTarget();
+	}
+
 	void Renderer2D::setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 	{
 		MRG_PROFILE_FUNCTION();

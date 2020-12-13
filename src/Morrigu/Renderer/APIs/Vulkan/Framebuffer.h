@@ -19,7 +19,7 @@ namespace MRG::Vulkan
 
 		[[nodiscard]] ImTextureID getImTextureID() override;
 		[[nodiscard]] const FramebufferSpecification& getSpecification() const override { return m_specification; }
-		[[nodiscard]] const std::array<ImVec2, 2> getUVMapping() const override { return m_UVMapping; }
+		[[nodiscard]] const std::array<ImVec2, 2>& getUVMapping() const override { return m_UVMapping; }
 		[[nodiscard]] const VkFramebuffer getHandle() { return m_handle; }
 		[[nodiscard]] const VkImage getColorAttachment() { return m_colorAttachment.handle; }
 

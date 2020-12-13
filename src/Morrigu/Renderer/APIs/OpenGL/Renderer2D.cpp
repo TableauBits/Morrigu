@@ -63,6 +63,10 @@ namespace MRG::OpenGL
 				texture->destroy();
 		}
 
+		if (m_framebuffer != nullptr) {
+			m_framebuffer->destroy();
+		}
+
 		delete[] m_qvbBase;
 	}
 
@@ -72,7 +76,6 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		return true;
 	}
 
@@ -242,7 +245,19 @@ namespace MRG::OpenGL
 		++m_stats.quadCount;
 	}
 
-	void Renderer2D::setRenderTarget(Ref<MRG::Framebuffer> renderTarget) { std::static_pointer_cast<Framebuffer>(renderTarget)->bind(); }
+	void Renderer2D::setRenderTarget(Ref<MRG::Framebuffer> renderTarget)
+	{
+		flushAndReset();
+		m_framebuffer = std::static_pointer_cast<Framebuffer>(renderTarget);
+		m_framebuffer->bind();
+	}
+
+	void Renderer2D::resetRenderTarget()
+	{
+		flushAndReset();
+		m_framebuffer->unbind();
+		m_framebuffer = nullptr;
+	}
 
 	void Renderer2D::resetStats() { m_stats = {}; }
 

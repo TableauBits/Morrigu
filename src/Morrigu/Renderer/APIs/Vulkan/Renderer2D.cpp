@@ -866,6 +866,8 @@ namespace MRG::Vulkan
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
 
+		m_sceneInProgress = true;
+
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -980,6 +982,8 @@ namespace MRG::Vulkan
 
 		MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
 		               "failed to submit draw command buffer!");
+
+		m_sceneInProgress = false;
 	}
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -1122,7 +1126,102 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
+		if (!m_sceneInProgress) {
+			m_renderTarget = std::static_pointer_cast<Framebuffer>(renderTarget);
+			return;
+		}
+
+		endScene();
+
 		m_renderTarget = std::static_pointer_cast<Framebuffer>(renderTarget);
+
+		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
+		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][1], 0);
+
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][1], &beginInfo),
+		               "failed to begin recording command bufer!");
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
+		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][1];
+		renderPassInfo.renderArea.offset = {0, 0};
+		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.clearValueCount = 0;
+
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+
+		VkBuffer vertexBuffers[] = {std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle()};
+		VkDeviceSize offsets[] = {0};
+		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
+		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, vertexBuffers, offsets);
+
+		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
+
+		m_quadIndexCount = 0;
+		m_qvbPtr = m_qvbBase;
+
+		m_textureSlotindex = 1;
+
+		m_sceneInProgress = true;
+	}
+
+	void Renderer2D::resetRenderTarget()
+	{
+		MRG_PROFILE_FUNCTION();
+
+		if (!m_sceneInProgress) {
+			m_renderTarget = nullptr;
+			return;
+		}
+
+		endScene();
+
+		m_renderTarget = nullptr;
+
+		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
+		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][1], 0);
+
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][1], &beginInfo),
+		               "failed to begin recording command bufer!");
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
+		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][1];
+		renderPassInfo.renderArea.offset = {0, 0};
+		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.clearValueCount = 0;
+
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+
+		VkBuffer vertexBuffers[] = {std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle()};
+		VkDeviceSize offsets[] = {0};
+		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
+		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, vertexBuffers, offsets);
+
+		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
+
+		m_quadIndexCount = 0;
+		m_qvbPtr = m_qvbBase;
+
+		m_textureSlotindex = 1;
+
+		m_sceneInProgress = true;
 	}
 
 	void Renderer2D::clear()
@@ -1336,7 +1435,8 @@ namespace MRG::Vulkan
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
-		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][1];
+		renderPassInfo.framebuffer =
+		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][1] : m_renderTarget->getHandle();
 		renderPassInfo.renderArea.offset = {0, 0};
 		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
 		renderPassInfo.clearValueCount = 0;

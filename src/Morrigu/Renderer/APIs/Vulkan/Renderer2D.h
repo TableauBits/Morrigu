@@ -51,6 +51,9 @@ namespace MRG::Vulkan
 		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
 		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
+		void resetRenderTarget() override;
+		[[nodiscard]] Ref<MRG::Framebuffer> getRenderTarget() const override { return m_renderTarget; }
+
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
 		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
 		void clear() override;
@@ -75,6 +78,8 @@ namespace MRG::Vulkan
 		VkDescriptorPool m_descriptorPool;
 		std::vector<VkDescriptorSet> m_descriptorSets;
 		bool m_shouldRecreateSwapChain = false;
+
+		bool m_sceneInProgress = false;
 
 		PushConstants m_modelMatrix;
 
