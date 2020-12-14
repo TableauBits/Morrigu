@@ -2,4 +2,4 @@
 * text=auto
 
 # Enforce git to keep LF encoding for shader files.
-runtime/resources/shaders/** text eol=lf
+src/**/runtime/resources/shaders/** text eol=lf

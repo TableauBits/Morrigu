@@ -5,6 +5,7 @@
 #include "Renderer/Context.h"
 #include "Renderer/WindowProperties.h"
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -29,8 +30,8 @@ namespace MRG
 
 		void onUpdate();
 
-		[[nodiscard]] unsigned int getWidth() const { return m_properties->width; }
-		[[nodiscard]] unsigned int getHeight() const { return m_properties->height; }
+		[[nodiscard]] uint32_t getWidth() const { return m_properties->width; }
+		[[nodiscard]] uint32_t getHeight() const { return m_properties->height; }
 		[[nodiscard]] bool isVsync() const { return m_properties->VSync; }
 
 		void setEventCallback(const EventCallbackFunction& callback) { m_properties->callback = callback; }

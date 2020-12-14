@@ -3,6 +3,7 @@
 
 #include "Events/Event.h"
 
+#include <cstdint>
 #include <functional>
 
 namespace MRG
@@ -12,17 +13,17 @@ namespace MRG
 	class WindowProperties
 	{
 	public:
-		[[nodiscard]] static Scope<WindowProperties> create(const char* title, unsigned int width, unsigned int height, bool vSync = true);
+		[[nodiscard]] static Scope<WindowProperties> create(const char* title, uint32_t width, uint32_t height, bool vSync = true);
 
 		const char* title;
-		unsigned int width;
-		unsigned int height;
+		uint32_t width;
+		uint32_t height;
 		bool VSync;
 		EventCallbackFunction callback = [](Event&) {};
-		unsigned int keyRepeats = 0;
+		uint32_t keyRepeats = 0;
 
 	protected:
-		WindowProperties(const char*& newTitle, unsigned int newWidth, unsigned int newHeight, bool newVSync)
+		WindowProperties(const char*& newTitle, uint32_t newWidth, uint32_t newHeight, bool newVSync)
 		    : title(newTitle), width(newWidth), height(newHeight), VSync(newVSync)
 		{}
 	};

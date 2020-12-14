@@ -51,7 +51,7 @@ namespace MRG
 			data->width = width;
 			data->height = height;
 
-			WindowResizeEvent resize{static_cast<unsigned int>(width), static_cast<unsigned int>(height)};
+			WindowResizeEvent resize{static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
 			data->callback(resize);
 		});
 
@@ -124,7 +124,7 @@ namespace MRG
 			data->callback(move);
 		});
 
-		glfwSetCharCallback(handle, [](GLFWwindow* window, unsigned int codePoint) {
+		glfwSetCharCallback(handle, [](GLFWwindow* window, uint32_t codePoint) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 
 			KeyTypedEvent typedChar{static_cast<KeyCode>(codePoint)};
