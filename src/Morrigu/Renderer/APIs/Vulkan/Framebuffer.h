@@ -24,7 +24,7 @@ namespace MRG::Vulkan
 		[[nodiscard]] const VkFramebuffer getHandle() { return m_handle; }
 		[[nodiscard]] const VkImage getColorAttachment() { return m_colorAttachment.handle; }
 
-		void updateView(VkCommandBuffer commandBuffer);
+		void updateView(VkCommandBuffer commandBuffer, bool isClearCommand = false);
 		VkExtent2D getFramebufferDimensions() { return {m_FBWidth, m_FBHeight}; }
 
 	private:

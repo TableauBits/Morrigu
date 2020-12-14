@@ -1271,7 +1271,7 @@ namespace MRG::Vulkan
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][0]);
 
 		if (m_renderTarget != nullptr) {
-			m_renderTarget->updateView(m_data->commandBuffers[m_imageIndex][0]);
+			m_renderTarget->updateView(m_data->commandBuffers[m_imageIndex][0], true);
 		}
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][0]), "failed to record command buffer!");

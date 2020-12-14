@@ -227,7 +227,7 @@ namespace MRG::Vulkan
 		return m_ImTextureID;
 	}
 
-	void Framebuffer::updateView(VkCommandBuffer commandBuffer)
+	void Framebuffer::updateView(VkCommandBuffer commandBuffer, bool isClearCommand)
 	{
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
@@ -255,6 +255,12 @@ namespace MRG::Vulkan
 		region.dstSubresource.mipLevel = 0;
 		region.dstSubresource.baseArrayLayer = 0;
 		region.dstSubresource.layerCount = 1;
+
+		if (isClearCommand) {
+			region.srcOffsets[1] = {
+			  static_cast<int32_t>(data->swapChain.extent.width), static_cast<int32_t>(data->swapChain.extent.height), 1};
+			region.dstOffsets[1] = {static_cast<int32_t>(m_specification.width), static_cast<int32_t>(m_specification.height), 1};
+		}
 
 		vkCmdBlitImage(commandBuffer,
 		               m_colorAttachment.handle,
