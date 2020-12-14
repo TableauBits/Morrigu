@@ -7,23 +7,6 @@ namespace MRG::OpenGL
 	Framebuffer::Framebuffer(const FramebufferSpecification& spec)
 	{
 		m_specification = spec;
-		invalidate();
-	}
-
-	Framebuffer::~Framebuffer() { destroy(); }
-
-	void Framebuffer::destroy()
-	{
-		if (m_isDestroyed)
-			return;
-
-		glDeleteFramebuffers(1, &m_rendererID);
-
-		m_isDestroyed = true;
-	}
-
-	void Framebuffer::invalidate()
-	{
 		glCreateFramebuffers(1, &m_rendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID);
 
@@ -43,6 +26,18 @@ namespace MRG::OpenGL
 		MRG_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	Framebuffer::~Framebuffer() { destroy(); }
+
+	void Framebuffer::destroy()
+	{
+		if (m_isDestroyed)
+			return;
+
+		glDeleteFramebuffers(1, &m_rendererID);
+
+		m_isDestroyed = true;
 	}
 
 	void Framebuffer::bind() { glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID); }

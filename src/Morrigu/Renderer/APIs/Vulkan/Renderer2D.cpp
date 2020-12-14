@@ -885,13 +885,6 @@ namespace MRG::Vulkan
 		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
 		renderPassInfo.clearValueCount = 0;
 
-		if (m_renderTarget != nullptr) {
-			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][1],
-			                            m_renderTarget->getColorAttachment(),
-			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		}
-
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
@@ -933,10 +926,7 @@ namespace MRG::Vulkan
 			vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
 
 			if (m_renderTarget != nullptr) {
-				transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][1],
-				                            m_renderTarget->getColorAttachment(),
-				                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				m_renderTarget->updateView(m_data->commandBuffers[m_imageIndex][1]);
 			}
 
 			MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][1]), "failed to record command buffer!");
@@ -972,10 +962,7 @@ namespace MRG::Vulkan
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
 
 		if (m_renderTarget != nullptr) {
-			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][1],
-			                            m_renderTarget->getColorAttachment(),
-			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_renderTarget->updateView(m_data->commandBuffers[m_imageIndex][1]);
 		}
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][1]), "failed to record command buffer!");
@@ -1128,6 +1115,11 @@ namespace MRG::Vulkan
 
 		if (!m_sceneInProgress) {
 			m_renderTarget = std::static_pointer_cast<Framebuffer>(renderTarget);
+			if (m_renderTarget->getFramebufferDimensions().height != m_data->swapChain.extent.height ||
+			    m_renderTarget->getFramebufferDimensions().width != m_data->swapChain.extent.width) {
+				m_renderTarget->invalidate();
+			}
+
 			return;
 		}
 
@@ -1137,6 +1129,11 @@ namespace MRG::Vulkan
 
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
+
+		if (m_renderTarget->getFramebufferDimensions().height != m_data->swapChain.extent.height ||
+		    m_renderTarget->getFramebufferDimensions().width != m_data->swapChain.extent.width) {
+			m_renderTarget->invalidate();
+		}
 
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1267,13 +1264,6 @@ namespace MRG::Vulkan
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSempahores;
 
-		if (m_renderTarget != nullptr) {
-			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][0],
-			                            m_renderTarget->getColorAttachment(),
-			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		}
-
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][0], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][0], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->clearingPipeline.handle);
@@ -1281,10 +1271,7 @@ namespace MRG::Vulkan
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][0]);
 
 		if (m_renderTarget != nullptr) {
-			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][0],
-			                            m_renderTarget->getColorAttachment(),
-			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_renderTarget->updateView(m_data->commandBuffers[m_imageIndex][0]);
 		}
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][0]), "failed to record command buffer!");
@@ -1386,6 +1373,10 @@ namespace MRG::Vulkan
 		m_descriptorSets = descriptors;
 
 		m_data->commandBuffers = allocateCommandBuffers(m_data);
+
+		if (m_renderTarget != nullptr) {
+			m_renderTarget->invalidate();
+		}
 	}
 
 	void Renderer2D::updateDescriptor()

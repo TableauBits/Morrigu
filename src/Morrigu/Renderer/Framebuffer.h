@@ -24,6 +24,8 @@ namespace MRG
 	public:
 		virtual void destroy() = 0;
 
+		virtual void invalidate() = 0;
+
 		[[nodiscard]] virtual ImTextureID getImTextureID() = 0;
 		[[nodiscard]] virtual const FramebufferSpecification& getSpecification() const = 0;
 

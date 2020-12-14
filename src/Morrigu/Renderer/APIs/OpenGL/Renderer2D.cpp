@@ -97,6 +97,7 @@ namespace MRG::OpenGL
 		m_qvbPtr = m_qvbBase;
 
 		m_textureSlotindex = 1;
+		m_sceneInProgress = true;
 	}
 
 	void Renderer2D::endScene()
@@ -107,6 +108,7 @@ namespace MRG::OpenGL
 		m_quadVertexBuffer->setData(m_qvbBase, dataSize);
 
 		flush();
+		m_sceneInProgress = false;
 	}
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -247,14 +249,23 @@ namespace MRG::OpenGL
 
 	void Renderer2D::setRenderTarget(Ref<MRG::Framebuffer> renderTarget)
 	{
-		flushAndReset();
+		if (renderTarget == nullptr) {
+			resetRenderTarget();
+			return;
+		}
+
+		if (m_sceneInProgress)
+			flushAndReset();
+
 		m_framebuffer = std::static_pointer_cast<Framebuffer>(renderTarget);
 		m_framebuffer->bind();
 	}
 
 	void Renderer2D::resetRenderTarget()
 	{
-		flushAndReset();
+		if (m_sceneInProgress)
+			flushAndReset();
+
 		m_framebuffer->unbind();
 		m_framebuffer = nullptr;
 	}

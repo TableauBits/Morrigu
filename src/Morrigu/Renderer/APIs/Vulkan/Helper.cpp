@@ -193,14 +193,19 @@ namespace MRG::Vulkan
 			sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;  // Hard coded for now, TODO: expose this somehow
 		} break;
 
+		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL: {
+			barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		} break;
+
 		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL: {
 			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		} break;
 
-		case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL: {
-			barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL: {
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		} break;
 
 		default: {
@@ -221,6 +226,11 @@ namespace MRG::Vulkan
 
 		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL: {
 			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		} break;
+
+		case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL: {
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		} break;
 

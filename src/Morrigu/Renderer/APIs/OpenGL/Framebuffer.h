@@ -15,7 +15,7 @@ namespace MRG::OpenGL
 
 		void destroy() override;
 
-		void invalidate();
+		void invalidate() override {}
 
 		void bind();
 		void unbind();

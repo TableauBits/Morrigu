@@ -69,6 +69,7 @@ namespace MRG::OpenGL
 		RenderingStatistics m_stats;
 
 		Ref<Framebuffer> m_framebuffer = nullptr;
+		bool m_sceneInProgress = false;
 	};
 }  // namespace MRG::OpenGL
 
