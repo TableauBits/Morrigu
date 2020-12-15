@@ -22,6 +22,8 @@ namespace MRG
 	class Framebuffer
 	{
 	public:
+		virtual ~Framebuffer() = default;
+	
 		virtual void destroy() = 0;
 
 		virtual void invalidate() = 0;

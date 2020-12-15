@@ -3,7 +3,6 @@
 #include "Debug/Instrumentor.h"
 #include "Renderer/ImageLoader.h"
 
-#include <gl/GLU.h>
 #include <stb_image.h>
 
 namespace MRG::OpenGL

@@ -21,8 +21,8 @@ namespace MRG::Vulkan
 		[[nodiscard]] const FramebufferSpecification& getSpecification() const override { return m_specification; }
 		[[nodiscard]] const std::array<ImVec2, 2>& getUVMapping() const override { return m_UVMapping; }
 
-		[[nodiscard]] const VkFramebuffer getHandle() { return m_handle; }
-		[[nodiscard]] const VkImage getColorAttachment() { return m_colorAttachment.handle; }
+		[[nodiscard]] VkFramebuffer getHandle() { return m_handle; }
+		[[nodiscard]] VkImage getColorAttachment() { return m_colorAttachment.handle; }
 
 		void updateView(VkCommandBuffer commandBuffer, bool isClearCommand = false);
 		VkExtent2D getFramebufferDimensions() { return {m_FBWidth, m_FBHeight}; }
