@@ -14,8 +14,9 @@ namespace MRG::Vulkan
 		virtual ~Framebuffer();
 
 		void destroy() override;
+		void resize(uint32_t width, uint32_t height) override;
 
-		void invalidate() override;
+		void invalidate();
 
 		[[nodiscard]] ImTextureID getImTextureID() override;
 		[[nodiscard]] const FramebufferSpecification& getSpecification() const override { return m_specification; }
@@ -24,7 +25,7 @@ namespace MRG::Vulkan
 		[[nodiscard]] VkFramebuffer getHandle() { return m_handle; }
 		[[nodiscard]] VkImage getColorAttachment() { return m_colorAttachment.handle; }
 
-		void updateView(VkCommandBuffer commandBuffer, bool isClearCommand = false);
+		void updateView(VkCommandBuffer commandBuffer);
 		VkExtent2D getFramebufferDimensions() { return {m_FBWidth, m_FBHeight}; }
 
 	private:
@@ -32,7 +33,7 @@ namespace MRG::Vulkan
 		std::array<ImVec2, 2> m_UVMapping = {ImVec2{0, 0}, ImVec2{1, 1}};
 		VkFramebuffer m_handle;
 		LightVulkanImage m_colorAttachment, m_depthAttachment;
-		Texture2D m_renderTexture;
+		Ref<Texture2D> m_renderTexture;
 		VkSampler m_sampler;
 		uint32_t m_FBWidth, m_FBHeight;
 	};

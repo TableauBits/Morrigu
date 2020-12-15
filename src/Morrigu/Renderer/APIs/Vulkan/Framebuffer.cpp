@@ -8,11 +8,12 @@
 
 namespace MRG::Vulkan
 {
-	Framebuffer::Framebuffer(const FramebufferSpecification& spec) : m_renderTexture(spec.width, spec.height)
+	Framebuffer::Framebuffer(const FramebufferSpecification& spec)
 	{
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
 		m_specification = spec;
+		m_renderTexture = createRef<Texture2D>(spec.width, spec.height);
 
 		createImage(data->physicalDevice,
 		            data->device,
@@ -128,9 +129,37 @@ namespace MRG::Vulkan
 
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
 
-		m_renderTexture.destroy();
+		m_renderTexture->destroy();
 
 		m_isDestroyed = true;
+	}
+
+	void Framebuffer::resize(uint32_t width, uint32_t height)
+	{
+		m_specification.width = width;
+		m_specification.height = height;
+
+		m_renderTexture = createRef<Texture2D>(width, height);
+
+		if (m_ImTextureID == nullptr) {
+			m_ImTextureID =
+			  ImGui_ImplVulkan_AddTexture(m_sampler, m_renderTexture->getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			return;
+		}
+
+		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+		VkDescriptorImageInfo desc_image[1] = {};
+		desc_image[0].sampler = m_sampler;
+		desc_image[0].imageView = m_renderTexture->getImageView();
+		desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		VkWriteDescriptorSet write_desc[1] = {};
+		write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		write_desc[0].dstSet = (VkDescriptorSet)m_ImTextureID;
+		write_desc[0].descriptorCount = 1;
+		write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		write_desc[0].pImageInfo = desc_image;
+		vkUpdateDescriptorSets(data->device, 1, write_desc, 0, nullptr);
 	}
 
 	void Framebuffer::invalidate()
@@ -221,13 +250,13 @@ namespace MRG::Vulkan
 	{
 		if (m_ImTextureID == nullptr) {
 			m_ImTextureID =
-			  ImGui_ImplVulkan_AddTexture(m_sampler, m_renderTexture.getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			  ImGui_ImplVulkan_AddTexture(m_sampler, m_renderTexture->getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
 
 		return m_ImTextureID;
 	}
 
-	void Framebuffer::updateView(VkCommandBuffer commandBuffer, bool isClearCommand)
+	void Framebuffer::updateView(VkCommandBuffer commandBuffer)
 	{
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
@@ -235,44 +264,34 @@ namespace MRG::Vulkan
 		  commandBuffer, m_colorAttachment.handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
 		transitionImageLayoutInline(
-		  commandBuffer, m_renderTexture.getHandle(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-		VkOffset3D offset = {static_cast<int32_t>(std::min(data->swapChain.extent.width, m_specification.width)),
-		                     static_cast<int32_t>(std::min(data->swapChain.extent.height, m_specification.height)),
-		                     1};
+		  commandBuffer, m_renderTexture->getHandle(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 		VkImageBlit region{};
 		region.srcOffsets[0] = {0, 0, 0};
-		region.srcOffsets[1] = offset;
+		region.srcOffsets[1] = {static_cast<int32_t>(data->swapChain.extent.width), static_cast<int32_t>(data->swapChain.extent.height), 1};
 		region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		region.srcSubresource.mipLevel = 0;
 		region.srcSubresource.baseArrayLayer = 0;
 		region.srcSubresource.layerCount = 1;
 
 		region.dstOffsets[0] = {0, 0, 0};
-		region.dstOffsets[1] = offset;
+		region.dstOffsets[1] = {static_cast<int32_t>(m_specification.width), static_cast<int32_t>(m_specification.height), 1};
 		region.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		region.dstSubresource.mipLevel = 0;
 		region.dstSubresource.baseArrayLayer = 0;
 		region.dstSubresource.layerCount = 1;
 
-		if (isClearCommand) {
-			region.srcOffsets[1] = {
-			  static_cast<int32_t>(data->swapChain.extent.width), static_cast<int32_t>(data->swapChain.extent.height), 1};
-			region.dstOffsets[1] = {static_cast<int32_t>(m_specification.width), static_cast<int32_t>(m_specification.height), 1};
-		}
-
 		vkCmdBlitImage(commandBuffer,
 		               m_colorAttachment.handle,
 		               VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-		               m_renderTexture.getHandle(),
+		               m_renderTexture->getHandle(),
 		               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		               1,
 		               &region,
 		               VK_FILTER_LINEAR);
 
 		transitionImageLayoutInline(
-		  commandBuffer, m_renderTexture.getHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		  commandBuffer, m_renderTexture->getHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		transitionImageLayoutInline(
 		  commandBuffer, m_colorAttachment.handle, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);

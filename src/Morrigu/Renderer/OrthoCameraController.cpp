@@ -62,6 +62,14 @@ namespace MRG
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) { return onWindowResized(resizeEvent); });
 	}
 
+	void OrthoCameraController::onResize(float width, float height)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_aspectRatio = width / height;
+		m_camera.setProjection(-m_aspectRatio * zoomFactor, m_aspectRatio * zoomFactor, -zoomFactor, zoomFactor);
+	}
+
 	bool OrthoCameraController::onMouseScrolled(MouseScrolledEvent& event)
 	{
 		MRG_PROFILE_FUNCTION();
@@ -77,8 +85,7 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		m_aspectRatio = static_cast<float>(event.getWidth()) / static_cast<float>(event.getHeight());
-		m_camera.setProjection(-m_aspectRatio * zoomFactor, m_aspectRatio * zoomFactor, -zoomFactor, zoomFactor);
+		onResize(static_cast<float>(event.getWidth()), static_cast<float>(event.getHeight()));
 
 		return false;
 	}

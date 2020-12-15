@@ -20,6 +20,8 @@ namespace MRG
 
 		Ref<Texture2D> m_checkerboard, m_character;
 
+		glm::vec2 m_viewportSize = {0.f, 0.f};
+
 		glm::vec4 m_color = {0.1f, 0.1f, 0.1f, 1.0f};
 		Timestep m_frameTime;
 

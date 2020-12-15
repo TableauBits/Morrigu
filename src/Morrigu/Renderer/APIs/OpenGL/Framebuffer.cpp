@@ -7,6 +7,38 @@ namespace MRG::OpenGL
 	Framebuffer::Framebuffer(const FramebufferSpecification& spec)
 	{
 		m_specification = spec;
+
+		m_isDestroyed = true;
+		invalidate();
+	}
+
+	Framebuffer::~Framebuffer() { destroy(); }
+
+	void Framebuffer::destroy()
+	{
+		if (m_isDestroyed)
+			return;
+
+		glDeleteFramebuffers(1, &m_rendererID);
+		glDeleteTextures(1, &m_colorAttachment);
+		glDeleteTextures(1, &m_depthAttachment);
+
+		m_isDestroyed = true;
+	}
+
+	void Framebuffer::resize(uint32_t width, uint32_t height)
+	{
+		m_specification.width = width;
+		m_specification.height = height;
+
+		invalidate();
+	}
+
+	void Framebuffer::invalidate()
+	{
+		destroy();
+		m_isDestroyed = false;
+
 		glCreateFramebuffers(1, &m_rendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID);
 
@@ -28,18 +60,10 @@ namespace MRG::OpenGL
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	Framebuffer::~Framebuffer() { destroy(); }
-
-	void Framebuffer::destroy()
+	void Framebuffer::bind()
 	{
-		if (m_isDestroyed)
-			return;
-
-		glDeleteFramebuffers(1, &m_rendererID);
-
-		m_isDestroyed = true;
+		glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID);
+		glViewport(0, 0, m_specification.width, m_specification.height);
 	}
-
-	void Framebuffer::bind() { glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID); }
 	void Framebuffer::unbind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 }  // namespace MRG::OpenGL

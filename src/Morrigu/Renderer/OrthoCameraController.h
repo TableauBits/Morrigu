@@ -16,6 +16,7 @@ namespace MRG
 
 		void onUpdate(Timestep ts);
 		void onEvent(Event& event);
+		void onResize(float width, float height);
 
 		[[nodiscard]] OrthoCamera& getCamera() { return m_camera; }
 		[[nodiscard]] const OrthoCamera& getCamera() const { return m_camera; }

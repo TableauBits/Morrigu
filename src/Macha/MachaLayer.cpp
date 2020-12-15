@@ -131,9 +131,19 @@ namespace MRG
 		ImGui::Separator();
 		ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
 		ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
-		ImGui::Image(
-		  m_renderTarget->getImTextureID(), ImVec2{1280.f, 720.f}, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
 		ImGui::End();
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
+		ImGui::Begin("Viewport");
+		auto viewportSize = ImGui::GetContentRegionAvail();
+		if (m_viewportSize != *((glm::vec2*)&viewportSize)) {
+			m_renderTarget->resize(static_cast<uint32_t>(viewportSize.x), static_cast<uint32_t>(viewportSize.y));
+			m_viewportSize = {viewportSize.x, viewportSize.y};
+			m_camera.onResize(viewportSize.x, viewportSize.y);
+		}
+		ImGui::Image(m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
+		ImGui::End();
+		ImGui::PopStyleVar();
 
 		ImGui::End();
 	}

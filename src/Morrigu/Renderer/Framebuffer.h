@@ -23,10 +23,10 @@ namespace MRG
 	{
 	public:
 		virtual ~Framebuffer() = default;
-	
+
 		virtual void destroy() = 0;
 
-		virtual void invalidate() = 0;
+		virtual void resize(uint32_t width, uint32_t height) = 0;
 
 		[[nodiscard]] virtual ImTextureID getImTextureID() = 0;
 		[[nodiscard]] virtual const FramebufferSpecification& getSpecification() const = 0;
