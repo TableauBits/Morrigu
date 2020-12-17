@@ -23,6 +23,13 @@ namespace MRG
 
 		m_frameTime = ts;
 
+		// handle resizing
+		if (auto spec = m_renderTarget->getSpecification();
+		    m_viewportSize.x > 0.f && m_viewportSize.y > 0.f && (spec.width != m_viewportSize.x || spec.height != m_viewportSize.y)) {
+			m_renderTarget->resize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
+			m_camera.onResize(m_viewportSize.x, m_viewportSize.y);
+		}
+
 		if (m_viewportFocused)
 			m_camera.onUpdate(ts);
 
@@ -124,30 +131,31 @@ namespace MRG
 		}
 
 		ImGui::Begin("Debug");
-		ImGui::Text("Renderer2D stats:");
-		ImGui::Text("Draw calls: %d", stats.drawCalls);
-		ImGui::Text("Quads: %d", stats.quadCount);
-		ImGui::Text("Vertices: %d", stats.getVertexCount());
-		ImGui::Text("Indices: %d", stats.getIndexCount());
-		ImGui::Separator();
-		ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
-		ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
+		{
+			ImGui::Text("Renderer2D stats:");
+			ImGui::Text("Draw calls: %d", stats.drawCalls);
+			ImGui::Text("Quads: %d", stats.quadCount);
+			ImGui::Text("Vertices: %d", stats.getVertexCount());
+			ImGui::Text("Indices: %d", stats.getIndexCount());
+			ImGui::Separator();
+			ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
+			ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
+		}
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
 		ImGui::Begin("Viewport");
+		{
+			m_viewportFocused = ImGui::IsWindowFocused();
+			m_viewportHovered = ImGui::IsWindowHovered();
+			Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused || !m_viewportHovered);
 
-		m_viewportFocused = ImGui::IsWindowFocused();
-		m_viewportHovered = ImGui::IsWindowHovered();
-		Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused || !m_viewportHovered);
-
-		auto viewportSize = ImGui::GetContentRegionAvail();
-		if (m_viewportSize != *((glm::vec2*)&viewportSize)) {
-			m_renderTarget->resize(static_cast<uint32_t>(viewportSize.x), static_cast<uint32_t>(viewportSize.y));
+			auto viewportSize = ImGui::GetContentRegionAvail();
 			m_viewportSize = {viewportSize.x, viewportSize.y};
-			m_camera.onResize(viewportSize.x, viewportSize.y);
+
+			ImGui::Image(
+			  m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
 		}
-		ImGui::Image(m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
 		ImGui::End();
 		ImGui::PopStyleVar();
 

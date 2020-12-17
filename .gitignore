@@ -3,7 +3,6 @@ build
 .vscode
 src/Morrigu/Vendor/ImGui/bindings
 imgui.ini
-!src/Macha/runtime/imgui.ini
 *.json
 *.log
 *.spv
