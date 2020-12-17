@@ -370,24 +370,18 @@ namespace
 		inputAssembly.primitiveRestartEnable = VK_FALSE;
 		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-		VkViewport viewport{};
-		viewport.x = 0;
-		viewport.y = 0;
-		viewport.width = static_cast<float>(data->swapChain.extent.width);
-		viewport.height = static_cast<float>(data->swapChain.extent.height);
-		viewport.minDepth = 0.f;
-		viewport.maxDepth = 1.f;
-
-		VkRect2D scissor{};
-		scissor.offset = {0, 0};
-		scissor.extent = data->swapChain.extent;
+		VkDynamicState dynamicStates[2]{VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+		VkPipelineDynamicStateCreateInfo dynamicState{};
+		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamicState.dynamicStateCount = 2;
+		dynamicState.pDynamicStates = dynamicStates;
 
 		VkPipelineViewportStateCreateInfo viewportState{};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 		viewportState.viewportCount = 1;
-		viewportState.pViewports = &viewport;
+		viewportState.pViewports = nullptr;  // Dynamic state
 		viewportState.scissorCount = 1;
-		viewportState.pScissors = &scissor;
+		viewportState.pScissors = nullptr;  // Dynamic state
 
 		VkPipelineRasterizationStateCreateInfo rasterizer{};
 		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -444,6 +438,7 @@ namespace
 		pipelineInfo.layout = data->clearingPipeline.layout;
 		pipelineInfo.renderPass = data->clearingPipeline.renderPass;
 		pipelineInfo.subpass = 0;
+		pipelineInfo.pDynamicState = &dynamicState;
 		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[0]),
 		               "failed to create graphics pipeline!");
 
@@ -725,6 +720,13 @@ namespace MRG::Vulkan
 
 		cleanupSwapChain();
 
+		vkDestroyPipeline(m_data->device, m_data->clearingPipeline.handle, nullptr);
+		vkDestroyPipeline(m_data->device, m_data->renderingPipeline.handle, nullptr);
+		vkDestroyPipeline(m_data->device, m_data->ImGuiPipeline.handle, nullptr);
+
+		// All 3 pipelines have the same VkLayout handle, so destroying only one is necessary
+		vkDestroyPipelineLayout(m_data->device, m_data->clearingPipeline.layout, nullptr);
+
 		vkDestroyDescriptorSetLayout(m_data->device, m_data->descriptorSetLayout, nullptr);
 
 		m_vertexArray->destroy();
@@ -798,6 +800,13 @@ namespace MRG::Vulkan
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][2], &beginInfo),
 		               "failed to begin recording command bufer!");
 
+		if (m_renderTarget != nullptr) {
+			transitionImageLayout(m_data,
+			                      m_renderTarget->getColorAttachment(),
+			                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = m_data->ImGuiPipeline.renderPass;
@@ -831,6 +840,13 @@ namespace MRG::Vulkan
 		}
 
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][2]);
+
+		if (m_renderTarget != nullptr) {
+			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][2],
+			                            m_renderTarget->getColorAttachment(),
+			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		}
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][2]), "failed to record command buffer!");
 
@@ -882,10 +898,30 @@ namespace MRG::Vulkan
 		renderPassInfo.framebuffer =
 		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][1] : m_renderTarget->getHandle();
 		renderPassInfo.renderArea.offset = {0, 0};
-		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.renderArea.extent =
+		  m_renderTarget == nullptr ? m_data->swapChain.extent
+		                            : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
 		renderPassInfo.clearValueCount = 0;
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width =
+		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.width) : m_renderTarget->getSpecification().width;
+		viewport.height =
+		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.height) : m_renderTarget->getSpecification().height;
+		viewport.minDepth = 0.f;
+		viewport.maxDepth = 1.f;
+		vkCmdSetViewport(m_data->commandBuffers[m_imageIndex][1], 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent = m_renderTarget == nullptr
+		                   ? m_data->swapChain.extent
+		                   : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
+		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
 
 		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
 
@@ -925,10 +961,6 @@ namespace MRG::Vulkan
 		if (m_quadIndexCount == 0) {
 			vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
 
-			if (m_renderTarget != nullptr) {
-				m_renderTarget->updateView(m_data->commandBuffers[m_imageIndex][1]);
-			}
-
 			MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][1]), "failed to record command buffer!");
 			MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
 			               "failed to submit draw command buffer!");
@@ -960,10 +992,6 @@ namespace MRG::Vulkan
 		++m_stats.drawCalls;
 
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
-
-		if (m_renderTarget != nullptr) {
-			m_renderTarget->updateView(m_data->commandBuffers[m_imageIndex][1]);
-		}
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][1]), "failed to record command buffer!");
 
@@ -1113,12 +1141,14 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION();
 
+		if (renderTarget == nullptr) {
+			resetRenderTarget();
+
+			return;
+		}
+
 		if (!m_sceneInProgress) {
 			m_renderTarget = std::static_pointer_cast<Framebuffer>(renderTarget);
-			if (m_renderTarget->getFramebufferDimensions().height != m_data->swapChain.extent.height ||
-			    m_renderTarget->getFramebufferDimensions().width != m_data->swapChain.extent.width) {
-				m_renderTarget->invalidate();
-			}
 
 			return;
 		}
@@ -1129,11 +1159,6 @@ namespace MRG::Vulkan
 
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
-
-		if (m_renderTarget->getFramebufferDimensions().height != m_data->swapChain.extent.height ||
-		    m_renderTarget->getFramebufferDimensions().width != m_data->swapChain.extent.width) {
-			m_renderTarget->invalidate();
-		}
 
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1146,12 +1171,26 @@ namespace MRG::Vulkan
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
-		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][1];
+		renderPassInfo.framebuffer = m_renderTarget->getHandle();
 		renderPassInfo.renderArea.offset = {0, 0};
-		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.renderArea.extent = VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
 		renderPassInfo.clearValueCount = 0;
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width = static_cast<float>(m_renderTarget->getSpecification().width);
+		viewport.height = static_cast<float>(m_renderTarget->getSpecification().height);
+		viewport.minDepth = 0.f;
+		viewport.maxDepth = 1.f;
+		vkCmdSetViewport(m_data->commandBuffers[m_imageIndex][1], 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent = VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
+		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
 
 		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
 
@@ -1204,6 +1243,20 @@ namespace MRG::Vulkan
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+		VkViewport viewport{};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width = static_cast<float>(m_data->swapChain.extent.width);
+		viewport.height = static_cast<float>(m_data->swapChain.extent.height);
+		viewport.minDepth = 0.f;
+		viewport.maxDepth = 1.f;
+		vkCmdSetViewport(m_data->commandBuffers[m_imageIndex][1], 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent = m_data->swapChain.extent;
+		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
+
 		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
 
 		VkBuffer vertexBuffers[] = {std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle()};
@@ -1246,7 +1299,9 @@ namespace MRG::Vulkan
 		renderPassInfo.framebuffer =
 		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][0] : m_renderTarget->getHandle();
 		renderPassInfo.renderArea.offset = {0, 0};
-		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.renderArea.extent =
+		  m_renderTarget == nullptr ? m_data->swapChain.extent
+		                            : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
 		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());
 		renderPassInfo.pClearValues = clearColors.data();
 
@@ -1266,13 +1321,27 @@ namespace MRG::Vulkan
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][0], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+		VkViewport viewport{};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width =
+		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.width) : m_renderTarget->getSpecification().width;
+		viewport.height =
+		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.height) : m_renderTarget->getSpecification().height;
+		viewport.minDepth = 0.f;
+		viewport.maxDepth = 1.f;
+		vkCmdSetViewport(m_data->commandBuffers[m_imageIndex][0], 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent = m_renderTarget == nullptr
+		                   ? m_data->swapChain.extent
+		                   : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
+		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][0], 0, 1, &scissor);
+
 		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][0], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->clearingPipeline.handle);
 
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][0]);
-
-		if (m_renderTarget != nullptr) {
-			m_renderTarget->updateView(m_data->commandBuffers[m_imageIndex][0]);
-		}
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][0]), "failed to record command buffer!");
 
@@ -1294,13 +1363,6 @@ namespace MRG::Vulkan
 
 		for (std::size_t i = 0; i < m_data->commandBuffers.size(); ++i)
 			vkFreeCommandBuffers(m_data->device, m_data->commandPool, 3, m_data->commandBuffers[i].data());
-
-		vkDestroyPipeline(m_data->device, m_data->clearingPipeline.handle, nullptr);
-		vkDestroyPipeline(m_data->device, m_data->renderingPipeline.handle, nullptr);
-		vkDestroyPipeline(m_data->device, m_data->ImGuiPipeline.handle, nullptr);
-
-		// All 3 pipelines have the same VkLayout handle, so destroying only one is necessary
-		vkDestroyPipelineLayout(m_data->device, m_data->clearingPipeline.layout, nullptr);
 
 		vkDestroyRenderPass(m_data->device, m_data->clearingPipeline.renderPass, nullptr);
 		vkDestroyRenderPass(m_data->device, m_data->renderingPipeline.renderPass, nullptr);
@@ -1339,23 +1401,6 @@ namespace MRG::Vulkan
 		m_data->clearingPipeline.renderPass = clearingRP;
 		m_data->renderingPipeline.renderPass = renderingRP;
 		m_data->ImGuiPipeline.renderPass = ImGuiRP;
-
-		const auto pipelineLayoutCreateInfo = populatePipelineLayout(&m_data->descriptorSetLayout, &m_data->pushConstantRanges);
-		VkPipelineLayout layout;
-		MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineLayoutCreateInfo, nullptr, &layout),
-		               "failed to create pipeline layout!");
-		m_data->clearingPipeline.layout = layout;
-		m_data->renderingPipeline.layout = layout;
-		m_data->ImGuiPipeline.layout = layout;
-		MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created");
-		auto [clearingPipeline, renderingPipeline, ImGuiPipeline] =
-		  createPipelines(m_data,
-		                  m_textureShader,
-		                  std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getAttributeDescriptions(),
-		                  {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getBindingDescription()});
-		m_data->clearingPipeline.handle = clearingPipeline;
-		m_data->renderingPipeline.handle = renderingPipeline;
-		m_data->ImGuiPipeline.handle = ImGuiPipeline;
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 
@@ -1429,10 +1474,30 @@ namespace MRG::Vulkan
 		renderPassInfo.framebuffer =
 		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][1] : m_renderTarget->getHandle();
 		renderPassInfo.renderArea.offset = {0, 0};
-		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
+		renderPassInfo.renderArea.extent =
+		  m_renderTarget == nullptr ? m_data->swapChain.extent
+		                            : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
 		renderPassInfo.clearValueCount = 0;
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width =
+		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.width) : m_renderTarget->getSpecification().width;
+		viewport.height =
+		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.height) : m_renderTarget->getSpecification().height;
+		viewport.minDepth = 0.f;
+		viewport.maxDepth = 1.f;
+		vkCmdSetViewport(m_data->commandBuffers[m_imageIndex][1], 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent = m_renderTarget == nullptr
+		                   ? m_data->swapChain.extent
+		                   : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
+		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
 
 		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
 

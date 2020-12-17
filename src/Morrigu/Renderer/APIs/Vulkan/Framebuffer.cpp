@@ -13,15 +13,14 @@ namespace MRG::Vulkan
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
 		m_specification = spec;
-		m_renderTexture = createRef<Texture2D>(spec.width, spec.height);
 
 		createImage(data->physicalDevice,
 		            data->device,
-		            data->swapChain.extent.width,
-		            data->swapChain.extent.height,
+		            m_specification.width,
+		            m_specification.height,
 		            data->swapChain.imageFormat,
 		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		            m_colorAttachment.handle,
 		            m_colorAttachment.memoryHandle);
@@ -53,8 +52,8 @@ namespace MRG::Vulkan
 
 		createImage(data->physicalDevice,
 		            data->device,
-		            data->swapChain.extent.width,
-		            data->swapChain.extent.height,
+		            m_specification.width,
+		            m_specification.height,
 		            VK_FORMAT_D32_SFLOAT,
 		            VK_IMAGE_TILING_OPTIMAL,
 		            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
@@ -96,15 +95,12 @@ namespace MRG::Vulkan
 		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 		createInfo.pAttachments = attachments.data();
-		createInfo.width = data->swapChain.extent.width;
-		createInfo.height = data->swapChain.extent.height;
+		createInfo.width = m_specification.width;
+		createInfo.height = m_specification.height;
 		createInfo.layers = 1;
 		createInfo.renderPass = data->renderingPipeline.renderPass;
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!");
-
-		m_FBWidth = data->swapChain.extent.width;
-		m_FBHeight = data->swapChain.extent.height;
 	}
 
 	Framebuffer::~Framebuffer() { destroy(); }
@@ -129,8 +125,6 @@ namespace MRG::Vulkan
 
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
 
-		m_renderTexture->destroy();
-
 		m_isDestroyed = true;
 	}
 
@@ -139,32 +133,14 @@ namespace MRG::Vulkan
 		m_specification.width = width;
 		m_specification.height = height;
 
-		m_renderTexture = createRef<Texture2D>(width, height);
-
-		if (m_ImTextureID == nullptr) {
-			m_ImTextureID =
-			  ImGui_ImplVulkan_AddTexture(m_sampler, m_renderTexture->getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			return;
-		}
-
-		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
-
-		VkDescriptorImageInfo desc_image[1] = {};
-		desc_image[0].sampler = m_sampler;
-		desc_image[0].imageView = m_renderTexture->getImageView();
-		desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		VkWriteDescriptorSet write_desc[1] = {};
-		write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		write_desc[0].dstSet = (VkDescriptorSet)m_ImTextureID;
-		write_desc[0].descriptorCount = 1;
-		write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		write_desc[0].pImageInfo = desc_image;
-		vkUpdateDescriptorSets(data->device, 1, write_desc, 0, nullptr);
+		invalidate();
 	}
 
 	void Framebuffer::invalidate()
 	{
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+		vkDeviceWaitIdle(data->device);
 
 		vkDestroyImageView(data->device, m_colorAttachment.imageView, nullptr);
 		vkDestroyImageView(data->device, m_depthAttachment.imageView, nullptr);
@@ -179,11 +155,11 @@ namespace MRG::Vulkan
 
 		createImage(data->physicalDevice,
 		            data->device,
-		            data->swapChain.extent.width,
-		            data->swapChain.extent.height,
+		            m_specification.width,
+		            m_specification.height,
 		            data->swapChain.imageFormat,
 		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		            m_colorAttachment.handle,
 		            m_colorAttachment.memoryHandle);
@@ -195,8 +171,8 @@ namespace MRG::Vulkan
 
 		createImage(data->physicalDevice,
 		            data->device,
-		            data->swapChain.extent.width,
-		            data->swapChain.extent.height,
+		            m_specification.width,
+		            m_specification.height,
 		            VK_FORMAT_D32_SFLOAT,
 		            VK_IMAGE_TILING_OPTIMAL,
 		            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
@@ -238,62 +214,44 @@ namespace MRG::Vulkan
 		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 		createInfo.pAttachments = attachments.data();
-		createInfo.width = data->swapChain.extent.width;
-		createInfo.height = data->swapChain.extent.height;
+		createInfo.width = m_specification.width;
+		createInfo.height = m_specification.height;
 		createInfo.layers = 1;
 		createInfo.renderPass = data->renderingPipeline.renderPass;
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!");
+
+		if (m_ImTextureID != nullptr) {
+			transitionImageLayout(
+			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			VkDescriptorImageInfo desc_image[1] = {};
+			desc_image[0].sampler = m_sampler;
+			desc_image[0].imageView = m_colorAttachment.imageView;
+			desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			VkWriteDescriptorSet write_desc[1] = {};
+			write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			write_desc[0].dstSet = (VkDescriptorSet)m_ImTextureID;
+			write_desc[0].descriptorCount = 1;
+			write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			write_desc[0].pImageInfo = desc_image;
+			vkUpdateDescriptorSets(data->device, 1, write_desc, 0, nullptr);
+			transitionImageLayout(
+			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		}
 	}
 
 	ImTextureID Framebuffer::getImTextureID()
 	{
 		if (m_ImTextureID == nullptr) {
-			m_ImTextureID =
-			  ImGui_ImplVulkan_AddTexture(m_sampler, m_renderTexture->getImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+			transitionImageLayout(
+			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_ImTextureID = ImGui_ImplVulkan_AddTexture(m_sampler, m_colorAttachment.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			transitionImageLayout(
+			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		}
 
 		return m_ImTextureID;
-	}
-
-	void Framebuffer::updateView(VkCommandBuffer commandBuffer)
-	{
-		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
-
-		transitionImageLayoutInline(
-		  commandBuffer, m_colorAttachment.handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-
-		transitionImageLayoutInline(
-		  commandBuffer, m_renderTexture->getHandle(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-		VkImageBlit region{};
-		region.srcOffsets[0] = {0, 0, 0};
-		region.srcOffsets[1] = {static_cast<int32_t>(data->swapChain.extent.width), static_cast<int32_t>(data->swapChain.extent.height), 1};
-		region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		region.srcSubresource.mipLevel = 0;
-		region.srcSubresource.baseArrayLayer = 0;
-		region.srcSubresource.layerCount = 1;
-
-		region.dstOffsets[0] = {0, 0, 0};
-		region.dstOffsets[1] = {static_cast<int32_t>(m_specification.width), static_cast<int32_t>(m_specification.height), 1};
-		region.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		region.dstSubresource.mipLevel = 0;
-		region.dstSubresource.baseArrayLayer = 0;
-		region.dstSubresource.layerCount = 1;
-
-		vkCmdBlitImage(commandBuffer,
-		               m_colorAttachment.handle,
-		               VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-		               m_renderTexture->getHandle(),
-		               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		               1,
-		               &region,
-		               VK_FILTER_LINEAR);
-
-		transitionImageLayoutInline(
-		  commandBuffer, m_renderTexture->getHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-		transitionImageLayoutInline(
-		  commandBuffer, m_colorAttachment.handle, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	}
 }  // namespace MRG::Vulkan
