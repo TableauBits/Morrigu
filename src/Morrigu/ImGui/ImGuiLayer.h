@@ -24,7 +24,10 @@ namespace MRG
 		void begin();
 		void end();
 
+		void blockEvents(bool block) { m_blockEvents = block; }
+
 	private:
+		bool m_blockEvents = true;
 		Ref<Framebuffer> m_renderTarget;
 	};
 }  // namespace MRG

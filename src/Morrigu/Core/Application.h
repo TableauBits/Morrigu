@@ -25,6 +25,7 @@ namespace MRG
 		void close();
 
 		[[nodiscard]] Window& getWindow() const { return *m_window; }
+		[[nodiscard]] ImGuiLayer* getImGuiLayer() const { return m_ImGuiLayer; }
 		[[nodiscard]] static Application& get() { return *s_instance; }
 
 	private:

@@ -23,7 +23,8 @@ namespace MRG
 
 		m_frameTime = ts;
 
-		m_camera.onUpdate(ts);
+		if (m_viewportFocused)
+			m_camera.onUpdate(ts);
 
 		Renderer2D::resetStats();
 
@@ -135,6 +136,11 @@ namespace MRG
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
 		ImGui::Begin("Viewport");
+
+		m_viewportFocused = ImGui::IsWindowFocused();
+		m_viewportHovered = ImGui::IsWindowHovered();
+		Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused || !m_viewportHovered);
+
 		auto viewportSize = ImGui::GetContentRegionAvail();
 		if (m_viewportSize != *((glm::vec2*)&viewportSize)) {
 			m_renderTarget->resize(static_cast<uint32_t>(viewportSize.x), static_cast<uint32_t>(viewportSize.y));
