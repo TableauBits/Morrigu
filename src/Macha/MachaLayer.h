@@ -18,15 +18,16 @@ namespace MRG
 	private:
 		OrthoCameraController m_camera;
 
-		Ref<Texture2D> m_checkerboard, m_character;
+		Ref<Texture2D> m_checkerboard;
 
 		bool m_viewportFocused = false, m_viewportHovered = false;
 		glm::vec2 m_viewportSize = {0.f, 0.f};
 
-		glm::vec4 m_color = {0.1f, 0.1f, 0.1f, 1.0f};
+		Ref<Scene> m_activeScene;
+		entt::entity m_squareEntity;
+
 		Timestep m_frameTime;
 
-		// temp
 		Ref<Framebuffer> m_renderTarget;
 	};
 }  // namespace MRG

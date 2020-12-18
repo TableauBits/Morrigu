@@ -7,6 +7,9 @@
 #include "Core/Logger.h"
 #include "Core/Timestep.h"
 
+#include "Scene/Components.h"
+#include "Scene/Scene.h"
+
 #include "Renderer/Buffers.h"
 #include "Renderer/OrthoCamera.h"
 #include "Renderer/OrthoCameraController.h"
