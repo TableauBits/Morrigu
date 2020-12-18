@@ -31,7 +31,6 @@ namespace MRG::Vulkan
 		VkFramebuffer m_handle;
 		LightVulkanImage m_colorAttachment, m_depthAttachment;
 		VkSampler m_sampler;
-		std::array<VkPipeline, 2> m_pipelines;
 	};
 
 }  // namespace MRG::Vulkan
