@@ -21,13 +21,7 @@ namespace MRG::OpenGL
 		void bind();
 		void unbind();
 
-		[[nodiscard]] virtual ImTextureID getImTextureID() override
-		{
-			DISABLE_WARNING_PUSH
-			DISABLE_WARNING_GREATER_SIZE_CAST
-			return (ImTextureID)m_colorAttachment;
-			DISABLE_WARNING_POP
-		}
+		[[nodiscard]] virtual ImTextureID getImTextureID() override { return (ImTextureID)(uintptr_t)m_colorAttachment; }
 		[[nodiscard]] const std::array<ImVec2, 2>& getUVMapping() const override { return m_UVMapping; }
 
 		[[nodiscard]] virtual const FramebufferSpecification& getSpecification() const override { return m_specification; }
