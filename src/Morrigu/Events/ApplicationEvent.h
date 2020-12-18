@@ -10,10 +10,10 @@ namespace MRG
 	class WindowResizeEvent : public Event
 	{
 	public:
-		WindowResizeEvent(unsigned int width, unsigned int height) : m_width(width), m_height(height) {}
+		WindowResizeEvent(uint32_t width, uint32_t height) : m_width(width), m_height(height) {}
 
-		[[nodiscard]] unsigned int getWidth() { return m_width; }
-		[[nodiscard]] unsigned int getHeight() { return m_height; }
+		[[nodiscard]] uint32_t getWidth() { return m_width; }
+		[[nodiscard]] uint32_t getHeight() { return m_height; }
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -26,7 +26,7 @@ namespace MRG
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication)
 
 	private:
-		unsigned int m_width, m_height;
+		uint32_t m_width, m_height;
 	};
 
 	class WindowCloseEvent : public Event

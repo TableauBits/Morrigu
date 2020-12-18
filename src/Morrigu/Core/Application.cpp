@@ -11,14 +11,14 @@ namespace MRG
 {
 	Application* Application::s_instance = nullptr;
 
-	Application::Application()
+	Application::Application(const char* name)
 	{
 		MRG_PROFILE_FUNCTION();
 
 		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists !");
 		s_instance = this;
 
-		m_window = std::make_unique<Window>(WindowProperties::create("Morrigu", 1280, 720, false));
+		m_window = std::make_unique<Window>(WindowProperties::create(name, 1280, 720, false));
 		m_window->setEventCallback([this](Event& event) { onEvent(event); });
 
 		Renderer2D::init(m_window->getGLFWWindow());
@@ -48,6 +48,22 @@ namespace MRG
 			(*it)->onEvent(event);
 		}
 	}
+
+	void Application::pushLayer(Layer* newLayer)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_layerStack.pushLayer(newLayer);
+	}
+
+	void Application::pushOverlay(Layer* newOverlay)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_layerStack.pushOverlay(newOverlay);
+	}
+
+	void Application::close() { m_running = false; }
 
 	void Application::run()
 	{
@@ -79,20 +95,6 @@ namespace MRG
 
 			while (!Renderer2D::endFrame()) {}
 		}
-	}
-
-	void Application::pushLayer(Layer* newLayer)
-	{
-		MRG_PROFILE_FUNCTION();
-
-		m_layerStack.pushLayer(newLayer);
-	}
-
-	void Application::pushOverlay(Layer* newOverlay)
-	{
-		MRG_PROFILE_FUNCTION();
-
-		m_layerStack.pushOverlay(newOverlay);
 	}
 
 	bool Application::onWindowClose([[maybe_unused]] WindowCloseEvent& event)

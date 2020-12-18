@@ -1,6 +1,7 @@
 #ifndef MRG_OPENGL_IMPL_TEXTURES
 #define MRG_OPENGL_IMPL_TEXTURES
 
+#include "Core/Warnings.h"
 #include "Renderer/Textures.h"
 
 #include <glad/glad.h>
@@ -20,6 +21,8 @@ namespace MRG::OpenGL
 
 		[[nodiscard]] uint32_t getWidth() const override { return m_width; };
 		[[nodiscard]] uint32_t getHeight() const override { return m_height; };
+		[[nodiscard]] uint32_t getHandle() const { return m_rendererID; }
+		[[nodiscard]] ImTextureID getImTextureID() override { return (ImTextureID)(uintptr_t)m_rendererID; };
 
 		void setData(void* data, uint32_t size) override;
 

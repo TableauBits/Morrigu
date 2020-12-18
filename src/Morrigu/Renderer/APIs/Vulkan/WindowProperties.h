@@ -9,9 +9,9 @@
 
 namespace MRG::Vulkan
 {
-	struct DepthBuffer
+	struct LightVulkanImage
 	{
-		VkImage depthImage;
+		VkImage handle;
 		VkDeviceMemory memoryHandle;
 		VkImageView imageView;
 	};
@@ -26,7 +26,7 @@ namespace MRG::Vulkan
 		VkExtent2D extent;
 		std::vector<VkImageView> imageViews;
 		std::vector<std::array<VkFramebuffer, 3>> frameBuffers;
-		DepthBuffer depthBuffer;
+		LightVulkanImage depthBuffer;
 	};
 
 	struct Queue
@@ -51,7 +51,7 @@ namespace MRG::Vulkan
 	class WindowProperties : public MRG::WindowProperties
 	{
 	public:
-		WindowProperties(const std::string& newTitle, unsigned int newWidth, unsigned int newHeight, bool newVSync)
+		WindowProperties(const char* newTitle, uint32_t newWidth, uint32_t newHeight, bool newVSync)
 		    : MRG::WindowProperties{newTitle, newWidth, newHeight, newVSync}
 		{}
 

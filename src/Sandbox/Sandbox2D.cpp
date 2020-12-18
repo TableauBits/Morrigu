@@ -1,19 +1,18 @@
 #include "Sandbox2D.h"
 
-Sandbox2D::Sandbox2D() : MRG::Layer("Sandbox 2D"), m_camera(1280.f / 720.f) {}
+Macha::Macha() : MRG::Layer("Sandbox 2D"), m_camera(1280.f / 720.f) {}
 
-void Sandbox2D::onAttach()
+void Macha::onAttach()
 {
 	MRG_PROFILE_FUNCTION();
 
 	m_checkerboard = MRG::Texture2D::create("resources/textures/Checkerboard.png");
-	m_character = MRG::Texture2D::create("resources/textures/Character.png");
 	m_camera.movementSpeed = 2.f;
 }
 
-void Sandbox2D::onDetach() { MRG_PROFILE_FUNCTION(); }
+void Macha::onDetach() { MRG_PROFILE_FUNCTION(); }
 
-void Sandbox2D::onUpdate(MRG::Timestep ts)
+void Macha::onUpdate(MRG::Timestep ts)
 {
 	MRG_PROFILE_FUNCTION();
 
@@ -21,12 +20,14 @@ void Sandbox2D::onUpdate(MRG::Timestep ts)
 
 	m_camera.onUpdate(ts);
 
+	MRG::Renderer2D::resetStats();
+
 	{
 		MRG_PROFILE_SCOPE("Render prep");
 		MRG::Renderer2D::setClearColor(m_color);
+		MRG::Renderer2D::clear();
 	}
 
-	MRG::Renderer2D::resetStats();
 	{
 		static float rotation = 0.f;
 		rotation += ts * 50.f;
@@ -53,7 +54,7 @@ void Sandbox2D::onUpdate(MRG::Timestep ts)
 	}
 }
 
-void Sandbox2D::onImGuiRender()
+void Macha::onImGuiRender()
 {
 	MRG_PROFILE_FUNCTION();
 
@@ -73,4 +74,4 @@ void Sandbox2D::onImGuiRender()
 	ImGui::End();
 }
 
-void Sandbox2D::onEvent(MRG::Event& event) { m_camera.onEvent(event); }
+void Macha::onEvent(MRG::Event& event) { m_camera.onEvent(event); }

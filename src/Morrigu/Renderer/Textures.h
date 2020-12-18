@@ -3,6 +3,8 @@
 
 #include "Core/Core.h"
 
+#include <imgui.h>
+
 #include <string>
 
 namespace MRG
@@ -18,6 +20,7 @@ namespace MRG
 
 		[[nodiscard]] virtual uint32_t getWidth() const = 0;
 		[[nodiscard]] virtual uint32_t getHeight() const = 0;
+		[[nodiscard]] virtual ImTextureID getImTextureID() = 0;
 
 		virtual void setData(void* data, uint32_t size) = 0;
 

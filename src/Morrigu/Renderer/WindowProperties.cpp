@@ -5,7 +5,7 @@
 
 namespace MRG
 {
-	Scope<WindowProperties> WindowProperties::create(const std::string& title, unsigned int width, unsigned int height, bool vSync)
+	Scope<WindowProperties> WindowProperties::create(const char* title, uint32_t width, uint32_t height, bool vSync)
 	{
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {

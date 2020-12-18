@@ -14,22 +14,22 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (MRG::Input::isKeyDown(MRG_KEY_W)) {
+		if (MRG::Input::isKeyPressed(MRG_KEY_W)) {
 			m_position.x += -std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 			m_position.y += std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
-		if (MRG::Input::isKeyDown(MRG_KEY_A)) {
+		if (MRG::Input::isKeyPressed(MRG_KEY_A)) {
 			m_position.x -= std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 			m_position.y -= std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
-		if (MRG::Input::isKeyDown(MRG_KEY_S)) {
+		if (MRG::Input::isKeyPressed(MRG_KEY_S)) {
 			m_position.x -= -std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 			m_position.y -= std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
-		if (MRG::Input::isKeyDown(MRG_KEY_D)) {
+		if (MRG::Input::isKeyPressed(MRG_KEY_D)) {
 			m_position.x += std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 			m_position.y += std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
@@ -37,10 +37,10 @@ namespace MRG
 		m_camera.setPosition(m_position);
 
 		if (isRotatable) {
-			if (MRG::Input::isKeyDown(MRG_KEY_Q))
+			if (MRG::Input::isKeyPressed(MRG_KEY_Q))
 				m_rotation -= rotationSpeed * ts;
 
-			if (MRG::Input::isKeyDown(MRG_KEY_E))
+			if (MRG::Input::isKeyPressed(MRG_KEY_E))
 				m_rotation += rotationSpeed * ts;
 
 			if (m_rotation > 180.f)
@@ -62,6 +62,14 @@ namespace MRG
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) { return onWindowResized(resizeEvent); });
 	}
 
+	void OrthoCameraController::onResize(float width, float height)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		m_aspectRatio = width / height;
+		m_camera.setProjection(-m_aspectRatio * zoomFactor, m_aspectRatio * zoomFactor, -zoomFactor, zoomFactor);
+	}
+
 	bool OrthoCameraController::onMouseScrolled(MouseScrolledEvent& event)
 	{
 		MRG_PROFILE_FUNCTION();
@@ -77,8 +85,7 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		m_aspectRatio = static_cast<float>(event.getWidth()) / static_cast<float>(event.getHeight());
-		m_camera.setProjection(-m_aspectRatio * zoomFactor, m_aspectRatio * zoomFactor, -zoomFactor, zoomFactor);
+		onResize(static_cast<float>(event.getWidth()), static_cast<float>(event.getHeight()));
 
 		return false;
 	}

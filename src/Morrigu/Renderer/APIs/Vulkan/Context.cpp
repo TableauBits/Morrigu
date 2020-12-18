@@ -174,7 +174,7 @@ namespace
 			}
 			if (!isSupported) {
 				MRG_ENGINE_ERROR("\t{} (NO VERSION FOUND) [NOT SUPPORTED]", requiredExtensions[i]);
-				MRG_ASSERT(false, "Required extension not supported by hardware!");
+				MRG_CORE_ASSERT(false, "Required extension not supported by hardware!");
 			}
 		}
 		MRG_ENGINE_INFO("All required extensions have been found.");
@@ -413,7 +413,7 @@ namespace MRG::Vulkan
 
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
-			data->instance = createInstance(data->title.c_str());
+			data->instance = createInstance(data->title);
 			MRG_ENGINE_INFO("Vulkan instance successfully created");
 
 			if (enableValidation)

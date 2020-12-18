@@ -3,6 +3,7 @@
 
 #include "Renderer/Renderer2D.h"
 
+#include "Renderer/APIs/Vulkan/Framebuffer.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/Shader.h"
 #include "Renderer/APIs/Vulkan/Textures.h"
@@ -49,13 +50,16 @@ namespace MRG::Vulkan
 		                     float tilingFactor = 1.0f,
 		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
+		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
+		void resetRenderTarget() override;
+		[[nodiscard]] Ref<MRG::Framebuffer> getRenderTarget() const override { return m_renderTarget; }
+
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
 		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
+		void clear() override;
 
 		void resetStats() override { m_stats = {}; };
 		RenderingStatistics getStats() const override { return m_stats; };
-
-		void clear(const glm::vec4& color);  // TODO: OVERRIDE
 
 	private:
 		void cleanupSwapChain();
@@ -75,9 +79,12 @@ namespace MRG::Vulkan
 		std::vector<VkDescriptorSet> m_descriptorSets;
 		bool m_shouldRecreateSwapChain = false;
 
+		bool m_sceneInProgress = false;
+
 		PushConstants m_modelMatrix;
 
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
+		Ref<Framebuffer> m_renderTarget;
 
 		RenderingStatistics m_stats;
 	};

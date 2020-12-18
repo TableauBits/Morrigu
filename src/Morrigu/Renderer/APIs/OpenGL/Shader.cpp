@@ -252,7 +252,7 @@ namespace MRG::OpenGL
 				glDeleteShader(shader);
 
 				MRG_ENGINE_ERROR("Could not compile the {} of '{}': {}", shaderTypeFromEnum(type), m_name, infoLog.data());
-				MRG_ASSERT(false, "Shader compilation failed !");
+				MRG_CORE_ASSERT(false, "Shader compilation failed !");
 				break;
 			}
 			glAttachShader(program, shader);
@@ -275,7 +275,7 @@ namespace MRG::OpenGL
 			for (auto id : shaderIDs) glDeleteShader(id);
 
 			MRG_ENGINE_ERROR("Could not link program: {0}", infoLog.data());
-			MRG_ASSERT(false, "Program linking failed !");
+			MRG_CORE_ASSERT(false, "Program linking failed !");
 			return;
 		}
 

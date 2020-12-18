@@ -125,9 +125,11 @@ namespace MRG
 
 	void ImGuiLayer::onEvent(Event& event)
 	{
-		auto& io = ImGui::GetIO();
-		event.handled |= event.isInCategory(EventCategoryMouse) & io.WantCaptureMouse;
-		event.handled |= event.isInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+		if (m_blockEvents) {
+			auto& io = ImGui::GetIO();
+			event.handled |= event.isInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+			event.handled |= event.isInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+		}
 	}
 
 	void ImGuiLayer::begin()
@@ -136,6 +138,8 @@ namespace MRG
 
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
+			m_renderTarget = Renderer2D::getRenderTarget();
+			Renderer2D::resetRenderTarget();
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
@@ -173,6 +177,7 @@ namespace MRG
 				ImGui::RenderPlatformWindowsDefault();
 				glfwMakeContextCurrent(contextBkp);
 			}
+			Renderer2D::setRenderTarget(m_renderTarget);
 		} break;
 
 		case RenderingAPI::API::Vulkan: {

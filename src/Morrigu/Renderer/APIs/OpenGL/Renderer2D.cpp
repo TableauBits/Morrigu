@@ -58,6 +58,15 @@ namespace MRG::OpenGL
 		m_whiteTexture->destroy();
 		m_quadVertexArray->destroy();
 
+		for (const auto& texture : m_textureSlots) {
+			if (texture != nullptr)
+				texture->destroy();
+		}
+
+		if (m_framebuffer != nullptr) {
+			m_framebuffer->destroy();
+		}
+
 		delete[] m_qvbBase;
 	}
 
@@ -67,7 +76,6 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		return true;
 	}
 
@@ -89,6 +97,7 @@ namespace MRG::OpenGL
 		m_qvbPtr = m_qvbBase;
 
 		m_textureSlotindex = 1;
+		m_sceneInProgress = true;
 	}
 
 	void Renderer2D::endScene()
@@ -99,6 +108,7 @@ namespace MRG::OpenGL
 		m_quadVertexBuffer->setData(m_qvbBase, dataSize);
 
 		flush();
+		m_sceneInProgress = false;
 	}
 
 	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
@@ -127,7 +137,7 @@ namespace MRG::OpenGL
 	}
 
 	void Renderer2D::drawQuad(
-	  const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	  const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		MRG_PROFILE_FUNCTION();
 
@@ -195,7 +205,7 @@ namespace MRG::OpenGL
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
 	                                 const glm::vec2& size,
 	                                 float rotation,
-	                                 const Ref<Texture2D>& texture,
+	                                 const Ref<MRG::Texture2D>& texture,
 	                                 float tilingFactor,
 	                                 const glm::vec4& tintColor)
 	{
@@ -235,6 +245,29 @@ namespace MRG::OpenGL
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
+	}
+
+	void Renderer2D::setRenderTarget(Ref<MRG::Framebuffer> renderTarget)
+	{
+		if (renderTarget == nullptr) {
+			resetRenderTarget();
+			return;
+		}
+
+		if (m_sceneInProgress)
+			flushAndReset();
+
+		m_framebuffer = std::static_pointer_cast<Framebuffer>(renderTarget);
+		m_framebuffer->bind();
+	}
+
+	void Renderer2D::resetRenderTarget()
+	{
+		if (m_sceneInProgress)
+			flushAndReset();
+
+		m_framebuffer->unbind();
+		m_framebuffer = nullptr;
 	}
 
 	void Renderer2D::resetStats() { m_stats = {}; }

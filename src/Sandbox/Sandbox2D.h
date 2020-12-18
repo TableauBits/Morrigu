@@ -1,10 +1,10 @@
 #include <Morrigu.h>
 
-class Sandbox2D : public MRG::Layer
+class Macha : public MRG::Layer
 {
 public:
-	Sandbox2D();
-	virtual ~Sandbox2D() = default;
+	Macha();
+	virtual ~Macha() = default;
 
 	void onAttach() override;
 	void onDetach() override;
@@ -20,4 +20,7 @@ private:
 
 	glm::vec4 m_color = {0.1f, 0.1f, 0.1f, 1.0f};
 	MRG::Timestep m_frameTime;
+
+	// temp
+	MRG::Ref<MRG::Framebuffer> m_renderTarget;
 };

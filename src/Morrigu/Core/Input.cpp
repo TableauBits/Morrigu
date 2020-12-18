@@ -4,14 +4,14 @@
 
 namespace MRG
 {
-	bool Input::isKeyDown(KeyCode key)
+	bool Input::isKeyPressed(KeyCode key)
 	{
 		const auto window = Application::get().getWindow().getGLFWWindow();
 		const auto state = glfwGetKey(window, static_cast<int32_t>(key));
 		return state == GLFW_PRESS || state == GLFW_REPEAT;
 	}
 
-	bool Input::isMouseButtonDown(MouseCode button)
+	bool Input::isMouseButtonPressed(MouseCode button)
 	{
 		const auto window = Application::get().getWindow().getGLFWWindow();
 		const auto state = glfwGetMouseButton(window, static_cast<int32_t>(button));

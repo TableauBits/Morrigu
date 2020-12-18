@@ -14,7 +14,7 @@ namespace MRG
 	{
 	private:
 	public:
-		Application();
+		Application(const char* name = "Morrigu App");
 		virtual ~Application();
 
 		void onEvent(Event& event);
@@ -22,7 +22,10 @@ namespace MRG
 		void pushLayer(Layer* newLayer);
 		void pushOverlay(Layer* newOverlay);
 
+		void close();
+
 		[[nodiscard]] Window& getWindow() const { return *m_window; }
+		[[nodiscard]] ImGuiLayer* getImGuiLayer() const { return m_ImGuiLayer; }
 		[[nodiscard]] static Application& get() { return *s_instance; }
 
 	private:

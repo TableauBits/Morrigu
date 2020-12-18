@@ -3,6 +3,9 @@
 
 #include "Renderer/VertexArray.h"
 
+#include "Renderer/APIs/OpenGL/Framebuffer.h"
+#include "Renderer/APIs/OpenGL/Textures.h"
+#include "Renderer/Framebuffer.h"
 #include "Renderer/Renderer2D.h"
 #include "Renderer/Shader.h"
 
@@ -30,7 +33,7 @@ namespace MRG::OpenGL
 		void drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color) override;
 		void drawQuad(const glm::vec3& position,
 		              const glm::vec2& size,
-		              const Ref<Texture2D>& texture,
+		              const Ref<MRG::Texture2D>& texture,
 		              float tilingFactor = 1.0f,
 		              const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
@@ -38,12 +41,17 @@ namespace MRG::OpenGL
 		void drawRotatedQuad(const glm::vec3& position,
 		                     const glm::vec2& size,
 		                     float rotation,
-		                     const Ref<Texture2D>& texture,
+		                     const Ref<MRG::Texture2D>& texture,
 		                     float tilingFactor = 1.0f,
 		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
 
+		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
+		void resetRenderTarget() override;
+		[[nodiscard]] Ref<MRG::Framebuffer> getRenderTarget() const override { return m_framebuffer; }
+
 		void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override { glViewport(x, y, width, height); }
 		void setClearColor(const glm::vec4& color) override { glClearColor(color.r, color.g, color.b, color.a); }
+		void clear() override { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
 		void resetStats() override;
 		RenderingStatistics getStats() const override;
@@ -59,6 +67,9 @@ namespace MRG::OpenGL
 		Ref<MRG::Texture2D> m_whiteTexture;
 
 		RenderingStatistics m_stats;
+
+		Ref<Framebuffer> m_framebuffer = nullptr;
+		bool m_sceneInProgress = false;
 	};
 }  // namespace MRG::OpenGL
 
