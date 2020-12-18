@@ -23,10 +23,10 @@ namespace MRG::OpenGL
 
 		[[nodiscard]] virtual ImTextureID getImTextureID() override
 		{
-			DISABLE_WARNING_PUSH;
-			DISABLE_WARNING_GREATER_SIZE_CAST;
+			DISABLE_WARNING_PUSH
+			DISABLE_WARNING_GREATER_SIZE_CAST
 			return (ImTextureID)m_colorAttachment;
-			DISABLE_WARNING_POP;
+			DISABLE_WARNING_POP
 		}
 		[[nodiscard]] const std::array<ImVec2, 2>& getUVMapping() const override { return m_UVMapping; }
 

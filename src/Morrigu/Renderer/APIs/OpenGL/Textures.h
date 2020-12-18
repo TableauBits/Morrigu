@@ -24,10 +24,10 @@ namespace MRG::OpenGL
 		[[nodiscard]] uint32_t getHandle() const { return m_rendererID; }
 		[[nodiscard]] ImTextureID getImTextureID() override
 		{
-			DISABLE_WARNING_PUSH;
-			DISABLE_WARNING_GREATER_SIZE_CAST;
+			DISABLE_WARNING_PUSH
+			DISABLE_WARNING_GREATER_SIZE_CAST
 			return ImTextureID(m_rendererID);
-			DISABLE_WARNING_POP;
+			DISABLE_WARNING_POP
 		};
 
 		void setData(void* data, uint32_t size) override;
