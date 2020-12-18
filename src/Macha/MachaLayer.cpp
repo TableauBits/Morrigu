@@ -146,5 +146,9 @@ namespace MRG
 		ImGui::End();
 	}
 
-	void MachaLayer::onEvent(Event& event) { m_camera.onEvent(event); }
+	void MachaLayer::onEvent(Event& event)
+	{
+		if (event.getEventType() != EventType::WindowResize)
+			m_camera.onEvent(event);
+	}
 }  // namespace MRG
