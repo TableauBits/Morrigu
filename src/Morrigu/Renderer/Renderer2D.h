@@ -3,6 +3,7 @@
 
 #include "Core/GLMIncludeHelper.h"
 #include "Renderer/Buffers.h"
+#include "Renderer/Camera.h"
 #include "Renderer/Framebuffer.h"
 #include "Renderer/OrthoCamera.h"
 #include "Renderer/Textures.h"
@@ -50,6 +51,7 @@ namespace MRG
 		virtual bool beginFrame() = 0;
 		virtual bool endFrame() = 0;
 
+		virtual void beginScene(const Camera& camera, const glm::mat4& transform) = 0;
 		virtual void beginScene(const OrthoCamera& camera) = 0;
 		virtual void endScene() = 0;
 
@@ -113,6 +115,7 @@ namespace MRG
 		static bool beginFrame();
 		static bool endFrame();
 
+		static void beginScene(const Camera& camera, const glm::mat4& transform);
 		static void beginScene(const OrthoCamera& camera);
 		static void endScene();
 

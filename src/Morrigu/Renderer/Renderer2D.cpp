@@ -60,6 +60,13 @@ namespace MRG
 		return s_renderer->endFrame();
 	}
 
+	void Renderer2D::beginScene(const Camera& camera, const glm::mat4& transform)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->beginScene(camera, transform);
+	}
+
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
 		MRG_PROFILE_FUNCTION();

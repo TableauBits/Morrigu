@@ -86,6 +86,22 @@ namespace MRG::OpenGL
 		return true;
 	}
 
+	void Renderer2D::beginScene(const Camera& camera, const glm::mat4& transform)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		const auto& viewProjection = camera.getProjection() * glm::inverse(transform);
+
+		m_textureShader->bind();
+		m_textureShader->upload("u_viewProjection", viewProjection);
+
+		m_quadIndexCount = 0;
+		m_qvbPtr = m_qvbBase;
+
+		m_textureSlotindex = 1;
+		m_sceneInProgress = true;
+	}
+
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
 		MRG_PROFILE_FUNCTION();

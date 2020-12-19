@@ -20,11 +20,31 @@ namespace MRG
 
 	void Scene::onUpdate(Timestep)
 	{
-		const auto& group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-		for (const auto& entity : group) {
-			const auto& [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+		Camera* mainCamera = nullptr;
+		glm::mat4* cameraTransform = nullptr;
+		{
+			auto view = m_registry.view<TransformComponent, CameraComponent>();
 
-			Renderer2D::drawQuad(glm::mat4(transform), sprite.color);
+			for (const auto& entity : view) {
+				const auto& [transformComp, cameraComp] = view.get<TransformComponent, CameraComponent>(entity);
+				if (cameraComp.primary) {
+					mainCamera = &cameraComp.camera;
+					cameraTransform = &transformComp.transform;
+					break;
+				}
+			}
+
+			if (mainCamera) {
+				Renderer2D::beginScene(mainCamera->getProjection(), *cameraTransform);
+
+				const auto& group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				for (const auto& entity : group) {
+					const auto& [transformComp, spriteComp] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+					Renderer2D::drawQuad(transformComp.transform, spriteComp.color);
+				}
+
+				Renderer2D::endScene();
+			}
 		}
 	}
 }  // namespace MRG

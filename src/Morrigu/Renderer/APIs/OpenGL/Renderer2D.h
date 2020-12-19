@@ -27,6 +27,7 @@ namespace MRG::OpenGL
 		bool beginFrame() override;
 		bool endFrame() override;
 
+		void beginScene(const Camera& camera, const glm::mat4& transform) override;
 		void beginScene(const OrthoCamera& camera) override;
 		void endScene() override;
 

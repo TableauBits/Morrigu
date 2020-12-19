@@ -2,14 +2,13 @@
 
 namespace MRG
 {
-	MachaLayer::MachaLayer() : Layer("Sandbox 2D"), m_camera(1280.f / 720.f) {}
+	MachaLayer::MachaLayer() : Layer("Sandbox 2D") {}
 
 	void MachaLayer::onAttach()
 	{
 		MRG_PROFILE_FUNCTION();
 
 		m_checkerboard = Texture2D::create("resources/textures/Checkerboard.png");
-		m_camera.movementSpeed = 2.f;
 
 		m_renderTarget = Framebuffer::create({1280, 720});
 		Renderer2D::setRenderTarget(m_renderTarget);
@@ -19,6 +18,13 @@ namespace MRG
 
 		m_squareEntity = m_activeScene->createEntity("Green square");
 		m_squareEntity.addComponent<SpriteRendererComponent>(glm::vec4{0.f, 1.f, 0.f, 1.f});
+
+		m_cameraEntity = m_activeScene->createEntity("Camera entity");
+		m_cameraEntity.addComponent<CameraComponent>(glm::ortho(-16.f, 16.f, -9.f, 9.f, -1.f, 1.f));
+
+		m_secondCamera = m_activeScene->createEntity("Clip-space entity");
+		auto& component = m_secondCamera.addComponent<CameraComponent>(glm::ortho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f));
+		component.primary = false;
 	}
 
 	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
@@ -33,19 +39,13 @@ namespace MRG
 		if (const auto spec = m_renderTarget->getSpecification();
 		    m_viewportSize.x > 0.f && m_viewportSize.y > 0.f && (spec.width != m_viewportSize.x || spec.height != m_viewportSize.y)) {
 			m_renderTarget->resize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
-			m_camera.onResize(m_viewportSize.x, m_viewportSize.y);
 		}
-
-		if (m_viewportFocused)
-			m_camera.onUpdate(ts);
 
 		Renderer2D::resetStats();
 		MRG_PROFILE_SCOPE("Render prep");
 		Renderer2D::clear();
 
-		Renderer2D::beginScene(m_camera.getCamera());
 		m_activeScene->onUpdate(ts);
-		Renderer2D::endScene();
 	}
 
 	void MachaLayer::onImGuiRender()
@@ -127,6 +127,14 @@ namespace MRG
 				ImGui::Text("%s", tag.c_str());
 				ImGui::ColorEdit4("Shader color", glm::value_ptr(color));
 			}
+
+			ImGui::Separator();
+			ImGui::DragFloat3("Camera transform", glm::value_ptr(m_cameraEntity.getComponent<TransformComponent>().transform[3]));
+
+			if (ImGui::Checkbox("Camera A", &m_primaryCamera)) {
+				m_cameraEntity.getComponent<CameraComponent>().primary = m_primaryCamera;
+				m_secondCamera.getComponent<CameraComponent>().primary = !m_primaryCamera;
+			}
 		}
 		ImGui::End();
 
@@ -149,9 +157,5 @@ namespace MRG
 		ImGui::End();
 	}
 
-	void MachaLayer::onEvent(Event& event)
-	{
-		if (event.getEventType() != EventType::WindowResize)
-			m_camera.onEvent(event);
-	}
+	void MachaLayer::onEvent(Event&) {}
 }  // namespace MRG

@@ -16,8 +16,6 @@ namespace MRG
 		void onEvent(Event& event) override;
 
 	private:
-		OrthoCameraController m_camera;
-
 		Ref<Texture2D> m_checkerboard;
 
 		bool m_viewportFocused = false, m_viewportHovered = false;
@@ -25,6 +23,9 @@ namespace MRG
 
 		Ref<Scene> m_activeScene;
 		Entity m_squareEntity;
+		Entity m_cameraEntity;
+		Entity m_secondCamera;
+		bool m_primaryCamera = true;
 
 		Timestep m_frameTime;
 
