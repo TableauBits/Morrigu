@@ -1,7 +1,7 @@
 #ifndef MRG_CLASS_KEYEVENT
 #define MRG_CLASS_KEYEVENT
 
-#include "Core/Input.h"
+#include "Core/KeyCodes.h"
 #include "Events/Event.h"
 
 #include <sstream>
@@ -16,7 +16,7 @@ namespace MRG
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 
 	protected:
-		KeyEvent(KeyCode keyCode) : m_keyCode(keyCode) {}
+		KeyEvent(const KeyCode keyCode) : m_keyCode(keyCode) {}
 
 		KeyCode m_keyCode;
 	};
@@ -24,9 +24,9 @@ namespace MRG
 	class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent(KeyCode keyCode, uint32_t repeatCount) : KeyEvent(keyCode), m_repeatCount(repeatCount) {}
+		KeyPressedEvent(const KeyCode keyCode, const uint16_t repeatCount) : KeyEvent(keyCode), m_repeatCount(repeatCount) {}
 
-		[[nodiscard]] uint32_t getRepeatCount() const { return m_repeatCount; }
+		[[nodiscard]] uint16_t getRepeatCount() const { return m_repeatCount; }
 		[[nodiscard]] std::string toString() const override
 		{
 			std::stringstream ss;
@@ -37,13 +37,13 @@ namespace MRG
 		MRG_EVENT_CLASS_TYPE(KeyPressed)
 
 	private:
-		int m_repeatCount;
+		uint16_t m_repeatCount;
 	};
 
 	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
-		KeyReleasedEvent(KeyCode keyCode) : KeyEvent(keyCode) {}
+		KeyReleasedEvent(const KeyCode keyCode) : KeyEvent(keyCode) {}
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -58,7 +58,7 @@ namespace MRG
 	class KeyTypedEvent : public KeyEvent
 	{
 	public:
-		KeyTypedEvent(KeyCode keyCode) : KeyEvent(keyCode) {}
+		KeyTypedEvent(const KeyCode keyCode) : KeyEvent(keyCode) {}
 
 		[[nodiscard]] std::string toString() const override
 		{

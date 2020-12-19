@@ -14,22 +14,22 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		if (MRG::Input::isKeyPressed(MRG_KEY_W)) {
+		if (MRG::Input::isKeyPressed(Key::W)) {
 			m_position.x += -std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 			m_position.y += std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
-		if (MRG::Input::isKeyPressed(MRG_KEY_A)) {
+		if (MRG::Input::isKeyPressed(Key::A)) {
 			m_position.x -= std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 			m_position.y -= std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
-		if (MRG::Input::isKeyPressed(MRG_KEY_S)) {
+		if (MRG::Input::isKeyPressed(Key::S)) {
 			m_position.x -= -std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 			m_position.y -= std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
 
-		if (MRG::Input::isKeyPressed(MRG_KEY_D)) {
+		if (MRG::Input::isKeyPressed(Key::D)) {
 			m_position.x += std::cos(glm::radians(m_rotation)) * m_transationFactor * ts;
 			m_position.y += std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
 		}
@@ -37,10 +37,10 @@ namespace MRG
 		m_camera.setPosition(m_position);
 
 		if (isRotatable) {
-			if (MRG::Input::isKeyPressed(MRG_KEY_Q))
+			if (MRG::Input::isKeyPressed(Key::Q))
 				m_rotation -= rotationSpeed * ts;
 
-			if (MRG::Input::isKeyPressed(MRG_KEY_E))
+			if (MRG::Input::isKeyPressed(Key::E))
 				m_rotation += rotationSpeed * ts;
 
 			if (m_rotation > 180.f)

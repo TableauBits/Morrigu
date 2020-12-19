@@ -15,32 +15,7 @@
     #define MRG_DEBUG
 #endif
 
-// PLATFORM DETECTION:
-#ifdef _WIN32
-    #define MRG_PLATFORM_WINDOWS
-#elif defined(__APPLE__) || defined(__MACH__)
-    // Apple devices ALL fall in this category. Apple provides the following includes to know what exact platform we're exactly on:
-    #include <TargetConditionals.h>
-
-    // We can now use this include to define a bit more specifically what we are compiling on:
-    #if TARGET_IPHONE_SIMULATOR == 1
-        #error "IOS simulator is not supported !"
-    #elif TARGET_OS_IPHONE == 1
-        #define MRG_PLATFORM_IOS
-        #error "IOS is not supported !"
-    #elif TARGET_OS_MAC == 1
-        #define MRG_PLATFORM_MACOS
-    #else
-        #error "Unkown Apple platform !"
-    #endif
-#elif defined(__ANDROID__)
-    #define MRG_PLATFORM_ANDROID
-    #error "Android platform not supported !"
-#elif defined(__linux__)
-    #define MRG_PLATFORM_LINUX
-#else
-    #error "Unknown platform detected !"
-#endif
+#include "Core/PlatformDetection.h"
 
 // defining common interface for function signature macro
 #ifdef _MSC_VER

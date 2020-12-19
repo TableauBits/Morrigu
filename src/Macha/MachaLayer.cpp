@@ -39,13 +39,13 @@ namespace MRG
 				auto& transform = getComponent<TransformComponent>().transform;
 				static float speed = 5.f;
 
-				if (Input::isKeyPressed(KeyCode::A))
+				if (Input::isKeyPressed(Key::A))
 					transform[3][0] -= speed * ts;
-				if (Input::isKeyPressed(KeyCode::D))
+				if (Input::isKeyPressed(Key::D))
 					transform[3][0] += speed * ts;
-				if (Input::isKeyPressed(KeyCode::W))
+				if (Input::isKeyPressed(Key::W))
 					transform[3][1] += speed * ts;
-				if (Input::isKeyPressed(KeyCode::S))
+				if (Input::isKeyPressed(Key::S))
 					transform[3][1] -= speed * ts;
 			}
 		};

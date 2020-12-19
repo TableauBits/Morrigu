@@ -1,7 +1,7 @@
 #ifndef MRG_CLASS_MOUSEEVENT
 #define MRG_CLASS_MOUSEEVENT
 
-#include "Core/Input.h"
+#include "Core/MouseCodes.h"
 #include "Events/Event.h"
 
 #include <sstream>
@@ -11,7 +11,7 @@ namespace MRG
 	class MouseMovedEvent : public Event
 	{
 	public:
-		MouseMovedEvent(float x, float y) : m_mouseX(x), m_mouseY(y) {}
+		MouseMovedEvent(const float x, const float y) : m_mouseX(x), m_mouseY(y) {}
 
 		[[nodiscard]] float getX() const { return m_mouseX; }
 		[[nodiscard]] float getY() const { return m_mouseY; }
@@ -33,7 +33,7 @@ namespace MRG
 	class MouseScrolledEvent : public Event
 	{
 	public:
-		MouseScrolledEvent(float x, float y) : m_mouseX(x), m_mouseY(y) {}
+		MouseScrolledEvent(const float x, const float y) : m_mouseX(x), m_mouseY(y) {}
 
 		[[nodiscard]] float getX() const { return m_mouseX; }
 		[[nodiscard]] float getY() const { return m_mouseY; }
@@ -60,7 +60,7 @@ namespace MRG
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 
 	protected:
-		MouseButtonEvent(MouseCode button) : m_button(button) {}
+		MouseButtonEvent(const MouseCode button) : m_button(button) {}
 
 		MouseCode m_button;
 	};
@@ -68,7 +68,7 @@ namespace MRG
 	class MouseButtonPressedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonPressedEvent(MouseCode button) : MouseButtonEvent(button) {}
+		MouseButtonPressedEvent(const MouseCode button) : MouseButtonEvent(button) {}
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -83,7 +83,7 @@ namespace MRG
 	class MouseButtonReleasedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonReleasedEvent(MouseCode button) : MouseButtonEvent(button) {}
+		MouseButtonReleasedEvent(const MouseCode button) : MouseButtonEvent(button) {}
 
 		[[nodiscard]] std::string toString() const override
 		{

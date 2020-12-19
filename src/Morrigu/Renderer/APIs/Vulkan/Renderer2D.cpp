@@ -995,7 +995,7 @@ namespace MRG::Vulkan
 
 		float texIndex = 0.f;
 		for (uint32_t i = 0; i < m_textureSlotindex; ++i) {
-			if (*m_textureSlots[i].get() == *texture.get()) {
+			if (*m_textureSlots[i] == *texture) {
 				texIndex = static_cast<float>(i);
 				break;
 			}

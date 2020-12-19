@@ -189,7 +189,6 @@ namespace MRG::OpenGL
 		result.resize(size);
 		file.seekg(0, std::ios::beg);
 		file.read(&result[0], result.size());
-		file.close();
 
 		return result;
 	}

@@ -20,7 +20,7 @@ namespace MRG
 		uint32_t height;
 		bool VSync;
 		EventCallbackFunction callback = [](Event&) {};
-		uint32_t keyRepeats = 0;
+		uint16_t keyRepeats = 0;
 
 	protected:
 		WindowProperties(const char*& newTitle, uint32_t newWidth, uint32_t newHeight, bool newVSync)

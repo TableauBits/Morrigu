@@ -18,26 +18,16 @@ namespace MRG
 		return state == GLFW_PRESS;
 	}
 
-	std::pair<float, float> Input::getMousePosition()
+	glm::vec2 Input::getMousePosition()
 	{
 		const auto window = Application::get().getWindow().getGLFWWindow();
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
 
-		return std::pair{static_cast<float>(xPos), static_cast<float>(yPos)};
+		return glm::vec2{static_cast<float>(xPos), static_cast<float>(yPos)};
 	}
 
-	float Input::getMouseX()
-	{
-		float x;
-		std::tie(x, std::ignore) = getMousePosition();
-		return x;
-	}
+	float Input::getMouseX() { return getMousePosition().x; }
 
-	float Input::getMouseY()
-	{
-		float y;
-		std::tie(std::ignore, y) = getMousePosition();
-		return y;
-	}
+	float Input::getMouseY() { return getMousePosition().y; }
 }  // namespace MRG
