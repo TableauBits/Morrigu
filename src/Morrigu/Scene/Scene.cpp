@@ -2,6 +2,7 @@
 
 #include "Renderer/Renderer2D.h"
 #include "Scene/Components.h"
+#include "Scene/Entity.h"
 
 namespace MRG
 {
@@ -9,7 +10,13 @@ namespace MRG
 
 	Scene::~Scene() {}
 
-	entt::entity Scene::createEntity() { return m_registry.create(); }
+	Entity Scene::createEntity(const std::string& name)
+	{
+		Entity entity = {m_registry.create(), this};
+		entity.addComponent<TransformComponent>();
+		entity.addComponent<TagComponent>(name.empty() ? "Entity" : name);
+		return entity;
+	}
 
 	void Scene::onUpdate(Timestep)
 	{

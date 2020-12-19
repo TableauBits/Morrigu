@@ -17,9 +17,8 @@ namespace MRG
 
 		m_activeScene = createRef<Scene>();
 
-		m_squareEntity = m_activeScene->createEntity();
-		m_activeScene->reg().emplace<TransformComponent>(m_squareEntity);
-		m_activeScene->reg().emplace<SpriteRendererComponent>(m_squareEntity, glm::vec4{0.f, 1.f, 0.f, 1.f});
+		m_squareEntity = m_activeScene->createEntity("Green square");
+		m_squareEntity.addComponent<SpriteRendererComponent>(glm::vec4{0.f, 1.f, 0.f, 1.f});
 	}
 
 	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
@@ -54,7 +53,7 @@ namespace MRG
 		MRG_PROFILE_FUNCTION();
 
 		const auto fps = 1 / m_frameTime;
-		const auto color = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
+		const auto tsColor = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
 		const auto stats = Renderer2D::getStats();
 
 		static bool dockspaceOpen = true;
@@ -119,11 +118,15 @@ namespace MRG
 			ImGui::Text("Quads: %d", stats.quadCount);
 			ImGui::Text("Vertices: %d", stats.getVertexCount());
 			ImGui::Text("Indices: %d", stats.getIndexCount());
-			ImGui::Separator();
-			ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
+			ImGui::TextColored(tsColor, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
 
-			auto& squareColor = m_activeScene->reg().get<SpriteRendererComponent>(m_squareEntity).color;
-			ImGui::ColorEdit4("Shader color", glm::value_ptr(squareColor));
+			if (m_squareEntity) {
+				ImGui::Separator();
+				const auto& tag = m_squareEntity.getComponent<TagComponent>().tag;
+				auto& color = m_squareEntity.getComponent<SpriteRendererComponent>().color;
+				ImGui::Text("%s", tag.c_str());
+				ImGui::ColorEdit4("Shader color", glm::value_ptr(color));
+			}
 		}
 		ImGui::End();
 

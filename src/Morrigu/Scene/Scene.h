@@ -7,20 +7,22 @@
 
 namespace MRG
 {
+	class Entity;
+
 	class Scene
 	{
 	public:
 		Scene();
 		~Scene();
 
-		entt::entity createEntity();
-
-		entt::registry& reg() { return m_registry; }
+		Entity createEntity(const std::string& name = std::string{});
 
 		void onUpdate(Timestep ts);
 
 	private:
 		entt::registry m_registry;
+
+		friend class Entity;
 	};
 }  // namespace MRG
 

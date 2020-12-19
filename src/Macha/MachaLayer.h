@@ -24,7 +24,7 @@ namespace MRG
 		glm::vec2 m_viewportSize = {0.f, 0.f};
 
 		Ref<Scene> m_activeScene;
-		entt::entity m_squareEntity;
+		Entity m_squareEntity;
 
 		Timestep m_frameTime;
 
