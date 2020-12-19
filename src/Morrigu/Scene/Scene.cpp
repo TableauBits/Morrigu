@@ -21,18 +21,15 @@ namespace MRG
 	void Scene::onUpdate(Timestep ts)
 	{
 		// Updating scripts
-		m_registry.view<NativeScriptComponent>().each([=](const auto entity, NativeScriptComponent& nativeScriptComp) {
+		m_registry.view<NativeScriptComponent>().each([=](const auto entity, NativeScriptComponent& nsc) {
 			// Creating entity if we haven't encountered them before
-			if (!nativeScriptComp.instance) {
-				nativeScriptComp.instantiateFunction();
-				nativeScriptComp.instance->m_entity = Entity{entity, this};
-
-				if (nativeScriptComp.onCreateFunction)
-					nativeScriptComp.onCreateFunction(nativeScriptComp.instance);
+			if (!nsc.instance) {
+				nsc.instance = nsc.instanciateScript();
+				nsc.instance->m_entity = Entity{entity, this};
+				nsc.instance->onCreate();
 			}
 
-			if (&nativeScriptComp.onUpdateFunction)
-				nativeScriptComp.onUpdateFunction(nativeScriptComp.instance, ts);
+			nsc.instance->onUpdate(ts);
 		});
 
 		// 2D rendering
@@ -41,10 +38,10 @@ namespace MRG
 		auto view = m_registry.view<TransformComponent, CameraComponent>();
 
 		for (const auto& entity : view) {
-			const auto& [transformComp, cameraComp] = view.get<TransformComponent, CameraComponent>(entity);
-			if (cameraComp.primary) {
-				mainCamera = &cameraComp.camera;
-				cameraTransform = &transformComp.transform;
+			const auto [tc, cc] = view.get<TransformComponent, CameraComponent>(entity);
+			if (cc.primary) {
+				mainCamera = &cc.camera;
+				cameraTransform = &tc.transform;
 				break;
 			}
 		}
@@ -54,8 +51,8 @@ namespace MRG
 
 			const auto& group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (const auto& entity : group) {
-				const auto& [transformComp, spriteComp] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-				Renderer2D::drawQuad(transformComp.transform, spriteComp.color);
+				const auto [tc, sc] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+				Renderer2D::drawQuad(tc.transform, sc.color);
 			}
 
 			Renderer2D::endScene();
@@ -69,9 +66,9 @@ namespace MRG
 
 		auto view = m_registry.view<CameraComponent>();
 		for (const auto& entity : view) {
-			auto& cameraComp = view.get<CameraComponent>(entity);
-			if (!cameraComp.fixedAspectRatio)
-				cameraComp.camera.setViewportSize(width, height);
+			auto& cc = view.get<CameraComponent>(entity);
+			if (!cc.fixedAspectRatio)
+				cc.camera.setViewportSize(width, height);
 		}
 	}
 }  // namespace MRG

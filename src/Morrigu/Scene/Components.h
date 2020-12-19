@@ -52,25 +52,17 @@ namespace MRG
 	{
 		ScriptableEntity* instance = nullptr;
 
-		std::function<void()> instantiateFunction;
-		std::function<void()> destroyFunction;
-
-		std::function<void(ScriptableEntity*)> onCreateFunction;
-		std::function<void(ScriptableEntity*)> onDestroyFunction;
-		std::function<void(ScriptableEntity*, Timestep)> onUpdateFunction;
+		ScriptableEntity* (*instanciateScript)();
+		void (*destroyScript)(NativeScriptComponent*);
 
 		template<typename T>
 		void bind()
 		{
-			instantiateFunction = [&] { instance = new T(); };
-			destroyFunction = [&] {
-				delete static_cast<T*>(instance);
-				instance = nullptr;
+			instanciateScript = +[]() { return static_cast<ScriptableEntity*>(new T{}); };
+			destroyScript = +[](NativeScriptComponent* nsc) {
+				delete nsc->instance;
+				nsc->instance = nullptr;
 			};
-
-			onCreateFunction = [](ScriptableEntity* instance) { static_cast<T*>(instance)->onCreate(); };
-			onDestroyFunction = [](ScriptableEntity* instance) { static_cast<T*>(instance)->onDestroy(); };
-			onUpdateFunction = [](ScriptableEntity* instance, Timestep ts) { static_cast<T*>(instance)->onUpdate(ts); };
 		}
 	};
 

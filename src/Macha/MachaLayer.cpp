@@ -36,6 +36,9 @@ namespace MRG
 
 			void onUpdate(Timestep ts)
 			{
+				if (!getComponent<CameraComponent>().primary)
+					return;
+
 				auto& transform = getComponent<TransformComponent>().transform;
 				static float speed = 5.f;
 
@@ -51,6 +54,7 @@ namespace MRG
 		};
 
 		m_cameraEntity.addComponent<NativeScriptComponent>().bind<CameraController>();
+		m_secondCamera.addComponent<NativeScriptComponent>().bind<CameraController>();
 	}
 
 	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
