@@ -39,6 +39,9 @@ namespace MRG
 	class Instrumentor
 	{
 	public:
+		Instrumentor(const Instrumentor&) = delete;
+		Instrumentor(Instrumentor&&) = delete;
+
 		void beginSession(const std::string& name, const std::string& filepath)
 		{
 			std::lock_guard lock(m_mutex);
@@ -100,6 +103,9 @@ namespace MRG
 		}
 
 	private:
+		Instrumentor() = default;
+		~Instrumentor() { endSession(); }
+
 		void writePrologue()
 		{
 			m_outputStream << R"({"otherData": {},"traceEvents":[{})";
@@ -130,12 +136,7 @@ namespace MRG
 	class InstrumentationTimer
 	{
 	public:
-		// clang-format off
-		InstrumentationTimer(const char* name) : m_name(name), m_stopped(false)
-		{
-			m_startTimePoint = std::chrono::steady_clock::now();
-		}
-		// clang-format on
+		InstrumentationTimer(const char* name) : m_name(name), m_stopped(false) { m_startTimePoint = std::chrono::steady_clock::now(); }
 
 		~InstrumentationTimer()
 		{
