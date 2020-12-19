@@ -1,5 +1,7 @@
 #include "MachaLayer.h"
 
+#include "Renderer/RenderingAPI.h"
+
 namespace MRG
 {
 	MachaLayer::MachaLayer() : Layer("Sandbox 2D") {}
@@ -25,6 +27,30 @@ namespace MRG
 		m_secondCamera = m_activeScene->createEntity("Clip-space entity");
 		auto& component = m_secondCamera.addComponent<CameraComponent>();
 		component.primary = false;
+
+		class CameraController : public ScriptableEntity
+		{
+		public:
+			void onCreate() {}
+			void onDestroy() {}
+
+			void onUpdate(Timestep ts)
+			{
+				auto& transform = getComponent<TransformComponent>().transform;
+				static float speed = 5.f;
+
+				if (Input::isKeyPressed(KeyCode::A))
+					transform[3][0] -= speed * ts;
+				if (Input::isKeyPressed(KeyCode::D))
+					transform[3][0] += speed * ts;
+				if (Input::isKeyPressed(KeyCode::W))
+					transform[3][1] += speed * ts;
+				if (Input::isKeyPressed(KeyCode::S))
+					transform[3][1] -= speed * ts;
+			}
+		};
+
+		m_cameraEntity.addComponent<NativeScriptComponent>().bind<CameraController>();
 	}
 
 	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
