@@ -1,7 +1,7 @@
 #ifndef MRG_CLASSES_COMPONENTS
 #define MRG_CLASSES_COMPONENTS
 
-#include "Renderer/Camera.h"
+#include "Scene/SceneCamera.h"
 
 #include <glm/glm.hpp>
 
@@ -39,12 +39,12 @@ namespace MRG
 
 	struct CameraComponent
 	{
-		Camera camera;
+		SceneCamera camera;
 		bool primary = true;
+		bool fixedAspectRatio = false;
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
-		CameraComponent(const glm::mat4& projection) : camera(projection) {}
 	};
 
 }  // namespace MRG

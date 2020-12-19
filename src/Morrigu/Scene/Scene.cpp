@@ -47,4 +47,17 @@ namespace MRG
 			}
 		}
 	}
+
+	void Scene::onViewportResize(uint32_t width, uint32_t height)
+	{
+		m_viewportWidth = width;
+		m_viewportHeight = height;
+
+		auto view = m_registry.view<CameraComponent>();
+		for (const auto& entity : view) {
+			auto& cameraComp = view.get<CameraComponent>(entity);
+			if (!cameraComp.fixedAspectRatio)
+				cameraComp.camera.setViewportSize(width, height);
+		}
+	}
 }  // namespace MRG

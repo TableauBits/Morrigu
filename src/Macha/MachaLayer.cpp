@@ -20,10 +20,10 @@ namespace MRG
 		m_squareEntity.addComponent<SpriteRendererComponent>(glm::vec4{0.f, 1.f, 0.f, 1.f});
 
 		m_cameraEntity = m_activeScene->createEntity("Camera entity");
-		m_cameraEntity.addComponent<CameraComponent>(glm::ortho(-16.f, 16.f, -9.f, 9.f, -1.f, 1.f));
+		m_cameraEntity.addComponent<CameraComponent>();
 
 		m_secondCamera = m_activeScene->createEntity("Clip-space entity");
-		auto& component = m_secondCamera.addComponent<CameraComponent>(glm::ortho(-1.f, 1.f, -1.f, 1.f, -1.f, 1.f));
+		auto& component = m_secondCamera.addComponent<CameraComponent>();
 		component.primary = false;
 	}
 
@@ -39,6 +39,7 @@ namespace MRG
 		if (const auto spec = m_renderTarget->getSpecification();
 		    m_viewportSize.x > 0.f && m_viewportSize.y > 0.f && (spec.width != m_viewportSize.x || spec.height != m_viewportSize.y)) {
 			m_renderTarget->resize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
+			m_activeScene->onViewportResize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
 		}
 
 		Renderer2D::resetStats();
@@ -135,6 +136,11 @@ namespace MRG
 				m_cameraEntity.getComponent<CameraComponent>().primary = m_primaryCamera;
 				m_secondCamera.getComponent<CameraComponent>().primary = !m_primaryCamera;
 			}
+
+			auto& camera = m_secondCamera.getComponent<CameraComponent>().camera;
+			float orthoSize = camera.getOrthographicSize();
+			if (ImGui::DragFloat("Second camera ortho size", &orthoSize))
+				camera.setOrthographicSize(orthoSize);
 		}
 		ImGui::End();
 
