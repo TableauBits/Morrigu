@@ -31,10 +31,7 @@ namespace MRG
 		class CameraController : public ScriptableEntity
 		{
 		public:
-			void onCreate() {}
-			void onDestroy() {}
-
-			void onUpdate(Timestep ts)
+			void onUpdate(Timestep ts) override
 			{
 				if (!getComponent<CameraComponent>().primary)
 					return;
