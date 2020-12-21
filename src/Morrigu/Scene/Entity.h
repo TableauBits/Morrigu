@@ -43,6 +43,9 @@ namespace MRG
 		}
 
 		operator bool() const { return m_handle != entt::null; };
+		operator uint32_t() const { return static_cast<uint32_t>(m_handle); }
+		[[nodiscard]] bool operator==(const Entity& other) const { return m_handle == other.m_handle && m_scene == other.m_scene; }
+		[[nodiscard]] bool operator!=(const Entity& other) const { return !(*this == other); }
 
 	private:
 		entt::entity m_handle{entt::null};

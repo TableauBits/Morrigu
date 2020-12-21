@@ -55,6 +55,8 @@ namespace MRG
 
 		m_cameraEntity.addComponent<NativeScriptComponent>().bind<CameraController>();
 		m_secondCamera.addComponent<NativeScriptComponent>().bind<CameraController>();
+
+		m_sceneHierarchyPanel.setContext(m_activeScene);
 	}
 
 	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
@@ -141,6 +143,8 @@ namespace MRG
 			}
 			ImGui::EndMenuBar();
 		}
+
+		m_sceneHierarchyPanel.onImGuiRender();
 
 		ImGui::Begin("Debug");
 		{

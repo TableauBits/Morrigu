@@ -1,3 +1,4 @@
+#include "Scene/Panels/SceneHierarchyPanel.h"
 #include <Morrigu.h>
 
 namespace MRG
@@ -30,5 +31,8 @@ namespace MRG
 		Timestep m_frameTime;
 
 		Ref<Framebuffer> m_renderTarget;
+
+		// Panels
+		SceneHierarchyPanel m_sceneHierarchyPanel;
 	};
 }  // namespace MRG
