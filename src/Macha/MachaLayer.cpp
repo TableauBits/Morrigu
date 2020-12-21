@@ -10,8 +10,6 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		m_checkerboard = Texture2D::create("resources/textures/Checkerboard.png");
-
 		m_renderTarget = Framebuffer::create({1280, 720});
 		Renderer2D::setRenderTarget(m_renderTarget);
 		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});

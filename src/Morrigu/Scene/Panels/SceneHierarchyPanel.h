@@ -19,6 +19,7 @@ namespace MRG
 
 	private:
 		void drawEntityNode(Entity& entity);
+		void drawComponents(Entity& entity);
 
 		Ref<Scene> m_context;
 		Entity m_selectedEntity;

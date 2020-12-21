@@ -17,7 +17,7 @@ namespace MRG
 		void onEvent(Event& event) override;
 
 	private:
-		Ref<Texture2D> m_checkerboard;
+		Ref<Framebuffer> m_renderTarget;
 
 		bool m_viewportFocused = false, m_viewportHovered = false;
 		glm::vec2 m_viewportSize = {0.f, 0.f};
@@ -29,8 +29,6 @@ namespace MRG
 		bool m_primaryCamera = true;
 
 		Timestep m_frameTime;
-
-		Ref<Framebuffer> m_renderTarget;
 
 		// Panels
 		SceneHierarchyPanel m_sceneHierarchyPanel;

@@ -1,5 +1,6 @@
 #include "SceneHierarchyPanel.h"
 
+#include "Core/Warnings.h"
 #include "Scene/Components.h"
 
 #include <imgui.h>
@@ -18,6 +19,16 @@ namespace MRG
 			Entity entity{entityID, m_context.get()};
 			drawEntityNode(entity);
 		});
+
+		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+			m_selectedEntity = {};
+
+		ImGui::End();
+
+		ImGui::Begin("Properties");
+
+		if (m_selectedEntity)
+			drawComponents(m_selectedEntity);
 
 		ImGui::End();
 	}
@@ -38,6 +49,32 @@ namespace MRG
 			if (opened)
 				ImGui::TreePop();
 			ImGui::TreePop();
+		}
+	}
+
+	void SceneHierarchyPanel::drawComponents(Entity& entity)
+	{
+		if (entity.hasComponent<TagComponent>()) {
+			auto& tag = entity.getComponent<TagComponent>().tag;
+
+			char buffer[256];
+			memset(buffer, 0, sizeof(buffer));
+			DISABLE_WARNING_PUSH
+			DISABLE_WARNING_UNSAFE_FUNCTIONS
+			strncat(buffer, tag.c_str(), tag.length());
+			DISABLE_WARNING_POP
+			if (ImGui::InputText("Tag", buffer, sizeof(buffer))) {
+				tag = std::string(buffer);
+			}
+		}
+
+		if (entity.hasComponent<TransformComponent>()) {
+			if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform")) {
+				auto& transform = entity.getComponent<TransformComponent>().transform;
+				ImGui::DragFloat3("Position", glm::value_ptr(transform[3]), 0.1f);
+
+				ImGui::TreePop();
+			}
 		}
 	}
 }  // namespace MRG
