@@ -19,6 +19,9 @@ namespace MRG
 		m_squareEntity = m_activeScene->createEntity("Green square");
 		m_squareEntity.addComponent<SpriteRendererComponent>(glm::vec4{0.f, 1.f, 0.f, 1.f});
 
+		auto redSquare = m_activeScene->createEntity("Red square");
+		redSquare.addComponent<SpriteRendererComponent>(glm::vec4{1.f, 0.f, 0.f, 1.f});
+
 		m_cameraEntity = m_activeScene->createEntity("Camera entity");
 		m_cameraEntity.addComponent<CameraComponent>();
 

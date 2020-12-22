@@ -76,5 +76,58 @@ namespace MRG
 				ImGui::TreePop();
 			}
 		}
+
+		if (entity.hasComponent<CameraComponent>()) {
+			if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Camera")) {
+				auto& cc = entity.getComponent<CameraComponent>();
+				auto& camera = cc.camera;
+
+				ImGui::Checkbox("Primary", &cc.primary);
+
+				const char* projectionTypeStrings[] = {"Orthographic", "Perspective"};
+				const char* currentProjectionString = projectionTypeStrings[static_cast<int>(camera.getProjectionType())];
+				if (ImGui::BeginCombo("Projection", currentProjectionString)) {
+					for (int i = 0; i < 2; ++i) {
+						auto isSelected = currentProjectionString == projectionTypeStrings[i];
+						if (ImGui::Selectable(projectionTypeStrings[i], isSelected)) {
+							currentProjectionString = projectionTypeStrings[i];
+							camera.setProjectionType(static_cast<SceneCamera::ProjectionType>(i));
+						}
+
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+
+				if (camera.getProjectionType() == SceneCamera::ProjectionType::Orthographic) {
+					auto size = glm::degrees(camera.getOrthographicSize());
+					if (ImGui::DragFloat("Size", &size))
+						camera.setOrthographicSize(glm::radians(size));
+					auto OrthographicNear = glm::degrees(camera.getOrthographicNear());
+					if (ImGui::DragFloat("Near clip", &OrthographicNear))
+						camera.setOrthographicNear(glm::radians(OrthographicNear));
+					auto OrthographicFar = glm::degrees(camera.getOrthographicFar());
+					if (ImGui::DragFloat("Far clip", &OrthographicFar))
+						camera.setOrthographicFar(glm::radians(OrthographicFar));
+				}
+
+				if (camera.getProjectionType() == SceneCamera::ProjectionType::Perspective) {
+					auto verticalFOV = glm::degrees(camera.getPerspectiveFOV());
+					if (ImGui::DragFloat("Vertical FOV", &verticalFOV))
+						camera.setPerspectiveFOV(glm::radians(verticalFOV));
+					auto perspectiveNear = glm::degrees(camera.getPerspectiveNear());
+					if (ImGui::DragFloat("Near clip", &perspectiveNear))
+						camera.setPerspectiveNear(glm::radians(perspectiveNear));
+					auto perspectiveFar = glm::degrees(camera.getPerspectiveFar());
+					if (ImGui::DragFloat("Far clip", &perspectiveFar))
+						camera.setPerspectiveFar(glm::radians(perspectiveFar));
+
+					ImGui::Checkbox("Fixed aspect ratio", &cc.fixedAspectRatio);
+				}
+
+				ImGui::TreePop();
+			}
+		}
 	}
 }  // namespace MRG
