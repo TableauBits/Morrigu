@@ -22,12 +22,12 @@ namespace MRG
 		auto redSquare = m_activeScene->createEntity("Red square");
 		redSquare.addComponent<SpriteRendererComponent>(glm::vec4{1.f, 0.f, 0.f, 1.f});
 
-		m_cameraEntity = m_activeScene->createEntity("Camera entity");
-		m_cameraEntity.addComponent<CameraComponent>();
-
-		m_secondCamera = m_activeScene->createEntity("Clip-space entity");
+		m_secondCamera = m_activeScene->createEntity("Camera B");
 		auto& component = m_secondCamera.addComponent<CameraComponent>();
 		component.primary = false;
+
+		m_cameraEntity = m_activeScene->createEntity("Camera A");
+		m_cameraEntity.addComponent<CameraComponent>();
 
 		class CameraController : public ScriptableEntity
 		{
@@ -152,27 +152,6 @@ namespace MRG
 			ImGui::Text("Vertices: %d", stats.getVertexCount());
 			ImGui::Text("Indices: %d", stats.getIndexCount());
 			ImGui::TextColored(tsColor, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
-
-			if (m_squareEntity) {
-				ImGui::Separator();
-				const auto& tag = m_squareEntity.getComponent<TagComponent>().tag;
-				auto& color = m_squareEntity.getComponent<SpriteRendererComponent>().color;
-				ImGui::Text("%s", tag.c_str());
-				ImGui::ColorEdit4("Shader color", glm::value_ptr(color));
-			}
-
-			ImGui::Separator();
-			ImGui::DragFloat3("Camera transform", glm::value_ptr(m_cameraEntity.getComponent<TransformComponent>().transform[3]));
-
-			if (ImGui::Checkbox("Camera A", &m_primaryCamera)) {
-				m_cameraEntity.getComponent<CameraComponent>().primary = m_primaryCamera;
-				m_secondCamera.getComponent<CameraComponent>().primary = !m_primaryCamera;
-			}
-
-			auto& camera = m_secondCamera.getComponent<CameraComponent>().camera;
-			float orthoSize = camera.getOrthographicSize();
-			if (ImGui::DragFloat("Second camera ortho size", &orthoSize))
-				camera.setOrthographicSize(orthoSize);
 		}
 		ImGui::End();
 

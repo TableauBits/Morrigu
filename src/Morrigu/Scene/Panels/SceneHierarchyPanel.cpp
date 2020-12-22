@@ -129,5 +129,13 @@ namespace MRG
 				ImGui::TreePop();
 			}
 		}
+
+		if (entity.hasComponent<SpriteRendererComponent>()) {
+			if (ImGui::TreeNodeEx((void*)typeid(SpriteRendererComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Sprite Renderer")) {
+				auto& src = entity.getComponent<SpriteRendererComponent>();
+				ImGui::ColorEdit4("Color", glm::value_ptr(src.color));
+				ImGui::TreePop();
+			}
+		}
 	}
 }  // namespace MRG
