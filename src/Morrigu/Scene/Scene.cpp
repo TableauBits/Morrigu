@@ -47,7 +47,7 @@ namespace MRG
 		}
 
 		if (mainCamera) {
-			Renderer2D::beginScene(mainCamera->getProjection(), *cameraTransform);
+			Renderer2D::beginScene(*mainCamera, *cameraTransform);
 
 			const auto& group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (const auto& entity : group) {

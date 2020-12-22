@@ -57,7 +57,7 @@ namespace MRG
 	public:
 		[[nodiscard]] MouseCode getMouseButton() const { return m_button; }
 
-		MRG_EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
+		MRG_EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput | EventCategoryMouseButton)
 
 	protected:
 		MouseButtonEvent(const MouseCode button) : m_button(button) {}
