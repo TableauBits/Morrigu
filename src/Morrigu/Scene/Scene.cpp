@@ -34,25 +34,25 @@ namespace MRG
 
 		// 2D rendering
 		Camera* mainCamera = nullptr;
-		glm::mat4* cameraTransform = nullptr;
+		glm::mat4 cameraTransform;
 		auto view = m_registry.view<TransformComponent, CameraComponent>();
 
 		for (const auto& entity : view) {
 			const auto [tc, cc] = view.get<TransformComponent, CameraComponent>(entity);
 			if (cc.primary) {
 				mainCamera = &cc.camera;
-				cameraTransform = &tc.transform;
+				cameraTransform = tc.getTransform();
 				break;
 			}
 		}
 
 		if (mainCamera) {
-			Renderer2D::beginScene(*mainCamera, *cameraTransform);
+			Renderer2D::beginScene(*mainCamera, cameraTransform);
 
 			const auto& group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (const auto& entity : group) {
 				const auto [tc, sc] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-				Renderer2D::drawQuad(tc.transform, sc.color);
+				Renderer2D::drawQuad(tc.getTransform(), sc.color);
 			}
 
 			Renderer2D::endScene();
