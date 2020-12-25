@@ -16,11 +16,15 @@ namespace MRG
 		~Scene();
 
 		Entity createEntity(const std::string& name = std::string{});
+		void destroyEntity(Entity entity);
 
 		void onUpdate(Timestep ts);
 		void onViewportResize(uint32_t width, uint32_t height);
 
 	private:
+		template<typename T>
+		void onComponentAdded(Entity entity, T& component);
+
 		entt::registry m_registry;
 		uint32_t m_viewportWidth = 0, m_viewportHeight = 0;
 

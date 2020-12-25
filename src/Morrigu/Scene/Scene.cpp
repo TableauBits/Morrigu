@@ -18,6 +18,8 @@ namespace MRG
 		return entity;
 	}
 
+	void Scene::destroyEntity(Entity entity) { m_registry.destroy(entity); }
+
 	void Scene::onUpdate(Timestep ts)
 	{
 		// Updating scripts
@@ -71,4 +73,26 @@ namespace MRG
 				cc.camera.setViewportSize(width, height);
 		}
 	}
+
+	template<>
+	void Scene::onComponentAdded<TransformComponent>(Entity, TransformComponent&)
+	{}
+
+	template<>
+	void Scene::onComponentAdded<CameraComponent>(Entity, CameraComponent& component)
+	{
+		component.camera.setViewportSize(m_viewportWidth, m_viewportHeight);
+	}
+
+	template<>
+	void Scene::onComponentAdded<SpriteRendererComponent>(Entity, SpriteRendererComponent&)
+	{}
+
+	template<>
+	void Scene::onComponentAdded<TagComponent>(Entity, TagComponent&)
+	{}
+
+	template<>
+	void Scene::onComponentAdded<NativeScriptComponent>(Entity, NativeScriptComponent&)
+	{}
 }  // namespace MRG

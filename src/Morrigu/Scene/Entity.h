@@ -19,7 +19,10 @@ namespace MRG
 		T& addComponent(Args&&... args)
 		{
 			MRG_CORE_ASSERT(!hasComponent<T>(), "Entity already has component!");
-			return m_scene->m_registry.emplace<T>(m_handle, std::forward<Args>(args)...);
+			auto& component = m_scene->m_registry.emplace<T>(m_handle, std::forward<Args>(args)...);
+			m_scene->onComponentAdded<T>(*this, component);
+
+			return component;
 		}
 
 		template<typename T>
@@ -43,7 +46,8 @@ namespace MRG
 		}
 
 		operator bool() const { return m_handle != entt::null; };
-		operator uint32_t() const { return static_cast<uint32_t>(m_handle); }
+		operator entt::entity() const { return m_handle; };
+		explicit operator uint32_t() const { return static_cast<uint32_t>(m_handle); }
 		[[nodiscard]] bool operator==(const Entity& other) const { return m_handle == other.m_handle && m_scene == other.m_scene; }
 		[[nodiscard]] bool operator!=(const Entity& other) const { return !(*this == other); }
 
