@@ -1,7 +1,9 @@
 build
 .vs
 .vscode
+
 src/Morrigu/Vendor/ImGui/bindings
+src/**/runtime/engine
 imgui.ini
 *.json
 *.log

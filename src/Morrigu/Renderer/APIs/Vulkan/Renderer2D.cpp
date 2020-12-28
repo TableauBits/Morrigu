@@ -604,7 +604,7 @@ namespace MRG::Vulkan
 		MRG_PROFILE_FUNCTION();
 
 		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
-		m_textureShader = createRef<Shader>("resources/shaders/texture");
+		m_textureShader = createRef<Shader>("engine/shaders/texture");
 
 		m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
 		MRG_ENGINE_INFO("Vulkan swap chain successfully created");

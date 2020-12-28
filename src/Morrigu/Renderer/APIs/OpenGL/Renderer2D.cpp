@@ -43,7 +43,7 @@ namespace MRG::OpenGL
 		int32_t samplers[maxTextureSlots];
 		for (uint32_t i = 0; i < maxTextureSlots; ++i) samplers[i] = i;
 
-		m_textureShader = Shader::create("resources/shaders/texture");
+		m_textureShader = Shader::create("engine/shaders/texture");
 		m_textureShader->bind();
 		m_textureShader->upload("u_textures", samplers, maxTextureSlots);
 
