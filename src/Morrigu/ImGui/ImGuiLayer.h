@@ -27,6 +27,8 @@ namespace MRG
 		void blockEvents(bool block) { m_blockEvents = block; }
 
 	private:
+		void setDarkThemeColors();
+
 		bool m_blockEvents = true;
 		Ref<Framebuffer> m_renderTarget;
 	};
