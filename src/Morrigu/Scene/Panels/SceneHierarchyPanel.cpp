@@ -225,7 +225,7 @@ namespace MRG
 			drawVec3Control("Rotation", rotation);
 			component.rotation = glm::radians(rotation);
 
-			drawVec3Control("Scale", component.scale);
+			drawVec3Control("Scale", component.scale, 1.f);
 		});
 
 		drawComponent<CameraComponent>("Camera", entity, [](CameraComponent& component) {
