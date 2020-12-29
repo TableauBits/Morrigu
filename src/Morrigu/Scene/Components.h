@@ -14,7 +14,7 @@ namespace MRG
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;
-		TagComponent(const std::string& tag) : tag(tag) {}
+		TagComponent(const std::string& newTag) : tag(newTag) {}
 	};
 
 	struct TransformComponent
@@ -25,7 +25,7 @@ namespace MRG
 
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent&) = default;
-		TransformComponent(const glm::vec3& translation) : translation(translation) {}
+		TransformComponent(const glm::vec3& newTranslation) : translation(newTranslation) {}
 
 		glm::mat4 getTransform() const
 		{
@@ -43,7 +43,7 @@ namespace MRG
 
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
-		SpriteRendererComponent(const glm::vec4& color) : color(color) {}
+		SpriteRendererComponent(const glm::vec4& newColor) : color(newColor) {}
 	};
 
 	struct CameraComponent
