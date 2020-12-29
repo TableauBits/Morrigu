@@ -1,3 +1,4 @@
+#include "Scene/Panels/SceneHierarchyPanel.h"
 #include <Morrigu.h>
 
 namespace MRG
@@ -16,17 +17,19 @@ namespace MRG
 		void onEvent(Event& event) override;
 
 	private:
-		OrthoCameraController m_camera;
-
-		Ref<Texture2D> m_checkerboard, m_character;
+		Ref<Framebuffer> m_renderTarget;
 
 		bool m_viewportFocused = false, m_viewportHovered = false;
 		glm::vec2 m_viewportSize = {0.f, 0.f};
 
-		glm::vec4 m_color = {0.1f, 0.1f, 0.1f, 1.0f};
+		Ref<Scene> m_activeScene;
+		Entity m_squareEntity;
+		Entity m_cameraEntity;
+		Entity m_secondCamera;
+
 		Timestep m_frameTime;
 
-		// temp
-		Ref<Framebuffer> m_renderTarget;
+		// Panels
+		SceneHierarchyPanel m_sceneHierarchyPanel;
 	};
 }  // namespace MRG

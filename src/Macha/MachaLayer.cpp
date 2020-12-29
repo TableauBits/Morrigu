@@ -1,18 +1,60 @@
 #include "MachaLayer.h"
 
+#include "Renderer/RenderingAPI.h"
+
 namespace MRG
 {
-	MachaLayer::MachaLayer() : Layer("Sandbox 2D"), m_camera(1280.f / 720.f) {}
+	MachaLayer::MachaLayer() : Layer("Sandbox 2D") {}
 
 	void MachaLayer::onAttach()
 	{
 		MRG_PROFILE_FUNCTION();
 
-		m_checkerboard = Texture2D::create("resources/textures/Checkerboard.png");
-		m_camera.movementSpeed = 2.f;
-
 		m_renderTarget = Framebuffer::create({1280, 720});
 		Renderer2D::setRenderTarget(m_renderTarget);
+		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
+
+		m_activeScene = createRef<Scene>();
+
+		m_squareEntity = m_activeScene->createEntity("Green square");
+		m_squareEntity.addComponent<SpriteRendererComponent>(glm::vec4{0.f, 1.f, 0.f, 1.f});
+
+		auto redSquare = m_activeScene->createEntity("Red square");
+		redSquare.addComponent<SpriteRendererComponent>(glm::vec4{1.f, 0.f, 0.f, 1.f});
+
+		m_secondCamera = m_activeScene->createEntity("Camera B");
+		auto& component = m_secondCamera.addComponent<CameraComponent>();
+		component.primary = false;
+
+		m_cameraEntity = m_activeScene->createEntity("Camera A");
+		m_cameraEntity.addComponent<CameraComponent>();
+
+		class CameraController : public ScriptableEntity
+		{
+		public:
+			void onUpdate(Timestep ts) override
+			{
+				if (!getComponent<CameraComponent>().primary)
+					return;
+
+				auto& translation = getComponent<TransformComponent>().translation;
+				static float speed = 5.f;
+
+				if (Input::isKeyPressed(Key::A))
+					translation.x -= speed * ts;
+				if (Input::isKeyPressed(Key::D))
+					translation.x += speed * ts;
+				if (Input::isKeyPressed(Key::W))
+					translation.y += speed * ts;
+				if (Input::isKeyPressed(Key::S))
+					translation.y -= speed * ts;
+			}
+		};
+
+		m_cameraEntity.addComponent<NativeScriptComponent>().bind<CameraController>();
+		m_secondCamera.addComponent<NativeScriptComponent>().bind<CameraController>();
+
+		m_sceneHierarchyPanel.setContext(m_activeScene);
 	}
 
 	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
@@ -24,47 +66,17 @@ namespace MRG
 		m_frameTime = ts;
 
 		// handle resizing
-		if (auto spec = m_renderTarget->getSpecification();
+		if (const auto spec = m_renderTarget->getSpecification();
 		    m_viewportSize.x > 0.f && m_viewportSize.y > 0.f && (spec.width != m_viewportSize.x || spec.height != m_viewportSize.y)) {
 			m_renderTarget->resize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
-			m_camera.onResize(m_viewportSize.x, m_viewportSize.y);
+			m_activeScene->onViewportResize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
 		}
-
-		if (m_viewportFocused)
-			m_camera.onUpdate(ts);
 
 		Renderer2D::resetStats();
+		MRG_PROFILE_SCOPE("Render prep");
+		Renderer2D::clear();
 
-		{
-			MRG_PROFILE_SCOPE("Render prep");
-			Renderer2D::setClearColor(m_color);
-			Renderer2D::clear();
-		}
-
-		{
-			static float rotation = 0.f;
-			rotation += ts * 50.f;
-			if (rotation >= 360)
-				rotation -= 360;
-
-			MRG_PROFILE_SCOPE("Render draw");
-			Renderer2D::beginScene(m_camera.getCamera());
-			Renderer2D::drawRotatedQuad({1.0f, 0.0f}, {0.8f, 0.8f}, -45.0f, {0.8f, 0.2f, 0.3f, 1.0f});
-			Renderer2D::drawQuad({-1.0f, 0.0f}, {0.8f, 0.8f}, {0.8f, 0.2f, 0.3f, 1.0f});
-			Renderer2D::drawQuad({0.5f, -0.5f}, {0.5f, 0.75f}, {0.2f, 0.3f, 0.8f, 1.0f});
-			Renderer2D::drawQuad({0.0f, 0.0f, -0.1f}, {20.0f, 20.0f}, m_checkerboard, 10.0f);
-			Renderer2D::drawRotatedQuad({-2.0f, 0.0f, 0.0f}, {1.0f, 1.0f}, glm::radians(rotation), m_color);
-			Renderer2D::endScene();
-
-			Renderer2D::beginScene(m_camera.getCamera());
-			for (float y = -5.f; y < 5.f; y += 0.5f) {
-				for (float x = -5.f; x < 5.f; x += 0.5f) {
-					glm::vec4 color = {(x + 5.f) / 10.f, 0.4f, (y + 5.f) / 10.f, 0.7f};
-					Renderer2D::drawQuad({x, y}, {0.45f, 0.45f}, color);
-				}
-			}
-			Renderer2D::endScene();
-		}
+		m_activeScene->onUpdate(ts);
 	}
 
 	void MachaLayer::onImGuiRender()
@@ -72,7 +84,7 @@ namespace MRG
 		MRG_PROFILE_FUNCTION();
 
 		const auto fps = 1 / m_frameTime;
-		const auto color = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
+		const auto tsColor = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
 		const auto stats = Renderer2D::getStats();
 
 		static bool dockspaceOpen = true;
@@ -112,10 +124,15 @@ namespace MRG
 
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
+		auto& style = ImGui::GetStyle();
+		float minWinSizeX = style.WindowMinSize.x;
+		style.WindowMinSize.x = 370.f;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, {0.0f, 0.0f}, dockspace_flags);
 		}
+
+		style.WindowMinSize.x = minWinSizeX;
 
 		if (ImGui::BeginMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
@@ -130,6 +147,8 @@ namespace MRG
 			ImGui::EndMenuBar();
 		}
 
+		m_sceneHierarchyPanel.onImGuiRender();
+
 		ImGui::Begin("Debug");
 		{
 			ImGui::Text("Renderer2D stats:");
@@ -137,9 +156,7 @@ namespace MRG
 			ImGui::Text("Quads: %d", stats.quadCount);
 			ImGui::Text("Vertices: %d", stats.getVertexCount());
 			ImGui::Text("Indices: %d", stats.getIndexCount());
-			ImGui::Separator();
-			ImGui::TextColored(color, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
-			ImGui::ColorEdit4("Shader color", glm::value_ptr(m_color));
+			ImGui::TextColored(tsColor, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
 		}
 		ImGui::End();
 
@@ -162,5 +179,5 @@ namespace MRG
 		ImGui::End();
 	}
 
-	void MachaLayer::onEvent(Event& event) { m_camera.onEvent(event); }
+	void MachaLayer::onEvent(Event&) {}
 }  // namespace MRG

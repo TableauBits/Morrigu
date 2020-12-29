@@ -75,7 +75,7 @@ namespace MRG
 		bool dispatch(const F& function)
 		{
 			if (m_event.getEventType() == T::getStaticType()) {
-				m_event.handled = function(static_cast<T&>(m_event));
+				m_event.handled |= function(static_cast<T&>(m_event));
 				return true;
 			}
 			return false;

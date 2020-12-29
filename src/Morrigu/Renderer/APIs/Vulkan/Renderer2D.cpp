@@ -604,7 +604,7 @@ namespace MRG::Vulkan
 		MRG_PROFILE_FUNCTION();
 
 		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
-		m_textureShader = createRef<Shader>("resources/shaders/texture");
+		m_textureShader = createRef<Shader>("engine/shaders/texture");
 
 		m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
 		MRG_ENGINE_INFO("Vulkan swap chain successfully created");
@@ -875,62 +875,25 @@ namespace MRG::Vulkan
 		return true;
 	}
 
+	void Renderer2D::beginScene(const Camera& camera, const glm::mat4& transform)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		setupScene();
+
+		m_modelMatrix.viewProjection = camera.getProjection() * glm::inverse(transform);
+
+		m_quadIndexCount = 0;
+		m_qvbPtr = m_qvbBase;
+
+		m_textureSlotindex = 1;
+	}
+
 	void Renderer2D::beginScene(const OrthoCamera& orthoCamera)
 	{
 		MRG_PROFILE_FUNCTION();
 
-		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
-		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
-
-		m_sceneInProgress = true;
-
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][1], 0);
-
-		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][1], &beginInfo),
-		               "failed to begin recording command bufer!");
-
-		VkRenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
-		renderPassInfo.framebuffer =
-		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][1] : m_renderTarget->getHandle();
-		renderPassInfo.renderArea.offset = {0, 0};
-		renderPassInfo.renderArea.extent =
-		  m_renderTarget == nullptr ? m_data->swapChain.extent
-		                            : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
-		renderPassInfo.clearValueCount = 0;
-
-		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		VkViewport viewport{};
-		viewport.x = 0;
-		viewport.y = 0;
-		viewport.width =
-		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.width) : m_renderTarget->getSpecification().width;
-		viewport.height =
-		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.height) : m_renderTarget->getSpecification().height;
-		viewport.minDepth = 0.f;
-		viewport.maxDepth = 1.f;
-		vkCmdSetViewport(m_data->commandBuffers[m_imageIndex][1], 0, 1, &viewport);
-
-		VkRect2D scissor{};
-		scissor.offset = {0, 0};
-		scissor.extent = m_renderTarget == nullptr
-		                   ? m_data->swapChain.extent
-		                   : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
-		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
-
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
-
-		VkBuffer vertexBuffers[] = {std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle()};
-		VkDeviceSize offsets[] = {0};
-		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
-		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, vertexBuffers, offsets);
-
-		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
+		setupScene();
 
 		m_modelMatrix.viewProjection = orthoCamera.getProjectionViewMatrix();
 
@@ -1001,17 +964,13 @@ namespace MRG::Vulkan
 		m_sceneInProgress = false;
 	}
 
-	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
+	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color)
 	{
-		MRG_PROFILE_FUNCTION();
-
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
 
 		if (m_quadIndexCount >= maxIndices)
 			flushAndReset();
-
-		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
 
 		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
 			m_qvbPtr->position = transform * m_quadVertexPositions[i];
@@ -1026,8 +985,8 @@ namespace MRG::Vulkan
 		++m_stats.quadCount;
 	}
 
-	void Renderer2D::drawQuad(
-	  const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& color)
+	void
+	Renderer2D::drawQuad(const glm::mat4& transform, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		MRG_PROFILE_FUNCTION();
 
@@ -1036,7 +995,7 @@ namespace MRG::Vulkan
 
 		float texIndex = 0.f;
 		for (uint32_t i = 0; i < m_textureSlotindex; ++i) {
-			if (*m_textureSlots[i].get() == *texture.get()) {
+			if (*m_textureSlots[i] == *texture) {
 				texIndex = static_cast<float>(i);
 				break;
 			}
@@ -1051,11 +1010,9 @@ namespace MRG::Vulkan
 			++m_textureSlotindex;
 		}
 
-		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
-
 		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
 			m_qvbPtr->position = transform * m_quadVertexPositions[i];
-			m_qvbPtr->color = color;
+			m_qvbPtr->color = tintColor;
 			m_qvbPtr->texCoord = m_textureCoordinates[i];
 			m_qvbPtr->texIndex = texIndex;
 			m_qvbPtr->tilingFactor = tilingFactor;
@@ -1066,30 +1023,27 @@ namespace MRG::Vulkan
 		++m_stats.quadCount;
 	}
 
+	void Renderer2D::drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
+	{
+		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
+
+		drawQuad(transform, color);
+	}
+
+	void Renderer2D::drawQuad(
+	  const glm::vec3& position, const glm::vec2& size, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	{
+		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
+
+		drawQuad(transform, texture, tilingFactor, tintColor);
+	}
+
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
-		MRG_PROFILE_FUNCTION();
-
-		const float texIndex = 0.0f;
-		const float tilingFactor = 1.0f;
-
-		if (m_quadIndexCount >= maxIndices)
-			flushAndReset();
-
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
-		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
-			m_qvbPtr->position = transform * m_quadVertexPositions[i];
-			m_qvbPtr->color = color;
-			m_qvbPtr->texCoord = m_textureCoordinates[i];
-			m_qvbPtr->texIndex = texIndex;
-			m_qvbPtr->tilingFactor = tilingFactor;
-			++m_qvbPtr;
-		}
-
-		m_quadIndexCount += 6;
-		++m_stats.quadCount;
+		drawQuad(transform, color);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
@@ -1097,44 +1051,12 @@ namespace MRG::Vulkan
 	                                 float rotation,
 	                                 const Ref<MRG::Texture2D>& texture,
 	                                 float tilingFactor,
-	                                 const glm::vec4& color)
+	                                 const glm::vec4& tintColor)
 	{
-		MRG_PROFILE_FUNCTION();
-
-		if (m_quadIndexCount >= maxIndices)
-			flushAndReset();
-
-		float texIndex = 0.f;
-		for (uint32_t i = 0; i < m_textureSlotindex; ++i) {
-			if (*m_textureSlots[i].get() == *texture.get()) {
-				texIndex = static_cast<float>(i);
-				break;
-			}
-		}
-
-		if (texIndex == 0.f) {
-			if (m_textureSlotindex >= maxTextureSlots)
-				flushAndReset();
-
-			texIndex = static_cast<float>(m_textureSlotindex);
-			m_textureSlots[m_textureSlotindex] = texture;
-			++m_textureSlotindex;
-		}
-
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
-		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
-			m_qvbPtr->position = transform * m_quadVertexPositions[i];
-			m_qvbPtr->color = color;
-			m_qvbPtr->texCoord = m_textureCoordinates[i];
-			m_qvbPtr->texIndex = texIndex;
-			m_qvbPtr->tilingFactor = tilingFactor;
-			++m_qvbPtr;
-		}
-
-		m_quadIndexCount += 6;
-		++m_stats.quadCount;
+		drawQuad(transform, texture, tilingFactor, tintColor);
 	}
 
 	void Renderer2D::setRenderTarget(Ref<MRG::Framebuffer> renderTarget)
@@ -1347,6 +1269,62 @@ namespace MRG::Vulkan
 
 		MRG_VKVALIDATE(vkQueueSubmit(m_data->graphicsQueue.handle, 1, &submitInfo, m_inFlightFences[m_data->currentFrame]),
 		               "failed to submit draw command buffer!");
+	}
+
+	void Renderer2D::setupScene()
+	{
+		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
+		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
+
+		m_sceneInProgress = true;
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][1], 0);
+
+		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][1], &beginInfo),
+		               "failed to begin recording command bufer!");
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
+		renderPassInfo.framebuffer =
+		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][1] : m_renderTarget->getHandle();
+		renderPassInfo.renderArea.offset = {0, 0};
+		renderPassInfo.renderArea.extent =
+		  m_renderTarget == nullptr ? m_data->swapChain.extent
+		                            : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
+		renderPassInfo.clearValueCount = 0;
+
+		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width =
+		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.width) : m_renderTarget->getSpecification().width;
+		viewport.height =
+		  m_renderTarget == nullptr ? static_cast<float>(m_data->swapChain.extent.height) : m_renderTarget->getSpecification().height;
+		viewport.minDepth = 0.f;
+		viewport.maxDepth = 1.f;
+		vkCmdSetViewport(m_data->commandBuffers[m_imageIndex][1], 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent = m_renderTarget == nullptr
+		                   ? m_data->swapChain.extent
+		                   : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
+		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
+
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+
+		VkBuffer vertexBuffers[] = {std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle()};
+		VkDeviceSize offsets[] = {0};
+		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
+		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, vertexBuffers, offsets);
+
+		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
 	}
 
 	void Renderer2D::cleanupSwapChain()

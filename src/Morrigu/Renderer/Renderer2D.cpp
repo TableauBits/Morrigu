@@ -60,6 +60,13 @@ namespace MRG
 		return s_renderer->endFrame();
 	}
 
+	void Renderer2D::beginScene(const Camera& camera, const glm::mat4& transform)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->beginScene(camera, transform);
+	}
+
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
 		MRG_PROFILE_FUNCTION();
@@ -72,6 +79,20 @@ namespace MRG
 		MRG_PROFILE_FUNCTION();
 
 		s_renderer->endScene();
+	}
+
+	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->drawQuad(transform, color);
+	}
+
+	void Renderer2D::drawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	{
+		MRG_PROFILE_FUNCTION();
+
+		s_renderer->drawQuad(transform, texture, tilingFactor, tintColor);
 	}
 
 	void Renderer2D::drawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)

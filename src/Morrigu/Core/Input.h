@@ -4,7 +4,7 @@
 #include "Core/KeyCodes.h"
 #include "Core/MouseCodes.h"
 
-#include <utility>
+#include "Core/GLMIncludeHelper.h"
 
 namespace MRG
 {
@@ -14,7 +14,7 @@ namespace MRG
 		[[nodiscard]] static bool isKeyPressed(KeyCode key);
 
 		[[nodiscard]] static bool isMouseButtonPressed(MouseCode button);
-		[[nodiscard]] static std::pair<float, float> getMousePosition();
+		[[nodiscard]] static glm::vec2 getMousePosition();
 		[[nodiscard]] static float getMouseX();
 		[[nodiscard]] static float getMouseY();
 	};

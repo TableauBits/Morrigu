@@ -32,8 +32,15 @@ namespace MRG::Vulkan
 		bool beginFrame() override;
 		bool endFrame() override;
 
+		void beginScene(const Camera& camera, const glm::mat4& transform) override;
 		void beginScene(const OrthoCamera& camera) override;
 		void endScene() override;
+
+		void drawQuad(const glm::mat4& transform, const glm::vec4& color) override;
+		void drawQuad(const glm::mat4& transform,
+		              const Ref<MRG::Texture2D>& texture,
+		              float tilingFactor = 1.f,
+		              const glm::vec4& tintColor = glm::vec4{1.f}) override;
 
 		void drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color) override;
 		void drawQuad(const glm::vec3& position,
@@ -62,6 +69,7 @@ namespace MRG::Vulkan
 		RenderingStatistics getStats() const override { return m_stats; };
 
 	private:
+		void setupScene();
 		void cleanupSwapChain();
 		void recreateSwapChain();
 		void updateDescriptor();
