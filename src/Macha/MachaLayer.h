@@ -26,7 +26,6 @@ namespace MRG
 		Entity m_squareEntity;
 		Entity m_cameraEntity;
 		Entity m_secondCamera;
-		bool m_primaryCamera = true;
 
 		Timestep m_frameTime;
 

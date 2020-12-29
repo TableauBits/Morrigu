@@ -17,7 +17,7 @@ namespace
 
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, columnWidth);
-		ImGui::Text(label);
+		ImGui::Text("%s", label);
 		ImGui::NextColumn();
 
 		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
@@ -87,7 +87,7 @@ namespace
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{4, 4});
 			auto lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.f;
 			ImGui::Separator();
-			bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name);
+			bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, "%s", name);
 			ImGui::PopStyleVar();
 
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
@@ -154,7 +154,7 @@ namespace MRG
 
 		ImGuiTreeNodeFlags flags = ((m_selectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-		bool opened = ImGui::TreeNodeEx((void*)(intptr_t)(uint32_t)entity, flags, tag.c_str());  // This is fucking ridiculous
+		bool opened = ImGui::TreeNodeEx((void*)(intptr_t)(uint32_t)entity, flags, "%s", tag.c_str());  // This is fucking ridiculous
 		if (ImGui::IsItemClicked()) {
 			m_selectedEntity = entity;
 		}
@@ -169,7 +169,7 @@ namespace MRG
 
 		if (opened) {
 			flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-			opened = ImGui::TreeNodeEx((void*)9817239, flags, tag.c_str());
+			opened = ImGui::TreeNodeEx((void*)9817239, flags, "%s", tag.c_str());
 			if (opened)
 				ImGui::TreePop();
 			ImGui::TreePop();
