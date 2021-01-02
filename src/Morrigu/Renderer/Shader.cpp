@@ -19,7 +19,7 @@ namespace MRG
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION ! ({})", RenderingAPI::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()));
 			return nullptr;
 		} break;
 		}
@@ -28,7 +28,7 @@ namespace MRG
 	void ShaderLibrary::add(const std::string& name, const Ref<Shader>& shader)
 	{
 		if (exists(name)) {
-			MRG_WARN("Shader '{}' already exists !", name);
+			MRG_WARN("Shader '{}' already exists!", name);
 			return;
 		}
 		m_shaders[name] = shader;
@@ -53,7 +53,7 @@ namespace MRG
 	Ref<Shader> ShaderLibrary::get(const std::string& name)
 	{
 		if (!exists(name)) {
-			MRG_WARN("Shader '{}' does not exist !", name);
+			MRG_WARN("Shader '{}' does not exist!", name);
 			return nullptr;
 		}
 		return m_shaders[name];

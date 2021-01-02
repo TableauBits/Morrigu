@@ -70,7 +70,7 @@ namespace
 	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, const MRG::WindowProperties* data)
 	{
 		if (capabilities.currentExtent.width != UINT32_MAX) {
-			// We don't need to change anything in this case !
+			// We don't need to change anything in this case!
 			return capabilities.currentExtent;
 		}
 

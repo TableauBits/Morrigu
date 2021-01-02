@@ -45,7 +45,7 @@ namespace
 			return "\r";
 
 		default:
-			MRG_CORE_ASSERT(false, "Invalid encoding selected !");
+			MRG_CORE_ASSERT(false, "Invalid encoding selected!");
 			return "\0";
 		}
 	}
@@ -210,7 +210,7 @@ namespace MRG::OpenGL
 			std::size_t begin = pos + typeTokenLength + 1;
 			std::string type = source.substr(begin, eol - begin);
 			MRG_CORE_ASSERT(shaderTypeFromString(type),
-			                fmt::format("Invalid shader type '{}' in shader preprocessing type definition !", type));
+			                fmt::format("Invalid shader type '{}' in shader preprocessing type definition!", type));
 
 			std::size_t nextLine = source.find_first_not_of(newLineChar, eol);
 			MRG_CORE_ASSERT(nextLine != std::string::npos, "Syntax Error");
@@ -251,7 +251,7 @@ namespace MRG::OpenGL
 				glDeleteShader(shader);
 
 				MRG_ENGINE_ERROR("Could not compile the {} of '{}': {}", shaderTypeFromEnum(type), m_name, infoLog.data());
-				MRG_CORE_ASSERT(false, "Shader compilation failed !");
+				MRG_CORE_ASSERT(false, "Shader compilation failed!");
 				break;
 			}
 			glAttachShader(program, shader);
@@ -274,7 +274,7 @@ namespace MRG::OpenGL
 			for (auto id : shaderIDs) glDeleteShader(id);
 
 			MRG_ENGINE_ERROR("Could not link program: {0}", infoLog.data());
-			MRG_CORE_ASSERT(false, "Program linking failed !");
+			MRG_CORE_ASSERT(false, "Program linking failed!");
 			return;
 		}
 

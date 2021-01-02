@@ -209,7 +209,7 @@ namespace MRG::Vulkan
 		} break;
 
 		default: {
-			MRG_CORE_ASSERT(false, "Layout transition not currently supported !");
+			MRG_CORE_ASSERT(false, "Layout transition not currently supported!");
 		} break;
 		}
 
@@ -235,7 +235,7 @@ namespace MRG::Vulkan
 		} break;
 
 		default: {
-			MRG_CORE_ASSERT(false, "Layout transition not currently supported !");
+			MRG_CORE_ASSERT(false, "Layout transition not currently supported!");
 		} break;
 		}
 

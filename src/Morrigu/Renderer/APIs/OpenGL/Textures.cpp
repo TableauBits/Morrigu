@@ -38,7 +38,7 @@ namespace MRG::OpenGL
 		m_internalFormat = GL_RGBA8;
 		m_dataFormat = GL_RGBA;
 
-		MRG_CORE_ASSERT(m_internalFormat & m_dataFormat, "File format not supported !");
+		MRG_CORE_ASSERT(m_internalFormat & m_dataFormat, "File format not supported!");
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);
 		glTextureStorage2D(m_rendererID, 1, m_internalFormat, m_width, m_height);
@@ -75,7 +75,7 @@ namespace MRG::OpenGL
 		MRG_PROFILE_FUNCTION();
 
 		[[maybe_unused]] const auto bpp = m_dataFormat == GL_RGBA ? 4 : 3;
-		MRG_CORE_ASSERT(size == m_width * m_width * bpp, "Data size is incorrect !");
+		MRG_CORE_ASSERT(size == m_width * m_width * bpp, "Data size is incorrect!");
 
 		glTextureSubImage2D(m_rendererID, 0, 0, 0, m_width, m_height, m_dataFormat, GL_UNSIGNED_BYTE, data);
 	}

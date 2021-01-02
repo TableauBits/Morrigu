@@ -15,7 +15,7 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION();
 
-		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists !");
+		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists!");
 		s_instance = this;
 
 		m_window = std::make_unique<Window>(WindowProperties::create(name, 1280, 720, false));

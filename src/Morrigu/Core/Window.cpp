@@ -26,7 +26,7 @@ namespace MRG
 			MRG_PROFILE_SCOPE("glfwInit");
 			MRG_ENGINE_INFO("Initializing GLFW");
 			[[maybe_unused]] auto success = glfwInit();
-			MRG_CORE_ASSERT(success, "Could not initialize GLFW !");
+			MRG_CORE_ASSERT(success, "Could not initialize GLFW!");
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 

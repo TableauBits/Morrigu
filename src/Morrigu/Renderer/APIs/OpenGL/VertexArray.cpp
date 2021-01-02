@@ -28,7 +28,7 @@ namespace
 
 			case MRG::ShaderDataType::None:
 			default: {
-				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
+				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
 				return GL_INVALID_ENUM;
 			}
 		}
@@ -68,7 +68,7 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION();
 
-		MRG_CORE_ASSERT(vertexBuffer->layout.getElements().size() != 0, "Vertex Buffer layout has not been set !");
+		MRG_CORE_ASSERT(vertexBuffer->layout.getElements().size() != 0, "Vertex Buffer layout has not been set!");
 
 		glBindVertexArray(m_rendererID);
 		vertexBuffer->bind();
