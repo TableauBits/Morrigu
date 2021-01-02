@@ -1,6 +1,7 @@
 #include "MachaLayer.h"
 
 #include "Renderer/RenderingAPI.h"
+#include "Scene/SceneSerializer.h"
 
 namespace MRG
 {
@@ -15,44 +16,6 @@ namespace MRG
 		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
 
 		m_activeScene = createRef<Scene>();
-
-		m_squareEntity = m_activeScene->createEntity("Green square");
-		m_squareEntity.addComponent<SpriteRendererComponent>(glm::vec4{0.f, 1.f, 0.f, 1.f});
-
-		auto redSquare = m_activeScene->createEntity("Red square");
-		redSquare.addComponent<SpriteRendererComponent>(glm::vec4{1.f, 0.f, 0.f, 1.f});
-
-		m_secondCamera = m_activeScene->createEntity("Camera B");
-		auto& component = m_secondCamera.addComponent<CameraComponent>();
-		component.primary = false;
-
-		m_cameraEntity = m_activeScene->createEntity("Camera A");
-		m_cameraEntity.addComponent<CameraComponent>();
-
-		class CameraController : public ScriptableEntity
-		{
-		public:
-			void onUpdate(Timestep ts) override
-			{
-				if (!getComponent<CameraComponent>().primary)
-					return;
-
-				auto& translation = getComponent<TransformComponent>().translation;
-				static float speed = 5.f;
-
-				if (Input::isKeyPressed(Key::A))
-					translation.x -= speed * ts;
-				if (Input::isKeyPressed(Key::D))
-					translation.x += speed * ts;
-				if (Input::isKeyPressed(Key::W))
-					translation.y += speed * ts;
-				if (Input::isKeyPressed(Key::S))
-					translation.y -= speed * ts;
-			}
-		};
-
-		m_cameraEntity.addComponent<NativeScriptComponent>().bind<CameraController>();
-		m_secondCamera.addComponent<NativeScriptComponent>().bind<CameraController>();
 
 		m_sceneHierarchyPanel.setContext(m_activeScene);
 	}
@@ -139,6 +102,16 @@ namespace MRG
 				// Disabling fullscreen would allow the window to be moved to the front of other windows,
 				// which we can't undo at the moment without finer window depth/z control.
 				// ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
+
+				if (ImGui::MenuItem("Serialize")) {
+					SceneSerializer serializer(m_activeScene);
+					serializer.serialize("scenes/example.morrigu");
+				}
+
+				if (ImGui::MenuItem("Deserialize")) {
+					SceneSerializer serializer(m_activeScene);
+					serializer.deserialize("scenes/example.morrigu");
+				}
 
 				if (ImGui::MenuItem("Exit"))
 					Application::get().close();
