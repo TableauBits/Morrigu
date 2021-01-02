@@ -242,7 +242,7 @@ namespace MRG
 			const auto tag = entity[SceneKeys::Entities::Tag::key];
 			std::string eName = tag ? tag.as<std::string>() : "Entity";
 
-			MRG_ENGINE_TRACE("Deserialized entity '{}' ({{ID{}}})", eName, entity[SceneKeys::Entities::entityID].as<uint64_t>());
+			MRG_ENGINE_TRACE("\tDeserialized entity '{}' {{ID{}}}", eName, entity[SceneKeys::Entities::entityID].as<uint64_t>());
 
 			auto newEntity = m_scene->createEntity(eName);
 
