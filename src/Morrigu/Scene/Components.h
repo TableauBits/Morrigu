@@ -68,7 +68,7 @@ namespace MRG
 		{
 			instanciateScript = +[]() { return static_cast<ScriptableEntity*>(new T{}); };
 			destroyScript = +[](NativeScriptComponent* nsc) {
-				delete nsc->instance;
+				delete static_cast<T*>(nsc->instance);
 				nsc->instance = nullptr;
 			};
 		}
