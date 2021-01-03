@@ -1,0 +1,52 @@
+SceneName: Untitled
+Entities:
+  - EntityID: 0000000000000000
+    TagComponent: Green square
+    TransformComponent:
+      translation: [0.800000012, 0.400000006, 0.600000024]
+      rotation: [0, 0, 0]
+      scale: [1, 1, 1]
+    SpriteRendererComponent:
+      color: [0, 0.164705753, 1, 1]
+  - EntityID: 0000000000000000
+    TagComponent: Red square
+    TransformComponent:
+      translation: [-0.200000003, 0, 0]
+      rotation: [0, 0, 0.785398185]
+      scale: [1, 1, 1]
+    SpriteRendererComponent:
+      color: [1, 0, 0, 1]
+  - EntityID: 0000000000000000
+    TagComponent: Camera B
+    TransformComponent:
+      translation: [0, 0, 0]
+      rotation: [0, 0, 0]
+      scale: [1, 1, 1]
+    CameraComponent:
+      camera:
+        projectionType: 0
+        orthographicSize: 10
+        orthographicNear: -1
+        orthographicFar: 1
+        perspectiveFOV: 0.785398185
+        perspectiveNear: 0.00999999978
+        perspectiveFar: 1000
+      primary: false
+      fixedAspectRatio: false
+  - EntityID: 0000000000000000
+    TagComponent: Camera A
+    TransformComponent:
+      translation: [0, 0, 0]
+      rotation: [0, 0, 0]
+      scale: [1, 1, 1]
+    CameraComponent:
+      camera:
+        projectionType: 0
+        orthographicSize: 10
+        orthographicNear: -1
+        orthographicFar: 1
+        perspectiveFOV: 0.785398185
+        perspectiveNear: 0.00999999978
+        perspectiveFar: 1000
+      primary: true
+      fixedAspectRatio: false

@@ -17,6 +17,12 @@ namespace MRG
 		void onEvent(Event& event) override;
 
 	private:
+		bool onKeyPressed(KeyPressedEvent& e);
+
+		void newScene();
+		void openScene();
+		void saveScene();
+
 		Ref<Framebuffer> m_renderTarget;
 
 		bool m_viewportFocused = false, m_viewportHovered = false;

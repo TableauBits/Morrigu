@@ -2,6 +2,7 @@
 
 #include "Renderer/RenderingAPI.h"
 #include "Scene/SceneSerializer.h"
+#include "Utils/FileDialogs.h"
 
 namespace MRG
 {
@@ -103,15 +104,12 @@ namespace MRG
 				// which we can't undo at the moment without finer window depth/z control.
 				// ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
 
-				if (ImGui::MenuItem("Serialize")) {
-					SceneSerializer serializer(m_activeScene);
-					serializer.serialize("scenes/example.morrigu");
-				}
-
-				if (ImGui::MenuItem("Deserialize")) {
-					SceneSerializer serializer(m_activeScene);
-					serializer.deserialize("scenes/example.morrigu");
-				}
+				if (ImGui::MenuItem("New scene", "Ctrl+N"))
+					newScene();
+				if (ImGui::MenuItem("Open scene", "Ctrl+O"))
+					openScene();
+				if (ImGui::MenuItem("Save scene as", "Ctrl+Shift+S"))
+					saveScene();
 
 				if (ImGui::MenuItem("Exit"))
 					Application::get().close();
@@ -152,5 +150,70 @@ namespace MRG
 		ImGui::End();
 	}
 
-	void MachaLayer::onEvent(Event&) {}
+	void MachaLayer::onEvent(Event& event)
+	{
+		EventDispatcher dispatcher{event};
+		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) { return onKeyPressed(event); });
+	}
+
+	bool MachaLayer::onKeyPressed(KeyPressedEvent& event)
+	{
+		if (event.getRepeatCount() > 0)
+			return false;
+
+		bool control = Input::isKeyPressed(Key::LeftControl) || Input::isKeyPressed(Key::RightControl);
+		bool shift = Input::isKeyPressed(Key::LeftShift) || Input::isKeyPressed(Key::RightShift);
+		// bool alt = Input::isKeyPressed(Key::LeftAlt) || Input::isKeyPressed(Key::RightAlt);
+
+		switch (event.getKeyCode()) {
+		case Key::N: {
+			if (control)
+				newScene();
+		} break;
+
+		case Key::O: {
+			if (control)
+				openScene();
+		} break;
+
+		case Key::S: {
+			if (control && shift)
+				saveScene();
+		} break;
+
+		default: {
+			return false;
+		}
+		}
+
+		return true;
+	}
+
+	void MachaLayer::newScene()
+	{
+		m_activeScene = createRef<Scene>();
+		m_activeScene->onViewportResize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
+		m_sceneHierarchyPanel.setContext(m_activeScene);
+	}
+
+	void MachaLayer::openScene()
+	{
+		const auto filepath = FileDialogs::openFile("Open a scene", "Morrigu scene file", {"*.morrigu"});
+		if (filepath.empty())
+			return;
+
+		newScene();
+		SceneSerializer serializer{m_activeScene};
+		serializer.deserialize(filepath);
+	}
+
+	void MachaLayer::saveScene()
+	{
+		const auto filepath = FileDialogs::saveFile("Save a scene as", "Morrigu scene file", {"*.morrigu"});
+		if (filepath.empty())
+			return;
+
+		SceneSerializer serializer{m_activeScene};
+		serializer.serialize(filepath);
+	}
 }  // namespace MRG

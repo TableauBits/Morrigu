@@ -117,7 +117,11 @@ namespace MRG
 {
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& scene) { setContext(scene); }
 
-	void SceneHierarchyPanel::setContext(const Ref<Scene>& scene) { m_context = scene; }
+	void SceneHierarchyPanel::setContext(const Ref<Scene>& scene)
+	{
+		m_context = scene;
+		m_selectedEntity = {};
+	}
 
 	void SceneHierarchyPanel::onImGuiRender()
 	{
