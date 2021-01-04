@@ -210,11 +210,17 @@ namespace MRG
 
 		if (ImGui::BeginPopup("AddComponent")) {
 			if (ImGui::MenuItem("Camera")) {
-				m_selectedEntity.addComponent<CameraComponent>();
+				if (!m_selectedEntity.hasComponent<CameraComponent>())
+					m_selectedEntity.addComponent<CameraComponent>();
+				else
+					MRG_ENGINE_WARN("Tried to add a CameraComponent to an entity that already has one!");
 				ImGui::CloseCurrentPopup();
 			}
 			if (ImGui::MenuItem("Sprite renderer")) {
-				m_selectedEntity.addComponent<SpriteRendererComponent>();
+				if (!m_selectedEntity.hasComponent<SpriteRendererComponent>())
+					m_selectedEntity.addComponent<SpriteRendererComponent>();
+				else
+					MRG_ENGINE_WARN("Tried to add a SpriteRendererComponent to an entity that already has one!");
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::EndPopup();

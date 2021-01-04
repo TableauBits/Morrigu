@@ -224,11 +224,7 @@ namespace MRG
 		MRG_CORE_ASSERT(std::filesystem::exists(filepath), "file {} does not exist!", filepath);
 		MRG_CORE_ASSERT(std::filesystem::is_regular_file(filepath), "file {} does not reference a file!", filepath);
 
-		std::ifstream stream{filepath};
-		std::stringstream ss;
-		ss << stream.rdbuf();
-
-		const auto data = YAML::Load(ss.str());
+		const auto data = YAML::LoadFile(filepath);
 		if (!data[SceneKeys::key])
 			return false;
 
