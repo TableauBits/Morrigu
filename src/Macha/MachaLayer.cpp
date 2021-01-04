@@ -197,21 +197,21 @@ namespace MRG
 	void MachaLayer::openScene()
 	{
 		const auto filepath = FileDialogs::openFile("Open a scene", "Morrigu scene file", {"*.morrigu"});
-		if (filepath.empty())
+		if (!filepath)
 			return;
 
 		newScene();
 		SceneSerializer serializer{m_activeScene};
-		serializer.deserialize(filepath);
+		serializer.deserialize(filepath.value());
 	}
 
 	void MachaLayer::saveScene()
 	{
 		const auto filepath = FileDialogs::saveFile("Save a scene as", "Morrigu scene file", {"*.morrigu"});
-		if (filepath.empty())
+		if (!filepath)
 			return;
 
 		SceneSerializer serializer{m_activeScene};
-		serializer.serialize(filepath);
+		serializer.serialize(filepath.value());
 	}
 }  // namespace MRG

@@ -10,14 +10,14 @@ namespace MRG
 	class FileDialogs
 	{
 	public:
-		[[nodiscard]] static std::string openFile(const char* actionTitle,
-		                                          const char* filterDescription,
-		                                          const std::vector<const char*>& filters,
-		                                          const char* defaultPath = "");
-		[[nodiscard]] static std::string saveFile(const char* actionTitle,
-		                                          const char* filterDescription,
-		                                          const std::vector<const char*>& filters,
-		                                          const char* defaultFile = "");
+		[[nodiscard]] static std::optional<std::string> openFile(const char* actionTitle,
+		                                                         const char* filterDescription,
+		                                                         const std::vector<const char*>& filters,
+		                                                         const char* defaultPath = "");
+		[[nodiscard]] static std::optional<std::string> saveFile(const char* actionTitle,
+		                                                         const char* filterDescription,
+		                                                         const std::vector<const char*>& filters,
+		                                                         const char* defaultFile = "");
 	};
 }  // namespace MRG
 
