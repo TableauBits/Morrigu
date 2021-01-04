@@ -3,7 +3,7 @@ Entities:
   - EntityID: 0000000000000000
     TagComponent: Green square
     TransformComponent:
-      translation: [0, 0, 0]
+      translation: [0, 0, -0.5]
       rotation: [0, 0, 0]
       scale: [1, 1, 1]
     SpriteRendererComponent:
@@ -11,7 +11,7 @@ Entities:
   - EntityID: 0000000000000000
     TagComponent: Red square
     TransformComponent:
-      translation: [1.5, 0, 0]
+      translation: [1.5, 0, 1]
       rotation: [0, 0, 0.785398185]
       scale: [1, 1, 1]
     SpriteRendererComponent:
@@ -19,12 +19,12 @@ Entities:
   - EntityID: 0000000000000000
     TagComponent: Camera B
     TransformComponent:
-      translation: [0, 0, 0]
+      translation: [4, 0, 10]
       rotation: [0, 0, 0]
       scale: [1, 1, 1]
     CameraComponent:
       camera:
-        projectionType: 0
+        projectionType: 1
         orthographicSize: 10
         orthographicNear: -1
         orthographicFar: 1
@@ -36,7 +36,7 @@ Entities:
   - EntityID: 0000000000000000
     TagComponent: Camera A
     TransformComponent:
-      translation: [0, 0, 0]
+      translation: [4, 0, 10]
       rotation: [0, 0, 0]
       scale: [1, 1, 1]
     CameraComponent:
@@ -44,7 +44,7 @@ Entities:
         projectionType: 0
         orthographicSize: 10
         orthographicNear: -1
-        orthographicFar: 1
+        orthographicFar: 11
         perspectiveFOV: 0.785398185
         perspectiveNear: 0.00999999978
         perspectiveFar: 1000

@@ -267,9 +267,9 @@ namespace MRG
 			}
 
 			if (camera.getProjectionType() == SceneCamera::ProjectionType::Perspective) {
-				auto verticalFOV = camera.getPerspectiveFOV();
-				if (ImGui::DragFloat("Vertical FOV", &verticalFOV))
-					camera.setPerspectiveFOV(verticalFOV);
+				auto verticalFOV = glm::degrees(camera.getPerspectiveFOV());
+				if (ImGui::DragFloat("Vertical FOV", &verticalFOV, 1.f, 0.f, 180.f))
+					camera.setPerspectiveFOV(glm::radians(verticalFOV));
 				auto perspectiveNear = camera.getPerspectiveNear();
 				if (ImGui::DragFloat("Near clip", &perspectiveNear))
 					camera.setPerspectiveNear(perspectiveNear);

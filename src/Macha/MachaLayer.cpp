@@ -16,9 +16,7 @@ namespace MRG
 		Renderer2D::setRenderTarget(m_renderTarget);
 		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
 
-		m_activeScene = createRef<Scene>();
-
-		m_sceneHierarchyPanel.setContext(m_activeScene);
+		newScene();
 	}
 
 	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
