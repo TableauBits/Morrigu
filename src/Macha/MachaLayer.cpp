@@ -151,7 +151,7 @@ namespace MRG
 	void MachaLayer::onEvent(Event& event)
 	{
 		EventDispatcher dispatcher{event};
-		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) { return onKeyPressed(event); });
+		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& keyPressedEvent) { return onKeyPressed(keyPressedEvent); });
 	}
 
 	bool MachaLayer::onKeyPressed(KeyPressedEvent& event)
