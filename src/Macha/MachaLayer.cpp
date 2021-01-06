@@ -1,8 +1,13 @@
 #include "MachaLayer.h"
 
+#include "Maths/Maths.h"
 #include "Renderer/RenderingAPI.h"
 #include "Scene/SceneSerializer.h"
 #include "Utils/FileDialogs.h"
+
+#include <imgui.h>
+
+#include <ImGuizmo.h>
 
 namespace MRG
 {
@@ -134,13 +139,57 @@ namespace MRG
 		{
 			m_viewportFocused = ImGui::IsWindowFocused();
 			m_viewportHovered = ImGui::IsWindowHovered();
-			Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused || !m_viewportHovered);
+			Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused && !m_viewportHovered);
 
 			auto viewportSize = ImGui::GetContentRegionAvail();
 			m_viewportSize = {viewportSize.x, viewportSize.y};
 
 			ImGui::Image(
 			  m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
+
+			// Drawing gizmos
+			auto selectedEntity = m_sceneHierarchyPanel.getSelectedEntity();
+			auto mainCameraEntity = m_activeScene->getPrimaryCameraEntity();
+			if (mainCameraEntity && selectedEntity && m_gizmoType != -1) {
+				const auto& camera = mainCameraEntity.value().getComponent<CameraComponent>().camera;
+				ImGuizmo::SetOrthographic(camera.getProjectionType() == SceneCamera::ProjectionType::Orthographic);
+				ImGuizmo::SetDrawlist();
+
+				const auto windowWidth = static_cast<float>(ImGui::GetWindowWidth());
+				const auto windowHeight = static_cast<float>(ImGui::GetWindowHeight());
+				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+				// Camera
+				const auto& cameraProj = camera.getProjection();
+				const auto cameraView = glm::inverse(mainCameraEntity.value().getComponent<TransformComponent>().getTransform());
+
+				// Transform
+				auto& tc = selectedEntity.getComponent<TransformComponent>();
+				auto transform = tc.getTransform();
+
+				// Snapping
+				bool snap = Input::isKeyPressed(Key::LeftControl);
+				float snapValue = m_gizmoType == ImGuizmo::OPERATION::ROTATE ? 45.f : 0.5f;
+				float snapValues[3] = {snapValue, snapValue, snapValue};
+
+				ImGuizmo::Manipulate(glm::value_ptr(cameraView),
+				                     glm::value_ptr(cameraProj),
+				                     static_cast<ImGuizmo::OPERATION>(m_gizmoType),
+				                     ImGuizmo::LOCAL,
+				                     glm::value_ptr(transform),
+				                     nullptr,
+				                     snap ? snapValues : nullptr);
+
+				if (ImGuizmo::IsUsing()) {
+					glm::vec3 translation, rotation, scale;
+					Maths::decomposeTransform(transform, translation, rotation, scale);
+
+					glm::vec3 deltaRotation = rotation - tc.rotation;
+					tc.translation = translation;
+					tc.rotation += deltaRotation;
+					tc.scale = scale;
+				}
+			}
 		}
 		ImGui::End();
 		ImGui::PopStyleVar();
@@ -164,19 +213,32 @@ namespace MRG
 		// bool alt = Input::isKeyPressed(Key::LeftAlt) || Input::isKeyPressed(Key::RightAlt);
 
 		switch (event.getKeyCode()) {
+		// File shortcuts
 		case Key::N: {
 			if (control)
 				newScene();
 		} break;
-
 		case Key::O: {
 			if (control)
 				openScene();
 		} break;
-
 		case Key::S: {
 			if (control && shift)
 				saveScene();
+		} break;
+
+		// Gizmos
+		case Key::Q: {
+			m_gizmoType = -1;
+		} break;
+		case Key::W: {
+			m_gizmoType = ImGuizmo::OPERATION::TRANSLATE;
+		} break;
+		case Key::E: {
+			m_gizmoType = ImGuizmo::OPERATION::ROTATE;
+		} break;
+		case Key::R: {
+			m_gizmoType = ImGuizmo::OPERATION::SCALE;
 		} break;
 
 		default: {

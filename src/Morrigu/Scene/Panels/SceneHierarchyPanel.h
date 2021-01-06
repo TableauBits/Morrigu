@@ -17,6 +17,8 @@ namespace MRG
 
 		void onImGuiRender();
 
+		[[nodiscard]] Entity getSelectedEntity() const { return m_selectedEntity; }
+
 	private:
 		void drawEntityNode(Entity& entity);
 		void drawComponents(Entity& entity);

@@ -34,22 +34,14 @@ namespace MRG
 			nsc.instance->onUpdate(ts);
 		});
 
-		// 2D rendering
-		Camera* mainCamera = nullptr;
-		glm::mat4 cameraTransform;
-		auto view = m_registry.view<TransformComponent, CameraComponent>();
-
-		for (const auto& entity : view) {
-			const auto [tc, cc] = view.get<TransformComponent, CameraComponent>(entity);
-			if (cc.primary) {
-				mainCamera = &cc.camera;
-				cameraTransform = tc.getTransform();
-				break;
-			}
-		}
+		auto mainCamera = getPrimaryCameraEntity();
 
 		if (mainCamera) {
-			Renderer2D::beginScene(*mainCamera, cameraTransform);
+			if (!mainCamera.value().hasComponent<TransformComponent>()) {
+				MRG_ENGINE_ERROR("Primary camera doesn't have a tranform component!");
+			}
+			Renderer2D::beginScene(mainCamera.value().getComponent<CameraComponent>().camera,
+			                       mainCamera.value().getComponent<TransformComponent>().getTransform());
 
 			const auto& group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (const auto& entity : group) {
@@ -72,6 +64,18 @@ namespace MRG
 			if (!cc.fixedAspectRatio)
 				cc.camera.setViewportSize(width, height);
 		}
+	}
+
+	std::optional<Entity> Scene::getPrimaryCameraEntity()
+	{
+		const auto view = m_registry.view<CameraComponent>();
+
+		for (const auto& entity : view) {
+			if (view.get<CameraComponent>(entity).primary)
+				return Entity{entity, this};
+		}
+
+		return std::nullopt;
 	}
 
 	template<>

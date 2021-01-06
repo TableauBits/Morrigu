@@ -29,6 +29,7 @@ namespace MRG
 		glm::vec2 m_viewportSize = {0.f, 0.f};
 
 		Ref<Scene> m_activeScene;
+		int m_gizmoType = -1;
 
 		Timestep m_frameTime;
 

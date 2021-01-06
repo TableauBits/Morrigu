@@ -5,6 +5,8 @@
 
 #include <entt/entt.hpp>
 
+#include <optional>
+
 namespace MRG
 {
 	class Entity;
@@ -20,6 +22,8 @@ namespace MRG
 
 		void onUpdate(Timestep ts);
 		void onViewportResize(uint32_t width, uint32_t height);
+
+		[[nodiscard]] std::optional<Entity> getPrimaryCameraEntity();
 
 	private:
 		template<typename T>

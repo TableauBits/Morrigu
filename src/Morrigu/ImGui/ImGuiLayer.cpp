@@ -13,6 +13,8 @@
 #include <ImGui/bindings/imgui_impl_vulkan.h>
 #include <imgui.h>
 
+#include <ImGuizmo.h>
+
 namespace MRG
 {
 	ImGuiLayer::ImGuiLayer() : Layer{"ImGui Layer"} {}
@@ -147,12 +149,14 @@ namespace MRG
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
+			ImGuizmo::BeginFrame();
 		} break;
 
 		case RenderingAPI::API::Vulkan: {
 			ImGui_ImplVulkan_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
+			ImGuizmo::BeginFrame();
 		} break;
 
 		case RenderingAPI::API::None:

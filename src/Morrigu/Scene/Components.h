@@ -1,10 +1,9 @@
 #ifndef MRG_CLASSES_COMPONENTS
 #define MRG_CLASSES_COMPONENTS
 
+#include "Core/GLMIncludeHelper.h"
 #include "Scene/SceneCamera.h"
 #include "Scene/ScriptableEntity.h"
-
-#include <glm/glm.hpp>
 
 namespace MRG
 {
@@ -29,11 +28,7 @@ namespace MRG
 
 		glm::mat4 getTransform() const
 		{
-			const auto rotationTotal = glm::rotate(glm::mat4{1.f}, rotation.x, {1.f, 0.f, 0.f}) *
-			                           glm::rotate(glm::mat4{1.f}, rotation.y, {0.f, 1.f, 0.f}) *
-			                           glm::rotate(glm::mat4{1.f}, rotation.z, {0.f, 0.f, 1.f});
-
-			return glm::translate(glm::mat4{1.f}, translation) * rotationTotal * glm::scale(glm::mat4{1.f}, scale);
+			return glm::translate(glm::mat4{1.f}, translation) * glm::toMat4(glm::quat(rotation)) * glm::scale(glm::mat4{1.f}, scale);
 		}
 	};
 
