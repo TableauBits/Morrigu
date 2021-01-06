@@ -4,6 +4,7 @@ spdlog/1.4.2@bincrafters/stable
 glad/0.1.29@bincrafters/stable
 glfw/3.3.2@bincrafters/stable
 imgui-docking/03-12-2020@ithyx/experimental
+ImGuizmo/06-01-2021@ithyx/experimental
 glm/0.9.9.5@g-truc/stable
 stb/20190512@conan/stable
 
