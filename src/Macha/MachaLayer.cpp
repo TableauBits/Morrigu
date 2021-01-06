@@ -1,6 +1,8 @@
 #include "MachaLayer.h"
 
 #include "Renderer/RenderingAPI.h"
+#include "Scene/SceneSerializer.h"
+#include "Utils/FileDialogs.h"
 
 namespace MRG
 {
@@ -14,47 +16,7 @@ namespace MRG
 		Renderer2D::setRenderTarget(m_renderTarget);
 		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
 
-		m_activeScene = createRef<Scene>();
-
-		m_squareEntity = m_activeScene->createEntity("Green square");
-		m_squareEntity.addComponent<SpriteRendererComponent>(glm::vec4{0.f, 1.f, 0.f, 1.f});
-
-		auto redSquare = m_activeScene->createEntity("Red square");
-		redSquare.addComponent<SpriteRendererComponent>(glm::vec4{1.f, 0.f, 0.f, 1.f});
-
-		m_secondCamera = m_activeScene->createEntity("Camera B");
-		auto& component = m_secondCamera.addComponent<CameraComponent>();
-		component.primary = false;
-
-		m_cameraEntity = m_activeScene->createEntity("Camera A");
-		m_cameraEntity.addComponent<CameraComponent>();
-
-		class CameraController : public ScriptableEntity
-		{
-		public:
-			void onUpdate(Timestep ts) override
-			{
-				if (!getComponent<CameraComponent>().primary)
-					return;
-
-				auto& translation = getComponent<TransformComponent>().translation;
-				static float speed = 5.f;
-
-				if (Input::isKeyPressed(Key::A))
-					translation.x -= speed * ts;
-				if (Input::isKeyPressed(Key::D))
-					translation.x += speed * ts;
-				if (Input::isKeyPressed(Key::W))
-					translation.y += speed * ts;
-				if (Input::isKeyPressed(Key::S))
-					translation.y -= speed * ts;
-			}
-		};
-
-		m_cameraEntity.addComponent<NativeScriptComponent>().bind<CameraController>();
-		m_secondCamera.addComponent<NativeScriptComponent>().bind<CameraController>();
-
-		m_sceneHierarchyPanel.setContext(m_activeScene);
+		newScene();
 	}
 
 	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
@@ -140,6 +102,13 @@ namespace MRG
 				// which we can't undo at the moment without finer window depth/z control.
 				// ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
 
+				if (ImGui::MenuItem("New scene", "Ctrl+N"))
+					newScene();
+				if (ImGui::MenuItem("Open scene", "Ctrl+O"))
+					openScene();
+				if (ImGui::MenuItem("Save scene as", "Ctrl+Shift+S"))
+					saveScene();
+
 				if (ImGui::MenuItem("Exit"))
 					Application::get().close();
 				ImGui::EndMenu();
@@ -179,5 +148,70 @@ namespace MRG
 		ImGui::End();
 	}
 
-	void MachaLayer::onEvent(Event&) {}
+	void MachaLayer::onEvent(Event& event)
+	{
+		EventDispatcher dispatcher{event};
+		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& keyPressedEvent) { return onKeyPressed(keyPressedEvent); });
+	}
+
+	bool MachaLayer::onKeyPressed(KeyPressedEvent& event)
+	{
+		if (event.getRepeatCount() > 0)
+			return false;
+
+		bool control = Input::isKeyPressed(Key::LeftControl) || Input::isKeyPressed(Key::RightControl);
+		bool shift = Input::isKeyPressed(Key::LeftShift) || Input::isKeyPressed(Key::RightShift);
+		// bool alt = Input::isKeyPressed(Key::LeftAlt) || Input::isKeyPressed(Key::RightAlt);
+
+		switch (event.getKeyCode()) {
+		case Key::N: {
+			if (control)
+				newScene();
+		} break;
+
+		case Key::O: {
+			if (control)
+				openScene();
+		} break;
+
+		case Key::S: {
+			if (control && shift)
+				saveScene();
+		} break;
+
+		default: {
+			return false;
+		}
+		}
+
+		return true;
+	}
+
+	void MachaLayer::newScene()
+	{
+		m_activeScene = createRef<Scene>();
+		m_activeScene->onViewportResize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
+		m_sceneHierarchyPanel.setContext(m_activeScene);
+	}
+
+	void MachaLayer::openScene()
+	{
+		const auto filepath = FileDialogs::openFile("Open a scene", "Morrigu scene file", {"*.morrigu"});
+		if (!filepath)
+			return;
+
+		newScene();
+		SceneSerializer serializer{m_activeScene};
+		serializer.deserialize(filepath.value());
+	}
+
+	void MachaLayer::saveScene()
+	{
+		const auto filepath = FileDialogs::saveFile("Save a scene as", "Morrigu scene file", {"*.morrigu"});
+		if (!filepath)
+			return;
+
+		SceneSerializer serializer{m_activeScene};
+		serializer.serialize(filepath.value());
+	}
 }  // namespace MRG

@@ -38,7 +38,7 @@ namespace MRG
 
 		case ShaderDataType::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
+			MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
 			return 0;
 		}
 		}
@@ -81,7 +81,7 @@ namespace MRG
 
 			case ShaderDataType::None:
 			default: {
-				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
+				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
 				return 0;
 			}
 			}

@@ -17,15 +17,18 @@ namespace MRG
 		void onEvent(Event& event) override;
 
 	private:
+		bool onKeyPressed(KeyPressedEvent& e);
+
+		void newScene();
+		void openScene();
+		void saveScene();
+
 		Ref<Framebuffer> m_renderTarget;
 
 		bool m_viewportFocused = false, m_viewportHovered = false;
 		glm::vec2 m_viewportSize = {0.f, 0.f};
 
 		Ref<Scene> m_activeScene;
-		Entity m_squareEntity;
-		Entity m_cameraEntity;
-		Entity m_secondCamera;
 
 		Timestep m_frameTime;
 

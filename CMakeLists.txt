@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(Morrigu CXX)
+project(Morrigu)
 
 set(MAIN_PRJ_NAME ${PROJECT_NAME})
 set(EDITOR_PRJ_NAME Macha)

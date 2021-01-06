@@ -107,7 +107,7 @@ namespace MRG::Vulkan
 
 		destroy();
 
-		MRG_CORE_ASSERT(size == m_width * m_width * 4, "Data size is incorrect !");
+		MRG_CORE_ASSERT(size == m_width * m_width * 4, "Data size is incorrect!");
 
 		const auto windowData = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 		Buffer stagingBuffer;

@@ -22,6 +22,12 @@ To get up and running with Morrigu, you will need the following:
 * A somewhat recent [CMake](https://cmake.org/) version (tested on 3.18.2, but versions a bit older should work);
 * The [Vulkan SDK](https://vulkan.lunarg.com/sdk/home) (the newest version available).
 
+## Vulkan shaders
+To get the vulkan renderer working, you will have to to launch the `compile.sh` script located in `resources/shaders` to compile the Vulkan shaders.
+Note that due to how engine files are handled, you will have to compile these shaders before using cmake.
+
+If it helps you going, you can take a look at my [MSVC tasks](https://gist.github.com/Ithyx/6b81d75ad732ce785a198ecedc047fd8) for VS Code.
+
 ## Compiling
 Morrigu is compiled as a static library, and should be linked against by another application. To debug and provide examples, this repository includes a "Sandbox" project, and a `CMakeLists.txt` to go along. To compile everything (while making an out of source build), run the following commands:
 ### MSVC
@@ -46,11 +52,6 @@ cmake --build .
 ```
 and replace `<CONFIG>` with the configuration you want, either `Debug` or `Release`.
 
-### Vulkan shaders
-To get the vulkan renderer working, you will have to to launch the `compile.sh` script located in `runtime/resources/shaders` to compile the Vulkan shaders.
-
-If it helps you going, you can take a look at my [MSVC tasks](https://gist.github.com/Ithyx/6b81d75ad732ce785a198ecedc047fd8) for VS Code.
-
 ### Launching
 To use the compiled executable, you have to set the working directory to the `runtime` folder of this repo.
 
@@ -72,11 +73,11 @@ If you encounter a problem, feel free to create an issue. There is currently no 
 
 # Roadmap
 Here are a few features and impovements that I would like to have in this engine at some point (not in order):
+* ~~Graphical Editor;~~ **currently being worked on, see ([#46](https://github.com/Ithyx/Morrigu/pull/46))**
+* ~~Entity-component system;~~ **basic version added in ([#47](https://github.com/Ithyx/Morrigu/pull/47))** 
+* ~~Native~~ and LUA scripting; **rudimentary native scripting added in ([#47](https://github.com/Ithyx/Morrigu/pull/47))** 
 * Quaternion-based Rotation;
 * Better rendering API switching (with conditional code compilation);
-* Native and LUA scripting;
-* Entity-component system;
-* Graphical Editor;
 * Maybe a 3D renderer (in the far future).
 
 # Contributing

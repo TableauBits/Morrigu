@@ -8,6 +8,7 @@ glm/0.9.9.5@g-truc/stable
 stb/20190512@conan/stable
 
 entt/3.5.2
+yaml-cpp/0.6.3
 
 [generators]
 cmake_multi

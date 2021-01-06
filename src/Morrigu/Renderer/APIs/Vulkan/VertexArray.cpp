@@ -28,7 +28,7 @@ namespace
 
 			case MRG::ShaderDataType::None:
 			default: {
-				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type ! ({})", type));
+				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
 				return VkFormat::VK_FORMAT_UNDEFINED;
 			}
 		}
