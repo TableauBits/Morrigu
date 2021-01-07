@@ -1,23 +1,21 @@
 #include "Renderer2D.h"
 
-#include "Core/GLMIncludeHelper.h"
 #include "Debug/Instrumentor.h"
-#include "Renderer/RenderingAPI.h"
 
 namespace MRG::OpenGL
 {
 	void Renderer2D::init()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_quadVertexArray = VertexArray::create();
 
 		m_quadVertexBuffer = VertexBuffer::create(maxVertices * sizeof(QuadVertex));
-		m_quadVertexBuffer->layout = QuadVertex::layout;
+		m_quadVertexBuffer->layout = QuadVertex::getLayout();
 		m_quadVertexArray->addVertexBuffer(m_quadVertexBuffer);
 
 		m_qvbBase = new QuadVertex[maxVertices];
-		uint32_t* quadIndices = new uint32_t[maxIndices];
+		auto quadIndices = new uint32_t[maxIndices];
 
 		uint32_t offset = 0;
 		for (uint32_t i = 0; i < maxIndices; i += 6) {
@@ -52,7 +50,7 @@ namespace MRG::OpenGL
 
 	void Renderer2D::shutdown()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_textureShader->destroy();
 		m_whiteTexture->destroy();
@@ -74,21 +72,21 @@ namespace MRG::OpenGL
 
 	bool Renderer2D::beginFrame()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		return true;
 	}
 
 	bool Renderer2D::endFrame()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		return true;
 	}
 
 	void Renderer2D::beginScene(const Camera& camera, const glm::mat4& transform)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto& viewProjection = camera.getProjection() * glm::inverse(transform);
 
@@ -104,7 +102,7 @@ namespace MRG::OpenGL
 
 	void Renderer2D::beginScene(const OrthoCamera& camera)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_textureShader->bind();
 		m_textureShader->upload("u_viewProjection", camera.getProjectionViewMatrix());
@@ -118,9 +116,9 @@ namespace MRG::OpenGL
 
 	void Renderer2D::endScene()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		uint32_t dataSize = static_cast<uint32_t>((uint8_t*)m_qvbPtr - (uint8_t*)m_qvbBase);
+		auto dataSize = static_cast<uint32_t>((uint8_t*)m_qvbPtr - (uint8_t*)m_qvbBase);
 		m_quadVertexBuffer->setData(m_qvbBase, dataSize);
 
 		flush();
@@ -269,7 +267,7 @@ namespace MRG::OpenGL
 
 	void Renderer2D::drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto indexCount = count ? count : vertexArray->getIndexBuffer()->getCount();
 

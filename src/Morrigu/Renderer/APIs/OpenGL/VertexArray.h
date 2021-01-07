@@ -9,7 +9,7 @@ namespace MRG::OpenGL
 	{
 	public:
 		VertexArray();
-		virtual ~VertexArray();
+		~VertexArray() override;
 
 		void destroy() override
 		{
@@ -31,7 +31,7 @@ namespace MRG::OpenGL
 		[[nodiscard]] const Ref<MRG::IndexBuffer>& getIndexBuffer() const override { return m_indexBuffer; };
 
 	private:
-		uint32_t m_rendererID;
+		uint32_t m_rendererID{0};
 		std::vector<Ref<MRG::VertexBuffer>> m_vertexBuffers;
 		Ref<MRG::IndexBuffer> m_indexBuffer;
 	};

@@ -14,7 +14,7 @@ namespace MRG
 	{
 	private:
 	public:
-		Application(const char* name = "Morrigu App");
+		explicit Application(const char* name = "Morrigu App");
 		virtual ~Application();
 
 		void onEvent(Event& event);

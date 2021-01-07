@@ -2,14 +2,9 @@
 
 #include "Renderer/Renderer2D.h"
 #include "Scene/Components.h"
-#include "Scene/Entity.h"
 
 namespace MRG
 {
-	Scene::Scene() {}
-
-	Scene::~Scene() {}
-
 	Entity Scene::createEntity(const std::string& name)
 	{
 		Entity entity = {m_registry.create(), this};
@@ -18,7 +13,7 @@ namespace MRG
 		return entity;
 	}
 
-	void Scene::destroyEntity(Entity entity) { m_registry.destroy(entity); }
+	void Scene::destroyEntity(const Entity entity) { m_registry.destroy(static_cast<entt::entity>(entity)); }
 
 	void Scene::onUpdate(Timestep ts)
 	{
@@ -38,7 +33,7 @@ namespace MRG
 
 		if (mainCamera) {
 			if (!mainCamera.value().hasComponent<TransformComponent>()) {
-				MRG_ENGINE_ERROR("Primary camera doesn't have a tranform component!");
+				MRG_ENGINE_ERROR("Primary camera doesn't have a tranform component!")
 			}
 			Renderer2D::beginScene(mainCamera.value().getComponent<CameraComponent>().camera,
 			                       mainCamera.value().getComponent<TransformComponent>().getTransform());

@@ -32,25 +32,23 @@ namespace MRG::OpenGL
 		void endScene() override;
 
 		void drawQuad(const glm::mat4& transform, const glm::vec4& color) override;
-		void drawQuad(const glm::mat4& transform,
-		              const Ref<MRG::Texture2D>& texture,
-		              float tilingFactor = 1.f,
-		              const glm::vec4& tintColor = glm::vec4{1.f}) override;
+		void
+		drawQuad(const glm::mat4& transform, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor) override;
 
 		void drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color) override;
 		void drawQuad(const glm::vec3& position,
 		              const glm::vec2& size,
 		              const Ref<MRG::Texture2D>& texture,
-		              float tilingFactor = 1.0f,
-		              const glm::vec4& tintColor = glm::vec4(1.0f)) override;
+		              float tilingFactor,
+		              const glm::vec4& tintColor) override;
 
 		void drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color) override;
 		void drawRotatedQuad(const glm::vec3& position,
 		                     const glm::vec2& size,
 		                     float rotation,
 		                     const Ref<MRG::Texture2D>& texture,
-		                     float tilingFactor = 1.0f,
-		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
+		                     float tilingFactor,
+		                     const glm::vec4& tintColor) override;
 
 		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
 		void resetRenderTarget() override;
@@ -66,7 +64,7 @@ namespace MRG::OpenGL
 	private:
 		void flush();
 		void flushAndReset();
-		void drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0);
+		static void drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0);
 
 		Ref<MRG::VertexArray> m_quadVertexArray;
 		Ref<MRG::VertexBuffer> m_quadVertexBuffer;

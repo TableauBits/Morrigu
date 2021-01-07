@@ -3,7 +3,6 @@
 #include "Core/GLMIncludeHelper.h"
 #include "Core/Warnings.h"
 #include "Scene/Components.h"
-#include "Scene/Entity.h"
 
 DISABLE_WARNING_PUSH
 DISABLE_WARNING_UNSAFE_FUNCTIONS
@@ -12,14 +11,13 @@ DISABLE_WARNING_POP
 
 #include <filesystem>
 #include <fstream>
-#include <sstream>
 
 namespace YAML
 {
 	template<>
-	struct convert<glm::vec3>
+	struct [[maybe_unused]] convert<glm::vec3>
 	{
-		static Node encode(const glm::vec3& rhs)
+		[[maybe_unused]] static Node encode(const glm::vec3& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -28,7 +26,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec3& rhs)
+		[[maybe_unused]] static bool decode(const Node& node, glm::vec3& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 3)
 				return false;
@@ -41,9 +39,9 @@ namespace YAML
 	};
 
 	template<>
-	struct convert<glm::vec4>
+	struct [[maybe_unused]] convert<glm::vec4>
 	{
-		static Node encode(const glm::vec4& rhs)
+		[[maybe_unused]] static Node encode(const glm::vec4& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -53,7 +51,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec4& rhs)
+		[[maybe_unused]] static bool decode(const Node& node, glm::vec4& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 4)
 				return false;
@@ -131,7 +129,7 @@ struct SceneKeys
 
 namespace
 {
-	static void serializeEntity(YAML::Emitter& out, MRG::Entity entity)
+	void serializeEntity(YAML::Emitter& out, MRG::Entity entity)
 	{
 		out << YAML::BeginMap;
 		{
@@ -215,20 +213,20 @@ namespace MRG
 		}
 		out << YAML::EndMap;
 
-		std::ofstream fout{filepath};
-		fout << out.c_str();
+		std::ofstream fOut{filepath};
+		fOut << out.c_str();
 	}
 
 	bool SceneSerializer::deserialize(const std::string& filepath)
 	{
-		MRG_CORE_ASSERT(std::filesystem::exists(filepath), "file {} does not exist!", filepath);
-		MRG_CORE_ASSERT(std::filesystem::is_regular_file(filepath), "file {} does not reference a file!", filepath);
+		MRG_CORE_ASSERT(std::filesystem::exists(filepath), "file {} does not exist!", filepath)
+		MRG_CORE_ASSERT(std::filesystem::is_regular_file(filepath), "file {} does not reference a file!", filepath)
 
 		const auto data = YAML::LoadFile(filepath);
 		if (!data[SceneKeys::key])
 			return false;
 
-		MRG_ENGINE_TRACE("Deserializing scene '{}'", data[SceneKeys::key].as<std::string>());
+		MRG_ENGINE_TRACE("Deserializing scene '{}'", data[SceneKeys::key].as<std::string>())
 
 		auto entities = data[SceneKeys::Entities::key];
 		if (!entities)
@@ -238,7 +236,7 @@ namespace MRG
 			const auto tag = entity[SceneKeys::Entities::Tag::key];
 			std::string eName = tag ? tag.as<std::string>() : "Entity";
 
-			MRG_ENGINE_TRACE("\tDeserialized entity '{}' {{ID{}}}", eName, entity[SceneKeys::Entities::entityID].as<uint64_t>());
+			MRG_ENGINE_TRACE("\tDeserialized entity '{}' {{ID{}}}", eName, entity[SceneKeys::Entities::entityID].as<uint64_t>())
 
 			auto newEntity = m_scene->createEntity(eName);
 

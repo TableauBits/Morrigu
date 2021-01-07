@@ -1,13 +1,8 @@
 #include "Context.h"
 
-#include "Core/Core.h"
 #include "Core/Window.h"
 #include "Debug/Instrumentor.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
-#include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
-#include "Renderer/APIs/Vulkan/WindowProperties.h"
-
-#include <GLFW/glfw3.h>
 
 #include <map>
 #include <set>
@@ -17,16 +12,24 @@
 // These function will mostly follow the structure of https://vulkan-tutorial.com
 namespace
 {
-	static const std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-	static const std::vector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+	auto getValidationLayers()
+	{
+		static std::vector<const char*> validationLayers{"VK_LAYER_KHRONOS_validation"};
+		return validationLayers;
+	}
+	auto getDeviceExtensions()
+	{
+		static std::vector<const char*> deviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+		return deviceExtensions;
+	}
 
 #ifdef MRG_DEBUG
-	static constexpr bool enableValidation = true;
+	constexpr bool enableValidation = true;
 #else
-	static constexpr bool enableValidation = false;
+	constexpr bool enableValidation = false;
 #endif
 
-	[[nodiscard]] MRG::Vulkan::QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface)
+	[[nodiscard]] MRG::Vulkan::QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
 	{
 		MRG::Vulkan::QueueFamilyIndices indices;
 
@@ -57,14 +60,14 @@ namespace
 
 	[[nodiscard]] bool checkValidationLayerSupport()
 	{
-		MRG_ENGINE_INFO("Validation layers requested. Checking availability...");
+		MRG_ENGINE_INFO("Validation layers requested. Checking availability...")
 		uint32_t layerCount;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
 		std::vector<VkLayerProperties> availableLayers(layerCount);
 		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-		for (const auto layerName : validationLayers) {
+		for (const auto layerName : getValidationLayers()) {
 			bool layerFound = false;
 			for (const auto& layer : availableLayers) {
 				if (strcmp(layer.layerName, layerName) == 0) {
@@ -73,11 +76,11 @@ namespace
 				}
 			}
 			if (!layerFound) {
-				MRG_ENGINE_ERROR("Validation layers missing!");
+				MRG_ENGINE_ERROR("Validation layers missing!")
 				return false;
 			}
 		}
-		MRG_ENGINE_INFO("Validation layers found.");
+		MRG_ENGINE_INFO("Validation layers found.")
 		return true;
 	}
 
@@ -96,26 +99,26 @@ namespace
 		return requiredExtensions;
 	}
 
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-	                                                    VkDebugUtilsMessageTypeFlagsEXT,
-	                                                    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	                                                    void*)
+	VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	                                             VkDebugUtilsMessageTypeFlagsEXT,
+	                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	                                             void*)
 	{
 		switch (messageSeverity) {
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: {
-			MRG_ENGINE_TRACE("[VK] {}", pCallbackData->pMessage);
+			MRG_ENGINE_TRACE("[VK] {}", pCallbackData->pMessage)
 		} break;
 
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: {
-			MRG_ENGINE_WARN("[VK] {}", pCallbackData->pMessage);
+			MRG_ENGINE_WARN("[VK] {}", pCallbackData->pMessage)
 		} break;
 
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
-			MRG_ENGINE_ERROR("[VK] {}", pCallbackData->pMessage);
+			MRG_ENGINE_ERROR("[VK] {}", pCallbackData->pMessage)
 		} break;
 
 		default: {
-			MRG_ENGINE_FATAL("[VK] {}", pCallbackData->pMessage);
+			MRG_ENGINE_FATAL("[VK] {}", pCallbackData->pMessage)
 		} break;
 		}
 
@@ -134,7 +137,7 @@ namespace
 
 	[[nodiscard]] VkInstance createInstance(const char* appName)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		// this if statement is split to allow constexpr if
 		if (enableValidation) {
@@ -159,28 +162,28 @@ namespace
 		std::vector<VkExtensionProperties> supportedExtensions(supportedExtensionCount);
 		vkEnumerateInstanceExtensionProperties(nullptr, &supportedExtensionCount, supportedExtensions.data());
 
-		MRG_ENGINE_INFO("The following {} vulkan extensions are required:", requiredExtensions.size());
-		for (std::size_t i = 0; i < requiredExtensions.size(); ++i) {
+		MRG_ENGINE_INFO("The following {} vulkan extensions are required:", requiredExtensions.size())
+		for (auto requiredExtension : requiredExtensions) {
 			bool isSupported = false;
-			for (uint32_t j = 0; j < supportedExtensionCount; ++j) {
-				if (strcmp(supportedExtensions[j].extensionName, requiredExtensions[i]) == 0) {
+			for (uint32_t i = 0; i < supportedExtensionCount; ++i) {
+				if (strcmp(supportedExtensions[i].extensionName, requiredExtension) == 0) {
 					MRG_ENGINE_INFO(
-					  "\t{} (version {}) [SUPPORTED]", supportedExtensions[j].extensionName, supportedExtensions[j].specVersion);
-					supportedExtensions.erase(supportedExtensions.begin() + j);
-					--j;  // might underflow if set to 0, but will overflow back to 0
+					  "\t{} (version {}) [SUPPORTED]", supportedExtensions[i].extensionName, supportedExtensions[i].specVersion)
+					supportedExtensions.erase(supportedExtensions.begin() + i);
+					--i;  // might underflow if set to 0, but will overflow back to 0
 					isSupported = true;
 					break;
 				}
 			}
 			if (!isSupported) {
-				MRG_ENGINE_ERROR("\t{} (NO VERSION FOUND) [NOT SUPPORTED]", requiredExtensions[i]);
-				MRG_CORE_ASSERT(false, "Required extension not supported by hardware!");
+				MRG_ENGINE_ERROR("\t{} (NO VERSION FOUND) [NOT SUPPORTED]", requiredExtension)
+				MRG_CORE_ASSERT(false, "Required extension not supported by hardware!")
 			}
 		}
-		MRG_ENGINE_INFO("All required extensions have been found.");
-		MRG_ENGINE_TRACE("Additional supported extensions ({}): ", supportedExtensions.size());
+		MRG_ENGINE_INFO("All required extensions have been found.")
+		MRG_ENGINE_TRACE("Additional supported extensions ({}): ", supportedExtensions.size())
 		for (const auto& extension : supportedExtensions) {
-			MRG_ENGINE_TRACE("\t{} (version {})", extension.extensionName, extension.specVersion);
+			MRG_ENGINE_TRACE("\t{} (version {})", extension.extensionName, extension.specVersion)
 		}
 
 		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
@@ -190,26 +193,21 @@ namespace
 		createInfo.pApplicationInfo = &appInfo;
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
 		createInfo.ppEnabledExtensionNames = requiredExtensions.data();
-		if (enableValidation) {
-			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = validationLayers.data();
+		createInfo.enabledLayerCount = static_cast<uint32_t>(getValidationLayers().size());
+		createInfo.ppEnabledLayerNames = getValidationLayers().data();
+		populateDebugMessengerCreateInfo(debugCreateInfo);
+		createInfo.pNext = &debugCreateInfo;
 
-			populateDebugMessengerCreateInfo(debugCreateInfo);
-			createInfo.pNext = &debugCreateInfo;
-		} else {
-			createInfo.enabledLayerCount = 0;
-		}
-
-		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "failed to create instance!");
+		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "failed to create instance!")
 		return returnInstance;
 	}
 
-	[[nodiscard]] VkResult createDebugUtilsMessengerEXT(const VkInstance instance,
+	[[nodiscard]] VkResult createDebugUtilsMessengerEXT(VkInstance instance,
 	                                                    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
 	                                                    const VkAllocationCallbacks* pAllocator,
 	                                                    VkDebugUtilsMessengerEXT* pDebugMessenger)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 		if (func != nullptr)
@@ -217,27 +215,25 @@ namespace
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 
-	void destroyDebugUtilsMessengerEXT(const VkInstance instance,
-	                                   const VkDebugUtilsMessengerEXT messenger,
-	                                   const VkAllocationCallbacks* pAllocator)
+	void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator)
 	{
 		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 		if (func != nullptr)
 			func(instance, messenger, pAllocator);
 	}
 
-	[[nodiscard]] VkDebugUtilsMessengerEXT setupDebugMessenger(const VkInstance instance)
+	[[nodiscard]] VkDebugUtilsMessengerEXT setupDebugMessenger(VkInstance instance)
 	{
 		VkDebugUtilsMessengerEXT returnMessenger;
 
 		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
 		populateDebugMessengerCreateInfo(createInfo);
 
-		MRG_VKVALIDATE(createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &returnMessenger), "failed to setup messenger!");
+		MRG_VKVALIDATE(createDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &returnMessenger), "failed to setup messenger!")
 		return returnMessenger;
 	}
 
-	[[nodiscard]] bool checkDeviceExtensionsSupport(const VkPhysicalDevice device)
+	[[nodiscard]] bool checkDeviceExtensionsSupport(VkPhysicalDevice device)
 	{
 		uint32_t extensionCount{};
 		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -245,23 +241,23 @@ namespace
 		std::vector<VkExtensionProperties> extensions(extensionCount);
 		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, extensions.data());
 
-		std::set<std::string> requiredExtensions{deviceExtensions.begin(), deviceExtensions.end()};
+		std::set<std::string> requiredExtensions{getDeviceExtensions().begin(), getDeviceExtensions().end()};
 		for (const auto& extension : extensions) {
 			if (requiredExtensions.erase(extension.extensionName))
-				MRG_ENGINE_TRACE("\t\tFound required extension {} (version {})", extension.extensionName, extension.specVersion);
+				MRG_ENGINE_TRACE("\t\tFound required extension {} (version {})", extension.extensionName, extension.specVersion)
 		}
 
 		if (requiredExtensions.empty()) {
-			MRG_ENGINE_TRACE("\t\tAll required extensions supported.");
+			MRG_ENGINE_TRACE("\t\tAll required extensions supported.")
 			return true;
 		}
 
-		MRG_ENGINE_TRACE("\t\tMissing required extensions:");
-		for (const auto& extension : requiredExtensions) { MRG_ENGINE_TRACE("\t\t\t{}", extension); }
+		MRG_ENGINE_TRACE("\t\tMissing required extensions:")
+		for (const auto& extension : requiredExtensions) { MRG_ENGINE_TRACE("\t\t\t{}", extension) }
 		return false;
 	}
 
-	[[nodiscard]] bool isDeviceSuitable(const VkPhysicalDevice device, const VkSurfaceKHR surface, const VkPhysicalDeviceFeatures features)
+	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface, const VkPhysicalDeviceFeatures features)
 	{
 		if (!features.samplerAnisotropy)
 			return false;
@@ -277,7 +273,7 @@ namespace
 		return true;
 	}
 
-	[[nodiscard]] std::size_t evaluateDevice(const VkPhysicalDevice device, const VkSurfaceKHR surface)
+	[[nodiscard]] std::size_t evaluateDevice(VkPhysicalDevice device, VkSurfaceKHR surface)
 	{
 		VkPhysicalDeviceProperties properties;
 		VkPhysicalDeviceFeatures features;
@@ -287,7 +283,7 @@ namespace
 		vkGetPhysicalDeviceFeatures(device, &features);
 
 		if (!isDeviceSuitable(device, surface, features)) {
-			MRG_ENGINE_TRACE("\t\tNot suitable.");
+			MRG_ENGINE_TRACE("\t\tNot suitable.")
 			return 0;
 		}
 
@@ -300,7 +296,7 @@ namespace
 		return score;
 	}
 
-	constexpr const char* vendorStringfromID(const uint32_t vendorID)
+	constexpr const char* vendorStringFromID(const uint32_t vendorID)
 	{
 		switch (vendorID) {
 		case 0x1002:
@@ -321,9 +317,9 @@ namespace
 		}
 	}
 
-	[[nodiscard]] VkPhysicalDevice pickPhysicalDevice(const VkInstance instance, const VkSurfaceKHR surface)
+	[[nodiscard]] VkPhysicalDevice pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
 	{
-		MRG_ENGINE_TRACE("Starting device selection process.");
+		MRG_ENGINE_TRACE("Starting device selection process.")
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -335,13 +331,13 @@ namespace
 
 		std::multimap<std::size_t, VkPhysicalDevice> candidates;
 
-		MRG_ENGINE_TRACE("The following device extensions are required and will be checked:");
-		for (const auto& extension : deviceExtensions) MRG_ENGINE_TRACE("\t{}", extension);
+		MRG_ENGINE_TRACE("The following device extensions are required and will be checked:")
+		for (const auto& extension : getDeviceExtensions()) { MRG_ENGINE_TRACE("\t{}", extension) }
 		VkPhysicalDeviceProperties props;
-		MRG_ENGINE_TRACE("{} physical devices found:", deviceCount);
+		MRG_ENGINE_TRACE("{} physical devices found:", deviceCount)
 		for (const auto& device : devices) {
 			vkGetPhysicalDeviceProperties(device, &props);
-			MRG_ENGINE_TRACE("\t{} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringfromID(props.vendorID));
+			MRG_ENGINE_TRACE("\t{} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringFromID(props.vendorID))
 			candidates.emplace(evaluateDevice(device, surface), device);
 		}
 
@@ -352,9 +348,9 @@ namespace
 		return candidates.rbegin()->second;
 	}
 
-	[[nodiscard]] VkDevice createDevice(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface)
+	[[nodiscard]] VkDevice createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		VkDevice returnDevice;
 
@@ -382,17 +378,17 @@ namespace
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
-		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(getDeviceExtensions().size());
+		createInfo.ppEnabledExtensionNames = getDeviceExtensions().data();
 		createInfo.pEnabledFeatures = &deviceFeatures;
 		if (enableValidation) {
-			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = validationLayers.data();
+			createInfo.enabledLayerCount = static_cast<uint32_t>(getValidationLayers().size());
+			createInfo.ppEnabledLayerNames = getValidationLayers().data();
 		} else {
 			createInfo.enabledLayerCount = 0;
 		}
 
-		MRG_VKVALIDATE(vkCreateDevice(physicalDevice, &createInfo, nullptr, &returnDevice), "failed to create device!");
+		MRG_VKVALIDATE(vkCreateDevice(physicalDevice, &createInfo, nullptr, &returnDevice), "failed to create device!")
 
 		return returnDevice;
 	}
@@ -403,30 +399,30 @@ namespace MRG::Vulkan
 {
 	Context::Context(GLFWwindow* window)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_window = window;
 
-		MRG_CORE_ASSERT(window, "Window handle is null!");
+		MRG_CORE_ASSERT(window, "Window handle is null!")
 
-		MRG_ENGINE_INFO("Using Vulkan as a rendering API. Other useful stats will follow:");
+		MRG_ENGINE_INFO("Using Vulkan as a rendering API. Other useful stats will follow:")
 
 		try {
 			auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(window));
 			data->instance = createInstance(data->title);
-			MRG_ENGINE_INFO("Vulkan instance successfully created");
+			MRG_ENGINE_INFO("Vulkan instance successfully created")
 
 			if (enableValidation)
 				data->messenger = setupDebugMessenger(data->instance);
 
-			MRG_VKVALIDATE(glfwCreateWindowSurface(data->instance, window, nullptr, &data->surface), "failed to create window surface!");
+			MRG_VKVALIDATE(glfwCreateWindowSurface(data->instance, window, nullptr, &data->surface), "failed to create window surface!")
 
 			data->physicalDevice = pickPhysicalDevice(data->instance, data->surface);
 
 			VkPhysicalDeviceProperties props;
 			vkGetPhysicalDeviceProperties(data->physicalDevice, &props);
 			MRG_ENGINE_INFO(
-			  "Physical device selected: {} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringfromID(props.vendorID));
+			  "Physical device selected: {} {{ID{}}} ({})", props.deviceName, props.deviceID, vendorStringFromID(props.vendorID))
 
 			data->device = createDevice(data->physicalDevice, data->surface);
 			auto queueFamilies = findQueueFamilies(data->physicalDevice, data->surface);
@@ -435,13 +431,13 @@ namespace MRG::Vulkan
 			vkGetDeviceQueue(data->device, queueFamilies.graphicsFamily.value(), 0, &data->graphicsQueue.handle);
 			vkGetDeviceQueue(data->device, queueFamilies.presentFamily.value(), 0, &data->presentQueue.handle);
 		} catch (const std::runtime_error& e) {
-			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what());
+			MRG_ENGINE_ERROR("Vulkan error detected: {}", e.what())
 		}
 	}
 
 	Context::~Context()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(m_window));
 
@@ -456,7 +452,7 @@ namespace MRG::Vulkan
 
 	void Context::swapBuffers()
 	{
-		// MRG_PROFILE_FUNCTION();
+		// MRG_PROFILE_FUNCTION()
 	}
 
 	void Context::swapInterval(int) {}

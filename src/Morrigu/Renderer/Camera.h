@@ -9,7 +9,7 @@ namespace MRG
 	{
 	public:
 		Camera() = default;
-		Camera(const glm::mat4& projection) : m_projection(projection) {}
+		explicit Camera(const glm::mat4& projection) : m_projection(projection) {}
 
 		virtual ~Camera() = default;
 

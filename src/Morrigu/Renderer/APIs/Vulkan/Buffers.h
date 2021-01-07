@@ -11,7 +11,7 @@ namespace MRG::Vulkan
 	class VertexBuffer : public MRG::VertexBuffer
 	{
 	public:
-		VertexBuffer(uint32_t size);
+		explicit VertexBuffer(uint32_t size);
 		VertexBuffer(const void* vertices, uint32_t size);
 		~VertexBuffer() override;
 
@@ -26,7 +26,7 @@ namespace MRG::Vulkan
 		[[nodiscard]] VkDeviceMemory getMemoryHandle() const { return m_bufferStruct.memoryHandle; }
 
 	private:
-		Buffer m_bufferStruct;
+		Buffer m_bufferStruct{};
 	};
 
 	class IndexBuffer : public MRG::IndexBuffer
@@ -46,7 +46,7 @@ namespace MRG::Vulkan
 		[[nodiscard]] uint32_t getCount() const override { return m_count; };
 
 	private:
-		Buffer m_bufferStruct;
+		Buffer m_bufferStruct{};
 		uint32_t m_count;
 	};
 }  // namespace MRG::Vulkan

@@ -15,7 +15,7 @@ namespace MRG
 	class GLFWWindowWrapper
 	{
 	public:
-		GLFWWindowWrapper(WindowProperties* props);
+		explicit GLFWWindowWrapper(WindowProperties* props);
 		~GLFWWindowWrapper();
 
 		GLFWwindow* handle;
@@ -26,7 +26,7 @@ namespace MRG
 	class Window
 	{
 	public:
-		Window(Scope<WindowProperties> props);
+		explicit Window(Scope<WindowProperties> props);
 
 		void onUpdate();
 

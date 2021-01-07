@@ -10,8 +10,8 @@ namespace MRG::Vulkan
 	class Context : public MRG::Context
 	{
 	public:
-		Context(GLFWwindow* window);
-		virtual ~Context();
+		explicit Context(GLFWwindow* window);
+		~Context() override;
 
 		void swapBuffers() override;
 		void swapInterval(int interval) override;

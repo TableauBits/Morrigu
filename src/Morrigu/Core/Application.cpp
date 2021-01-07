@@ -3,8 +3,6 @@
 #include "Debug/Instrumentor.h"
 #include "Renderer/Renderer2D.h"
 
-#include <GLFW/glfw3.h>
-
 #include <functional>
 
 namespace MRG
@@ -13,9 +11,9 @@ namespace MRG
 
 	Application::Application(const char* name)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists!");
+		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists!")
 		s_instance = this;
 
 		m_window = std::make_unique<Window>(WindowProperties::create(name, 1280, 720, false));
@@ -29,14 +27,14 @@ namespace MRG
 
 	Application::~Application()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		Renderer2D::shutdown();
 	}
 
 	void Application::onEvent(Event& event)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		EventDispatcher dispatcher{event};
 		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& closeEvent) -> bool { return onWindowClose(closeEvent); });
@@ -51,14 +49,14 @@ namespace MRG
 
 	void Application::pushLayer(Layer* newLayer)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_layerStack.pushLayer(newLayer);
 	}
 
 	void Application::pushOverlay(Layer* newOverlay)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_layerStack.pushOverlay(newOverlay);
 	}
@@ -67,10 +65,10 @@ namespace MRG
 
 	void Application::run()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		while (m_running) {
-			MRG_PROFILE_SCOPE("RunLoop");
+			MRG_PROFILE_SCOPE("RunLoop")
 
 			auto time = float(glfwGetTime());
 			Timestep ts = time - m_lastFrameTime;
@@ -79,14 +77,14 @@ namespace MRG
 			while (!Renderer2D::beginFrame()) {}
 
 			if (!m_minimized) {
-				MRG_PROFILE_SCOPE("LayerStack onUpdate");
+				MRG_PROFILE_SCOPE("LayerStack onUpdate")
 
 				for (auto& layer : m_layerStack) layer->onUpdate(ts);
 			}
 
 			m_ImGuiLayer->begin();
 			{
-				MRG_PROFILE_SCOPE("LayerStack onImGuiRender");
+				MRG_PROFILE_SCOPE("LayerStack onImGuiRender")
 
 				for (auto& layer : m_layerStack) layer->onImGuiRender();
 			}
@@ -105,7 +103,7 @@ namespace MRG
 
 	bool Application::onWindowResize(WindowResizeEvent& event)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		if (event.getWidth() == 0 || event.getHeight() == 0) {
 			m_minimized = true;

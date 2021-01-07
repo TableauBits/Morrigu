@@ -11,17 +11,17 @@ namespace MRG
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::VertexArray>();
-		} break;
+		}
 
 		case RenderingAPI::API::Vulkan: {
 			return createRef<Vulkan::VertexArray>();
-		} break;
+		}
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()))
 			return nullptr;
-		} break;
+		}
 		}
 	}
 }  // namespace MRG

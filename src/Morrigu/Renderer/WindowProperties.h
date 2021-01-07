@@ -23,7 +23,7 @@ namespace MRG
 		uint16_t keyRepeats = 0;
 
 	protected:
-		WindowProperties(const char*& newTitle, uint32_t newWidth, uint32_t newHeight, bool newVSync)
+		WindowProperties(const char* newTitle, uint32_t newWidth, uint32_t newHeight, bool newVSync)
 		    : title(newTitle), width(newWidth), height(newHeight), VSync(newVSync)
 		{}
 	};

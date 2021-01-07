@@ -16,7 +16,7 @@ namespace MRG
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 
 	protected:
-		KeyEvent(const KeyCode keyCode) : m_keyCode(keyCode) {}
+		explicit KeyEvent(const KeyCode keyCode) : m_keyCode(keyCode) {}
 
 		KeyCode m_keyCode;
 	};
@@ -43,7 +43,7 @@ namespace MRG
 	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
-		KeyReleasedEvent(const KeyCode keyCode) : KeyEvent(keyCode) {}
+		explicit KeyReleasedEvent(const KeyCode keyCode) : KeyEvent(keyCode) {}
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -58,7 +58,7 @@ namespace MRG
 	class KeyTypedEvent : public KeyEvent
 	{
 	public:
-		KeyTypedEvent(const KeyCode keyCode) : KeyEvent(keyCode) {}
+		explicit KeyTypedEvent(const KeyCode keyCode) : KeyEvent(keyCode) {}
 
 		[[nodiscard]] std::string toString() const override
 		{

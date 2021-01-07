@@ -3,7 +3,7 @@
 
 #include "Core/Timestep.h"
 
-#include <entt/entt.hpp>
+#include <entt/entity/registry.hpp>
 
 #include <optional>
 
@@ -14,9 +14,6 @@ namespace MRG
 	class Scene
 	{
 	public:
-		Scene();
-		~Scene();
-
 		Entity createEntity(const std::string& name = std::string{});
 		void destroyEntity(Entity entity);
 

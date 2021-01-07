@@ -1,10 +1,10 @@
 #include <Morrigu.h>
 
-class Macha : public MRG::Layer
+class SandboxLayer : public MRG::Layer
 {
 public:
-	Macha();
-	virtual ~Macha() = default;
+	SandboxLayer();
+	~SandboxLayer() override = default;
 
 	void onAttach() override;
 	void onDetach() override;

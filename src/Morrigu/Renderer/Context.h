@@ -9,7 +9,7 @@ namespace MRG
 	class Context
 	{
 	public:
-		virtual ~Context() {}
+		virtual ~Context() = default;
 
 		virtual void swapBuffers() = 0;
 		virtual void swapInterval(int interval) = 0;

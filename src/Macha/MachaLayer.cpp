@@ -1,7 +1,6 @@
 #include "MachaLayer.h"
 
 #include "Maths/Maths.h"
-#include "Renderer/RenderingAPI.h"
 #include "Scene/SceneSerializer.h"
 #include "Utils/FileDialogs.h"
 
@@ -15,7 +14,7 @@ namespace MRG
 
 	void MachaLayer::onAttach()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_renderTarget = Framebuffer::create({1280, 720});
 		Renderer2D::setRenderTarget(m_renderTarget);
@@ -24,11 +23,11 @@ namespace MRG
 		newScene();
 	}
 
-	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
+	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION() }
 
 	void MachaLayer::onUpdate(Timestep ts)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_frameTime = ts;
 
@@ -40,7 +39,7 @@ namespace MRG
 		}
 
 		Renderer2D::resetStats();
-		MRG_PROFILE_SCOPE("Render prep");
+		MRG_PROFILE_SCOPE("Render prep")
 		Renderer2D::clear();
 
 		m_activeScene->onUpdate(ts);
@@ -48,29 +47,26 @@ namespace MRG
 
 	void MachaLayer::onImGuiRender()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto fps = 1 / m_frameTime;
 		const auto tsColor = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
 		const auto stats = Renderer2D::getStats();
 
 		static bool dockspaceOpen = true;
-		bool opt_fullscreen = true;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
 		// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
 		// because it would be confusing to have two docking targets within each others.
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-		if (opt_fullscreen) {
-			ImGuiViewport* viewport = ImGui::GetMainViewport();
-			ImGui::SetNextWindowPos(viewport->Pos);
-			ImGui::SetNextWindowSize(viewport->Size);
-			ImGui::SetNextWindowViewport(viewport->ID);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-			window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-		}
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->Pos);
+		ImGui::SetNextWindowSize(viewport->Size);
+		ImGui::SetNextWindowViewport(viewport->ID);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
 		// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we
 		// ask Begin() to not render a background.
@@ -86,8 +82,7 @@ namespace MRG
 		ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
 		ImGui::PopStyleVar();
 
-		if (opt_fullscreen)
-			ImGui::PopStyleVar(2);
+		ImGui::PopStyleVar(2);
 
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();

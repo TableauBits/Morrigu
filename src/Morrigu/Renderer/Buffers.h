@@ -38,7 +38,7 @@ namespace MRG
 
 		case ShaderDataType::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
+			MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type))
 			return 0;
 		}
 		}
@@ -49,14 +49,14 @@ namespace MRG
 	struct BufferElement
 	{
 		std::string name;
-		ShaderDataType type;
-		uint32_t size;
-		std::size_t offset;
-		bool isNormalized;
+		ShaderDataType type{ShaderDataType::None};
+		uint32_t size{0};
+		std::size_t offset{0};
+		bool isNormalized{false};
 
 		BufferElement() = default;
 		BufferElement(ShaderDataType bufferType, const char* bufferName, bool normalized = false)
-		    : name(bufferName), type(bufferType), size(ShaderDataTypeSize(bufferType)), offset(0), isNormalized(normalized)
+		    : name(bufferName), type(bufferType), size(ShaderDataTypeSize(bufferType)), isNormalized(normalized)
 		{}
 
 		[[nodiscard]] uint32_t getComponentCount() const
@@ -81,7 +81,7 @@ namespace MRG
 
 			case ShaderDataType::None:
 			default: {
-				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
+				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type))
 				return 0;
 			}
 			}

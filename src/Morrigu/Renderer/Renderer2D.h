@@ -22,11 +22,15 @@ namespace MRG
 		float texIndex;
 		float tilingFactor;
 
-		static inline std::initializer_list<MRG::BufferElement> layout = {{MRG::ShaderDataType::Float3, "a_position"},
-		                                                                  {MRG::ShaderDataType::Float4, "a_color"},
-		                                                                  {MRG::ShaderDataType::Float2, "a_texCoord"},
-		                                                                  {MRG::ShaderDataType::Float, "a_texIndex"},
-		                                                                  {MRG::ShaderDataType::Float, "a_tilingFactor"}};
+		static auto getLayout()
+		{
+			static std::initializer_list<MRG::BufferElement> layout = {{MRG::ShaderDataType::Float3, "a_position"},
+			                                                           {MRG::ShaderDataType::Float4, "a_color"},
+			                                                           {MRG::ShaderDataType::Float2, "a_texCoord"},
+			                                                           {MRG::ShaderDataType::Float, "a_texIndex"},
+			                                                           {MRG::ShaderDataType::Float, "a_tilingFactor"}};
+			return layout;
+		};
 	};
 
 	struct RenderingStatistics
@@ -56,25 +60,23 @@ namespace MRG
 		virtual void endScene() = 0;
 
 		virtual void drawQuad(const glm::mat4& transform, const glm::vec4& color) = 0;
-		virtual void drawQuad(const glm::mat4& transform,
-		                      const Ref<Texture2D>& texture,
-		                      float tilingFactor = 1.f,
-		                      const glm::vec4& tintColor = glm::vec4{1.f}) = 0;
+		virtual void
+		drawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor) = 0;
 
 		virtual void drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color) = 0;
 		virtual void drawQuad(const glm::vec3& position,
 		                      const glm::vec2& size,
 		                      const Ref<Texture2D>& texture,
-		                      float tilingFactor = 1.f,
-		                      const glm::vec4& tintColor = glm::vec4{1.f}) = 0;
+		                      float tilingFactor,
+		                      const glm::vec4& tintColor) = 0;
 
 		virtual void drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color) = 0;
 		virtual void drawRotatedQuad(const glm::vec3& position,
 		                             const glm::vec2& size,
 		                             float rotation,
 		                             const Ref<Texture2D>& texture,
-		                             float tilingFactor = 1.f,
-		                             const glm::vec4& tintColor = glm::vec4{1.f}) = 0;
+		                             float tilingFactor,
+		                             const glm::vec4& tintColor) = 0;
 
 		virtual void setRenderTarget(Ref<Framebuffer> renderTarget) = 0;
 		virtual void resetRenderTarget() = 0;
@@ -84,7 +86,7 @@ namespace MRG
 		virtual void clear() = 0;
 
 		virtual void resetStats() = 0;
-		virtual RenderingStatistics getStats() const = 0;
+		[[nodiscard]] virtual RenderingStatistics getStats() const = 0;
 
 		static const uint32_t maxQuads = 10000;
 		static const uint32_t maxVertices = 4 * maxQuads;

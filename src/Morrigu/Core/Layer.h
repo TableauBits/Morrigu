@@ -5,13 +5,14 @@
 #include "Events/Event.h"
 
 #include <string>
+#include <utility>
 
 namespace MRG
 {
 	class Layer
 	{
 	public:
-		Layer(const std::string& name) : m_name(name) {}
+		explicit Layer(std::string name) : m_name(std::move(name)) {}
 		virtual ~Layer() = default;
 
 		virtual void onAttach() = 0;
@@ -20,7 +21,7 @@ namespace MRG
 		virtual void onEvent(Event& event) = 0;
 		virtual void onImGuiRender() {}
 
-		[[nodiscard]] const std::string getName() const { return m_name; }
+		[[nodiscard]] std::string getName() const { return m_name; }
 
 	protected:
 		std::string m_name;

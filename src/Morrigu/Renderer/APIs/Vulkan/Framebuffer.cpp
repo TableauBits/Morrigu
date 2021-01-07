@@ -48,7 +48,7 @@ namespace MRG::Vulkan
 		samplerInfo.minLod = 0.f;
 		samplerInfo.maxLod = 0.f;
 
-		MRG_VKVALIDATE(vkCreateSampler(data->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!");
+		MRG_VKVALIDATE(vkCreateSampler(data->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!")
 
 		createImage(data->physicalDevice,
 		            data->device,
@@ -100,10 +100,10 @@ namespace MRG::Vulkan
 		createInfo.layers = 1;
 		createInfo.renderPass = data->renderingPipeline.renderPass;
 
-		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!");
+		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
 	}
 
-	Framebuffer::~Framebuffer() { destroy(); }
+	Framebuffer::~Framebuffer() { Framebuffer::destroy(); }
 
 	void Framebuffer::destroy()
 	{
@@ -219,7 +219,7 @@ namespace MRG::Vulkan
 		createInfo.layers = 1;
 		createInfo.renderPass = data->renderingPipeline.renderPass;
 
-		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!");
+		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
 
 		if (m_ImTextureID != nullptr) {
 			transitionImageLayout(

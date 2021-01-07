@@ -11,7 +11,7 @@ namespace MRG
 	{
 	public:
 		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const Ref<Scene>& scene);
+		explicit SceneHierarchyPanel(const Ref<Scene>& scene);
 
 		void setContext(const Ref<Scene>& scene);
 

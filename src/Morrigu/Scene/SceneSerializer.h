@@ -9,7 +9,7 @@ namespace MRG
 	class SceneSerializer
 	{
 	public:
-		SceneSerializer(const Ref<Scene>& scene);
+		explicit SceneSerializer(const Ref<Scene>& scene);
 
 		void serialize(const std::string& filepath);
 		bool deserialize(const std::string& filepath);

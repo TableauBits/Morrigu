@@ -12,7 +12,7 @@ namespace MRG
 	class OrthoCameraController
 	{
 	public:
-		OrthoCameraController(float aspectRatio, bool rotation = false);
+		explicit OrthoCameraController(float aspectRatio, bool rotation = false);
 
 		void onUpdate(Timestep ts);
 		void onEvent(Event& event);

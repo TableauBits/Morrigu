@@ -4,7 +4,6 @@
 #include "Renderer/ImageLoader.h"
 #include "Renderer/Renderer2D.h"
 
-#include <GLFW/glfw3.h>
 #include <Vendor/ImGui/bindings/imgui_impl_vulkan.h>
 #include <stb_image.h>
 
@@ -12,7 +11,7 @@ namespace MRG::Vulkan
 {
 	Texture2D::Texture2D(uint32_t width, uint32_t height) : m_width(width), m_height(height)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto windowData = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
@@ -49,16 +48,16 @@ namespace MRG::Vulkan
 		samplerInfo.minLod = 0.f;
 		samplerInfo.maxLod = 0.f;
 
-		MRG_VKVALIDATE(vkCreateSampler(windowData->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!");
+		MRG_VKVALIDATE(vkCreateSampler(windowData->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!")
 	}
 
 	Texture2D::Texture2D(const std::string& path)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		int width, height, channels;
 		const auto pixels = ImageLoader::loadFromFile(path.c_str(), &width, &height, &channels, STBI_rgb_alpha, true);
-		MRG_CORE_ASSERT(pixels, fmt::format("Failed to load file '{}'", path));
+		MRG_CORE_ASSERT(pixels, fmt::format("Failed to load file '{}'", path))
 
 		m_width = static_cast<uint32_t>(width);
 		m_height = static_cast<uint32_t>(height);
@@ -66,14 +65,14 @@ namespace MRG::Vulkan
 		uint32_t imageSize = width * height * 4;
 
 		m_isDestroyed = true;
-		setData(pixels, imageSize);
+		Texture2D::setData(pixels, imageSize);
 	}
 
 	Texture2D::~Texture2D()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		destroy();
+		Texture2D::destroy();
 	}
 
 	void Texture2D::destroy()
@@ -103,14 +102,14 @@ namespace MRG::Vulkan
 
 	void Texture2D::setData(void* pixels, uint32_t size)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		destroy();
 
-		MRG_CORE_ASSERT(size == m_width * m_width * 4, "Data size is incorrect!");
+		MRG_CORE_ASSERT(size == m_width * m_width * 4, "Data size is incorrect!")
 
 		const auto windowData = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
-		Buffer stagingBuffer;
+		Buffer stagingBuffer{};
 		createBuffer(windowData->device,
 		             windowData->physicalDevice,
 		             size,
@@ -161,13 +160,13 @@ namespace MRG::Vulkan
 		samplerInfo.minLod = 0.f;
 		samplerInfo.maxLod = 0.f;
 
-		MRG_VKVALIDATE(vkCreateSampler(windowData->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!");
+		MRG_VKVALIDATE(vkCreateSampler(windowData->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!")
 
 		m_isDestroyed = false;
 	}
 
 	void Texture2D::bind(uint32_t) const
 	{
-		// MRG_PROFILE_FUNCTION();
+		// MRG_PROFILE_FUNCTION()
 	}
 }  // namespace MRG::Vulkan

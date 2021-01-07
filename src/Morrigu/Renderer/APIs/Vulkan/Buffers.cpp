@@ -3,13 +3,11 @@
 #include "Debug/Instrumentor.h"
 #include "Renderer/Renderer2D.h"
 
-#include <GLFW/glfw3.h>
-
 namespace MRG::Vulkan
 {
 	VertexBuffer::VertexBuffer(uint32_t size)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
@@ -23,11 +21,11 @@ namespace MRG::Vulkan
 
 	VertexBuffer::VertexBuffer(const void* vertices, uint32_t size)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
-		MRG::Vulkan::Buffer stagingBuffer;
+		MRG::Vulkan::Buffer stagingBuffer{};
 		MRG::Vulkan::createBuffer(data->device,
 		                          data->physicalDevice,
 		                          size,
@@ -55,14 +53,14 @@ namespace MRG::Vulkan
 
 	VertexBuffer::~VertexBuffer()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		destroy();
+		VertexBuffer::destroy();
 	}
 
 	void VertexBuffer::destroy()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		if (m_isDestroyed)
 			return;
@@ -76,18 +74,18 @@ namespace MRG::Vulkan
 
 	void VertexBuffer::bind() const
 	{
-		// MRG_PROFILE_FUNCTION();
+		// MRG_PROFILE_FUNCTION()
 	}
 	void VertexBuffer::unbind() const
 	{
-		// MRG_PROFILE_FUNCTION();
+		// MRG_PROFILE_FUNCTION()
 	}
 
 	void VertexBuffer::setData(const void* data, uint32_t size)
 	{
 		const auto windowData = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
-		MRG::Vulkan::Buffer stagingBuffer;
+		MRG::Vulkan::Buffer stagingBuffer{};
 		MRG::Vulkan::createBuffer(windowData->device,
 		                          windowData->physicalDevice,
 		                          size,
@@ -110,12 +108,12 @@ namespace MRG::Vulkan
 
 	IndexBuffer::IndexBuffer(const uint32_t* indices, uint32_t count) : m_count(count)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 		const auto bufferSize = count * sizeof(uint32_t);
 
-		MRG::Vulkan::Buffer stagingBuffer;
+		MRG::Vulkan::Buffer stagingBuffer{};
 		MRG::Vulkan::createBuffer(data->device,
 		                          data->physicalDevice,
 		                          bufferSize,
@@ -127,7 +125,7 @@ namespace MRG::Vulkan
 		vkMapMemory(data->device, stagingBuffer.memoryHandle, 0, bufferSize, 0, &dataPointer);
 		memcpy(dataPointer, indices, bufferSize);
 		vkUnmapMemory(data->device, stagingBuffer.memoryHandle);
-		MRG_ENGINE_TRACE("Index buffer data successfully bound and updloaded");
+		MRG_ENGINE_TRACE("Index buffer data successfully bound and updloaded")
 
 		MRG::Vulkan::createBuffer(data->device,
 		                          data->physicalDevice,
@@ -144,14 +142,14 @@ namespace MRG::Vulkan
 
 	IndexBuffer::~IndexBuffer()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		destroy();
+		IndexBuffer::destroy();
 	}
 
 	void IndexBuffer::destroy()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		if (m_isDestroyed)
 			return;
@@ -165,10 +163,10 @@ namespace MRG::Vulkan
 
 	void IndexBuffer::bind() const
 	{
-		// MRG_PROFILE_FUNCTION();
+		// MRG_PROFILE_FUNCTION()
 	}
 	void IndexBuffer::unbind() const
 	{
-		// MRG_PROFILE_FUNCTION();
+		// MRG_PROFILE_FUNCTION()
 	}
 }  // namespace MRG::Vulkan

@@ -1,6 +1,8 @@
 #ifndef MRG_CLASSES_COMPONENTS
 #define MRG_CLASSES_COMPONENTS
 
+#include <utility>
+
 #include "Core/GLMIncludeHelper.h"
 #include "Scene/SceneCamera.h"
 #include "Scene/ScriptableEntity.h"
@@ -13,7 +15,7 @@ namespace MRG
 
 		TagComponent() = default;
 		TagComponent(const TagComponent&) = default;
-		TagComponent(const std::string& newTag) : tag(newTag) {}
+		explicit TagComponent(std::string newTag) : tag(std::move(newTag)) {}
 	};
 
 	struct TransformComponent
@@ -24,9 +26,9 @@ namespace MRG
 
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent&) = default;
-		TransformComponent(const glm::vec3& newTranslation) : translation(newTranslation) {}
+		explicit TransformComponent(const glm::vec3& newTranslation) : translation(newTranslation) {}
 
-		glm::mat4 getTransform() const
+		[[nodiscard]] glm::mat4 getTransform() const
 		{
 			return glm::translate(glm::mat4{1.f}, translation) * glm::toMat4(glm::quat(rotation)) * glm::scale(glm::mat4{1.f}, scale);
 		}
@@ -38,7 +40,7 @@ namespace MRG
 
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
-		SpriteRendererComponent(const glm::vec4& newColor) : color(newColor) {}
+		explicit SpriteRendererComponent(const glm::vec4& newColor) : color(newColor) {}
 	};
 
 	struct CameraComponent
@@ -55,8 +57,8 @@ namespace MRG
 	{
 		ScriptableEntity* instance = nullptr;
 
-		ScriptableEntity* (*instanciateScript)();
-		void (*destroyScript)(NativeScriptComponent*);
+		ScriptableEntity* (*instanciateScript)(){};
+		void (*destroyScript)(NativeScriptComponent*){};
 
 		template<typename T>
 		void bind()

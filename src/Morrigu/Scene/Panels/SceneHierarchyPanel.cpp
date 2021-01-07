@@ -8,7 +8,7 @@
 
 namespace
 {
-	static void drawVec3Control(const char* label, glm::vec3& values, float resetValue = 0.f, float columnWidth = 100.f)
+	void drawVec3Control(const char* label, glm::vec3& values, float resetValue = 0.f, float columnWidth = 100.f)
 	{
 		auto& io = ImGui::GetIO();
 		auto boldFont = io.Fonts->Fonts[0];
@@ -135,7 +135,7 @@ namespace MRG
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
 			m_selectedEntity = {};
 
-		if (ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
+		if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
 			if (ImGui::MenuItem("Create empty entity"))
 				m_context->createEntity("Empty entity");
 
@@ -213,14 +213,14 @@ namespace MRG
 				if (!m_selectedEntity.hasComponent<CameraComponent>())
 					m_selectedEntity.addComponent<CameraComponent>();
 				else
-					MRG_ENGINE_WARN("Tried to add a CameraComponent to an entity that already has one!");
+					MRG_ENGINE_WARN("Tried to add a CameraComponent to an entity that already has one!")
 				ImGui::CloseCurrentPopup();
 			}
 			if (ImGui::MenuItem("Sprite renderer")) {
 				if (!m_selectedEntity.hasComponent<SpriteRendererComponent>())
 					m_selectedEntity.addComponent<SpriteRendererComponent>();
 				else
-					MRG_ENGINE_WARN("Tried to add a SpriteRendererComponent to an entity that already has one!");
+					MRG_ENGINE_WARN("Tried to add a SpriteRendererComponent to an entity that already has one!")
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::EndPopup();

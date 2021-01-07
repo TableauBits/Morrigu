@@ -12,7 +12,7 @@ namespace MRG
 
 	void OrthoCameraController::onUpdate(Timestep ts)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		if (MRG::Input::isKeyPressed(Key::W)) {
 			m_position.x += -std::sin(glm::radians(m_rotation)) * m_transationFactor * ts;
@@ -55,7 +55,7 @@ namespace MRG
 
 	void OrthoCameraController::onEvent(Event& event)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		EventDispatcher dispatcher{event};
 		dispatcher.dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& scrollEvent) { return onMouseScrolled(scrollEvent); });
@@ -64,7 +64,7 @@ namespace MRG
 
 	void OrthoCameraController::onResize(float width, float height)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_aspectRatio = width / height;
 		m_camera.setProjection(-m_aspectRatio * zoomFactor, m_aspectRatio * zoomFactor, -zoomFactor, zoomFactor);
@@ -72,7 +72,7 @@ namespace MRG
 
 	bool OrthoCameraController::onMouseScrolled(MouseScrolledEvent& event)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		zoomFactor -= event.getY() * 0.25f;
 		zoomFactor = std::max(zoomFactor, 0.25f);
@@ -83,7 +83,7 @@ namespace MRG
 
 	bool OrthoCameraController::onWindowResized(WindowResizeEvent& event)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		onResize(static_cast<float>(event.getWidth()), static_cast<float>(event.getHeight()));
 

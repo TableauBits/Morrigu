@@ -11,7 +11,7 @@ namespace MRG::Vulkan
 	{
 	public:
 		VertexArray();
-		virtual ~VertexArray();
+		~VertexArray() override;
 
 		void destroy() override
 		{

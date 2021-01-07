@@ -1,6 +1,5 @@
 #include "Context.h"
 
-#include "Core/Core.h"
 #include "Debug/Instrumentor.h"
 
 #include <glad/glad.h>
@@ -11,37 +10,37 @@ namespace MRG::OpenGL
 	{
 		switch (severity) {
 		case GL_DEBUG_SEVERITY_NOTIFICATION: {
-			MRG_ENGINE_TRACE(message);
+			MRG_ENGINE_TRACE(message)
 		} break;
 		case GL_DEBUG_SEVERITY_LOW: {
-			MRG_ENGINE_WARN(message);
+			MRG_ENGINE_WARN(message)
 		} break;
 		case GL_DEBUG_SEVERITY_MEDIUM: {
-			MRG_ENGINE_ERROR(message);
+			MRG_ENGINE_ERROR(message)
 		} break;
 		case GL_DEBUG_SEVERITY_HIGH: {
-			MRG_ENGINE_FATAL(message);
+			MRG_ENGINE_FATAL(message)
 		} break;
 		default: {
-			MRG_ENGINE_INFO(message);
+			MRG_ENGINE_INFO(message)
 		} break;
 		}
 	}
 
 	Context::Context(GLFWwindow* window) : m_window(window)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		MRG_CORE_ASSERT(window, "Window handle is null!");
+		MRG_CORE_ASSERT(window, "Window handle is null!")
 
 		glfwMakeContextCurrent(window);
 		[[maybe_unused]] const auto status = gladLoadGLLoader(GLADloadproc(glfwGetProcAddress));
-		MRG_CORE_ASSERT(status, "Could not initialize glad!");
+		MRG_CORE_ASSERT(status, "Could not initialize glad!")
 
-		MRG_ENGINE_INFO("Using OpenGL as a rendering API. Useful stats:");
-		MRG_ENGINE_INFO("\tHardware vendor: {0}", glGetString(GL_VENDOR));
-		MRG_ENGINE_INFO("\tHardware device used to render: {0}", glGetString(GL_RENDERER));
-		MRG_ENGINE_INFO("\tOpenGL version: {0}", glGetString(GL_VERSION));
+		MRG_ENGINE_INFO("Using OpenGL as a rendering API. Useful stats:")
+		MRG_ENGINE_INFO("\tHardware vendor: {0}", glGetString(GL_VENDOR))
+		MRG_ENGINE_INFO("\tHardware device used to render: {0}", glGetString(GL_RENDERER))
+		MRG_ENGINE_INFO("\tOpenGL version: {0}", glGetString(GL_VERSION))
 
 		MRG_CORE_ASSERT((GLVersion.major > 4 || (GLVersion.major == 4 && GLVersion.minor >= 5)), "OpenGL 4.5 required!")
 
@@ -54,7 +53,7 @@ namespace MRG::OpenGL
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageCallback(openGLMessageCallback, nullptr);
 
-		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL, GL_FALSE);
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 #endif
 
 		glEnable(GL_BLEND);
@@ -65,14 +64,14 @@ namespace MRG::OpenGL
 
 	void Context::swapBuffers()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		glfwSwapBuffers(m_window);
 	}
 
 	void Context::swapInterval(int interval)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		glfwSwapInterval(interval);
 	}

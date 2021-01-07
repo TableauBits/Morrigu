@@ -1,20 +1,20 @@
 #include "Sandbox2D.h"
 
-Macha::Macha() : MRG::Layer("Sandbox 2D"), m_camera(1280.f / 720.f) {}
+SandboxLayer::SandboxLayer() : MRG::Layer("Sandbox 2D"), m_camera(1280.f / 720.f) {}
 
-void Macha::onAttach()
+void SandboxLayer::onAttach()
 {
-	MRG_PROFILE_FUNCTION();
+	MRG_PROFILE_FUNCTION()
 
 	m_checkerboard = MRG::Texture2D::create("resources/textures/Checkerboard.png");
 	m_camera.movementSpeed = 2.f;
 }
 
-void Macha::onDetach() { MRG_PROFILE_FUNCTION(); }
+void SandboxLayer::onDetach() { MRG_PROFILE_FUNCTION() }
 
-void Macha::onUpdate(MRG::Timestep ts)
+void SandboxLayer::onUpdate(MRG::Timestep ts)
 {
-	MRG_PROFILE_FUNCTION();
+	MRG_PROFILE_FUNCTION()
 
 	m_frameTime = ts;
 
@@ -23,7 +23,7 @@ void Macha::onUpdate(MRG::Timestep ts)
 	MRG::Renderer2D::resetStats();
 
 	{
-		MRG_PROFILE_SCOPE("Render prep");
+		MRG_PROFILE_SCOPE("Render prep")
 		MRG::Renderer2D::setClearColor(m_color);
 		MRG::Renderer2D::clear();
 	}
@@ -34,7 +34,7 @@ void Macha::onUpdate(MRG::Timestep ts)
 		if (rotation >= 360)
 			rotation -= 360;
 
-		MRG_PROFILE_SCOPE("Render draw");
+		MRG_PROFILE_SCOPE("Render draw")
 		MRG::Renderer2D::beginScene(m_camera.getCamera());
 		MRG::Renderer2D::drawRotatedQuad({1.0f, 0.0f}, {0.8f, 0.8f}, -45.0f, {0.8f, 0.2f, 0.3f, 1.0f});
 		MRG::Renderer2D::drawQuad({-1.0f, 0.0f}, {0.8f, 0.8f}, {0.8f, 0.2f, 0.3f, 1.0f});
@@ -44,19 +44,19 @@ void Macha::onUpdate(MRG::Timestep ts)
 		MRG::Renderer2D::endScene();
 
 		MRG::Renderer2D::beginScene(m_camera.getCamera());
-		for (float y = -5.f; y < 5.f; y += 0.5f) {
-			for (float x = -5.f; x < 5.f; x += 0.5f) {
-				glm::vec4 color = {(x + 5.f) / 10.f, 0.4f, (y + 5.f) / 10.f, 0.7f};
-				MRG::Renderer2D::drawQuad({x, y}, {0.45f, 0.45f}, color);
+		for (auto y = -10; y < 10; ++y) {
+			for (auto x = -10; x < 10; ++x) {
+				glm::vec4 color = {((x / 2.f) + 5.f) / 10.f, 0.4f, ((y / 2.f) + 5.f) / 10.f, 0.7f};
+				MRG::Renderer2D::drawQuad({(x / 2.f), (y / 2.f)}, {0.45f, 0.45f}, color);
 			}
 		}
 		MRG::Renderer2D::endScene();
 	}
 }
 
-void Macha::onImGuiRender()
+void SandboxLayer::onImGuiRender()
 {
-	MRG_PROFILE_FUNCTION();
+	MRG_PROFILE_FUNCTION()
 
 	const auto fps = 1 / m_frameTime;
 	const auto color = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
@@ -74,4 +74,4 @@ void Macha::onImGuiRender()
 	ImGui::End();
 }
 
-void Macha::onEvent(MRG::Event& event) { m_camera.onEvent(event); }
+void SandboxLayer::onEvent(MRG::Event& event) { m_camera.onEvent(event); }
