@@ -14,8 +14,6 @@ public:
 	void onEvent(MRG::Event& event) override;
 
 private:
-	MRG::OrthoCameraController m_camera;
-
 	MRG::Ref<MRG::Texture2D> m_checkerboard, m_character;
 
 	glm::vec4 m_color = {0.1f, 0.1f, 0.1f, 1.0f};
