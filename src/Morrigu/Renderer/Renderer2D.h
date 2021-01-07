@@ -4,8 +4,8 @@
 #include "Core/GLMIncludeHelper.h"
 #include "Renderer/Buffers.h"
 #include "Renderer/Camera.h"
+#include "Renderer/EditorCamera.h"
 #include "Renderer/Framebuffer.h"
-#include "Renderer/OrthoCamera.h"
 #include "Renderer/Textures.h"
 
 #include <GLFW/glfw3.h>
@@ -56,7 +56,7 @@ namespace MRG
 		virtual bool endFrame() = 0;
 
 		virtual void beginScene(const Camera& camera, const glm::mat4& transform) = 0;
-		virtual void beginScene(const OrthoCamera& camera) = 0;
+		virtual void beginScene(const EditorCamera& camera) = 0;
 		virtual void endScene() = 0;
 
 		virtual void drawQuad(const glm::mat4& transform, const glm::vec4& color) = 0;
@@ -118,7 +118,7 @@ namespace MRG
 		static bool endFrame();
 
 		static void beginScene(const Camera& camera, const glm::mat4& transform);
-		static void beginScene(const OrthoCamera& camera);
+		static void beginScene(const EditorCamera& camera);
 		static void endScene();
 
 		[[nodiscard]] static GLFWwindow* getGLFWWindow() { return s_windowHandle; }

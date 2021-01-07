@@ -1,4 +1,6 @@
+#include "Renderer/EditorCamera.h"
 #include "Scene/Panels/SceneHierarchyPanel.h"
+
 #include <Morrigu.h>
 
 namespace MRG
@@ -7,7 +9,7 @@ namespace MRG
 	{
 	public:
 		MachaLayer();
-		virtual ~MachaLayer() = default;
+		~MachaLayer() override = default;
 
 		void onAttach() override;
 		void onDetach() override;
@@ -32,6 +34,8 @@ namespace MRG
 		int m_gizmoType = -1;
 
 		Timestep m_frameTime;
+
+		EditorCamera m_editorCamera;
 
 		// Panels
 		SceneHierarchyPanel m_sceneHierarchyPanel;

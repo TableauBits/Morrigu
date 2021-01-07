@@ -1,7 +1,6 @@
 #include "MachaLayer.h"
 
 #include "Maths/Maths.h"
-#include "Renderer/RenderingAPI.h"
 #include "Scene/SceneSerializer.h"
 #include "Utils/FileDialogs.h"
 
@@ -21,6 +20,8 @@ namespace MRG
 		Renderer2D::setRenderTarget(m_renderTarget);
 		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
 
+		m_editorCamera = EditorCamera{30.f, 1.778f, 0.1f, 100.f};
+
 		newScene();
 	}
 
@@ -36,14 +37,17 @@ namespace MRG
 		if (const auto spec = m_renderTarget->getSpecification();
 		    m_viewportSize.x > 0.f && m_viewportSize.y > 0.f && (spec.width != m_viewportSize.x || spec.height != m_viewportSize.y)) {
 			m_renderTarget->resize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
+			m_editorCamera.setViewportSize(m_viewportSize.x, m_viewportSize.y);
 			m_activeScene->onViewportResize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
 		}
+
+		m_editorCamera.onUpdate(ts);
 
 		Renderer2D::resetStats();
 		MRG_PROFILE_SCOPE("Render prep")
 		Renderer2D::clear();
 
-		m_activeScene->onUpdate(ts);
+		m_activeScene->onEditorUpdate(ts, m_editorCamera);
 	}
 
 	void MachaLayer::onImGuiRender()
@@ -145,21 +149,18 @@ namespace MRG
 
 			// Drawing gizmos
 			auto selectedEntity = m_sceneHierarchyPanel.getSelectedEntity();
-			auto mainCameraEntity = m_activeScene->getPrimaryCameraEntity();
-			if (mainCameraEntity && selectedEntity && m_gizmoType != -1) {
-				const auto& camera = mainCameraEntity.value().getComponent<CameraComponent>().camera;
-				ImGuizmo::SetOrthographic(camera.getProjectionType() == SceneCamera::ProjectionType::Orthographic);
+			if (selectedEntity && m_gizmoType != -1) {
 				ImGuizmo::SetDrawlist();
 
 				const auto windowWidth = static_cast<float>(ImGui::GetWindowWidth());
 				const auto windowHeight = static_cast<float>(ImGui::GetWindowHeight());
 				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
 
-				// Camera
-				const auto& cameraProj = camera.getProjection();
-				auto cameraView = glm::inverse(mainCameraEntity.value().getComponent<TransformComponent>().getTransform());
+				// Editor camera
+				auto cameraProj = m_editorCamera.getProjection();
+				auto cameraView = m_editorCamera.getViewMatrix();
 				if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
-					cameraView[1][1] *= -1;
+					cameraProj[1][1] *= -1;
 
 				// Transform
 				auto& tc = selectedEntity.getComponent<TransformComponent>();
@@ -197,6 +198,8 @@ namespace MRG
 
 	void MachaLayer::onEvent(Event& event)
 	{
+		m_editorCamera.onEvent(event);
+
 		EventDispatcher dispatcher{event};
 		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& keyPressedEvent) { return onKeyPressed(keyPressedEvent); });
 	}

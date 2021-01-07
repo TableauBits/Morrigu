@@ -1,7 +1,5 @@
 #include "SceneCamera.h"
 
-#include "Renderer/RenderingAPI.h"
-
 namespace MRG
 {
 	SceneCamera::SceneCamera() { recalculateProjection(); }
@@ -40,11 +38,9 @@ namespace MRG
 			float orthoBottom = -m_orthographicSize * 0.5f;
 			float orthoTop = m_orthographicSize * 0.5f;
 
-			m_projection = glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, m_orthographicNear, m_orthographicFar);
+			setProjection(glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, m_orthographicNear, m_orthographicFar));
 		} else {
-			m_projection = glm::perspective(m_perspectiveFOV, m_aspectRatio, m_perspectiveNear, m_perspectiveFar);
+			setProjection(glm::perspective(m_perspectiveFOV, m_aspectRatio, m_perspectiveNear, m_perspectiveFar));
 		}
-		if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
-			m_projection[1][1] *= -1;
 	}
 }  // namespace MRG

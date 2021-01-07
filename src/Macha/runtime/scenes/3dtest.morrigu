@@ -1,52 +1,42 @@
 SceneName: Untitled
 Entities:
   - EntityID: 0000000000000000
-    TagComponent: Green square
+    TagComponent: Floor
     TransformComponent:
-      translation: [3.35373616, 0, 3.52999997]
-      rotation: [1.37934221e-05, -0.172408253, -0.139183551]
-      scale: [0.999999642, 1, 0.999999881]
+      translation: [0, -0.5, 0]
+      rotation: [1.57079637, 0, 0]
+      scale: [3, 2.99936795, 2.99936795]
     SpriteRendererComponent:
-      color: [0, 1, 0, 1]
+      color: [0.960784316, 0.960784316, 0.862745106, 1]
   - EntityID: 0000000000000000
-    TagComponent: Red square
+    TagComponent: North wall
     TransformComponent:
-      translation: [3.56583238, 0.306849092, 3.71002913]
-      rotation: [-0.85220027, -0.708795726, 1.16212761]
-      scale: [2.70215893, 2.83053541, 1.65614557]
+      translation: [0, 0, -1.5]
+      rotation: [0, 0, 0]
+      scale: [3, 1, 1]
+    SpriteRendererComponent:
+      color: [0.193050027, 1, 0, 1]
+  - EntityID: 0000000000000000
+    TagComponent: South wall
+    TransformComponent:
+      translation: [0, 0, 1.5]
+      rotation: [0, 0, 0]
+      scale: [3, 1, 1]
     SpriteRendererComponent:
       color: [1, 0, 0, 1]
   - EntityID: 0000000000000000
-    TagComponent: Camera B
+    TagComponent: West wall
     TransformComponent:
-      translation: [4, 0, 9.5]
-      rotation: [0, 0, 0]
-      scale: [1, 1, 1]
-    CameraComponent:
-      camera:
-        projectionType: 1
-        orthographicSize: 10
-        orthographicNear: -1
-        orthographicFar: 1
-        perspectiveFOV: 0.785398185
-        perspectiveNear: 0.00999999978
-        perspectiveFar: 1000
-      primary: true
-      fixedAspectRatio: false
+      translation: [1.5, 0, -8.94069814e-08]
+      rotation: [0, -1.57079637, 0]
+      scale: [2.99975896, 0.999999881, 0.99994272]
+    SpriteRendererComponent:
+      color: [0.0297064781, 0, 1, 1]
   - EntityID: 0000000000000000
-    TagComponent: Camera A
+    TagComponent: East wall
     TransformComponent:
-      translation: [4, 0, 10]
-      rotation: [0, 0, 0]
-      scale: [1, 1, 1]
-    CameraComponent:
-      camera:
-        projectionType: 0
-        orthographicSize: 10
-        orthographicNear: -4
-        orthographicFar: 116
-        perspectiveFOV: 0.785398185
-        perspectiveNear: 0.00999999978
-        perspectiveFar: 1000
-      primary: false
-      fixedAspectRatio: false
+      translation: [-1.49999988, 0, 0.000517934561]
+      rotation: [0, -1.57045102, 0]
+      scale: [2.99999976, 1, 1]
+    SpriteRendererComponent:
+      color: [0.934467316, 0, 1, 1]

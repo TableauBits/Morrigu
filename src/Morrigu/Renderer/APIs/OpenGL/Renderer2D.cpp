@@ -100,12 +100,12 @@ namespace MRG::OpenGL
 		m_sceneInProgress = true;
 	}
 
-	void Renderer2D::beginScene(const OrthoCamera& camera)
+	void Renderer2D::beginScene(const EditorCamera& camera)
 	{
 		MRG_PROFILE_FUNCTION()
 
 		m_textureShader->bind();
-		m_textureShader->upload("u_viewProjection", camera.getProjectionViewMatrix());
+		m_textureShader->upload("u_viewProjection", camera.getViewProjection());
 
 		m_quadIndexCount = 0;
 		m_qvbPtr = m_qvbBase;

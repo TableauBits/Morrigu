@@ -12,8 +12,6 @@
 #include "Scene/Scene.h"
 
 #include "Renderer/Buffers.h"
-#include "Renderer/OrthoCamera.h"
-#include "Renderer/OrthoCameraController.h"
 #include "Renderer/Renderer2D.h"
 #include "Renderer/Shader.h"
 #include "Renderer/Textures.h"

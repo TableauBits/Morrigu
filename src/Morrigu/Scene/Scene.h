@@ -2,6 +2,7 @@
 #define MRG_CLASS_SCENE
 
 #include "Core/Timestep.h"
+#include "Renderer/EditorCamera.h"
 
 #include <entt/entity/registry.hpp>
 
@@ -18,6 +19,7 @@ namespace MRG
 		void destroyEntity(Entity entity);
 
 		void onUpdate(Timestep ts);
+		void onEditorUpdate(Timestep ts, EditorCamera& camera);
 		void onViewportResize(uint32_t width, uint32_t height);
 
 		[[nodiscard]] std::optional<Entity> getPrimaryCameraEntity();

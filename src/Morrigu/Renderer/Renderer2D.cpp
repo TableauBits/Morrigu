@@ -69,7 +69,7 @@ namespace MRG
 		s_renderer->beginScene(camera, transform);
 	}
 
-	void Renderer2D::beginScene(const OrthoCamera& camera)
+	void Renderer2D::beginScene(const EditorCamera& camera)
 	{
 		MRG_PROFILE_FUNCTION()
 

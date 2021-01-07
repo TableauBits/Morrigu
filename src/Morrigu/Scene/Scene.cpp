@@ -48,6 +48,19 @@ namespace MRG
 		}
 	}
 
+	void Scene::onEditorUpdate(Timestep, EditorCamera& camera)
+	{
+		Renderer2D::beginScene(camera);
+
+		const auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+		for (const auto& entity : group) {
+			auto [tc, src] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+			Renderer2D::drawQuad(tc.getTransform(), src.color);
+		}
+
+		Renderer2D::endScene();
+	}
+
 	void Scene::onViewportResize(uint32_t width, uint32_t height)
 	{
 		m_viewportWidth = width;
