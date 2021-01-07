@@ -1,6 +1,7 @@
 #include "MachaLayer.h"
 
 #include "Maths/Maths.h"
+#include "Renderer/RenderingAPI.h"
 #include "Scene/SceneSerializer.h"
 #include "Utils/FileDialogs.h"
 
@@ -156,7 +157,9 @@ namespace MRG
 
 				// Camera
 				const auto& cameraProj = camera.getProjection();
-				const auto cameraView = glm::inverse(mainCameraEntity.value().getComponent<TransformComponent>().getTransform());
+				auto cameraView = glm::inverse(mainCameraEntity.value().getComponent<TransformComponent>().getTransform());
+				if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
+					cameraView[1][1] *= -1;
 
 				// Transform
 				auto& tc = selectedEntity.getComponent<TransformComponent>();

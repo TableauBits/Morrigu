@@ -12,12 +12,12 @@
 // These function will mostly follow the structure of https://vulkan-tutorial.com
 namespace
 {
-	auto getValidationLayers()
+	auto& getValidationLayers()
 	{
 		static std::vector<const char*> validationLayers{"VK_LAYER_KHRONOS_validation"};
 		return validationLayers;
 	}
-	auto getDeviceExtensions()
+	auto& getDeviceExtensions()
 	{
 		static std::vector<const char*> deviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 		return deviceExtensions;
@@ -193,10 +193,15 @@ namespace
 		createInfo.pApplicationInfo = &appInfo;
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
 		createInfo.ppEnabledExtensionNames = requiredExtensions.data();
-		createInfo.enabledLayerCount = static_cast<uint32_t>(getValidationLayers().size());
-		createInfo.ppEnabledLayerNames = getValidationLayers().data();
-		populateDebugMessengerCreateInfo(debugCreateInfo);
-		createInfo.pNext = &debugCreateInfo;
+		if (enableValidation) {
+			createInfo.enabledLayerCount = static_cast<uint32_t>(getValidationLayers().size());
+			createInfo.ppEnabledLayerNames = getValidationLayers().data();
+
+			populateDebugMessengerCreateInfo(debugCreateInfo);
+			createInfo.pNext = &debugCreateInfo;
+		} else {
+			createInfo.enabledLayerCount = 0;
+		}
 
 		MRG_VKVALIDATE(vkCreateInstance(&createInfo, nullptr, &returnInstance), "failed to create instance!")
 		return returnInstance;

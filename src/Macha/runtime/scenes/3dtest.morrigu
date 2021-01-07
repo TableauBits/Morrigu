@@ -1,6 +1,39 @@
 SceneName: Untitled
 Entities:
   - EntityID: 0000000000000000
+    TagComponent: Green square
+    TransformComponent:
+      translation: [3.35373616, 0, 3.52999997]
+      rotation: [1.37934221e-05, -0.172408253, -0.139183551]
+      scale: [0.999999642, 1, 0.999999881]
+    SpriteRendererComponent:
+      color: [0, 1, 0, 1]
+  - EntityID: 0000000000000000
+    TagComponent: Red square
+    TransformComponent:
+      translation: [3.56583238, 0.306849092, 3.71002913]
+      rotation: [-0.85220027, -0.708795726, 1.16212761]
+      scale: [2.70215893, 2.83053541, 1.65614557]
+    SpriteRendererComponent:
+      color: [1, 0, 0, 1]
+  - EntityID: 0000000000000000
+    TagComponent: Camera B
+    TransformComponent:
+      translation: [4, 0, 9.5]
+      rotation: [0, 0, 0]
+      scale: [1, 1, 1]
+    CameraComponent:
+      camera:
+        projectionType: 1
+        orthographicSize: 10
+        orthographicNear: -1
+        orthographicFar: 1
+        perspectiveFOV: 0.785398185
+        perspectiveNear: 0.00999999978
+        perspectiveFar: 1000
+      primary: true
+      fixedAspectRatio: false
+  - EntityID: 0000000000000000
     TagComponent: Camera A
     TransformComponent:
       translation: [4, 0, 10]
@@ -17,36 +50,3 @@ Entities:
         perspectiveFar: 1000
       primary: false
       fixedAspectRatio: false
-  - EntityID: 0000000000000000
-    TagComponent: Camera B
-    TransformComponent:
-      translation: [4, 0, 10]
-      rotation: [0, 0, 0]
-      scale: [1, 1, 1]
-    CameraComponent:
-      camera:
-        projectionType: 1
-        orthographicSize: 10
-        orthographicNear: -1
-        orthographicFar: 1
-        perspectiveFOV: 0.785398185
-        perspectiveNear: 0.00999999978
-        perspectiveFar: 1000
-      primary: true
-      fixedAspectRatio: false
-  - EntityID: 0000000000000000
-    TagComponent: Red square
-    TransformComponent:
-      translation: [3.56583238, 0.306849092, 3.71002913]
-      rotation: [-0.85220027, -0.708795726, 1.16212761]
-      scale: [2.70215893, 2.83053541, 1.65614557]
-    SpriteRendererComponent:
-      color: [1, 0, 0, 1]
-  - EntityID: 0000000000000000
-    TagComponent: Green square
-    TransformComponent:
-      translation: [3.73066664, 0.0602658316, 4.49947786]
-      rotation: [-2.27572489, 0.524005711, -0.0112331528]
-      scale: [0.999974728, 0.99999994, 0.999999762]
-    SpriteRendererComponent:
-      color: [0, 1, 0, 1]
