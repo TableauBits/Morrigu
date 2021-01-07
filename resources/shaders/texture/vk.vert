@@ -11,7 +11,7 @@ u_constants;
 
 layout(location = 0) out vec4 v_color;
 layout(location = 1) out vec2 v_texCoord;
-layout(location = 2) out float v_texIndex;
+layout(location = 2) out flat float v_texIndex;
 layout(location = 3) out float v_tilingFactor;
 
 void main()
