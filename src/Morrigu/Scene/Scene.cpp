@@ -41,7 +41,7 @@ namespace MRG
 			const auto& group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (const auto& entity : group) {
 				const auto [tc, sc] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-				Renderer2D::drawQuad(tc.getTransform(), sc.color);
+				Renderer2D::drawQuad(tc.getTransform(), sc.color, static_cast<uint32_t>(entity));
 			}
 
 			Renderer2D::endScene();
@@ -55,7 +55,7 @@ namespace MRG
 		const auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 		for (const auto& entity : group) {
 			auto [tc, src] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-			Renderer2D::drawQuad(tc.getTransform(), src.color);
+			Renderer2D::drawQuad(tc.getTransform(), src.color, static_cast<uint32_t>(entity));
 		}
 
 		Renderer2D::endScene();

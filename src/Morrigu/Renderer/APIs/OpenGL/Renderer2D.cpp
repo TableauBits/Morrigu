@@ -125,7 +125,7 @@ namespace MRG::OpenGL
 		m_sceneInProgress = false;
 	}
 
-	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t objectID)
 	{
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
@@ -139,6 +139,7 @@ namespace MRG::OpenGL
 			m_qvbPtr->texCoord = m_textureCoordinates[i];
 			m_qvbPtr->texIndex = texIndex;
 			m_qvbPtr->tilingFactor = tilingFactor;
+			m_qvbPtr->objectID = objectID;
 			++m_qvbPtr;
 		}
 
@@ -186,7 +187,7 @@ namespace MRG::OpenGL
 	{
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
 
-		drawQuad(transform, color);
+		drawQuad(transform, color, 0);
 	}
 
 	void Renderer2D::drawQuad(
@@ -202,7 +203,8 @@ namespace MRG::OpenGL
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
-		drawQuad(transform, color);
+		// TODO: This will completely break, but we're not exposing this for now. Fix it before everything breaks please.
+		drawQuad(transform, color, 0);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
@@ -215,6 +217,7 @@ namespace MRG::OpenGL
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
+		// TODO: This will completely break, but we're not exposing this for now. Fix it before everything breaks please.
 		drawQuad(transform, texture, tilingFactor, tintColor);
 	}
 

@@ -90,7 +90,7 @@ namespace
 	}
 
 	[[nodiscard]] MRG::Vulkan::SwapChain
-	createSwapChain(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkDevice device, const MRG::WindowProperties* data)
+	createSwapChain(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkDevice device, MRG::Vulkan::WindowProperties* data)
 	{
 		VkSwapchainKHR handle{};
 		MRG::Vulkan::SwapChainSupportDetails SwapChainSupport = MRG::Vulkan::querySwapChainSupport(physicalDevice, surface);
@@ -258,6 +258,25 @@ namespace
 		colorAttachments[2].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		colorAttachments[2].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+		std::array<VkAttachmentDescription, 2> objectIDBufferAttachments{};
+		objectIDBufferAttachments[0].format = swapChainFormat;
+		objectIDBufferAttachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+		objectIDBufferAttachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		objectIDBufferAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		objectIDBufferAttachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		objectIDBufferAttachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		objectIDBufferAttachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		objectIDBufferAttachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		objectIDBufferAttachments[1].format = swapChainFormat;
+		objectIDBufferAttachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+		objectIDBufferAttachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		objectIDBufferAttachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		objectIDBufferAttachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		objectIDBufferAttachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		objectIDBufferAttachments[1].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		objectIDBufferAttachments[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
 		// The clearing subpass needs to clear the z buffer, and the rendering subpass needs to load it instead.
 		// ImGui doesn't care
 		std::array<VkAttachmentDescription, 3> depthAttachments{};
@@ -293,15 +312,31 @@ namespace
 		colorAttachmentRef.attachment = 0;
 		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+		VkAttachmentReference objectIDBufferAttachmentRef{};
+		objectIDBufferAttachmentRef.attachment = 1;
+		objectIDBufferAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference ImGuiDepthAttachmentRef{};
+		ImGuiDepthAttachmentRef.attachment = 1;
+		ImGuiDepthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 		VkAttachmentReference depthAttachmentRef{};
-		depthAttachmentRef.attachment = 1;
+		depthAttachmentRef.attachment = 2;
 		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-		VkSubpassDescription subpass{};
-		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &colorAttachmentRef;
-		subpass.pDepthStencilAttachment = &depthAttachmentRef;
+		VkAttachmentReference colorAttachmentRefs[] = {colorAttachmentRef, objectIDBufferAttachmentRef};
+
+		VkSubpassDescription mainSubpass{};
+		mainSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		mainSubpass.colorAttachmentCount = 2;
+		mainSubpass.pColorAttachments = colorAttachmentRefs;
+		mainSubpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+		VkSubpassDescription ImGuiSubpass{};
+		ImGuiSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		ImGuiSubpass.colorAttachmentCount = 1;
+		ImGuiSubpass.pColorAttachments = &colorAttachmentRefs[0];
+		ImGuiSubpass.pDepthStencilAttachment = &ImGuiDepthAttachmentRef;
 
 		VkSubpassDependency dependency{};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -311,20 +346,29 @@ namespace
 		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-		std::array<VkAttachmentDescription, 2> attachments{};
-		VkRenderPassCreateInfo renderPassInfo{};
+		VkAttachmentDescription clearAttachments[] = {colorAttachments[0], objectIDBufferAttachments[0], depthAttachments[0]};
+		VkAttachmentDescription mainAttachments[] = {colorAttachments[1], objectIDBufferAttachments[1], depthAttachments[1]};
+		VkAttachmentDescription ImGuiAttachments[] = {colorAttachments[2], depthAttachments[2]};
 
-		for (std::size_t i = 0; i < 3; ++i) {
-			attachments = {colorAttachments[i], depthAttachments[i]};
-			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-			renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-			renderPassInfo.pAttachments = attachments.data();
-			renderPassInfo.subpassCount = 1;
-			renderPassInfo.pSubpasses = &subpass;
-			renderPassInfo.dependencyCount = 1;
-			renderPassInfo.pDependencies = &dependency;
-			MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[i]), "failed to create render passes!")
-		}
+		VkRenderPassCreateInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.dependencyCount = 1;
+		renderPassInfo.pDependencies = &dependency;
+
+		renderPassInfo.pSubpasses = &mainSubpass;
+		renderPassInfo.attachmentCount = 3;
+		renderPassInfo.pAttachments = clearAttachments;
+		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[0]), "failed to create clearing render pass!")
+
+		renderPassInfo.attachmentCount = 3;
+		renderPassInfo.pAttachments = mainAttachments;
+		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[1]), "failed to create main render pass!")
+
+		renderPassInfo.pSubpasses = &ImGuiSubpass;
+		renderPassInfo.attachmentCount = 2;
+		renderPassInfo.pAttachments = ImGuiAttachments;
+		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[2]), "failed to create ImGui render pass!")
 
 		return renderpasses;
 	}
@@ -410,14 +454,15 @@ namespace
 		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
+		std::array<VkPipelineColorBlendAttachmentState, 2> blendAttachments{colorBlendAttachment, colorBlendAttachment};
+
 		VkPipelineColorBlendStateCreateInfo colorBlending{};
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlending.logicOpEnable = VK_FALSE;
-		colorBlending.attachmentCount = 1;
-		colorBlending.pAttachments = &colorBlendAttachment;
+		colorBlending.attachmentCount = static_cast<uint32_t>(blendAttachments.size());
+		colorBlending.pAttachments = blendAttachments.data();
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
-
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = 2;
 		pipelineInfo.pStages = shaderStages;
@@ -432,6 +477,7 @@ namespace
 		pipelineInfo.renderPass = data->clearingPipeline.renderPass;
 		pipelineInfo.subpass = 0;
 		pipelineInfo.pDynamicState = &dynamicState;
+
 		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[0]),
 		               "failed to create graphics pipeline!")
 
@@ -440,6 +486,8 @@ namespace
 		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[1]),
 		               "failed to create graphics pipeline!")
 
+		colorBlending.attachmentCount = 1;
+		colorBlending.pAttachments = &colorBlendAttachment;
 		pipelineInfo.layout = data->ImGuiPipeline.layout;
 		pipelineInfo.renderPass = data->ImGuiPipeline.renderPass;
 		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[2]),
@@ -448,29 +496,41 @@ namespace
 		return pipelines;
 	}
 
-	[[nodiscard]] std::vector<std::array<VkFramebuffer, 3>> createFramebuffers(VkDevice device,
-	                                                                           const std::vector<VkImageView>& swapChainImagesViews,
-	                                                                           VkImageView depthImageView,
-	                                                                           const std::array<VkRenderPass, 3>& renderPasses,
-	                                                                           const VkExtent2D swapChainExtent)
+	[[nodiscard]] std::vector<std::array<VkFramebuffer, 3>>
+	createFramebuffers(VkDevice device,
+	                   const std::vector<VkImageView>& swapChainImagesViews,
+	                   const std::vector<MRG::Vulkan::LightVulkanImage> objectIDBuffers,
+	                   VkImageView depthImageView,
+	                   const std::array<VkRenderPass, 3>& renderPasses,
+	                   const VkExtent2D swapChainExtent)
 	{
 		std::vector<std::array<VkFramebuffer, 3>> frameBuffers(swapChainImagesViews.size());
 
 		for (std::size_t i = 0; i < swapChainImagesViews.size(); ++i) {
-			std::array<VkImageView, 2> attachments = {swapChainImagesViews[i], depthImageView};
+			std::array<VkImageView, 3> mainAttachments = {swapChainImagesViews[i], objectIDBuffers[i].imageView, depthImageView};
+			std::array<VkImageView, 2> ImGuiAttachments = {swapChainImagesViews[i], depthImageView};
 
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-			framebufferInfo.pAttachments = attachments.data();
+			framebufferInfo.attachmentCount = static_cast<uint32_t>(mainAttachments.size());
+			framebufferInfo.pAttachments = mainAttachments.data();
 			framebufferInfo.width = swapChainExtent.width;
 			framebufferInfo.height = swapChainExtent.height;
 			framebufferInfo.layers = 1;
 
-			for (std::size_t j = 0; j < 3; ++j) {
-				framebufferInfo.renderPass = renderPasses[j];
-				MRG_VKVALIDATE(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &frameBuffers[i][j]), "failed to create framebuffer!")
-			}
+			framebufferInfo.renderPass = renderPasses[0];
+			MRG_VKVALIDATE(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &frameBuffers[i][0]),
+			               "failed to create clearing framebuffer!")
+
+			framebufferInfo.renderPass = renderPasses[1];
+			MRG_VKVALIDATE(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &frameBuffers[i][1]),
+			               "failed to create main framebuffer!")
+
+			framebufferInfo.attachmentCount = static_cast<uint32_t>(ImGuiAttachments.size());
+			framebufferInfo.pAttachments = ImGuiAttachments.data();
+			framebufferInfo.renderPass = renderPasses[2];
+			MRG_VKVALIDATE(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &frameBuffers[i][2]),
+			               "failed to create ImGui framebuffer!")
 		}
 
 		return frameBuffers;
@@ -553,6 +613,31 @@ namespace
 		endSingleTimeCommand(data, commandBuffer);
 
 		return depthBuffer;
+	}
+
+	[[nodiscard]] std::vector<MRG::Vulkan::LightVulkanImage> createObjectIDBuffers(MRG::Vulkan::WindowProperties* data)
+	{
+		std::vector<MRG::Vulkan::LightVulkanImage> buffers(data->swapChain.imageCount);
+
+		for (auto& buffer : buffers) {
+			MRG::Vulkan::createImage(data->physicalDevice,
+			                         data->device,
+			                         data->width,
+			                         data->height,
+			                         data->swapChain.imageFormat,
+			                         VK_IMAGE_TILING_OPTIMAL,
+			                         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			                         buffer.handle,
+			                         buffer.memoryHandle);
+
+			transitionImageLayout(data, buffer.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+			buffer.imageView =
+			  MRG::Vulkan::createImageView(data->device, buffer.handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+
+		return buffers;
 	}
 
 	std::pair<VkDescriptorPool, std::vector<VkDescriptorSet>> createDescriptorPool(const MRG::Vulkan::WindowProperties* data,
@@ -668,10 +753,12 @@ namespace MRG::Vulkan
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created")
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
+		m_data->swapChain.objectIDBuffers = createObjectIDBuffers(m_data);
 
 		m_data->swapChain.frameBuffers =
 		  createFramebuffers(m_data->device,
 		                     m_data->swapChain.imageViews,
+		                     m_data->swapChain.objectIDBuffers,
 		                     m_data->swapChain.depthBuffer.imageView,
 		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiPipeline.renderPass},
 		                     m_data->swapChain.extent);
@@ -954,7 +1041,7 @@ namespace MRG::Vulkan
 		m_sceneInProgress = false;
 	}
 
-	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t objectID)
 	{
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
@@ -968,8 +1055,12 @@ namespace MRG::Vulkan
 			m_qvbPtr->texCoord = m_textureCoordinates[i];
 			m_qvbPtr->texIndex = texIndex;
 			m_qvbPtr->tilingFactor = tilingFactor;
+			m_qvbPtr->objectID = objectID;
 			++m_qvbPtr;
 		}
+
+		objectID = 0x12345678;
+		[[maybe_unused]] const std::vector<uint32_t> temp = {};
 
 		m_quadIndexCount += 6;
 		++m_stats.quadCount;
@@ -1017,7 +1108,8 @@ namespace MRG::Vulkan
 	{
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
 
-		drawQuad(transform, color);
+		// TODO: This will completely break, but we're not exposing this for now. Fix it before everything breaks please.
+		drawQuad(transform, color, 0);
 	}
 
 	void Renderer2D::drawQuad(
@@ -1033,7 +1125,8 @@ namespace MRG::Vulkan
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
-		drawQuad(transform, color);
+		// TODO: This will completely break, but we're not exposing this for now. Fix it before everything breaks please.
+		drawQuad(transform, color, 0);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
@@ -1201,9 +1294,10 @@ namespace MRG::Vulkan
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][0], &beginInfo),
 		               "failed to begin recording command bufer!")
 
-		std::array<VkClearValue, 2> clearColors{};
+		std::array<VkClearValue, 3> clearColors{};
 		clearColors[0].color = {{m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a}};
-		clearColors[1].depthStencil = {1.f, 0};
+		clearColors[1].color = {{0.f, 0.f, 0.f, 1.f}};
+		clearColors[2].depthStencil = {1.f, 0};
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1325,6 +1419,12 @@ namespace MRG::Vulkan
 		vkDestroyImage(m_data->device, m_data->swapChain.depthBuffer.handle, nullptr);
 		vkFreeMemory(m_data->device, m_data->swapChain.depthBuffer.memoryHandle, nullptr);
 
+		for (auto objectIDBuffer : m_data->swapChain.objectIDBuffers) {
+			vkDestroyImageView(m_data->device, objectIDBuffer.imageView, nullptr);
+			vkDestroyImage(m_data->device, objectIDBuffer.handle, nullptr);
+			vkFreeMemory(m_data->device, objectIDBuffer.memoryHandle, nullptr);
+		}
+
 		for (auto framebuffers : m_data->swapChain.frameBuffers) {
 			for (auto framebuffer : framebuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
 		}
@@ -1371,11 +1471,13 @@ namespace MRG::Vulkan
 		m_data->ImGuiPipeline.renderPass = ImGuiRP;
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
+		m_data->swapChain.objectIDBuffers = createObjectIDBuffers(m_data);
 
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created")
 		m_data->swapChain.frameBuffers =
 		  createFramebuffers(m_data->device,
 		                     m_data->swapChain.imageViews,
+		                     m_data->swapChain.objectIDBuffers,
 		                     m_data->swapChain.depthBuffer.imageView,
 		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiPipeline.renderPass},
 		                     m_data->swapChain.extent);

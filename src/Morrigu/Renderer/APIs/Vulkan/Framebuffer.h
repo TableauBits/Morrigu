@@ -29,7 +29,7 @@ namespace MRG::Vulkan
 		ImTextureID m_ImTextureID = nullptr;
 		std::array<ImVec2, 2> m_UVMapping = {ImVec2{0, 0}, ImVec2{1, 1}};
 		VkFramebuffer m_handle{};
-		LightVulkanImage m_colorAttachment{}, m_depthAttachment{};
+		LightVulkanImage m_colorAttachment{}, m_objectIDBuffer{}, m_depthAttachment{};
 		VkSampler m_sampler{};
 	};
 

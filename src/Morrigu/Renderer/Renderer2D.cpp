@@ -83,11 +83,11 @@ namespace MRG
 		s_renderer->endScene();
 	}
 
-	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t objectID)
 	{
 		MRG_PROFILE_FUNCTION()
 
-		s_renderer->drawQuad(transform, color);
+		s_renderer->drawQuad(transform, color, objectID);
 	}
 
 	void Renderer2D::drawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)

@@ -23,6 +23,11 @@ namespace
 			case MRG::ShaderDataType::Int3:
 			case MRG::ShaderDataType::Int4:   return GL_INT;
 
+			case MRG::ShaderDataType::UInt:
+			case MRG::ShaderDataType::UInt2:
+			case MRG::ShaderDataType::UInt3:
+			case MRG::ShaderDataType::UInt4:   return GL_UNSIGNED_INT;
+
 			case MRG::ShaderDataType::Bool:   return GL_BOOL;
 
 			case MRG::ShaderDataType::None:

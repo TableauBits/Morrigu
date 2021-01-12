@@ -21,6 +21,7 @@ namespace MRG
 		glm::vec2 texCoord;
 		float texIndex;
 		float tilingFactor;
+		uint32_t objectID;
 
 		static auto getLayout()
 		{
@@ -28,7 +29,8 @@ namespace MRG
 			                                                           {MRG::ShaderDataType::Float4, "a_color"},
 			                                                           {MRG::ShaderDataType::Float2, "a_texCoord"},
 			                                                           {MRG::ShaderDataType::Float, "a_texIndex"},
-			                                                           {MRG::ShaderDataType::Float, "a_tilingFactor"}};
+			                                                           {MRG::ShaderDataType::Float, "a_tilingFactor"},
+			                                                           {MRG::ShaderDataType::UInt, "a_objectID"}};
 			return layout;
 		};
 	};
@@ -59,7 +61,7 @@ namespace MRG
 		virtual void beginScene(const EditorCamera& camera) = 0;
 		virtual void endScene() = 0;
 
-		virtual void drawQuad(const glm::mat4& transform, const glm::vec4& color) = 0;
+		virtual void drawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t objectID) = 0;
 		virtual void
 		drawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor) = 0;
 
@@ -139,7 +141,7 @@ namespace MRG
 		                     float tilingFactor = 1.f,
 		                     const glm::vec4& tintColor = glm::vec4{1.f});
 
-		static void drawQuad(const glm::mat4& transform, const glm::vec4& color);
+		static void drawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t objectID);
 		static void drawQuad(const glm::mat4& transform,
 		                     const Ref<Texture2D>& texture,
 		                     float tilingFactor = 1.f,

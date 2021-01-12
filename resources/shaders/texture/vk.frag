@@ -7,8 +7,10 @@ layout(location = 0) in vec4 v_color;
 layout(location = 1) in vec2 v_texCoord;
 layout(location = 2) in flat float v_texIndex;
 layout(location = 3) in float v_tilingFactor;
+layout(location = 4) in flat uint v_objectID;
 
 layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 objectIDBuffer;
 
 void main() {
     color = v_color;
@@ -46,4 +48,6 @@ void main() {
 		case 30: color *= texture(u_textures[30], v_texCoord * v_tilingFactor); break;
 		case 31: color *= texture(u_textures[31], v_texCoord * v_tilingFactor); break;
 	}
+
+	objectIDBuffer = vec4(float(v_objectID) / 0xffff, 0, 0, 1);
 }

@@ -31,7 +31,7 @@ namespace MRG::OpenGL
 		void beginScene(const EditorCamera& camera) override;
 		void endScene() override;
 
-		void drawQuad(const glm::mat4& transform, const glm::vec4& color) override;
+		void drawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t objectID) override;
 		void
 		drawQuad(const glm::mat4& transform, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor) override;
 

@@ -23,6 +23,11 @@ namespace
 			case MRG::ShaderDataType::Int3:   return VkFormat::VK_FORMAT_R32G32B32_SINT;
 			case MRG::ShaderDataType::Int4:   return VkFormat::VK_FORMAT_R32G32B32A32_SINT;
 
+			case MRG::ShaderDataType::UInt:    return VkFormat::VK_FORMAT_R8_UINT;
+			case MRG::ShaderDataType::UInt2:   return VkFormat::VK_FORMAT_R32G32_UINT;
+			case MRG::ShaderDataType::UInt3:   return VkFormat::VK_FORMAT_R32G32B32_UINT;
+			case MRG::ShaderDataType::UInt4:   return VkFormat::VK_FORMAT_R32G32B32A32_UINT;
+
 			// TODO: Get a better look at this
 			case MRG::ShaderDataType::Bool:   return VkFormat::VK_FORMAT_R8_SINT;
 
