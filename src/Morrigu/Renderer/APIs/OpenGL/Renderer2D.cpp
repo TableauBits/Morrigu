@@ -244,6 +244,8 @@ namespace MRG::OpenGL
 		m_framebuffer = nullptr;
 	}
 
+	uint32_t Renderer2D::objectIDAt(uint32_t x, uint32_t y) { return x + y; }
+
 	void Renderer2D::resetStats() { m_stats = {}; }
 
 	RenderingStatistics Renderer2D::getStats() const { return m_stats; }

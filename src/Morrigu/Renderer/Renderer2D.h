@@ -83,6 +83,8 @@ namespace MRG
 		virtual void setRenderTarget(Ref<Framebuffer> renderTarget) = 0;
 		virtual void resetRenderTarget() = 0;
 		[[nodiscard]] virtual Ref<Framebuffer> getRenderTarget() const = 0;
+		[[nodiscard]] virtual uint32_t objectIDAt(uint32_t x, uint32_t y) = 0;
+
 		virtual void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 		virtual void setClearColor(const glm::vec4& color) = 0;
 		virtual void clear() = 0;
@@ -165,6 +167,8 @@ namespace MRG
 		static void setRenderTarget(Ref<Framebuffer> renderTarget);
 		static void resetRenderTarget();
 		[[nodiscard]] static Ref<Framebuffer> getRenderTarget();
+
+		[[nodiscard]] static uint32_t objectIDAt(uint32_t x, uint32_t y);
 
 		static void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 		static void setClearColor(const glm::vec4& color);

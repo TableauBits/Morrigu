@@ -125,6 +125,63 @@ namespace MRG
 
 		m_sceneHierarchyPanel.onImGuiRender();
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
+		ImGui::Begin("Viewport");
+		auto [windowX, windowY] = ImGui::GetWindowPos();
+		m_viewportFocused = ImGui::IsWindowFocused();
+		m_viewportHovered = ImGui::IsWindowHovered();
+		Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused && !m_viewportHovered);
+
+		auto viewportSize = ImGui::GetContentRegionAvail();
+		m_viewportSize = {viewportSize.x, viewportSize.y};
+
+		ImGui::Image(m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
+
+		// Drawing gizmos
+		auto selectedEntity = m_sceneHierarchyPanel.getSelectedEntity();
+		if (selectedEntity && m_gizmoType != -1) {
+			ImGuizmo::SetDrawlist();
+
+			const auto windowWidth = static_cast<float>(ImGui::GetWindowWidth());
+			const auto windowHeight = static_cast<float>(ImGui::GetWindowHeight());
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+			// Editor camera
+			auto cameraProj = m_editorCamera.getProjection();
+			auto cameraView = m_editorCamera.getViewMatrix();
+			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
+				cameraProj[1][1] *= -1;
+
+			// Transform
+			auto& tc = selectedEntity.getComponent<TransformComponent>();
+			auto transform = tc.getTransform();
+
+			// Snapping
+			bool snap = Input::isKeyPressed(Key::LeftControl);
+			float snapValue = m_gizmoType == ImGuizmo::OPERATION::ROTATE ? 45.f : 0.5f;
+			float snapValues[3] = {snapValue, snapValue, snapValue};
+
+			ImGuizmo::Manipulate(glm::value_ptr(cameraView),
+			                     glm::value_ptr(cameraProj),
+			                     static_cast<ImGuizmo::OPERATION>(m_gizmoType),
+			                     ImGuizmo::LOCAL,
+			                     glm::value_ptr(transform),
+			                     nullptr,
+			                     snap ? snapValues : nullptr);
+
+			if (ImGuizmo::IsUsing()) {
+				glm::vec3 translation, rotation, scale;
+				Maths::decomposeTransform(transform, translation, rotation, scale);
+
+				glm::vec3 deltaRotation = rotation - tc.rotation;
+				tc.translation = translation;
+				tc.rotation += deltaRotation;
+				tc.scale = scale;
+			}
+		}
+		ImGui::End();
+		ImGui::PopStyleVar();
+
 		ImGui::Begin("Debug");
 		{
 			ImGui::Text("Renderer2D stats:");
@@ -133,67 +190,16 @@ namespace MRG
 			ImGui::Text("Vertices: %d", stats.getVertexCount());
 			ImGui::Text("Indices: %d", stats.getIndexCount());
 			ImGui::TextColored(tsColor, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
-		}
-		ImGui::End();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
-		ImGui::Begin("Viewport");
-		{
-			m_viewportFocused = ImGui::IsWindowFocused();
-			m_viewportHovered = ImGui::IsWindowHovered();
-			Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused && !m_viewportHovered);
-
-			auto viewportSize = ImGui::GetContentRegionAvail();
-			m_viewportSize = {viewportSize.x, viewportSize.y};
-
-			ImGui::Image(
-			  m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
-
-			// Drawing gizmos
-			auto selectedEntity = m_sceneHierarchyPanel.getSelectedEntity();
-			if (selectedEntity && m_gizmoType != -1) {
-				ImGuizmo::SetDrawlist();
-
-				const auto windowWidth = static_cast<float>(ImGui::GetWindowWidth());
-				const auto windowHeight = static_cast<float>(ImGui::GetWindowHeight());
-				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
-				// Editor camera
-				auto cameraProj = m_editorCamera.getProjection();
-				auto cameraView = m_editorCamera.getViewMatrix();
-				if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
-					cameraProj[1][1] *= -1;
-
-				// Transform
-				auto& tc = selectedEntity.getComponent<TransformComponent>();
-				auto transform = tc.getTransform();
-
-				// Snapping
-				bool snap = Input::isKeyPressed(Key::LeftControl);
-				float snapValue = m_gizmoType == ImGuizmo::OPERATION::ROTATE ? 45.f : 0.5f;
-				float snapValues[3] = {snapValue, snapValue, snapValue};
-
-				ImGuizmo::Manipulate(glm::value_ptr(cameraView),
-				                     glm::value_ptr(cameraProj),
-				                     static_cast<ImGuizmo::OPERATION>(m_gizmoType),
-				                     ImGuizmo::LOCAL,
-				                     glm::value_ptr(transform),
-				                     nullptr,
-				                     snap ? snapValues : nullptr);
-
-				if (ImGuizmo::IsUsing()) {
-					glm::vec3 translation, rotation, scale;
-					Maths::decomposeTransform(transform, translation, rotation, scale);
-
-					glm::vec3 deltaRotation = rotation - tc.rotation;
-					tc.translation = translation;
-					tc.rotation += deltaRotation;
-					tc.scale = scale;
-				}
+			auto [mouseX, mouseY] = ImGui::GetMousePos();
+			glm::vec2 offsetPosition = {mouseX - windowX, mouseY - windowY};
+			uint32_t id = entt::null;
+			if (offsetPosition.x >= 0 && offsetPosition.y >= 0 && offsetPosition.x < viewportSize.x && offsetPosition.y < viewportSize.y) {
+				id = m_activeScene->objectIDAt(static_cast<uint32_t>(offsetPosition.x), static_cast<uint32_t>(offsetPosition.y));
 			}
+			ImGui::Text("Hovered entity ID: %d (%f , %f)", id, offsetPosition.x, offsetPosition.y);
 		}
 		ImGui::End();
-		ImGui::PopStyleVar();
 
 		ImGui::End();
 	}

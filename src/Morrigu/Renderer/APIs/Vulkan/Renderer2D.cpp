@@ -3,9 +3,11 @@
 #include "Debug/Instrumentor.h"
 
 #include <ImGui/bindings/imgui_impl_vulkan.h>
+#include <entt/entt.hpp>
 #include <imgui.h>
 
 #include <array>
+#include <numeric>
 
 namespace
 {
@@ -259,7 +261,7 @@ namespace
 		colorAttachments[2].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 		std::array<VkAttachmentDescription, 2> objectIDBufferAttachments{};
-		objectIDBufferAttachments[0].format = swapChainFormat;
+		objectIDBufferAttachments[0].format = VK_FORMAT_R16G16B16A16_UNORM;
 		objectIDBufferAttachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
 		objectIDBufferAttachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		objectIDBufferAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -268,7 +270,7 @@ namespace
 		objectIDBufferAttachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		objectIDBufferAttachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		objectIDBufferAttachments[1].format = swapChainFormat;
+		objectIDBufferAttachments[1].format = VK_FORMAT_R16G16B16A16_UNORM;
 		objectIDBufferAttachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
 		objectIDBufferAttachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		objectIDBufferAttachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -624,9 +626,9 @@ namespace
 			                         data->device,
 			                         data->width,
 			                         data->height,
-			                         data->swapChain.imageFormat,
+			                         VK_FORMAT_R16G16B16A16_UNORM,
 			                         VK_IMAGE_TILING_OPTIMAL,
-			                         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			                         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
 			                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			                         buffer.handle,
 			                         buffer.memoryHandle);
@@ -634,14 +636,28 @@ namespace
 			transitionImageLayout(data, buffer.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 			buffer.imageView =
-			  MRG::Vulkan::createImageView(data->device, buffer.handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+			  MRG::Vulkan::createImageView(data->device, buffer.handle, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 
 		return buffers;
 	}
 
-	std::pair<VkDescriptorPool, std::vector<VkDescriptorSet>> createDescriptorPool(const MRG::Vulkan::WindowProperties* data,
-	                                                                               uint32_t textureCount)
+	[[nodiscard]] MRG::Vulkan::Buffer createObjectIDLocalBuffer(MRG::Vulkan::WindowProperties* data)
+	{
+		MRG::Vulkan::Buffer localBuffer{};
+
+		createBuffer(data->device,
+		             data->physicalDevice,
+		             data->width * data->height * 8,  // TODO: make this work for something else than 64bits pixel data
+		             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
+		             localBuffer);
+
+		return localBuffer;
+	}
+
+	[[nodiscard]] std::pair<VkDescriptorPool, std::vector<VkDescriptorSet>> createDescriptorPool(const MRG::Vulkan::WindowProperties* data,
+	                                                                                             uint32_t textureCount)
 	{
 		VkDescriptorPool descriptorPool;
 
@@ -754,6 +770,8 @@ namespace MRG::Vulkan
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 		m_data->swapChain.objectIDBuffers = createObjectIDBuffers(m_data);
+
+		m_objectIDBuffer = createObjectIDLocalBuffer(m_data);
 
 		m_data->swapChain.frameBuffers =
 		  createFramebuffers(m_data->device,
@@ -879,7 +897,7 @@ namespace MRG::Vulkan
 
 		if (m_renderTarget != nullptr) {
 			transitionImageLayout(m_data,
-			                      m_renderTarget->getColorAttachment(),
+			                      m_renderTarget->getColorAttachment().handle,
 			                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
@@ -920,7 +938,7 @@ namespace MRG::Vulkan
 
 		if (m_renderTarget != nullptr) {
 			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][2],
-			                            m_renderTarget->getColorAttachment(),
+			                            m_renderTarget->getColorAttachment().handle,
 			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		}
@@ -1279,6 +1297,47 @@ namespace MRG::Vulkan
 		m_sceneInProgress = true;
 	}
 
+	uint32_t Renderer2D::objectIDAt(uint32_t, uint32_t)
+	{
+		void* data;
+		auto targetImage = (m_renderTarget == nullptr) ? m_data->swapChain.objectIDBuffers[m_imageIndex].handle
+		                                               : m_renderTarget->getObjectBufferAttachment().handle;
+		auto targetLocalBuffer = (m_renderTarget == nullptr) ? m_objectIDBuffer : m_renderTarget->getObjectIDLocalBuffer();
+		auto width = (m_renderTarget == nullptr) ? m_data->width : m_renderTarget->getSpecification().width;
+		auto height = (m_renderTarget == nullptr) ? m_data->height : m_renderTarget->getSpecification().height;
+
+		// auto offset = (y * width + x) * 4;  // TODO: This is for 32 bits per pixel only at the moment
+
+		auto cmdBuffer = beginSingleTimeCommand(m_data);
+		transitionImageLayoutInline(cmdBuffer, targetImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+
+		VkBufferImageCopy region{};
+		region.bufferOffset = 0;
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		region.imageSubresource.mipLevel = 0;
+		region.imageSubresource.baseArrayLayer = 0;
+		region.imageSubresource.layerCount = 1;
+		region.imageOffset = {0, 0, 0};
+		region.imageExtent = {width, height, 1};
+
+		vkCmdCopyImageToBuffer(cmdBuffer, targetImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, targetLocalBuffer.handle, 1, &region);
+
+		transitionImageLayoutInline(cmdBuffer, targetImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		endSingleTimeCommand(m_data, cmdBuffer);
+
+		MRG_VKVALIDATE(vkMapMemory(m_data->device, targetLocalBuffer.memoryHandle, 0, sizeof(uint64_t), 0, &data), "Failed to map memory!")
+		// layout in memory is: ABGR, 16 bits for each channel
+		uint64_t pixelData = *((uint64_t*)data);
+		uint32_t objectID = entt::null;
+		if (pixelData & 0xffff00000000)
+			objectID = pixelData & 0xffffffff;
+		vkUnmapMemory(m_data->device, targetLocalBuffer.memoryHandle);
+
+		return objectID;
+	}
+
 	void Renderer2D::clear()
 	{
 		MRG_PROFILE_FUNCTION()
@@ -1425,6 +1484,9 @@ namespace MRG::Vulkan
 			vkFreeMemory(m_data->device, objectIDBuffer.memoryHandle, nullptr);
 		}
 
+		vkDestroyBuffer(m_data->device, m_objectIDBuffer.handle, nullptr);
+		vkFreeMemory(m_data->device, m_objectIDBuffer.memoryHandle, nullptr);
+
 		for (auto framebuffers : m_data->swapChain.frameBuffers) {
 			for (auto framebuffer : framebuffers) vkDestroyFramebuffer(m_data->device, framebuffer, nullptr);
 		}
@@ -1472,6 +1534,8 @@ namespace MRG::Vulkan
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 		m_data->swapChain.objectIDBuffers = createObjectIDBuffers(m_data);
+
+		m_objectIDBuffer = createObjectIDLocalBuffer(m_data);
 
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created")
 		m_data->swapChain.frameBuffers =

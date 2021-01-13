@@ -34,9 +34,9 @@ namespace MRG::Vulkan
 		            data->device,
 		            m_specification.width,
 		            m_specification.height,
-		            data->swapChain.imageFormat,
+		            VK_FORMAT_R16G16B16A16_UNORM,
 		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
 		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		            m_objectIDBuffer.handle,
 		            m_objectIDBuffer.memoryHandle);
@@ -44,7 +44,7 @@ namespace MRG::Vulkan
 		transitionImageLayout(data, m_objectIDBuffer.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 		m_objectIDBuffer.imageView =
-		  createImageView(data->device, m_objectIDBuffer.handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+		  createImageView(data->device, m_objectIDBuffer.handle, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -117,6 +117,13 @@ namespace MRG::Vulkan
 		createInfo.renderPass = data->renderingPipeline.renderPass;
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
+
+		createBuffer(data->device,
+		             data->physicalDevice,
+		             data->width * data->height * 8,  // TODO: make this work for something else than 64bits pixel data
+		             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
+		             m_objectIDLocalBuffer);
 	}
 
 	Framebuffer::~Framebuffer() { Framebuffer::destroy(); }
@@ -143,6 +150,9 @@ namespace MRG::Vulkan
 		vkFreeMemory(data->device, m_depthAttachment.memoryHandle, nullptr);
 
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
+
+		vkDestroyBuffer(data->device, m_objectIDLocalBuffer.handle, nullptr);
+		vkFreeMemory(data->device, m_objectIDLocalBuffer.memoryHandle, nullptr);
 
 		m_isDestroyed = true;
 	}
@@ -175,6 +185,9 @@ namespace MRG::Vulkan
 
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
 
+		vkDestroyBuffer(data->device, m_objectIDLocalBuffer.handle, nullptr);
+		vkFreeMemory(data->device, m_objectIDLocalBuffer.memoryHandle, nullptr);
+
 		createImage(data->physicalDevice,
 		            data->device,
 		            m_specification.width,
@@ -195,9 +208,9 @@ namespace MRG::Vulkan
 		            data->device,
 		            m_specification.width,
 		            m_specification.height,
-		            data->swapChain.imageFormat,
+		            VK_FORMAT_R16G16B16A16_UNORM,
 		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
 		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		            m_objectIDBuffer.handle,
 		            m_objectIDBuffer.memoryHandle);
@@ -205,7 +218,7 @@ namespace MRG::Vulkan
 		transitionImageLayout(data, m_objectIDBuffer.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 		m_objectIDBuffer.imageView =
-		  createImageView(data->device, m_objectIDBuffer.handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+		  createImageView(data->device, m_objectIDBuffer.handle, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 
 		createImage(data->physicalDevice,
 		            data->device,
@@ -258,6 +271,13 @@ namespace MRG::Vulkan
 		createInfo.renderPass = data->renderingPipeline.renderPass;
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
+
+		createBuffer(data->device,
+		             data->physicalDevice,
+		             data->width * data->height * 8,  // TODO: make this work for something else than 64bits pixel data
+		             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
+		             m_objectIDLocalBuffer);
 
 		if (m_ImTextureID != nullptr) {
 			transitionImageLayout(
