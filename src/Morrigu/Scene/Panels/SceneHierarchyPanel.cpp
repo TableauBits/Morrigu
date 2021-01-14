@@ -120,7 +120,7 @@ namespace MRG
 	void SceneHierarchyPanel::setContext(const Ref<Scene>& scene)
 	{
 		m_context = scene;
-		m_selectedEntity = {};
+		selectedEntity = {};
 	}
 
 	void SceneHierarchyPanel::onImGuiRender()
@@ -133,7 +133,7 @@ namespace MRG
 		});
 
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
-			m_selectedEntity = {};
+			selectedEntity = {};
 
 		if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
 			if (ImGui::MenuItem("Create empty entity"))
@@ -146,8 +146,8 @@ namespace MRG
 
 		ImGui::Begin("Properties");
 
-		if (m_selectedEntity)
-			drawComponents(m_selectedEntity);
+		if (selectedEntity)
+			drawComponents(selectedEntity);
 
 		ImGui::End();
 	}
@@ -156,11 +156,11 @@ namespace MRG
 	{
 		const auto& tag = entity.getComponent<TagComponent>().tag;
 
-		ImGuiTreeNodeFlags flags = ((m_selectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+		ImGuiTreeNodeFlags flags = ((selectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		bool opened = ImGui::TreeNodeEx((void*)(intptr_t)(uint32_t)entity, flags, "%s", tag.c_str());  // This is fucking ridiculous
 		if (ImGui::IsItemClicked()) {
-			m_selectedEntity = entity;
+			selectedEntity = entity;
 		}
 
 		auto entityDeleted = false;
@@ -181,8 +181,8 @@ namespace MRG
 
 		if (entityDeleted) {
 			m_context->destroyEntity(entity);
-			if (m_selectedEntity == entity)
-				m_selectedEntity = {};
+			if (selectedEntity == entity)
+				selectedEntity = {};
 		}
 	}
 
@@ -210,15 +210,15 @@ namespace MRG
 
 		if (ImGui::BeginPopup("AddComponent")) {
 			if (ImGui::MenuItem("Camera")) {
-				if (!m_selectedEntity.hasComponent<CameraComponent>())
-					m_selectedEntity.addComponent<CameraComponent>();
+				if (!selectedEntity.hasComponent<CameraComponent>())
+					selectedEntity.addComponent<CameraComponent>();
 				else
 					MRG_ENGINE_WARN("Tried to add a CameraComponent to an entity that already has one!")
 				ImGui::CloseCurrentPopup();
 			}
 			if (ImGui::MenuItem("Sprite renderer")) {
-				if (!m_selectedEntity.hasComponent<SpriteRendererComponent>())
-					m_selectedEntity.addComponent<SpriteRendererComponent>();
+				if (!selectedEntity.hasComponent<SpriteRendererComponent>())
+					selectedEntity.addComponent<SpriteRendererComponent>();
 				else
 					MRG_ENGINE_WARN("Tried to add a SpriteRendererComponent to an entity that already has one!")
 				ImGui::CloseCurrentPopup();

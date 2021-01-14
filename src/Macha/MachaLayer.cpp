@@ -127,7 +127,7 @@ namespace MRG
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
 		ImGui::Begin("Viewport");
-		auto [windowX, windowY] = ImGui::GetWindowPos();
+		m_viewportPosition = ImGui::GetWindowPos();
 		m_viewportFocused = ImGui::IsWindowFocused();
 		m_viewportHovered = ImGui::IsWindowHovered();
 		Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused && !m_viewportHovered);
@@ -138,7 +138,7 @@ namespace MRG
 		ImGui::Image(m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
 
 		// Drawing gizmos
-		auto selectedEntity = m_sceneHierarchyPanel.getSelectedEntity();
+		auto selectedEntity = m_sceneHierarchyPanel.selectedEntity;
 		if (selectedEntity && m_gizmoType != -1) {
 			ImGuizmo::SetDrawlist();
 
@@ -190,14 +190,6 @@ namespace MRG
 			ImGui::Text("Vertices: %d", stats.getVertexCount());
 			ImGui::Text("Indices: %d", stats.getIndexCount());
 			ImGui::TextColored(tsColor, "Frametime: %04.4f ms (%04.2f FPS)", m_frameTime.getMillieconds(), fps);
-
-			auto [mouseX, mouseY] = ImGui::GetMousePos();
-			glm::vec2 offsetPosition = {mouseX - windowX, mouseY - windowY};
-			uint32_t id = entt::null;
-			if (offsetPosition.x >= 0 && offsetPosition.y >= 0 && offsetPosition.x < viewportSize.x && offsetPosition.y < viewportSize.y) {
-				id = m_activeScene->objectIDAt(static_cast<uint32_t>(offsetPosition.x), static_cast<uint32_t>(offsetPosition.y));
-			}
-			ImGui::Text("Hovered entity ID: %d (%f , %f)", id, offsetPosition.x, offsetPosition.y);
 		}
 		ImGui::End();
 
@@ -210,6 +202,8 @@ namespace MRG
 
 		EventDispatcher dispatcher{event};
 		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& keyPressedEvent) { return onKeyPressed(keyPressedEvent); });
+		dispatcher.dispatch<MouseButtonPressedEvent>(
+		  [this](MouseButtonPressedEvent& mouseButtonPressedEvent) { return onMousePressed(mouseButtonPressedEvent); });
 	}
 
 	bool MachaLayer::onKeyPressed(KeyPressedEvent& event)
@@ -256,6 +250,28 @@ namespace MRG
 		}
 
 		return true;
+	}
+
+	bool MachaLayer::onMousePressed(MouseButtonPressedEvent& event)
+	{
+		if (event.getMouseButton() == Mouse::ButtonLeft) {
+			if (!Input::isKeyPressed(Key::LeftAlt)) {
+				auto [mouseX, mouseY] = ImGui::GetMousePos();
+				glm::vec2 offsetPosition = {mouseX - m_viewportPosition.x, mouseY - m_viewportPosition.y};
+				if (offsetPosition.x >= 0 && offsetPosition.y >= 0 && offsetPosition.x < m_viewportSize.x &&
+				    offsetPosition.y < m_viewportSize.y) {
+					const auto id =
+					  m_activeScene->objectIDAt(static_cast<uint32_t>(offsetPosition.x), static_cast<uint32_t>(offsetPosition.y));
+
+					m_sceneHierarchyPanel.selectedEntity = MRG::Entity{static_cast<entt::entity>(id), m_activeScene.get()};
+				} else {
+					m_sceneHierarchyPanel.selectedEntity = {};
+				}
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	void MachaLayer::newScene()

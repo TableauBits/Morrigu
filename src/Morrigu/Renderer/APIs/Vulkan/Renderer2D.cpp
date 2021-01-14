@@ -1286,7 +1286,7 @@ namespace MRG::Vulkan
 		m_sceneInProgress = true;
 	}
 
-	uint32_t Renderer2D::objectIDAt(uint32_t, uint32_t)
+	uint32_t Renderer2D::objectIDAt(uint32_t x, uint32_t y)
 	{
 		void* data;
 		auto targetImage = (m_renderTarget == nullptr) ? m_data->swapChain.objectIDBuffers[m_imageIndex].handle
@@ -1295,7 +1295,7 @@ namespace MRG::Vulkan
 		auto width = (m_renderTarget == nullptr) ? m_data->width : m_renderTarget->getSpecification().width;
 		auto height = (m_renderTarget == nullptr) ? m_data->height : m_renderTarget->getSpecification().height;
 
-		// auto offset = (y * width + x) * 4;  // TODO: This is for 32 bits per pixel only at the moment
+		auto offset = (y * width + x) * 8;  // TODO: This is for 64 bits per pixel only at the moment
 
 		auto cmdBuffer = beginSingleTimeCommand(m_data);
 		transitionImageLayoutInline(cmdBuffer, targetImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
@@ -1316,7 +1316,7 @@ namespace MRG::Vulkan
 		transitionImageLayoutInline(cmdBuffer, targetImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		endSingleTimeCommand(m_data, cmdBuffer);
 
-		MRG_VKVALIDATE(vkMapMemory(m_data->device, targetLocalBuffer.memoryHandle, 0, sizeof(uint64_t), 0, &data), "Failed to map memory!")
+		MRG_VKVALIDATE(vkMapMemory(m_data->device, targetLocalBuffer.memoryHandle, offset, sizeof(uint64_t), 0, &data), "Failed to map memory!")
 		// layout in memory is: ABGR, 16 bits for each channel
 		uint64_t pixelData = *((uint64_t*)data);
 		uint32_t objectID = entt::null;

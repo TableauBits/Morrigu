@@ -17,14 +17,13 @@ namespace MRG
 
 		void onImGuiRender();
 
-		[[nodiscard]] Entity getSelectedEntity() const { return m_selectedEntity; }
+		Entity selectedEntity;
 
 	private:
 		void drawEntityNode(Entity& entity);
 		void drawComponents(Entity& entity);
 
 		Ref<Scene> m_context;
-		Entity m_selectedEntity;
 	};
 }  // namespace MRG
 

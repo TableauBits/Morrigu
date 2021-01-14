@@ -20,6 +20,7 @@ namespace MRG
 
 	private:
 		bool onKeyPressed(KeyPressedEvent& e);
+		bool onMousePressed(MouseButtonPressedEvent& e);
 
 		void newScene();
 		void openScene();
@@ -29,6 +30,7 @@ namespace MRG
 
 		bool m_viewportFocused = false, m_viewportHovered = false;
 		glm::vec2 m_viewportSize = {0.f, 0.f};
+		ImVec2 m_viewportPosition = {0.f, 0.f};
 
 		Ref<Scene> m_activeScene;
 		int m_gizmoType = -1;
