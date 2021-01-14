@@ -363,6 +363,7 @@ namespace
 		renderPassInfo.pAttachments = clearAttachments;
 		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[0]), "failed to create clearing render pass!")
 
+		renderPassInfo.pSubpasses = &mainSubpass;
 		renderPassInfo.attachmentCount = 3;
 		renderPassInfo.pAttachments = mainAttachments;
 		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[1]), "failed to create main render pass!")
@@ -375,12 +376,12 @@ namespace
 		return renderpasses;
 	}
 
-	[[nodiscard]] std::array<VkPipeline, 3> createPipelines(const MRG::Vulkan::WindowProperties* data,
+	[[nodiscard]] std::array<VkPipeline, 2> createPipelines(const MRG::Vulkan::WindowProperties* data,
 	                                                        const MRG::Ref<MRG::Vulkan::Shader>& textureShader,
 	                                                        const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
 	                                                        const std::vector<VkVertexInputBindingDescription>& bindingDescriptions)
 	{
-		std::array<VkPipeline, 3> pipelines{};
+		std::array<VkPipeline, 2> pipelines{};
 
 		// TODO: Add proper debug logging for selected rendering features
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -486,13 +487,6 @@ namespace
 		pipelineInfo.layout = data->renderingPipeline.layout;
 		pipelineInfo.renderPass = data->renderingPipeline.renderPass;
 		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[1]),
-		               "failed to create graphics pipeline!")
-
-		colorBlending.attachmentCount = 1;
-		colorBlending.pAttachments = &colorBlendAttachment;
-		pipelineInfo.layout = data->ImGuiPipeline.layout;
-		pipelineInfo.renderPass = data->ImGuiPipeline.renderPass;
-		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[2]),
 		               "failed to create graphics pipeline!")
 
 		return pipelines;
@@ -704,7 +698,7 @@ namespace MRG::Vulkan
 		auto [clearingRP, renderingRP, ImGuiRP] = createRenderPasses(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
 		m_data->clearingPipeline.renderPass = clearingRP;
 		m_data->renderingPipeline.renderPass = renderingRP;
-		m_data->ImGuiPipeline.renderPass = ImGuiRP;
+		m_data->ImGuiRenderPass = ImGuiRP;
 
 		m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
 		MRG_ENGINE_TRACE("Command pool successfully created")
@@ -755,17 +749,15 @@ namespace MRG::Vulkan
 		               "failed to create pipeline layout!")
 		m_data->clearingPipeline.layout = layout;
 		m_data->renderingPipeline.layout = layout;
-		m_data->ImGuiPipeline.layout = layout;
 		MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created")
 
-		auto [clearingPipeline, renderingPipeline, ImGuiPipeline] =
+		auto [clearingPipeline, renderingPipeline] =
 		  createPipelines(m_data,
 		                  m_textureShader,
 		                  std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getAttributeDescriptions(),
 		                  {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getBindingDescription()});
 		m_data->clearingPipeline.handle = clearingPipeline;
 		m_data->renderingPipeline.handle = renderingPipeline;
-		m_data->ImGuiPipeline.handle = ImGuiPipeline;
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created")
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
@@ -778,7 +770,7 @@ namespace MRG::Vulkan
 		                     m_data->swapChain.imageViews,
 		                     m_data->swapChain.objectIDBuffers,
 		                     m_data->swapChain.depthBuffer.imageView,
-		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiPipeline.renderPass},
+		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiRenderPass},
 		                     m_data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created")
 
@@ -817,7 +809,6 @@ namespace MRG::Vulkan
 
 		vkDestroyPipeline(m_data->device, m_data->clearingPipeline.handle, nullptr);
 		vkDestroyPipeline(m_data->device, m_data->renderingPipeline.handle, nullptr);
-		vkDestroyPipeline(m_data->device, m_data->ImGuiPipeline.handle, nullptr);
 
 		// All 3 pipelines have the same VkLayout handle, so destroying only one is necessary
 		vkDestroyPipelineLayout(m_data->device, m_data->clearingPipeline.layout, nullptr);
@@ -904,7 +895,7 @@ namespace MRG::Vulkan
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_data->ImGuiPipeline.renderPass;
+		renderPassInfo.renderPass = m_data->ImGuiRenderPass;
 		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][2];
 		renderPassInfo.renderArea.offset = {0, 0};
 		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
@@ -921,8 +912,6 @@ namespace MRG::Vulkan
 		submitInfo.pSignalSemaphores = signalSempahores;
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][2], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][2], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->ImGuiPipeline.handle);
 
 		auto& io = ImGui::GetIO();
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_data->commandBuffers[m_imageIndex][2]);
@@ -1496,7 +1485,7 @@ namespace MRG::Vulkan
 
 		vkDestroyRenderPass(m_data->device, m_data->clearingPipeline.renderPass, nullptr);
 		vkDestroyRenderPass(m_data->device, m_data->renderingPipeline.renderPass, nullptr);
-		vkDestroyRenderPass(m_data->device, m_data->ImGuiPipeline.renderPass, nullptr);
+		vkDestroyRenderPass(m_data->device, m_data->ImGuiRenderPass, nullptr);
 
 		for (auto imageView : m_data->swapChain.imageViews) vkDestroyImageView(m_data->device, imageView, nullptr);
 
@@ -1530,7 +1519,7 @@ namespace MRG::Vulkan
 		auto [clearingRP, renderingRP, ImGuiRP] = createRenderPasses(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
 		m_data->clearingPipeline.renderPass = clearingRP;
 		m_data->renderingPipeline.renderPass = renderingRP;
-		m_data->ImGuiPipeline.renderPass = ImGuiRP;
+		m_data->ImGuiRenderPass = ImGuiRP;
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 		m_data->swapChain.objectIDBuffers = createObjectIDBuffers(m_data);
@@ -1543,7 +1532,7 @@ namespace MRG::Vulkan
 		                     m_data->swapChain.imageViews,
 		                     m_data->swapChain.objectIDBuffers,
 		                     m_data->swapChain.depthBuffer.imageView,
-		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiPipeline.renderPass},
+		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiRenderPass},
 		                     m_data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created")
 

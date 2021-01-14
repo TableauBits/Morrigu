@@ -66,7 +66,7 @@ namespace MRG::Vulkan
 		VkDescriptorSetLayout descriptorSetLayout{};
 		Pipeline clearingPipeline{};
 		Pipeline renderingPipeline{};
-		Pipeline ImGuiPipeline{};
+		VkRenderPass ImGuiRenderPass{};
 		VkCommandPool commandPool{};
 		std::vector<std::array<VkCommandBuffer, 3>> commandBuffers;
 		std::size_t currentFrame = 0;
