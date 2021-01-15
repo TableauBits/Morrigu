@@ -259,15 +259,13 @@ namespace MRG
 				auto [mouseX, mouseY] = ImGui::GetMousePos();
 				glm::vec2 offsetPosition = {mouseX - m_viewportPosition.x, mouseY - m_viewportPosition.y};
 				if (offsetPosition.x >= 0 && offsetPosition.y >= 0 && offsetPosition.x < m_viewportSize.x &&
-				    offsetPosition.y < m_viewportSize.y) {
+				    offsetPosition.y < m_viewportSize.y && !ImGuizmo::IsOver()) {
 					const auto id =
 					  m_activeScene->objectIDAt(static_cast<uint32_t>(offsetPosition.x), static_cast<uint32_t>(offsetPosition.y));
 
 					m_sceneHierarchyPanel.selectedEntity = MRG::Entity{static_cast<entt::entity>(id), m_activeScene.get()};
-				} else {
-					m_sceneHierarchyPanel.selectedEntity = {};
+					return true;
 				}
-				return true;
 			}
 		}
 
