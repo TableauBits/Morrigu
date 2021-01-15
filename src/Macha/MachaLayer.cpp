@@ -169,7 +169,7 @@ namespace MRG
 			                     nullptr,
 			                     snap ? snapValues : nullptr);
 
-			if (ImGuizmo::IsUsing()) {
+			if (!Input::isKeyPressed(Key::LeftAlt) && ImGuizmo::IsUsing()) {
 				glm::vec3 translation, rotation, scale;
 				Maths::decomposeTransform(transform, translation, rotation, scale);
 
