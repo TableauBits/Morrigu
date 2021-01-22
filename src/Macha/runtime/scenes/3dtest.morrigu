@@ -1,29 +1,13 @@
 SceneName: Untitled
 Entities:
   - EntityID: 0000000000000000
-    TagComponent: Floor
+    TagComponent: East wall
     TransformComponent:
-      translation: [0, -0.5, 0]
-      rotation: [1.57079637, 0, 0]
-      scale: [3, 2.99936795, 2.99936795]
+      translation: [-1.49999988, 0, 0.000517934561]
+      rotation: [0, -1.57079637, 0]
+      scale: [2.99999976, 1, 1]
     SpriteRendererComponent:
-      color: [0.960784316, 0.960784316, 0.862745106, 1]
-  - EntityID: 0000000000000000
-    TagComponent: North wall
-    TransformComponent:
-      translation: [0, 0, -1.5]
-      rotation: [0, 0, 0]
-      scale: [3, 1, 1]
-    SpriteRendererComponent:
-      color: [0.193050027, 1, 0, 1]
-  - EntityID: 0000000000000000
-    TagComponent: South wall
-    TransformComponent:
-      translation: [0, 0, 1.5]
-      rotation: [0, 0, 0]
-      scale: [3, 1, 1]
-    SpriteRendererComponent:
-      color: [1, 0, 0, 1]
+      color: [0.934467316, 0, 1, 1]
   - EntityID: 0000000000000000
     TagComponent: West wall
     TransformComponent:
@@ -33,10 +17,43 @@ Entities:
     SpriteRendererComponent:
       color: [0.0297064781, 0, 1, 1]
   - EntityID: 0000000000000000
-    TagComponent: East wall
+    TagComponent: South wall
     TransformComponent:
-      translation: [-1.49999988, 0, 0.000517934561]
-      rotation: [0, -1.57045102, 0]
-      scale: [2.99999976, 1, 1]
+      translation: [0, 0, 1.5]
+      rotation: [0, 0, 0]
+      scale: [3, 1, 1]
     SpriteRendererComponent:
-      color: [0.934467316, 0, 1, 1]
+      color: [1, 0, 0, 1]
+  - EntityID: 0000000000000000
+    TagComponent: North wall
+    TransformComponent:
+      translation: [0, 0, -1.5]
+      rotation: [0, 0, 0]
+      scale: [3.00000072, 1, 0.999999821]
+    SpriteRendererComponent:
+      color: [0.193050027, 1, 0, 1]
+  - EntityID: 0000000000000000
+    TagComponent: Floor
+    TransformComponent:
+      translation: [0, -0.5, 0]
+      rotation: [1.57080305, 0, 0]
+      scale: [3.00128841, 2.99843049, 2.99810672]
+    SpriteRendererComponent:
+      color: [0.960784316, 0.960784316, 0.862745106, 1]
+  - EntityID: 0000000000000000
+    TagComponent: Camera
+    TransformComponent:
+      translation: [0, 2.47508454, 2.14792657]
+      rotation: [-0.784800172, 0, 0]
+      scale: [1, 1, 1]
+    CameraComponent:
+      camera:
+        projectionType: 1
+        orthographicSize: 10
+        orthographicNear: -1
+        orthographicFar: 1
+        perspectiveFOV: 0.785398185
+        perspectiveNear: 0.00999999978
+        perspectiveFar: 1000
+      primary: true
+      fixedAspectRatio: false

@@ -127,8 +127,10 @@ namespace MRG
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
 		ImGui::Begin("Viewport");
-		m_viewportPosition = ImGui::GetWindowPos();
+		m_viewportWindowPosition = ImGui::GetWindowPos();
+		m_viewportPosition = ImGui::GetWindowContentRegionMin();
 		m_viewportFocused = ImGui::IsWindowFocused();
+
 		m_viewportHovered = ImGui::IsWindowHovered();
 		Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused && !m_viewportHovered);
 
@@ -161,15 +163,16 @@ namespace MRG
 			float snapValue = m_gizmoType == ImGuizmo::OPERATION::ROTATE ? 45.f : 0.5f;
 			float snapValues[3] = {snapValue, snapValue, snapValue};
 
-			ImGuizmo::Manipulate(glm::value_ptr(cameraView),
-			                     glm::value_ptr(cameraProj),
-			                     static_cast<ImGuizmo::OPERATION>(m_gizmoType),
-			                     ImGuizmo::LOCAL,
-			                     glm::value_ptr(transform),
-			                     nullptr,
-			                     snap ? snapValues : nullptr);
+			if (!Input::isKeyPressed(Key::LeftAlt))
+				ImGuizmo::Manipulate(glm::value_ptr(cameraView),
+				                     glm::value_ptr(cameraProj),
+				                     static_cast<ImGuizmo::OPERATION>(m_gizmoType),
+				                     ImGuizmo::LOCAL,
+				                     glm::value_ptr(transform),
+				                     nullptr,
+				                     snap ? snapValues : nullptr);
 
-			if (!Input::isKeyPressed(Key::LeftAlt) && ImGuizmo::IsUsing()) {
+			if (ImGuizmo::IsUsing()) {
 				glm::vec3 translation, rotation, scale;
 				Maths::decomposeTransform(transform, translation, rotation, scale);
 
@@ -232,16 +235,20 @@ namespace MRG
 
 		// Gizmos
 		case Key::Q: {
-			m_gizmoType = -1;
+			if (!ImGuizmo::IsUsing())
+				m_gizmoType = -1;
 		} break;
 		case Key::W: {
-			m_gizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			if (!ImGuizmo::IsUsing())
+				m_gizmoType = ImGuizmo::OPERATION::TRANSLATE;
 		} break;
 		case Key::E: {
-			m_gizmoType = ImGuizmo::OPERATION::ROTATE;
+			if (!ImGuizmo::IsUsing())
+				m_gizmoType = ImGuizmo::OPERATION::ROTATE;
 		} break;
 		case Key::R: {
-			m_gizmoType = ImGuizmo::OPERATION::SCALE;
+			if (!ImGuizmo::IsUsing())
+				m_gizmoType = ImGuizmo::OPERATION::SCALE;
 		} break;
 
 		default: {
@@ -257,7 +264,8 @@ namespace MRG
 		if (event.getMouseButton() == Mouse::ButtonLeft) {
 			if (!Input::isKeyPressed(Key::LeftAlt)) {
 				auto [mouseX, mouseY] = ImGui::GetMousePos();
-				glm::vec2 offsetPosition = {mouseX - m_viewportPosition.x, mouseY - m_viewportPosition.y};
+				glm::vec2 offsetPosition = {mouseX - (m_viewportWindowPosition.x + m_viewportPosition.x),
+				                            mouseY - (m_viewportWindowPosition.y + m_viewportPosition.y)};
 				if (offsetPosition.x >= 0 && offsetPosition.y >= 0 && offsetPosition.x < m_viewportSize.x &&
 				    offsetPosition.y < m_viewportSize.y && !ImGuizmo::IsOver()) {
 					const auto id =

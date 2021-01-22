@@ -12,6 +12,7 @@ DISABLE_WARNING_POP
 #include <filesystem>
 #include <fstream>
 
+// clang-format off
 namespace YAML
 {
 	template<>
@@ -79,7 +80,6 @@ namespace YAML
 	}
 }  // namespace YAML
 
-// clang-format off
 struct SceneKeys
 {
 	static constexpr const char* key = "SceneName";
