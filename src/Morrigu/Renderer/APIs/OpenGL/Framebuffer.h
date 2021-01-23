@@ -1,7 +1,6 @@
 #ifndef MRG_OPENGL_IMPL_FRAMEBUFFER
 #define MRG_OPENGL_IMPL_FRAMEBUFFER
 
-#include "Core/Warnings.h"
 #include "Renderer/APIs/OpenGL/Renderer2D.h"
 #include "Renderer/Framebuffer.h"
 

@@ -289,10 +289,7 @@ namespace MRG
 
 	void MachaLayer::openScene()
 	{
-		const auto filepath = FileDialogs::openFile("Open a scene",
-		                                            "Morrigu scene file",
-		                                            {"*.morrigu"},
-		                                            fmt::format("{}/runtime/scenes", std::filesystem::current_path().string()).c_str());
+		const auto filepath = FileDialogs::openFile("Open a scene", "Morrigu scene file", {"*.morrigu"}, nullptr);
 		if (!filepath)
 			return;
 
@@ -303,10 +300,7 @@ namespace MRG
 
 	void MachaLayer::saveScene()
 	{
-		const auto filepath = FileDialogs::saveFile("Save a scene as",
-		                                            "Morrigu scene file",
-		                                            {"*.morrigu"},
-		                                            fmt::format("{}/runtime/scenes", std::filesystem::current_path().string()).c_str());
+		const auto filepath = FileDialogs::saveFile("Save scene as", "Morrigu scene file", {"*.morrigu"}, nullptr);
 		if (!filepath)
 			return;
 

@@ -32,8 +32,8 @@ if (MSVC)
     
     # setting the default project in the solution
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EDITOR_PRJ_NAME})
-    set_property(TARGET ${EDITOR_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/${EDITOR_PRJ_NAME}/runtime)
-    set_property(TARGET ${RUNTIME_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/${RUNTIME_PRJ_NAME}/runtime)
+    set_property(TARGET ${EDITOR_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtimes/${EDITOR_PRJ_NAME})
+    set_property(TARGET ${RUNTIME_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtimes/${RUNTIME_PRJ_NAME})
 else()
     message("DETECTED NON MSVC COMPILER")
     # we consider that the majority of C++ compilers other than MSVC recognise the following flags,
@@ -53,17 +53,3 @@ target_include_directories(${EDITOR_PRJ_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_include_directories(${RUNTIME_PRJ_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 
 conan_target_link_libraries(${MAIN_PRJ_NAME})
-
-add_custom_target(
-    copyFilesToEditor ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/resources ${CMAKE_SOURCE_DIR}/src/${EDITOR_PRJ_NAME}/runtime/engine
-    DEPENDS ${MAIN_PRJ_NAME}
-)
-
-add_custom_target(
-    copyFilesToRuntime ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/resources ${CMAKE_SOURCE_DIR}/src/${RUNTIME_PRJ_NAME}/runtime/engine
-    DEPENDS ${MAIN_PRJ_NAME}
-)
