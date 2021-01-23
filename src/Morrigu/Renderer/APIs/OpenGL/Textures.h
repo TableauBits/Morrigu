@@ -12,8 +12,8 @@ namespace MRG::OpenGL
 	{
 	public:
 		Texture2D(uint32_t width, uint32_t height);
-		Texture2D(const std::string& path);
-		virtual ~Texture2D();
+		explicit Texture2D(const std::string& path);
+		~Texture2D() override;
 
 		bool operator==(const Texture& other) const override { return m_rendererID == ((OpenGL::Texture2D&)other).m_rendererID; }
 
@@ -26,11 +26,11 @@ namespace MRG::OpenGL
 
 		void setData(void* data, uint32_t size) override;
 
-		void bind(uint32_t slot = 0) const override;
+		void bind(uint32_t slot) const override;
 
 	private:
 		uint32_t m_width, m_height;
-		uint32_t m_rendererID;
+		uint32_t m_rendererID{0};
 		GLenum m_internalFormat, m_dataFormat;
 	};
 }  // namespace MRG::OpenGL

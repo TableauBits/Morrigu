@@ -8,7 +8,7 @@ namespace MRG::OpenGL
 	class VertexBuffer : public MRG::VertexBuffer
 	{
 	public:
-		VertexBuffer(uint32_t size);
+		explicit VertexBuffer(uint32_t size);
 		VertexBuffer(const void* vertices, uint32_t size);
 		~VertexBuffer() override;
 
@@ -20,7 +20,7 @@ namespace MRG::OpenGL
 		void setData(const void* data, uint32_t size) override;
 
 	private:
-		uint32_t m_rendererID;
+		uint32_t m_rendererID{0};
 	};
 
 	class IndexBuffer : public MRG::IndexBuffer
@@ -37,7 +37,7 @@ namespace MRG::OpenGL
 		[[nodiscard]] uint32_t getCount() const override { return m_count; };
 
 	private:
-		uint32_t m_rendererID;
+		uint32_t m_rendererID{0};
 		uint32_t m_count;
 	};
 }  // namespace MRG::OpenGL

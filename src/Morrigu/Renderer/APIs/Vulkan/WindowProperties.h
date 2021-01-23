@@ -18,15 +18,16 @@ namespace MRG::Vulkan
 
 	struct SwapChain
 	{
-		VkSwapchainKHR handle;
-		uint32_t minImageCount;
-		uint32_t imageCount;
+		VkSwapchainKHR handle{};
+		uint32_t minImageCount{};
+		uint32_t imageCount{};
 		std::vector<VkImage> images;
-		VkFormat imageFormat;
-		VkExtent2D extent;
+		VkFormat imageFormat{};
+		VkExtent2D extent{};
 		std::vector<VkImageView> imageViews;
+		std::vector<LightVulkanImage> objectIDBuffers;
 		std::vector<std::array<VkFramebuffer, 3>> frameBuffers;
-		LightVulkanImage depthBuffer;
+		LightVulkanImage depthBuffer{};
 	};
 
 	struct Queue
@@ -55,22 +56,22 @@ namespace MRG::Vulkan
 		    : MRG::WindowProperties{newTitle, newWidth, newHeight, newVSync}
 		{}
 
-		VkInstance instance;
-		VkDebugUtilsMessengerEXT messenger;
-		VkSurfaceKHR surface;
+		VkInstance instance{};
+		VkDebugUtilsMessengerEXT messenger{};
+		VkSurfaceKHR surface{};
 		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-		VkDevice device;
-		Queue graphicsQueue, presentQueue;
+		VkDevice device{};
+		Queue graphicsQueue{}, presentQueue{};
 		SwapChain swapChain;
-		VkDescriptorSetLayout descriptorSetLayout;
-		Pipeline clearingPipeline;
-		Pipeline renderingPipeline;
-		Pipeline ImGuiPipeline;
-		VkCommandPool commandPool;
+		VkDescriptorSetLayout descriptorSetLayout{};
+		Pipeline clearingPipeline{};
+		Pipeline renderingPipeline{};
+		VkRenderPass ImGuiRenderPass{};
+		VkCommandPool commandPool{};
 		std::vector<std::array<VkCommandBuffer, 3>> commandBuffers;
 		std::size_t currentFrame = 0;
-		VkPushConstantRange pushConstantRanges;
-		VkDescriptorPool ImGuiPool;
+		VkPushConstantRange pushConstantRanges{};
+		VkDescriptorPool ImGuiPool{};
 	};
 }  // namespace MRG::Vulkan
 

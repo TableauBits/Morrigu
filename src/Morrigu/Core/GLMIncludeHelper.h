@@ -17,4 +17,8 @@ DISABLE_WARNING_NONSTANDARD_EXTENSION
 #include <glm/gtc/type_ptr.hpp>
 DISABLE_WARNING_POP
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 #endif

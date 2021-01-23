@@ -1,11 +1,8 @@
 #include "Helper.h"
 
-#include "Core/Core.h"
-#include "Core/Logger.h"
-
 namespace MRG::Vulkan
 {
-	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice device, const VkSurfaceKHR surface)
+	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
 	{
 		SwapChainSupportDetails details;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
@@ -53,7 +50,7 @@ namespace MRG::Vulkan
 		bufferInfo.usage = usage;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		MRG_VKVALIDATE(vkCreateBuffer(device, &bufferInfo, nullptr, &buffer.handle), "failed to create vertex buffer!");
+		MRG_VKVALIDATE(vkCreateBuffer(device, &bufferInfo, nullptr, &buffer.handle), "failed to create buffer!")
 
 		VkMemoryRequirements memRequirements;
 		vkGetBufferMemoryRequirements(device, buffer.handle, &memRequirements);
@@ -63,7 +60,7 @@ namespace MRG::Vulkan
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
 
-		MRG_VKVALIDATE(vkAllocateMemory(device, &allocInfo, nullptr, &buffer.memoryHandle), "failed to allocate vertex buffer memory");
+		MRG_VKVALIDATE(vkAllocateMemory(device, &allocInfo, nullptr, &buffer.memoryHandle), "failed to allocate buffer memory")
 
 		vkBindBufferMemory(device, buffer.handle, buffer.memoryHandle, 0);
 	}
@@ -140,7 +137,7 @@ namespace MRG::Vulkan
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 
-		MRG_VKVALIDATE(vkCreateImage(device, &imageInfo, nullptr, &image), "failed to create image!");
+		MRG_VKVALIDATE(vkCreateImage(device, &imageInfo, nullptr, &image), "failed to create image!")
 
 		VkMemoryRequirements memRequirements{};
 		vkGetImageMemoryRequirements(device, image, &memRequirements);
@@ -150,7 +147,7 @@ namespace MRG::Vulkan
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
 
-		MRG_VKVALIDATE(vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory), "failed to allocate image memory!");
+		MRG_VKVALIDATE(vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory), "failed to allocate image memory!")
 
 		vkBindImageMemory(device, image, imageMemory, 0);
 	}
@@ -179,8 +176,6 @@ namespace MRG::Vulkan
 		barrier.subresourceRange.levelCount = 1;
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.layerCount = 1;
-		barrier.srcAccessMask = 0;  // TODO
-		barrier.dstAccessMask = 0;  // TODO
 
 		switch (oldLayout) {
 		case VK_IMAGE_LAYOUT_UNDEFINED: {
@@ -209,7 +204,7 @@ namespace MRG::Vulkan
 		} break;
 
 		default: {
-			MRG_CORE_ASSERT(false, "Layout transition not currently supported!");
+			MRG_CORE_ASSERT(false, "Layout transition not currently supported!")
 		} break;
 		}
 
@@ -235,7 +230,7 @@ namespace MRG::Vulkan
 		} break;
 
 		default: {
-			MRG_CORE_ASSERT(false, "Layout transition not currently supported!");
+			MRG_CORE_ASSERT(false, "Layout transition not currently supported!")
 		} break;
 		}
 
@@ -263,7 +258,7 @@ namespace MRG::Vulkan
 		endSingleTimeCommand(data, commandBuffer);
 	}
 
-	[[nodiscard]] VkImageView createImageView(const VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+	[[nodiscard]] VkImageView createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
 	{
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -277,7 +272,7 @@ namespace MRG::Vulkan
 		viewInfo.subresourceRange.layerCount = 1;
 
 		VkImageView imageView;
-		MRG_VKVALIDATE(vkCreateImageView(device, &viewInfo, nullptr, &imageView), "failed to create texture image view!");
+		MRG_VKVALIDATE(vkCreateImageView(device, &viewInfo, nullptr, &imageView), "failed to create texture image view!")
 
 		return imageView;
 	}

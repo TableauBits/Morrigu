@@ -60,7 +60,7 @@ namespace MRG
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput | EventCategoryMouseButton)
 
 	protected:
-		MouseButtonEvent(const MouseCode button) : m_button(button) {}
+		explicit MouseButtonEvent(const MouseCode button) : m_button(button) {}
 
 		MouseCode m_button;
 	};
@@ -68,7 +68,7 @@ namespace MRG
 	class MouseButtonPressedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonPressedEvent(const MouseCode button) : MouseButtonEvent(button) {}
+		explicit MouseButtonPressedEvent(const MouseCode button) : MouseButtonEvent(button) {}
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -83,7 +83,7 @@ namespace MRG
 	class MouseButtonReleasedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonReleasedEvent(const MouseCode button) : MouseButtonEvent(button) {}
+		explicit MouseButtonReleasedEvent(const MouseCode button) : MouseButtonEvent(button) {}
 
 		[[nodiscard]] std::string toString() const override
 		{

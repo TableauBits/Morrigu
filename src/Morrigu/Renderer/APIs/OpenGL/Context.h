@@ -10,7 +10,7 @@ namespace MRG::OpenGL
 	class Context : public MRG::Context
 	{
 	public:
-		Context(GLFWwindow* window);
+		explicit Context(GLFWwindow* window);
 
 		void swapBuffers() override;
 		void swapInterval(int interval) override;

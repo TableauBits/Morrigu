@@ -10,8 +10,8 @@ namespace MRG::Vulkan
 	{
 	public:
 		Texture2D(uint32_t width, uint32_t height);
-		Texture2D(const std::string& path);
-		virtual ~Texture2D();
+		explicit Texture2D(const std::string& path);
+		~Texture2D() override;
 
 		void destroy() override;
 
@@ -20,13 +20,13 @@ namespace MRG::Vulkan
 		[[nodiscard]] ImTextureID getImTextureID() override;
 		[[nodiscard]] VkImage& getHandle() { return m_imageHandle; }
 		[[nodiscard]] VkDeviceMemory& getMemoryHandle() { return m_memoryHandle; }
-		[[nodiscard]] VkFormat getFormat() { return VK_FORMAT_R8G8B8A8_UNORM; }
+		[[nodiscard]] static VkFormat getFormat() { return VK_FORMAT_R8G8B8A8_UNORM; }
 
 		bool operator==(const Texture& other) const override { return m_imageHandle == ((Vulkan::Texture2D&)other).m_imageHandle; }
 
 		void setData(void* data, uint32_t size) override;
 
-		void bind(uint32_t slot = 0) const override;
+		void bind(uint32_t slot) const override;
 
 		[[nodiscard]] VkImageView getImageView() const { return m_imageView; };
 		[[nodiscard]] VkSampler getSampler() const { return m_sampler; };
@@ -34,10 +34,10 @@ namespace MRG::Vulkan
 	private:
 		ImTextureID m_ImTextureID = nullptr;
 
-		VkImage m_imageHandle;
-		VkDeviceMemory m_memoryHandle;
-		VkImageView m_imageView;
-		VkSampler m_sampler;
+		VkImage m_imageHandle{};
+		VkDeviceMemory m_memoryHandle{};
+		VkImageView m_imageView{};
+		VkSampler m_sampler{};
 		uint32_t m_width, m_height;
 	};
 }  // namespace MRG::Vulkan

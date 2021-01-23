@@ -19,7 +19,7 @@ namespace MRG::Vulkan
 		std::optional<uint32_t> graphicsFamily;
 		std::optional<uint32_t> presentFamily;
 
-		[[nodiscard]] bool isComplete() { return graphicsFamily.has_value() && presentFamily.has_value(); }
+		[[nodiscard]] bool isComplete() const { return graphicsFamily.has_value() && presentFamily.has_value(); }
 	};
 
 	struct SwapChainSupportDetails
@@ -29,7 +29,7 @@ namespace MRG::Vulkan
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
-	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice device, const VkSurfaceKHR surface);
+	[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 
 	[[nodiscard]] uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void createBuffer(VkDevice device,
@@ -57,7 +57,7 @@ namespace MRG::Vulkan
 	void transitionImageLayoutInline(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 	void copyBufferToImage(const MRG::Vulkan::WindowProperties* data, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
-	[[nodiscard]] VkImageView createImageView(const VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+	[[nodiscard]] VkImageView createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 }  // namespace MRG::Vulkan
 
 #endif

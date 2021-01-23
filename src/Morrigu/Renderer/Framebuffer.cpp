@@ -11,17 +11,17 @@ namespace MRG
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
 			return createRef<OpenGL::Framebuffer>(spec);
-		} break;
+		}
 
 		case RenderingAPI::API::Vulkan: {
 			return createRef<Vulkan::Framebuffer>(spec);
-		} break;
+		}
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()))
 			return nullptr;
-		} break;
+		}
 		}
 	}
 }  // namespace MRG

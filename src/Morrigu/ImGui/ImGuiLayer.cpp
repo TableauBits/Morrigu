@@ -5,7 +5,6 @@
 #include "Renderer/RenderingAPI.h"
 
 #include "Renderer/APIs/Vulkan/Helper.h"
-#include "Renderer/APIs/Vulkan/WindowProperties.h"
 #include "Renderer/Renderer2D.h"
 
 #include <ImGui/bindings/imgui_impl_glfw.h>
@@ -13,13 +12,15 @@
 #include <ImGui/bindings/imgui_impl_vulkan.h>
 #include <imgui.h>
 
+#include <ImGuizmo.h>
+
 namespace MRG
 {
 	ImGuiLayer::ImGuiLayer() : Layer{"ImGui Layer"} {}
 
 	void ImGuiLayer::onAttach()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -72,7 +73,7 @@ namespace MRG
 			pool_info.pPoolSizes = pool_sizes;
 
 			MRG_VKVALIDATE(vkCreateDescriptorPool(data->device, &pool_info, nullptr, &data->ImGuiPool),
-			               "failed to create imgui descriptor pool!");
+			               "failed to create imgui descriptor pool!")
 
 			ImGui_ImplGlfw_InitForVulkan(window, true);
 
@@ -85,7 +86,7 @@ namespace MRG
 			init_info.MinImageCount = data->swapChain.minImageCount;
 			init_info.ImageCount = data->swapChain.imageCount;
 
-			ImGui_ImplVulkan_Init(&init_info, data->ImGuiPipeline.renderPass);
+			ImGui_ImplVulkan_Init(&init_info, data->ImGuiRenderPass);
 
 			auto commandBuffer = Vulkan::beginSingleTimeCommand(data);
 			ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
@@ -96,14 +97,14 @@ namespace MRG
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()))
 		} break;
 		}
 	}
 
 	void ImGuiLayer::onDetach()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
@@ -119,7 +120,7 @@ namespace MRG
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()))
 		} break;
 		}
 
@@ -138,7 +139,7 @@ namespace MRG
 
 	void ImGuiLayer::begin()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		switch (RenderingAPI::getAPI()) {
 		case RenderingAPI::API::OpenGL: {
@@ -147,24 +148,26 @@ namespace MRG
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
+			ImGuizmo::BeginFrame();
 		} break;
 
 		case RenderingAPI::API::Vulkan: {
 			ImGui_ImplVulkan_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
+			ImGuizmo::BeginFrame();
 		} break;
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()))
 		} break;
 		}
 	}
 
 	void ImGuiLayer::end()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		auto& io = ImGui::GetIO();
 		auto& app = Application::get();
@@ -190,7 +193,7 @@ namespace MRG
 
 		case RenderingAPI::API::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()));
+			MRG_CORE_ASSERT(false, fmt::format("UNSUPPORTED RENDERER API OPTION! ({})", RenderingAPI::getAPI()))
 		} break;
 		}
 	}

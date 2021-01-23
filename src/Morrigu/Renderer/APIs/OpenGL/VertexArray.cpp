@@ -6,29 +6,33 @@
 
 namespace
 {
-	[[nodiscard]] static GLenum ShaderDataTypeToOpenGLBaseType(MRG::ShaderDataType type)
+	[[nodiscard]] GLenum ShaderDataTypeToOpenGLBaseType(MRG::ShaderDataType type)
 	{
 		// clang-format off
 		switch (type)
 		{
-			case MRG::ShaderDataType::Float:  return GL_FLOAT;
-			case MRG::ShaderDataType::Float2: return GL_FLOAT;
-			case MRG::ShaderDataType::Float3: return GL_FLOAT;
-			case MRG::ShaderDataType::Float4: return GL_FLOAT;
-
-			case MRG::ShaderDataType::Mat3:   return GL_FLOAT;
+			case MRG::ShaderDataType::Float:
+			case MRG::ShaderDataType::Float2:
+			case MRG::ShaderDataType::Float3:
+			case MRG::ShaderDataType::Float4:
+			case MRG::ShaderDataType::Mat3:
 			case MRG::ShaderDataType::Mat4:   return GL_FLOAT;
 
-			case MRG::ShaderDataType::Int:    return GL_INT;
-			case MRG::ShaderDataType::Int2:   return GL_INT;
-			case MRG::ShaderDataType::Int3:   return GL_INT;
+			case MRG::ShaderDataType::Int:
+			case MRG::ShaderDataType::Int2:
+			case MRG::ShaderDataType::Int3:
 			case MRG::ShaderDataType::Int4:   return GL_INT;
+
+			case MRG::ShaderDataType::UInt:
+			case MRG::ShaderDataType::UInt2:
+			case MRG::ShaderDataType::UInt3:
+			case MRG::ShaderDataType::UInt4:   return GL_UNSIGNED_INT;
 
 			case MRG::ShaderDataType::Bool:   return GL_BOOL;
 
 			case MRG::ShaderDataType::None:
 			default: {
-				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
+				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type))
 				return GL_INVALID_ENUM;
 			}
 		}
@@ -40,35 +44,35 @@ namespace MRG::OpenGL
 {
 	VertexArray::VertexArray()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		glCreateVertexArrays(1, &m_rendererID);
 	}
 	VertexArray::~VertexArray()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		destroy();
+		VertexArray::destroy();
 	}
 
 	void VertexArray::bind() const
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		glBindVertexArray(m_rendererID);
 	}
 	void VertexArray::unbind() const
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		glBindVertexArray(0);
 	}
 
 	void VertexArray::addVertexBuffer(const Ref<MRG::VertexBuffer>& vertexBuffer)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		MRG_CORE_ASSERT(vertexBuffer->layout.getElements().size() != 0, "Vertex Buffer layout has not been set!");
+		MRG_CORE_ASSERT(!vertexBuffer->layout.getElements().empty(), "Vertex Buffer layout has not been set!")
 
 		glBindVertexArray(m_rendererID);
 		vertexBuffer->bind();
@@ -91,7 +95,7 @@ namespace MRG::OpenGL
 
 	void VertexArray::setIndexBuffer(const Ref<MRG::IndexBuffer>& indexBuffer)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		glBindVertexArray(m_rendererID);
 		indexBuffer->bind();

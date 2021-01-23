@@ -11,18 +11,19 @@ namespace MRG
 	{
 	public:
 		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const Ref<Scene>& scene);
+		explicit SceneHierarchyPanel(const Ref<Scene>& scene);
 
 		void setContext(const Ref<Scene>& scene);
 
 		void onImGuiRender();
+
+		Entity selectedEntity;
 
 	private:
 		void drawEntityNode(Entity& entity);
 		void drawComponents(Entity& entity);
 
 		Ref<Scene> m_context;
-		Entity m_selectedEntity;
 	};
 }  // namespace MRG
 

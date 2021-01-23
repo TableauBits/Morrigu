@@ -14,6 +14,7 @@ namespace MRG
 		Float, Float2, Float3, Float4,
 		Mat3, Mat4,
 		Int, Int2, Int3, Int4,
+		UInt, UInt2, UInt3, UInt4,
 		Bool
 	};
 
@@ -34,11 +35,16 @@ namespace MRG
 		case ShaderDataType::Int3:   return 4 * 3;
 		case ShaderDataType::Int4:   return 4 * 4;
 
+		case ShaderDataType::UInt:    return 4 * 1;
+		case ShaderDataType::UInt2:   return 4 * 2;
+		case ShaderDataType::UInt3:   return 4 * 3;
+		case ShaderDataType::UInt4:   return 4 * 4;
+
 		case ShaderDataType::Bool:   return 1;
 
 		case ShaderDataType::None:
 		default: {
-			MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
+			MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type))
 			return 0;
 		}
 		}
@@ -49,14 +55,14 @@ namespace MRG
 	struct BufferElement
 	{
 		std::string name;
-		ShaderDataType type;
-		uint32_t size;
-		std::size_t offset;
-		bool isNormalized;
+		ShaderDataType type{ShaderDataType::None};
+		uint32_t size{0};
+		std::size_t offset{0};
+		bool isNormalized{false};
 
 		BufferElement() = default;
 		BufferElement(ShaderDataType bufferType, const char* bufferName, bool normalized = false)
-		    : name(bufferName), type(bufferType), size(ShaderDataTypeSize(bufferType)), offset(0), isNormalized(normalized)
+		    : name(bufferName), type(bufferType), size(ShaderDataTypeSize(bufferType)), isNormalized(normalized)
 		{}
 
 		[[nodiscard]] uint32_t getComponentCount() const
@@ -77,11 +83,16 @@ namespace MRG
 			case ShaderDataType::Int3:   return 3;
 			case ShaderDataType::Int4:   return 4;
 
+			case ShaderDataType::UInt:    return 1;
+			case ShaderDataType::UInt2:   return 2;
+			case ShaderDataType::UInt3:   return 3;
+			case ShaderDataType::UInt4:   return 4;
+
 			case ShaderDataType::Bool:   return 1;
 
 			case ShaderDataType::None:
 			default: {
-				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
+				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type))
 				return 0;
 			}
 			}

@@ -14,7 +14,7 @@ namespace MRG
 	{
 	private:
 	public:
-		Application(const char* name = "Morrigu App");
+		explicit Application(const char* name = "Morrigu App");
 		virtual ~Application();
 
 		void onEvent(Event& event);
@@ -34,7 +34,7 @@ namespace MRG
 		bool onWindowClose(WindowCloseEvent& event);
 		bool onWindowResize(WindowResizeEvent& event);
 
-		std::unique_ptr<Window> m_window;
+		Scope<Window> m_window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_running = true;
 		bool m_minimized = false;

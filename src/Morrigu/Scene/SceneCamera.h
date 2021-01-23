@@ -15,7 +15,7 @@ namespace MRG
 		};
 
 		SceneCamera();
-		virtual ~SceneCamera() = default;
+		~SceneCamera() override = default;
 
 		void setOrthographic(float size, float nearClip, float farClip);
 		void setPerspective(float verticalFOV, float nearClip, float farClip);

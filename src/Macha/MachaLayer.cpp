@@ -1,8 +1,14 @@
 #include "MachaLayer.h"
 
-#include "Renderer/RenderingAPI.h"
+#include "Maths/Maths.h"
 #include "Scene/SceneSerializer.h"
 #include "Utils/FileDialogs.h"
+
+#include <imgui.h>
+///
+#include <ImGuizmo.h>
+
+#include <filesystem>
 
 namespace MRG
 {
@@ -10,20 +16,22 @@ namespace MRG
 
 	void MachaLayer::onAttach()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_renderTarget = Framebuffer::create({1280, 720});
 		Renderer2D::setRenderTarget(m_renderTarget);
 		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
 
+		m_editorCamera = EditorCamera{30.f, 1.778f, 0.1f, 100.f};
+
 		newScene();
 	}
 
-	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION(); }
+	void MachaLayer::onDetach() { MRG_PROFILE_FUNCTION() }
 
 	void MachaLayer::onUpdate(Timestep ts)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_frameTime = ts;
 
@@ -31,41 +39,41 @@ namespace MRG
 		if (const auto spec = m_renderTarget->getSpecification();
 		    m_viewportSize.x > 0.f && m_viewportSize.y > 0.f && (spec.width != m_viewportSize.x || spec.height != m_viewportSize.y)) {
 			m_renderTarget->resize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
+			m_editorCamera.setViewportSize(m_viewportSize.x, m_viewportSize.y);
 			m_activeScene->onViewportResize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
 		}
 
+		m_editorCamera.onUpdate(ts);
+
 		Renderer2D::resetStats();
-		MRG_PROFILE_SCOPE("Render prep");
+		MRG_PROFILE_SCOPE("Render prep")
 		Renderer2D::clear();
 
-		m_activeScene->onUpdate(ts);
+		m_activeScene->onEditorUpdate(ts, m_editorCamera);
 	}
 
 	void MachaLayer::onImGuiRender()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto fps = 1 / m_frameTime;
 		const auto tsColor = (fps < 30) ? ImVec4{1.f, 0.f, 0.f, 1.f} : ImVec4{0.f, 1.f, 0.f, 1.f};
 		const auto stats = Renderer2D::getStats();
 
 		static bool dockspaceOpen = true;
-		bool opt_fullscreen = true;
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
 		// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
 		// because it would be confusing to have two docking targets within each others.
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-		if (opt_fullscreen) {
-			ImGuiViewport* viewport = ImGui::GetMainViewport();
-			ImGui::SetNextWindowPos(viewport->Pos);
-			ImGui::SetNextWindowSize(viewport->Size);
-			ImGui::SetNextWindowViewport(viewport->ID);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-			window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-		}
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->Pos);
+		ImGui::SetNextWindowSize(viewport->Size);
+		ImGui::SetNextWindowViewport(viewport->ID);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
 		// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we
 		// ask Begin() to not render a background.
@@ -81,8 +89,7 @@ namespace MRG
 		ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
 		ImGui::PopStyleVar();
 
-		if (opt_fullscreen)
-			ImGui::PopStyleVar(2);
+		ImGui::PopStyleVar(2);
 
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
@@ -118,6 +125,66 @@ namespace MRG
 
 		m_sceneHierarchyPanel.onImGuiRender();
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
+		ImGui::Begin("Viewport");
+		m_viewportWindowPosition = ImGui::GetWindowPos();
+		m_viewportPosition = ImGui::GetWindowContentRegionMin();
+		m_viewportFocused = ImGui::IsWindowFocused();
+
+		m_viewportHovered = ImGui::IsWindowHovered();
+		Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused && !m_viewportHovered);
+
+		auto viewportSize = ImGui::GetContentRegionAvail();
+		m_viewportSize = {viewportSize.x, viewportSize.y};
+
+		ImGui::Image(m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
+
+		// Drawing gizmos
+		auto selectedEntity = m_sceneHierarchyPanel.selectedEntity;
+		if (selectedEntity && m_gizmoType != -1) {
+			ImGuizmo::SetDrawlist();
+
+			const auto windowWidth = static_cast<float>(ImGui::GetWindowWidth());
+			const auto windowHeight = static_cast<float>(ImGui::GetWindowHeight());
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+			// Editor camera
+			auto cameraProj = m_editorCamera.getProjection();
+			auto cameraView = m_editorCamera.getViewMatrix();
+			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
+				cameraProj[1][1] *= -1;
+
+			// Transform
+			auto& tc = selectedEntity.getComponent<TransformComponent>();
+			auto transform = tc.getTransform();
+
+			// Snapping
+			bool snap = Input::isKeyPressed(Key::LeftControl);
+			float snapValue = m_gizmoType == ImGuizmo::OPERATION::ROTATE ? 45.f : 0.5f;
+			float snapValues[3] = {snapValue, snapValue, snapValue};
+
+			if (!Input::isKeyPressed(Key::LeftAlt))
+				ImGuizmo::Manipulate(glm::value_ptr(cameraView),
+				                     glm::value_ptr(cameraProj),
+				                     static_cast<ImGuizmo::OPERATION>(m_gizmoType),
+				                     ImGuizmo::LOCAL,
+				                     glm::value_ptr(transform),
+				                     nullptr,
+				                     snap ? snapValues : nullptr);
+
+			if (ImGuizmo::IsUsing()) {
+				glm::vec3 translation, rotation, scale;
+				Maths::decomposeTransform(transform, translation, rotation, scale);
+
+				glm::vec3 deltaRotation = rotation - tc.rotation;
+				tc.translation = translation;
+				tc.rotation += deltaRotation;
+				tc.scale = scale;
+			}
+		}
+		ImGui::End();
+		ImGui::PopStyleVar();
+
 		ImGui::Begin("Debug");
 		{
 			ImGui::Text("Renderer2D stats:");
@@ -129,29 +196,17 @@ namespace MRG
 		}
 		ImGui::End();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0, 0});
-		ImGui::Begin("Viewport");
-		{
-			m_viewportFocused = ImGui::IsWindowFocused();
-			m_viewportHovered = ImGui::IsWindowHovered();
-			Application::get().getImGuiLayer()->blockEvents(!m_viewportFocused || !m_viewportHovered);
-
-			auto viewportSize = ImGui::GetContentRegionAvail();
-			m_viewportSize = {viewportSize.x, viewportSize.y};
-
-			ImGui::Image(
-			  m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
-		}
-		ImGui::End();
-		ImGui::PopStyleVar();
-
 		ImGui::End();
 	}
 
 	void MachaLayer::onEvent(Event& event)
 	{
+		m_editorCamera.onEvent(event);
+
 		EventDispatcher dispatcher{event};
 		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& keyPressedEvent) { return onKeyPressed(keyPressedEvent); });
+		dispatcher.dispatch<MouseButtonPressedEvent>(
+		  [this](MouseButtonPressedEvent& mouseButtonPressedEvent) { return onMousePressed(mouseButtonPressedEvent); });
 	}
 
 	bool MachaLayer::onKeyPressed(KeyPressedEvent& event)
@@ -164,19 +219,36 @@ namespace MRG
 		// bool alt = Input::isKeyPressed(Key::LeftAlt) || Input::isKeyPressed(Key::RightAlt);
 
 		switch (event.getKeyCode()) {
+		// File shortcuts
 		case Key::N: {
 			if (control)
 				newScene();
 		} break;
-
 		case Key::O: {
 			if (control)
 				openScene();
 		} break;
-
 		case Key::S: {
 			if (control && shift)
 				saveScene();
+		} break;
+
+		// Gizmos
+		case Key::Q: {
+			if (!ImGuizmo::IsUsing())
+				m_gizmoType = -1;
+		} break;
+		case Key::W: {
+			if (!ImGuizmo::IsUsing())
+				m_gizmoType = ImGuizmo::OPERATION::TRANSLATE;
+		} break;
+		case Key::E: {
+			if (!ImGuizmo::IsUsing())
+				m_gizmoType = ImGuizmo::OPERATION::ROTATE;
+		} break;
+		case Key::R: {
+			if (!ImGuizmo::IsUsing())
+				m_gizmoType = ImGuizmo::OPERATION::SCALE;
 		} break;
 
 		default: {
@@ -185,6 +257,27 @@ namespace MRG
 		}
 
 		return true;
+	}
+
+	bool MachaLayer::onMousePressed(MouseButtonPressedEvent& event)
+	{
+		if (event.getMouseButton() == Mouse::ButtonLeft) {
+			if (!Input::isKeyPressed(Key::LeftAlt)) {
+				auto [mouseX, mouseY] = ImGui::GetMousePos();
+				glm::vec2 offsetPosition = {mouseX - (m_viewportWindowPosition.x + m_viewportPosition.x),
+				                            mouseY - (m_viewportWindowPosition.y + m_viewportPosition.y)};
+				if (offsetPosition.x >= 0 && offsetPosition.y >= 0 && offsetPosition.x < m_viewportSize.x &&
+				    offsetPosition.y < m_viewportSize.y && !ImGuizmo::IsOver()) {
+					const auto id =
+					  m_activeScene->objectIDAt(static_cast<uint32_t>(offsetPosition.x), static_cast<uint32_t>(offsetPosition.y));
+
+					m_sceneHierarchyPanel.selectedEntity = MRG::Entity{static_cast<entt::entity>(id), m_activeScene.get()};
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	void MachaLayer::newScene()
@@ -196,7 +289,10 @@ namespace MRG
 
 	void MachaLayer::openScene()
 	{
-		const auto filepath = FileDialogs::openFile("Open a scene", "Morrigu scene file", {"*.morrigu"});
+		const auto filepath = FileDialogs::openFile("Open a scene",
+		                                            "Morrigu scene file",
+		                                            {"*.morrigu"},
+		                                            fmt::format("{}/runtime/scenes", std::filesystem::current_path().string()).c_str());
 		if (!filepath)
 			return;
 
@@ -207,7 +303,10 @@ namespace MRG
 
 	void MachaLayer::saveScene()
 	{
-		const auto filepath = FileDialogs::saveFile("Save a scene as", "Morrigu scene file", {"*.morrigu"});
+		const auto filepath = FileDialogs::saveFile("Save a scene as",
+		                                            "Morrigu scene file",
+		                                            {"*.morrigu"},
+		                                            fmt::format("{}/runtime/scenes", std::filesystem::current_path().string()).c_str());
 		if (!filepath)
 			return;
 

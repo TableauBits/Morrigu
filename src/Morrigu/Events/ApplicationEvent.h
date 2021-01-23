@@ -12,8 +12,8 @@ namespace MRG
 	public:
 		WindowResizeEvent(uint32_t width, uint32_t height) : m_width(width), m_height(height) {}
 
-		[[nodiscard]] uint32_t getWidth() { return m_width; }
-		[[nodiscard]] uint32_t getHeight() { return m_height; }
+		[[nodiscard]] uint32_t getWidth() const { return m_width; }
+		[[nodiscard]] uint32_t getHeight() const { return m_height; }
 
 		[[nodiscard]] std::string toString() const override
 		{

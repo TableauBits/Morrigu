@@ -58,18 +58,18 @@ namespace MRG
 
 		bool handled = false;
 
-		virtual EventType getEventType() const = 0;
-		virtual const char* getName() const = 0;
-		virtual int getCategoryFlags() const = 0;
-		virtual std::string toString() const { return getName(); }
+		[[nodiscard]] virtual EventType getEventType() const = 0;
+		[[nodiscard]] virtual const char* getName() const = 0;
+		[[nodiscard]] virtual int getCategoryFlags() const = 0;
+		[[nodiscard]] virtual std::string toString() const { return getName(); }
 
-		[[nodiscard]] bool isInCategory(EventCategory category) { return getCategoryFlags() & category; }
+		[[nodiscard]] bool isInCategory(EventCategory category) const { return getCategoryFlags() & category; }
 	};
 
 	class EventDispatcher
 	{
 	public:
-		EventDispatcher(Event& event) : m_event(event) {}
+		explicit EventDispatcher(Event& event) : m_event(event) {}
 
 		template<typename T, typename F>
 		bool dispatch(const F& function)

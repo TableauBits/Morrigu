@@ -49,7 +49,7 @@ namespace MRG
 			if (m_currentSession) {
 				if (Logger::getEngineLogger()) {
 					MRG_ENGINE_ERROR(
-					  "Instrumentor::beginSession('{}') called when session '{}' was already active!", name, m_currentSession->name);
+					  "Instrumentor::beginSession('{}') called when session '{}' was already active!", name, m_currentSession->name)
 				}
 				internalEndSession();
 			}
@@ -60,7 +60,7 @@ namespace MRG
 				m_currentSession = new InstrumentationSession{name};
 			} else {
 				if (Logger::getEngineLogger()) {
-					MRG_ENGINE_ERROR("Instrumentor could not open file '{}'", filepath);
+					MRG_ENGINE_ERROR("Instrumentor could not open file '{}'", filepath)
 				}
 			}
 		}
@@ -137,7 +137,10 @@ namespace MRG
 	class InstrumentationTimer
 	{
 	public:
-		InstrumentationTimer(const char* name) : m_name(name), m_stopped(false) { m_startTimePoint = std::chrono::steady_clock::now(); }
+		explicit InstrumentationTimer(const char* name) : m_name(name), m_stopped(false)
+		{
+			m_startTimePoint = std::chrono::steady_clock::now();
+		}
 
 		~InstrumentationTimer()
 		{
@@ -168,10 +171,10 @@ namespace MRG
 // clang-format off
 #define MRG_PROFILING 0
 #if MRG_PROFILING
-	#define MRG_PROFILE_BEGIN_SESSION(name, filepath) ::MRG::Instrumentor::get().beginSession(name, filepath)
-	#define MRG_PROFILE_END_SESSION() ::MRG::Instrumentor::get().endSession()
+	#define MRG_PROFILE_BEGIN_SESSION(name, filepath) ::MRG::Instrumentor::get().beginSession(name, filepath);
+	#define MRG_PROFILE_END_SESSION() ::MRG::Instrumentor::get().endSession();
 	#define MRG_PROFILE_SCOPE(name) ::MRG::InstrumentationTimer MRG_PREPOC_EVALUATOR(timer,__LINE__)(name); // we need this workaround to uniquely define timers
-	#define MRG_PROFILE_FUNCTION() MRG_PROFILE_SCOPE(MRG_FUNCSIG)
+	#define MRG_PROFILE_FUNCTION() MRG_PROFILE_SCOPE(MRG_FUNCSIG);
 #else
 	#define MRG_PROFILE_BEGIN_SESSION(name, filepath)
 	#define MRG_PROFILE_END_SESSION()

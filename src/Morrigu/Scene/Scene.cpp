@@ -2,14 +2,9 @@
 
 #include "Renderer/Renderer2D.h"
 #include "Scene/Components.h"
-#include "Scene/Entity.h"
 
 namespace MRG
 {
-	Scene::Scene() {}
-
-	Scene::~Scene() {}
-
 	Entity Scene::createEntity(const std::string& name)
 	{
 		Entity entity = {m_registry.create(), this};
@@ -18,7 +13,7 @@ namespace MRG
 		return entity;
 	}
 
-	void Scene::destroyEntity(Entity entity) { m_registry.destroy(entity); }
+	void Scene::destroyEntity(const Entity entity) { m_registry.destroy(static_cast<entt::entity>(entity)); }
 
 	void Scene::onUpdate(Timestep ts)
 	{
@@ -34,31 +29,36 @@ namespace MRG
 			nsc.instance->onUpdate(ts);
 		});
 
-		// 2D rendering
-		Camera* mainCamera = nullptr;
-		glm::mat4 cameraTransform;
-		auto view = m_registry.view<TransformComponent, CameraComponent>();
-
-		for (const auto& entity : view) {
-			const auto [tc, cc] = view.get<TransformComponent, CameraComponent>(entity);
-			if (cc.primary) {
-				mainCamera = &cc.camera;
-				cameraTransform = tc.getTransform();
-				break;
-			}
-		}
+		auto mainCamera = getPrimaryCameraEntity();
 
 		if (mainCamera) {
-			Renderer2D::beginScene(*mainCamera, cameraTransform);
+			if (!mainCamera.value().hasComponent<TransformComponent>()) {
+				MRG_ENGINE_ERROR("Primary camera doesn't have a tranform component!")
+			}
+			Renderer2D::beginScene(mainCamera.value().getComponent<CameraComponent>().camera,
+			                       mainCamera.value().getComponent<TransformComponent>().getTransform());
 
 			const auto& group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (const auto& entity : group) {
 				const auto [tc, sc] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-				Renderer2D::drawQuad(tc.getTransform(), sc.color);
+				Renderer2D::drawQuad(tc.getTransform(), sc.color, static_cast<uint32_t>(entity));
 			}
 
 			Renderer2D::endScene();
 		}
+	}
+
+	void Scene::onEditorUpdate(Timestep, EditorCamera& camera)
+	{
+		Renderer2D::beginScene(camera);
+
+		const auto group = m_registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+		for (const auto& entity : group) {
+			auto [tc, src] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+			Renderer2D::drawQuad(tc.getTransform(), src.color, static_cast<uint32_t>(entity));
+		}
+
+		Renderer2D::endScene();
 	}
 
 	void Scene::onViewportResize(uint32_t width, uint32_t height)
@@ -72,6 +72,20 @@ namespace MRG
 			if (!cc.fixedAspectRatio)
 				cc.camera.setViewportSize(width, height);
 		}
+	}
+
+	uint32_t Scene::objectIDAt(uint32_t x, uint32_t y) { return Renderer2D::objectIDAt(x, y); }
+
+	std::optional<Entity> Scene::getPrimaryCameraEntity()
+	{
+		const auto view = m_registry.view<CameraComponent>();
+
+		for (const auto& entity : view) {
+			if (view.get<CameraComponent>(entity).primary)
+				return Entity{entity, this};
+		}
+
+		return std::nullopt;
 	}
 
 	template<>

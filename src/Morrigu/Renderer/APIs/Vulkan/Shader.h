@@ -11,8 +11,8 @@ namespace MRG::Vulkan
 	class Shader : public MRG::Shader
 	{
 	public:
-		Shader(const std::string& filePath);
-		virtual ~Shader();
+		explicit Shader(const std::string& filePath);
+		~Shader() override;
 		void destroy() override;
 
 		void bind() const override;

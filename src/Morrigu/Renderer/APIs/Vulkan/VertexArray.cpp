@@ -4,7 +4,7 @@
 
 namespace
 {
-	[[nodiscard]] static VkFormat ShaderDataTypeToVulkanBaseType(MRG::ShaderDataType type)
+	[[nodiscard]] VkFormat ShaderDataTypeToVulkanBaseType(MRG::ShaderDataType type)
 	{
 		// clang-format off
 		switch (type)
@@ -23,12 +23,17 @@ namespace
 			case MRG::ShaderDataType::Int3:   return VkFormat::VK_FORMAT_R32G32B32_SINT;
 			case MRG::ShaderDataType::Int4:   return VkFormat::VK_FORMAT_R32G32B32A32_SINT;
 
+			case MRG::ShaderDataType::UInt:    return VkFormat::VK_FORMAT_R8_UINT;
+			case MRG::ShaderDataType::UInt2:   return VkFormat::VK_FORMAT_R32G32_UINT;
+			case MRG::ShaderDataType::UInt3:   return VkFormat::VK_FORMAT_R32G32B32_UINT;
+			case MRG::ShaderDataType::UInt4:   return VkFormat::VK_FORMAT_R32G32B32A32_UINT;
+
 			// TODO: Get a better look at this
 			case MRG::ShaderDataType::Bool:   return VkFormat::VK_FORMAT_R8_SINT;
 
 			case MRG::ShaderDataType::None:
 			default: {
-				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type));
+				MRG_CORE_ASSERT(false, fmt::format("Invalid shader data type! ({})", type))
 				return VkFormat::VK_FORMAT_UNDEFINED;
 			}
 		}
@@ -38,40 +43,36 @@ namespace
 
 namespace MRG::Vulkan
 {
-	VertexArray::VertexArray()
-	{
-		MRG_PROFILE_FUNCTION();
+	// Vulkan doesn't have actual vertex array objects
 
-		// Vulkan doesn't have actual vertex array objects
+	// That may be a good place to some optimized memory allocation
+	// Having a VkDeviceMemory shared for both the vertex and index buffer
 
-		// That may be a good place to some optimized memory allocation
-		// Having a VkDeviceMemory shared for both the vertex and index buffer
-
-		// TODO ?
-	}
+	// TODO ?
+	VertexArray::VertexArray() = default;
 
 	VertexArray::~VertexArray()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		destroy();
+		VertexArray::destroy();
 	}
 
 	void VertexArray::bind() const
 	{
-		// MRG_PROFILE_FUNCTION();
+		// MRG_PROFILE_FUNCTION()
 	}
 	void VertexArray::unbind() const
 	{
-		// MRG_PROFILE_FUNCTION();
+		// MRG_PROFILE_FUNCTION()
 	}
 
 	void VertexArray::addVertexBuffer(const Ref<MRG::VertexBuffer>& vertexBuffer)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		MRG_CORE_ASSERT(m_vertexBuffers.size() == 0, "Only a single vertex buffer per vertex array is supported right now!");
-		MRG_CORE_ASSERT(vertexBuffer->layout.getElements().size() != 0, "Vertex Buffer layout has not been set!");
+		MRG_CORE_ASSERT(m_vertexBuffers.empty(), "Only a single vertex buffer per vertex array is supported right now!")
+		MRG_CORE_ASSERT(!vertexBuffer->layout.getElements().empty(), "Vertex Buffer layout has not been set!")
 
 		m_bindingDescription.binding = 0;
 		m_bindingDescription.stride = vertexBuffer->layout.getStride();
@@ -96,7 +97,7 @@ namespace MRG::Vulkan
 
 	void VertexArray::setIndexBuffer(const Ref<MRG::IndexBuffer>& indexBuffer)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_indexBuffer = indexBuffer;
 	}

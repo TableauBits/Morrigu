@@ -2,8 +2,11 @@
 #define MRG_CLASS_SCENE
 
 #include "Core/Timestep.h"
+#include "Renderer/EditorCamera.h"
 
-#include <entt/entt.hpp>
+#include <entt/entity/registry.hpp>
+
+#include <optional>
 
 namespace MRG
 {
@@ -12,14 +15,16 @@ namespace MRG
 	class Scene
 	{
 	public:
-		Scene();
-		~Scene();
-
 		Entity createEntity(const std::string& name = std::string{});
 		void destroyEntity(Entity entity);
 
 		void onUpdate(Timestep ts);
+		void onEditorUpdate(Timestep ts, EditorCamera& camera);
 		void onViewportResize(uint32_t width, uint32_t height);
+
+		[[nodiscard]] uint32_t objectIDAt(uint32_t x, uint32_t y);
+
+		[[nodiscard]] std::optional<Entity> getPrimaryCameraEntity();
 
 	private:
 		template<typename T>

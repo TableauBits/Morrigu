@@ -1,6 +1,9 @@
 build
 .vs
 .vscode
+cmake-build-release/
+cmake-build-debug/
+.idea/
 
 src/Morrigu/Vendor/ImGui/bindings
 src/**/runtime/engine

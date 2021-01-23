@@ -14,7 +14,7 @@ namespace MRG::OpenGL
 	{
 	public:
 		Shader(const std::string& filePath, MRG::Encoding encoding);
-		virtual ~Shader();
+		~Shader() override;
 		void destroy() override;
 
 		void bind() const override;
@@ -29,23 +29,23 @@ namespace MRG::OpenGL
 
 		[[nodiscard]] const std::string& getName() const override { return m_name; }
 
-		void uploadUniform(const std::string& name, int value);
-		void uploadUniform(const std::string& name, int* value, std::size_t count);
+		void uploadUniform(const std::string& name, int value) const;
+		void uploadUniform(const std::string& name, int* value, std::size_t count) const;
 
-		void uploadUniform(const std::string& name, float value);
-		void uploadUniform(const std::string& name, const glm::vec2& value);
-		void uploadUniform(const std::string& name, const glm::vec3& value);
-		void uploadUniform(const std::string& name, const glm::vec4& value);
+		void uploadUniform(const std::string& name, float value) const;
+		void uploadUniform(const std::string& name, const glm::vec2& value) const;
+		void uploadUniform(const std::string& name, const glm::vec3& value) const;
+		void uploadUniform(const std::string& name, const glm::vec4& value) const;
 
-		void uploadUniform(const std::string& name, const glm::mat3& matrix);
-		void uploadUniform(const std::string& name, const glm::mat4& matrix);
+		void uploadUniform(const std::string& name, const glm::mat3& matrix) const;
+		void uploadUniform(const std::string& name, const glm::mat4& matrix) const;
 
 	private:
-		[[nodiscard]] std::string readFile(const std::string& filePath);
+		[[nodiscard]] static std::string readFile(const std::string& filePath);
 		[[nodiscard]] std::unordered_map<GLenum, std::string> preProcess(const std::string& source, Encoding encoding);
 		void compile(const std::unordered_map<GLenum, std::string>& shaderSources);
 
-		uint32_t m_rendererID;
+		uint32_t m_rendererID{0};
 		std::string m_name;
 	};
 }  // namespace MRG::OpenGL

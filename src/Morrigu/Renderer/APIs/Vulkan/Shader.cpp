@@ -1,13 +1,10 @@
 #include "Shader.h"
 
-#include "Core/Core.h"
 #include "Debug/Instrumentor.h"
 #include "Renderer/APIs/Vulkan/Helper.h"
-#include "Renderer/APIs/Vulkan/WindowProperties.h"
 #include "Renderer/Renderer2D.h"
 
 #include <filesystem>
-#include <fstream>
 #include <ios>
 
 namespace
@@ -29,7 +26,7 @@ namespace
 		return buffer;
 	}
 
-	[[nodiscard]] VkShaderModule createShader(const std::vector<char>& code, const VkDevice device)
+	[[nodiscard]] VkShaderModule createShader(const std::vector<char>& code, VkDevice device)
 	{
 		VkShaderModule returnShader;
 
@@ -38,7 +35,7 @@ namespace
 		createInfo.codeSize = code.size();
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
-		MRG_VKVALIDATE(vkCreateShaderModule(device, &createInfo, nullptr, &returnShader), "failed to create shader!");
+		MRG_VKVALIDATE(vkCreateShaderModule(device, &createInfo, nullptr, &returnShader), "failed to create shader!")
 		return returnShader;
 	}
 }  // namespace
@@ -47,16 +44,16 @@ namespace MRG::Vulkan
 {
 	Shader::Shader(const std::string& filePath)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		std::filesystem::path shaderDir{filePath};
 		std::filesystem::path vertFile{filePath + "/vert.spv"};
 		std::filesystem::path fragFile{filePath + "/frag.spv"};
-		MRG_CORE_ASSERT(std::filesystem::exists(shaderDir), fmt::format("Directory '{}' does not exist!", filePath));
+		MRG_CORE_ASSERT(std::filesystem::exists(shaderDir), fmt::format("Directory '{}' does not exist!", filePath))
 		MRG_CORE_ASSERT(std::filesystem::is_directory(shaderDir),
-		                fmt::format("Specified path '{}' doesn't reference a directory!", filePath));
+		                fmt::format("Specified path '{}' doesn't reference a directory!", filePath))
 		MRG_CORE_ASSERT(std::filesystem::exists(vertFile) && std::filesystem::exists(fragFile),
-		                fmt::format("Directory '{}' does not contain vulkan shader files!", filePath));
+		                fmt::format("Directory '{}' does not contain vulkan shader files!", filePath))
 		m_name = shaderDir.stem().string();
 
 		const auto vertShaderSrc = readFile(vertFile.string());
@@ -68,11 +65,11 @@ namespace MRG::Vulkan
 		m_fragmentShaderModule = createShader(fragShaderSrc, data->device);
 	}
 
-	Shader::~Shader() { destroy(); }
+	Shader::~Shader() { Shader::destroy(); }
 
 	void Shader::destroy()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		if (m_isDestroyed)
 			return;

@@ -5,10 +5,12 @@ layout(binding = 1) uniform sampler2D u_textures[32];
 
 layout(location = 0) in vec4 v_color;
 layout(location = 1) in vec2 v_texCoord;
-layout(location = 2) in float v_texIndex;
+layout(location = 2) in flat float v_texIndex;
 layout(location = 3) in float v_tilingFactor;
+layout(location = 4) in flat uint v_objectID;
 
 layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 objectIDBuffer;
 
 void main() {
     color = v_color;
@@ -46,4 +48,8 @@ void main() {
 		case 30: color *= texture(u_textures[30], v_texCoord * v_tilingFactor); break;
 		case 31: color *= texture(u_textures[31], v_texCoord * v_tilingFactor); break;
 	}
+
+	// the object ID buffer is set to be 64 bits per pixel, so entity id becomes:
+	// ID=0x12345678 => R=0x5678 G=0x1234 G=0xffff A=0xffff
+	objectIDBuffer = vec4(float((v_objectID & 0xffff)) / 0xffff, float(((v_objectID >> 16) & 0xffff)) / 0xffff, 1, 1);
 }

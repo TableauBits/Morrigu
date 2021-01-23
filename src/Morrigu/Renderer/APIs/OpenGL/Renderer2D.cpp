@@ -1,23 +1,21 @@
 #include "Renderer2D.h"
 
-#include "Core/GLMIncludeHelper.h"
 #include "Debug/Instrumentor.h"
-#include "Renderer/RenderingAPI.h"
 
 namespace MRG::OpenGL
 {
 	void Renderer2D::init()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_quadVertexArray = VertexArray::create();
 
 		m_quadVertexBuffer = VertexBuffer::create(maxVertices * sizeof(QuadVertex));
-		m_quadVertexBuffer->layout = QuadVertex::layout;
+		m_quadVertexBuffer->layout = QuadVertex::getLayout();
 		m_quadVertexArray->addVertexBuffer(m_quadVertexBuffer);
 
 		m_qvbBase = new QuadVertex[maxVertices];
-		uint32_t* quadIndices = new uint32_t[maxIndices];
+		auto quadIndices = new uint32_t[maxIndices];
 
 		uint32_t offset = 0;
 		for (uint32_t i = 0; i < maxIndices; i += 6) {
@@ -52,7 +50,7 @@ namespace MRG::OpenGL
 
 	void Renderer2D::shutdown()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_textureShader->destroy();
 		m_whiteTexture->destroy();
@@ -74,21 +72,21 @@ namespace MRG::OpenGL
 
 	bool Renderer2D::beginFrame()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		return true;
 	}
 
 	bool Renderer2D::endFrame()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		return true;
 	}
 
 	void Renderer2D::beginScene(const Camera& camera, const glm::mat4& transform)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto& viewProjection = camera.getProjection() * glm::inverse(transform);
 
@@ -102,12 +100,12 @@ namespace MRG::OpenGL
 		m_sceneInProgress = true;
 	}
 
-	void Renderer2D::beginScene(const OrthoCamera& camera)
+	void Renderer2D::beginScene(const EditorCamera& camera)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_textureShader->bind();
-		m_textureShader->upload("u_viewProjection", camera.getProjectionViewMatrix());
+		m_textureShader->upload("u_viewProjection", camera.getViewProjection());
 
 		m_quadIndexCount = 0;
 		m_qvbPtr = m_qvbBase;
@@ -118,16 +116,16 @@ namespace MRG::OpenGL
 
 	void Renderer2D::endScene()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		uint32_t dataSize = static_cast<uint32_t>((uint8_t*)m_qvbPtr - (uint8_t*)m_qvbBase);
+		auto dataSize = static_cast<uint32_t>((uint8_t*)m_qvbPtr - (uint8_t*)m_qvbBase);
 		m_quadVertexBuffer->setData(m_qvbBase, dataSize);
 
 		flush();
 		m_sceneInProgress = false;
 	}
 
-	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t objectID)
 	{
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
@@ -141,6 +139,7 @@ namespace MRG::OpenGL
 			m_qvbPtr->texCoord = m_textureCoordinates[i];
 			m_qvbPtr->texIndex = texIndex;
 			m_qvbPtr->tilingFactor = tilingFactor;
+			m_qvbPtr->objectID = objectID;
 			++m_qvbPtr;
 		}
 
@@ -188,7 +187,7 @@ namespace MRG::OpenGL
 	{
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f});
 
-		drawQuad(transform, color);
+		drawQuad(transform, color, 0);
 	}
 
 	void Renderer2D::drawQuad(
@@ -204,7 +203,8 @@ namespace MRG::OpenGL
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
-		drawQuad(transform, color);
+		// TODO: This will completely break, but we're not exposing this for now. Fix it before everything breaks please.
+		drawQuad(transform, color, 0);
 	}
 
 	void Renderer2D::drawRotatedQuad(const glm::vec3& position,
@@ -217,6 +217,7 @@ namespace MRG::OpenGL
 		auto transform = glm::translate(glm::mat4{1.f}, position) * glm::scale(glm::mat4{1.f}, {size.x, size.y, 1.f}) *
 		                 glm::rotate(glm::mat4{1.f}, rotation, {0.f, 0.f, 1.f});
 
+		// TODO: This will completely break, but we're not exposing this for now. Fix it before everything breaks please.
 		drawQuad(transform, texture, tilingFactor, tintColor);
 	}
 
@@ -242,6 +243,8 @@ namespace MRG::OpenGL
 		m_framebuffer->unbind();
 		m_framebuffer = nullptr;
 	}
+
+	uint32_t Renderer2D::objectIDAt(uint32_t x, uint32_t y) { return x + y; }
 
 	void Renderer2D::resetStats() { m_stats = {}; }
 
@@ -269,7 +272,7 @@ namespace MRG::OpenGL
 
 	void Renderer2D::drawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		const auto indexCount = count ? count : vertexArray->getIndexBuffer()->getCount();
 

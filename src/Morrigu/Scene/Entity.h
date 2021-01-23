@@ -18,7 +18,7 @@ namespace MRG
 		template<typename T, typename... Args>
 		T& addComponent(Args&&... args)
 		{
-			MRG_CORE_ASSERT(!hasComponent<T>(), "Entity already has component!");
+			MRG_CORE_ASSERT(!hasComponent<T>(), "Entity already has component!")
 			auto& component = m_scene->m_registry.emplace<T>(m_handle, std::forward<Args>(args)...);
 			m_scene->onComponentAdded<T>(*this, component);
 
@@ -28,7 +28,7 @@ namespace MRG
 		template<typename T>
 		[[nodiscard]] T& getComponent()
 		{
-			MRG_CORE_ASSERT(hasComponent<T>(), "Entity does not have component!");
+			MRG_CORE_ASSERT(hasComponent<T>(), "Entity does not have component!")
 			return m_scene->m_registry.get<T>(m_handle);
 		}
 
@@ -41,12 +41,12 @@ namespace MRG
 		template<typename T>
 		void removeComponent()
 		{
-			MRG_CORE_ASSERT(hasComponent<T>(), "Entity does not have component!");
+			MRG_CORE_ASSERT(hasComponent<T>(), "Entity does not have component!")
 			m_scene->m_registry.remove<T>(m_handle);
 		}
 
-		operator bool() const { return m_handle != entt::null; };
-		operator entt::entity() const { return m_handle; };
+		explicit operator bool() const { return m_handle != entt::null; };
+		explicit operator entt::entity() const { return m_handle; };
 		explicit operator uint32_t() const { return static_cast<uint32_t>(m_handle); }
 		[[nodiscard]] bool operator==(const Entity& other) const { return m_handle == other.m_handle && m_scene == other.m_scene; }
 		[[nodiscard]] bool operator!=(const Entity& other) const { return !(*this == other); }

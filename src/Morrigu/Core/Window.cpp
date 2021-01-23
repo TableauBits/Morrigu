@@ -1,6 +1,5 @@
 #include "Window.h"
 
-#include "Core/Logger.h"
 #include "Debug/Instrumentor.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
@@ -9,24 +8,21 @@
 
 namespace MRG
 {
-	static void GLFWErrorCallback(int error, const char* description)
-	{
-		MRG_ENGINE_ERROR("GLFW error detected: {0}: {1}", error, description);
-	}
+	static void GLFWErrorCallback(int error, const char* description){MRG_ENGINE_ERROR("GLFW error detected: {0}: {1}", error, description)}
 
 	uint8_t Window::s_GLFWWindowCount = 0;
 
 	GLFWWindowWrapper::GLFWWindowWrapper(WindowProperties* props)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
-		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", props->title, props->width, props->height);
+		MRG_ENGINE_INFO("Creating window {0} ({1}x{2})", props->title, props->width, props->height)
 
 		if (Window::s_GLFWWindowCount == 0) {
-			MRG_PROFILE_SCOPE("glfwInit");
-			MRG_ENGINE_INFO("Initializing GLFW");
+			MRG_PROFILE_SCOPE("glfwInit")
+			MRG_ENGINE_INFO("Initializing GLFW")
 			[[maybe_unused]] auto success = glfwInit();
-			MRG_CORE_ASSERT(success, "Could not initialize GLFW!");
+			MRG_CORE_ASSERT(success, "Could not initialize GLFW!")
 			glfwSetErrorCallback(GLFWErrorCallback);
 		}
 
@@ -85,7 +81,7 @@ namespace MRG
 			  } break;
 
 			  default: {
-				  MRG_ENGINE_WARN("Ignoring unrecognized GLFW key event (type {})", action);
+				  MRG_ENGINE_WARN("Ignoring unrecognized GLFW key event (type {})", action)
 			  } break;
 			  }
 		  });
@@ -105,7 +101,7 @@ namespace MRG
 			} break;
 
 			default: {
-				MRG_ENGINE_WARN("Ignoring unrecognized GLFW mouse event (type {})", action);
+				MRG_ENGINE_WARN("Ignoring unrecognized GLFW mouse event (type {})", action)
 			} break;
 			}
 		});
@@ -134,13 +130,13 @@ namespace MRG
 
 	GLFWWindowWrapper::~GLFWWindowWrapper()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		glfwDestroyWindow(handle);
 
 		--Window::s_GLFWWindowCount;
 		if (Window::s_GLFWWindowCount == 0) {
-			MRG_ENGINE_INFO("Terminating GLFW");
+			MRG_ENGINE_INFO("Terminating GLFW")
 #ifdef MRG_PLATFORM_WINDOWS
 			// For some reason, that causes an exception on linux. This is most likely a GLFW bug.
 			glfwTerminate();
@@ -150,7 +146,7 @@ namespace MRG
 
 	Window::Window(Scope<WindowProperties> props) : m_window(props.get())
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		m_properties = std::move(props);
 		m_context = Context::create(m_window.handle);
@@ -159,7 +155,7 @@ namespace MRG
 
 	void Window::onUpdate()
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		glfwPollEvents();
 		m_context->swapBuffers();
@@ -167,7 +163,7 @@ namespace MRG
 
 	void Window::setVsync(bool enabled)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		if (enabled) {
 			m_context->swapInterval(1);

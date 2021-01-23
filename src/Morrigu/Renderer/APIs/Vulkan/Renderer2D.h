@@ -22,7 +22,7 @@ namespace MRG::Vulkan
 	class Renderer2D : public Generic2DRenderer
 	{
 	public:
-		virtual ~Renderer2D() = default;
+		~Renderer2D() override = default;
 
 		void init() override;
 		void shutdown() override;
@@ -33,40 +33,39 @@ namespace MRG::Vulkan
 		bool endFrame() override;
 
 		void beginScene(const Camera& camera, const glm::mat4& transform) override;
-		void beginScene(const OrthoCamera& camera) override;
+		void beginScene(const EditorCamera& camera) override;
 		void endScene() override;
 
-		void drawQuad(const glm::mat4& transform, const glm::vec4& color) override;
-		void drawQuad(const glm::mat4& transform,
-		              const Ref<MRG::Texture2D>& texture,
-		              float tilingFactor = 1.f,
-		              const glm::vec4& tintColor = glm::vec4{1.f}) override;
+		void drawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t objectID) override;
+		void
+		drawQuad(const glm::mat4& transform, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor) override;
 
 		void drawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color) override;
 		void drawQuad(const glm::vec3& position,
 		              const glm::vec2& size,
 		              const Ref<MRG::Texture2D>& texture,
-		              float tilingFactor = 1.0f,
-		              const glm::vec4& tintColor = glm::vec4(1.0f)) override;
+		              float tilingFactor,
+		              const glm::vec4& tintColor) override;
 
 		void drawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color) override;
 		void drawRotatedQuad(const glm::vec3& position,
 		                     const glm::vec2& size,
 		                     float rotation,
 		                     const Ref<MRG::Texture2D>& texture,
-		                     float tilingFactor = 1.0f,
-		                     const glm::vec4& tintColor = glm::vec4(1.0f)) override;
+		                     float tilingFactor,
+		                     const glm::vec4& tintColor) override;
 
 		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
 		void resetRenderTarget() override;
 		[[nodiscard]] Ref<MRG::Framebuffer> getRenderTarget() const override { return m_renderTarget; }
+		[[nodiscard]] uint32_t objectIDAt(uint32_t x, uint32_t y) override;
 
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
 		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
 		void clear() override;
 
 		void resetStats() override { m_stats = {}; };
-		RenderingStatistics getStats() const override { return m_stats; };
+		[[nodiscard]] RenderingStatistics getStats() const override { return m_stats; };
 
 	private:
 		void setupScene();
@@ -93,6 +92,8 @@ namespace MRG::Vulkan
 
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
 		Ref<Framebuffer> m_renderTarget;
+
+		Buffer m_objectIDBuffer{};
 
 		RenderingStatistics m_stats;
 	};
