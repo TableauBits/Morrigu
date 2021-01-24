@@ -11,6 +11,12 @@ namespace MRG::OpenGL
 	{
 	public:
 		explicit Context(GLFWwindow* window);
+		Context(const Context&) = delete;
+		Context(Context&&) = delete;
+		~Context() override = default;
+
+		Context& operator=(const Context&) = delete;
+		Context& operator=(Context&&) = delete;
 
 		void swapBuffers() override;
 		void swapInterval(int interval) override;

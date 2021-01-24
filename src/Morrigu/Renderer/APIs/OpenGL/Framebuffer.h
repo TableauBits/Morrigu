@@ -9,8 +9,13 @@ namespace MRG::OpenGL
 	class Framebuffer : public MRG::Framebuffer
 	{
 	public:
-		Framebuffer(const FramebufferSpecification& spec);
-		virtual ~Framebuffer();
+		explicit Framebuffer(const FramebufferSpecification& spec);
+		Framebuffer(const Framebuffer&) = delete;
+		Framebuffer(Framebuffer&&) = delete;
+		~Framebuffer() override;
+
+		Framebuffer& operator=(const Framebuffer&) = delete;
+		Framebuffer& operator=(Framebuffer&&) = delete;
 
 		void destroy() override;
 		void resize(uint32_t width, uint32_t height) override;

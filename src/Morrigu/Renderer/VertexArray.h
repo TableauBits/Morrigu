@@ -9,7 +9,12 @@ namespace MRG
 	class VertexArray
 	{
 	public:
+		VertexArray(const VertexArray&) = delete;
+		VertexArray(VertexArray&&) = delete;
 		virtual ~VertexArray() = default;
+
+		VertexArray& operator=(const VertexArray&) = delete;
+		VertexArray& operator=(VertexArray&&) = delete;
 
 		virtual void destroy() = 0;
 
@@ -25,6 +30,7 @@ namespace MRG
 		[[nodiscard]] static Ref<VertexArray> create();
 
 	protected:
+		VertexArray() = default;
 		bool m_isDestroyed = false;
 	};
 }  // namespace MRG

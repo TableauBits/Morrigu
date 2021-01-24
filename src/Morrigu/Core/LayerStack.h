@@ -11,7 +11,12 @@ namespace MRG
 	{
 	public:
 		LayerStack() = default;
+		LayerStack(const LayerStack&) = delete;
+		LayerStack(LayerStack&&) = delete;
 		~LayerStack();
+
+		LayerStack& operator=(const LayerStack&) = delete;
+		LayerStack& operator=(LayerStack&&) = delete;
 
 		void pushLayer(Layer* newLayer);
 		void pushOverlay(Layer* newOverlay);

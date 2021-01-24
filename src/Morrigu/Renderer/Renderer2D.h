@@ -47,7 +47,13 @@ namespace MRG
 	class Generic2DRenderer
 	{
 	public:
+		Generic2DRenderer() = default;
+		Generic2DRenderer(const Generic2DRenderer&) = delete;
+		Generic2DRenderer(Generic2DRenderer&&) = delete;
 		virtual ~Generic2DRenderer() = default;
+
+		Generic2DRenderer& operator=(const Generic2DRenderer&) = delete;
+		Generic2DRenderer& operator=(Generic2DRenderer&&) = delete;
 
 		virtual void init() = 0;
 		virtual void shutdown() = 0;
@@ -99,9 +105,12 @@ namespace MRG
 
 	protected:
 		const std::size_t m_quadVertexCount = 4;
-		const glm::vec4 m_quadVertexPositions[4] = {
-		  {-0.5f, -0.5f, 0.0f, 1.f}, {0.5f, -0.5f, 0.0f, 1.f}, {0.5f, 0.5f, 0.0f, 1.f}, {-0.5f, 0.5f, 0.0f, 1.f}};
-		const glm::vec2 m_textureCoordinates[4] = {{0.f, 0.f}, {1.f, 0.f}, {1.f, 1.f}, {0.f, 1.f}};
+		const std::array<glm::vec4, 4> m_quadVertexPositions = {glm::vec4{-0.5f, -0.5f, 0.0f, 1.f},
+		                                                        glm::vec4{0.5f, -0.5f, 0.0f, 1.f},
+		                                                        glm::vec4{0.5f, 0.5f, 0.0f, 1.f},
+		                                                        glm::vec4{-0.5f, 0.5f, 0.0f, 1.f}};
+		const std::array<glm::vec2, 4> m_textureCoordinates = {
+		  glm::vec2{0.f, 0.f}, glm::vec2{1.f, 0.f}, glm::vec2{1.f, 1.f}, glm::vec2{0.f, 1.f}};
 
 		uint32_t m_quadIndexCount = 0;
 		QuadVertex* m_qvbBase = nullptr;

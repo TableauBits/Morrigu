@@ -35,7 +35,7 @@ namespace MRG
 		ImGui::StyleColorsDark();
 
 		ImGuiStyle& style = ImGui::GetStyle();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+		if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) != 0) {
 			style.WindowRounding = 0.f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.f;
 		}
@@ -53,24 +53,24 @@ namespace MRG
 		case RenderingAPI::API::Vulkan: {
 			const auto data = static_cast<Vulkan::WindowProperties*>(glfwGetWindowUserPointer(window));
 
-			VkDescriptorPoolSize pool_sizes[] = {{VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
-			                                     {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}};
+			std::array<VkDescriptorPoolSize, 11> pool_sizes = {VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
+			                                                   VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}};
 
 			VkDescriptorPoolCreateInfo pool_info = {};
 			pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 			pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 			pool_info.maxSets = 1000;
-			pool_info.poolSizeCount = static_cast<uint32_t>(std::size(pool_sizes));
-			pool_info.pPoolSizes = pool_sizes;
+			pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+			pool_info.pPoolSizes = pool_sizes.data();
 
 			MRG_VKVALIDATE(vkCreateDescriptorPool(data->device, &pool_info, nullptr, &data->ImGuiPool),
 			               "failed to create imgui descriptor pool!")
@@ -132,8 +132,8 @@ namespace MRG
 	{
 		if (m_blockEvents) {
 			auto& io = ImGui::GetIO();
-			event.handled |= event.isInCategory(EventCategoryMouse) & io.WantCaptureMouse;
-			event.handled |= event.isInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+			event.handled |= static_cast<int>(event.isInCategory(EventCategoryMouse)) & static_cast<int>(io.WantCaptureMouse);
+			event.handled |= static_cast<int>(event.isInCategory(EventCategoryKeyboard)) & static_cast<int>(io.WantCaptureKeyboard);
 		}
 	}
 
@@ -178,7 +178,7 @@ namespace MRG
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+			if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) != 0) {
 				const auto contextBkp = glfwGetCurrentContext();
 				ImGui::UpdatePlatformWindows();
 				ImGui::RenderPlatformWindowsDefault();

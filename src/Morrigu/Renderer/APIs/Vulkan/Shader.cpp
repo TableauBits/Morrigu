@@ -13,8 +13,9 @@ namespace
 	{
 		std::ifstream file(fileName, std::ios::ate | std::ios::binary);
 
-		if (!file.is_open())
+		if (!file.is_open()) {
 			throw std::runtime_error("Could not open file!");
+		}
 
 		std::size_t fileSize = static_cast<std::size_t>(file.tellg());
 		std::vector<char> buffer(fileSize);
@@ -71,8 +72,9 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION()
 
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 

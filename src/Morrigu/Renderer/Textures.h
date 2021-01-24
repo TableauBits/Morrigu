@@ -12,7 +12,12 @@ namespace MRG
 	class Texture
 	{
 	public:
+		Texture(const Texture&) = delete;
+		Texture(Texture&&) = delete;
 		virtual ~Texture() = default;
+
+		Texture& operator=(const Texture&) = delete;
+		Texture& operator=(Texture&&) = delete;
 
 		virtual void destroy() = 0;
 
@@ -27,6 +32,7 @@ namespace MRG
 		virtual void bind(uint32_t slot) const = 0;
 
 	protected:
+		Texture() = default;
 		bool m_isDestroyed = false;
 	};
 

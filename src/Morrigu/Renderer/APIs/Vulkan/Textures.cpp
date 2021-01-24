@@ -77,8 +77,9 @@ namespace MRG::Vulkan
 
 	void Texture2D::destroy()
 	{
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		const auto windowData = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 

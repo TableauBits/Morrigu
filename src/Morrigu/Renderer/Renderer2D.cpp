@@ -4,7 +4,6 @@
 #include "Renderer/APIs/OpenGL/Renderer2D.h"
 #include "Renderer/APIs/Vulkan/Renderer2D.h"
 
-#include "Renderer/RenderingAPI.h"
 #include <utility>
 
 namespace MRG
@@ -180,7 +179,7 @@ namespace MRG
 
 	[[nodiscard]] uint32_t Renderer2D::objectIDAt(uint32_t x, uint32_t y)
 	{
-		MRG_PROFILE_FUNCTION();
+		MRG_PROFILE_FUNCTION()
 
 		return s_renderer->objectIDAt(x, y);
 	}

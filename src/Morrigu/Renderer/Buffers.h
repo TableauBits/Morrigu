@@ -128,7 +128,12 @@ namespace MRG
 	class VertexBuffer
 	{
 	public:
+		VertexBuffer(const VertexBuffer&) = delete;
+		VertexBuffer(VertexBuffer&&) = delete;
 		virtual ~VertexBuffer() = default;
+
+		VertexBuffer& operator=(const VertexBuffer&) = delete;
+		VertexBuffer& operator=(VertexBuffer&&) = delete;
 
 		virtual void destroy() = 0;
 
@@ -143,6 +148,7 @@ namespace MRG
 		[[nodiscard]] static Ref<VertexBuffer> create(const void* vertices, uint32_t size);
 
 	protected:
+		VertexBuffer() = default;
 		bool m_isDestroyed = false;
 	};
 
@@ -150,7 +156,12 @@ namespace MRG
 	class IndexBuffer
 	{
 	public:
+		IndexBuffer(const IndexBuffer&) = delete;
+		IndexBuffer(IndexBuffer&&) = delete;
 		virtual ~IndexBuffer() = default;
+
+		IndexBuffer& operator=(const IndexBuffer&) = delete;
+		IndexBuffer& operator=(IndexBuffer&&) = delete;
 
 		virtual void destroy() = 0;
 
@@ -161,6 +172,7 @@ namespace MRG
 		[[nodiscard]] static Ref<IndexBuffer> create(const uint32_t* indices, uint32_t count);
 
 	protected:
+		IndexBuffer() = default;
 		bool m_isDestroyed = false;
 	};
 }  // namespace MRG

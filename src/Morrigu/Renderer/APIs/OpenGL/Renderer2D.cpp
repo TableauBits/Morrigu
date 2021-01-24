@@ -38,12 +38,12 @@ namespace MRG::OpenGL
 		auto whiteTextureData = 0xffffffff;
 		m_whiteTexture->setData(&whiteTextureData, sizeof(whiteTextureData));
 
-		int32_t samplers[maxTextureSlots];
-		for (uint32_t i = 0; i < maxTextureSlots; ++i) samplers[i] = i;
+		std::array<int32_t, maxTextureSlots> samplers{};
+		for (uint32_t i = 0; i < maxTextureSlots; ++i) { samplers[i] = i; }
 
 		m_textureShader = Shader::create("engine/shaders/texture");
 		m_textureShader->bind();
-		m_textureShader->upload("u_textures", samplers, maxTextureSlots);
+		m_textureShader->upload("u_textures", samplers.data(), maxTextureSlots);
 
 		m_textureSlots[0] = m_whiteTexture;
 	}
@@ -57,8 +57,9 @@ namespace MRG::OpenGL
 		m_quadVertexArray->destroy();
 
 		for (const auto& texture : m_textureSlots) {
-			if (texture != nullptr)
+			if (texture != nullptr) {
 				texture->destroy();
+			}
 		}
 
 		if (m_framebuffer != nullptr) {
@@ -130,8 +131,9 @@ namespace MRG::OpenGL
 		const float texIndex = 0.0f;
 		const float tilingFactor = 1.0f;
 
-		if (m_quadIndexCount >= maxIndices)
+		if (m_quadIndexCount >= maxIndices) {
 			flushAndReset();
+		}
 
 		for (std::size_t i = 0; i < m_quadVertexCount; ++i) {
 			m_qvbPtr->position = transform * m_quadVertexPositions[i];
@@ -150,8 +152,9 @@ namespace MRG::OpenGL
 	void
 	Renderer2D::drawQuad(const glm::mat4& transform, const Ref<MRG::Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		if (m_quadIndexCount >= maxIndices)
+		if (m_quadIndexCount >= maxIndices) {
 			flushAndReset();
+		}
 
 		float texIndex = 0.f;
 		for (uint32_t i = 0; i < m_textureSlotindex; ++i) {
@@ -162,8 +165,9 @@ namespace MRG::OpenGL
 		}
 
 		if (texIndex == 0.f) {
-			if (m_textureSlotindex >= maxTextureSlots)
+			if (m_textureSlotindex >= maxTextureSlots) {
 				flushAndReset();
+			}
 
 			texIndex = static_cast<float>(m_textureSlotindex);
 			m_textureSlots[m_textureSlotindex] = texture;
@@ -228,8 +232,9 @@ namespace MRG::OpenGL
 			return;
 		}
 
-		if (m_sceneInProgress)
+		if (m_sceneInProgress) {
 			flushAndReset();
+		}
 
 		m_framebuffer = std::static_pointer_cast<Framebuffer>(renderTarget);
 		m_framebuffer->bind();
@@ -237,8 +242,9 @@ namespace MRG::OpenGL
 
 	void Renderer2D::resetRenderTarget()
 	{
-		if (m_sceneInProgress)
+		if (m_sceneInProgress) {
 			flushAndReset();
+		}
 
 		m_framebuffer->unbind();
 		m_framebuffer = nullptr;
@@ -252,10 +258,11 @@ namespace MRG::OpenGL
 
 	void Renderer2D::flush()
 	{
-		if (m_quadIndexCount == 0)
+		if (m_quadIndexCount == 0) {
 			return;
+		}
 
-		for (uint32_t i = 0; i < m_textureSlotindex; ++i) m_textureSlots[i]->bind(i);
+		for (uint32_t i = 0; i < m_textureSlotindex; ++i) { m_textureSlots[i]->bind(i); }
 
 		drawIndexed(m_quadVertexArray, m_quadIndexCount);
 		++m_stats.drawCalls;
@@ -274,7 +281,7 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION()
 
-		const auto indexCount = count ? count : vertexArray->getIndexBuffer()->getCount();
+		const auto indexCount = (count != 0) ? count : vertexArray->getIndexBuffer()->getCount();
 
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);

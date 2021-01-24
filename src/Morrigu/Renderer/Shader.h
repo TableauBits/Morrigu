@@ -19,7 +19,13 @@ namespace MRG
 	class Shader
 	{
 	public:
+		Shader(const Shader&) = delete;
+		Shader(Shader&&) = delete;
 		virtual ~Shader() = default;
+
+		Shader& operator=(const Shader&) = delete;
+		Shader& operator=(Shader&&) = delete;
+
 		virtual void destroy() = 0;
 
 		virtual void bind() const = 0;
@@ -37,6 +43,7 @@ namespace MRG
 		[[nodiscard]] static Ref<Shader> create(const std::string& filePath, Encoding encoding = Encoding::LF);
 
 	protected:
+		Shader() = default;
 		bool m_isDestroyed = false;
 	};
 

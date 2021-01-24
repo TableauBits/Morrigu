@@ -33,8 +33,9 @@ namespace MRG::OpenGL
 
 	void VertexBuffer::destroy()
 	{
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		glDeleteBuffers(1, &m_rendererID);
 		m_isDestroyed = true;
@@ -82,8 +83,9 @@ namespace MRG::OpenGL
 
 	void IndexBuffer::destroy()
 	{
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		glDeleteBuffers(1, &m_rendererID);
 		m_isDestroyed = true;

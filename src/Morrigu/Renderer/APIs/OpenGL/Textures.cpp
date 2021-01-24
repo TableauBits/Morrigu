@@ -63,8 +63,9 @@ namespace MRG::OpenGL
 
 	void Texture2D::destroy()
 	{
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		glDeleteTextures(1, &m_rendererID);
 		m_isDestroyed = true;

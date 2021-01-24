@@ -22,7 +22,13 @@ namespace MRG::Vulkan
 	class Renderer2D : public Generic2DRenderer
 	{
 	public:
+		Renderer2D() = default;
+		Renderer2D(const Renderer2D&) = delete;
+		Renderer2D(Renderer2D&&) = delete;
 		~Renderer2D() override = default;
+
+		Renderer2D& operator=(const Renderer2D&) = delete;
+		Renderer2D& operator=(Renderer2D&&) = delete;
 
 		void init() override;
 		void shutdown() override;
@@ -74,21 +80,21 @@ namespace MRG::Vulkan
 		void updateDescriptor();
 		void flushAndReset();
 
-		WindowProperties* m_data;
+		WindowProperties* m_data{};
 		Ref<Shader> m_textureShader;
-		uint32_t m_imageIndex;
+		uint32_t m_imageIndex{};
 		std::size_t m_maxFramesInFlight = 2;
 		std::vector<VkSemaphore> m_imageAvailableSemaphores;
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
 		Ref<VertexArray> m_vertexArray;
 		Ref<Texture2D> m_whiteTexture;
-		VkDescriptorPool m_descriptorPool;
+		VkDescriptorPool m_descriptorPool{};
 		std::vector<VkDescriptorSet> m_descriptorSets;
 		bool m_shouldRecreateSwapChain = false;
 
 		bool m_sceneInProgress = false;
 
-		PushConstants m_modelMatrix;
+		PushConstants m_modelMatrix{};
 
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
 		Ref<Framebuffer> m_renderTarget;

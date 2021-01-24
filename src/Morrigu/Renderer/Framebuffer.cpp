@@ -2,7 +2,6 @@
 
 #include "Renderer/APIs/OpenGL/Framebuffer.h"
 #include "Renderer/APIs/Vulkan/Framebuffer.h"
-#include "Renderer/RenderingAPI.h"
 
 namespace MRG
 {

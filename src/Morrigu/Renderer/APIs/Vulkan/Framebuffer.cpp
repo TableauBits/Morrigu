@@ -130,8 +130,9 @@ namespace MRG::Vulkan
 
 	void Framebuffer::destroy()
 	{
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
@@ -282,17 +283,17 @@ namespace MRG::Vulkan
 		if (m_ImTextureID != nullptr) {
 			transitionImageLayout(
 			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			VkDescriptorImageInfo desc_image[1] = {};
-			desc_image[0].sampler = m_sampler;
-			desc_image[0].imageView = m_colorAttachment.imageView;
-			desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			VkWriteDescriptorSet write_desc[1] = {};
-			write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write_desc[0].dstSet = (VkDescriptorSet)m_ImTextureID;
-			write_desc[0].descriptorCount = 1;
-			write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			write_desc[0].pImageInfo = desc_image;
-			vkUpdateDescriptorSets(data->device, 1, write_desc, 0, nullptr);
+			VkDescriptorImageInfo desc_image{};
+			desc_image.sampler = m_sampler;
+			desc_image.imageView = m_colorAttachment.imageView;
+			desc_image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			VkWriteDescriptorSet write_desc{};
+			write_desc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			write_desc.dstSet = (VkDescriptorSet)m_ImTextureID;
+			write_desc.descriptorCount = 1;
+			write_desc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			write_desc.pImageInfo = &desc_image;
+			vkUpdateDescriptorSets(data->device, 1, &write_desc, 0, nullptr);
 			transitionImageLayout(
 			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		}

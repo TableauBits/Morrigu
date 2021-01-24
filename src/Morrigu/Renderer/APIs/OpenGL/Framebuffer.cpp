@@ -14,8 +14,9 @@ namespace MRG::OpenGL
 
 	void Framebuffer::destroy()
 	{
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		glDeleteFramebuffers(1, &m_rendererID);
 		glDeleteTextures(1, &m_colorAttachment);

@@ -14,7 +14,6 @@ namespace MRG
 		std::string tag;
 
 		TagComponent() = default;
-		TagComponent(const TagComponent&) = default;
 		explicit TagComponent(std::string newTag) : tag(std::move(newTag)) {}
 	};
 
@@ -25,7 +24,6 @@ namespace MRG
 		glm::vec3 scale{1.f, 1.f, 1.f};
 
 		TransformComponent() = default;
-		TransformComponent(const TransformComponent&) = default;
 		explicit TransformComponent(const glm::vec3& newTranslation) : translation(newTranslation) {}
 
 		[[nodiscard]] glm::mat4 getTransform() const
@@ -39,7 +37,6 @@ namespace MRG
 		glm::vec4 color{1.f};
 
 		SpriteRendererComponent() = default;
-		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		explicit SpriteRendererComponent(const glm::vec4& newColor) : color(newColor) {}
 	};
 
@@ -50,7 +47,6 @@ namespace MRG
 		bool fixedAspectRatio = false;
 
 		CameraComponent() = default;
-		CameraComponent(const CameraComponent&) = default;
 	};
 
 	struct NativeScriptComponent

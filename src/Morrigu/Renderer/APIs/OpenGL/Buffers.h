@@ -10,7 +10,12 @@ namespace MRG::OpenGL
 	public:
 		explicit VertexBuffer(uint32_t size);
 		VertexBuffer(const void* vertices, uint32_t size);
+		VertexBuffer(const VertexBuffer&) = delete;
+		VertexBuffer(VertexBuffer&&) = delete;
 		~VertexBuffer() override;
+
+		VertexBuffer& operator=(const VertexBuffer&) = delete;
+		VertexBuffer& operator=(VertexBuffer&&) = delete;
 
 		void destroy() override;
 
@@ -27,7 +32,12 @@ namespace MRG::OpenGL
 	{
 	public:
 		IndexBuffer(const uint32_t* indices, uint32_t count);
+		IndexBuffer(const IndexBuffer&) = delete;
+		IndexBuffer(IndexBuffer&&) = delete;
 		~IndexBuffer() override;
+
+		IndexBuffer& operator=(const IndexBuffer&) = delete;
+		IndexBuffer& operator=(IndexBuffer&&) = delete;
 
 		void destroy() override;
 

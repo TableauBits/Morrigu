@@ -69,8 +69,9 @@ namespace MRG
 		auto view = m_registry.view<CameraComponent>();
 		for (const auto& entity : view) {
 			auto& cc = view.get<CameraComponent>(entity);
-			if (!cc.fixedAspectRatio)
+			if (!cc.fixedAspectRatio) {
 				cc.camera.setViewportSize(width, height);
+			}
 		}
 	}
 

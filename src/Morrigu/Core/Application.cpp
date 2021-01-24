@@ -41,8 +41,9 @@ namespace MRG
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) -> bool { return onWindowResize(resizeEvent); });
 
 		for (auto it = m_layerStack.rbegin(); it != m_layerStack.rend(); ++it) {
-			if (event.handled)
+			if (event.handled) {
 				break;
+			}
 			(*it)->onEvent(event);
 		}
 	}
@@ -79,14 +80,14 @@ namespace MRG
 			if (!m_minimized) {
 				MRG_PROFILE_SCOPE("LayerStack onUpdate")
 
-				for (auto& layer : m_layerStack) layer->onUpdate(ts);
+				for (auto& layer : m_layerStack) { layer->onUpdate(ts); }
 			}
 
 			m_ImGuiLayer->begin();
 			{
 				MRG_PROFILE_SCOPE("LayerStack onImGuiRender")
 
-				for (auto& layer : m_layerStack) layer->onImGuiRender();
+				for (auto& layer : m_layerStack) { layer->onImGuiRender(); }
 			}
 			m_ImGuiLayer->end();
 			m_window->onUpdate();

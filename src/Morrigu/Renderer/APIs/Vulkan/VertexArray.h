@@ -11,14 +11,20 @@ namespace MRG::Vulkan
 	{
 	public:
 		VertexArray();
+		VertexArray(const VertexArray&) = delete;
+		VertexArray(VertexArray&&) = delete;
 		~VertexArray() override;
+
+		VertexArray& operator=(const VertexArray&) = delete;
+		VertexArray& operator=(VertexArray&&) = delete;
 
 		void destroy() override
 		{
-			if (m_isDestroyed)
+			if (m_isDestroyed) {
 				return;
+			}
 
-			for (auto& vb : m_vertexBuffers) vb->destroy();
+			for (auto& vb : m_vertexBuffers) { vb->destroy(); }
 			m_indexBuffer->destroy();
 
 			m_isDestroyed = true;

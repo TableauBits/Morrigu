@@ -15,7 +15,12 @@ namespace MRG
 	private:
 	public:
 		explicit Application(const char* name = "Morrigu App");
+		Application(const Application&) = delete;
+		Application(Application&&) = delete;
 		virtual ~Application();
+
+		Application& operator=(const Application&) = delete;
+		Application& operator=(Application&&) = delete;
 
 		void onEvent(Event& event);
 

@@ -12,7 +12,7 @@ namespace MRG
 	{
 		const auto result =
 		  tinyfd_openFileDialog(actionTitle, defaultPath, static_cast<int>(filters.size()), filters.data(), filterDescription, 0);
-		return result ? std::optional<std::string>{result} : std::nullopt;
+		return (result != nullptr) ? std::optional<std::string>{result} : std::nullopt;
 	}
 
 	std::optional<std::string> FileDialogs::saveFile(const char* actionTitle,
@@ -22,6 +22,6 @@ namespace MRG
 	{
 		const auto result =
 		  tinyfd_saveFileDialog(actionTitle, defaultFile, static_cast<int>(filters.size()), filters.data(), filterDescription);
-		return result ? std::optional<std::string>{result} : std::nullopt;
+		return (result != nullptr) ? std::optional<std::string>{result} : std::nullopt;
 	}
 }  // namespace MRG

@@ -12,7 +12,13 @@ namespace MRG::Vulkan
 	{
 	public:
 		explicit Shader(const std::string& filePath);
+		Shader(const Shader&) = delete;
+		Shader(Shader&&) = delete;
 		~Shader() override;
+
+		Shader& operator=(const Shader&) = delete;
+		Shader& operator=(Shader&&) = delete;
+
 		void destroy() override;
 
 		void bind() const override;

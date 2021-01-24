@@ -21,7 +21,12 @@ namespace MRG
 	class Framebuffer
 	{
 	public:
+		Framebuffer(const Framebuffer&) = delete;
+		Framebuffer(Framebuffer&&) = delete;
 		virtual ~Framebuffer() = default;
+
+		Framebuffer& operator=(const Framebuffer&) = delete;
+		Framebuffer& operator=(Framebuffer&&) = delete;
 
 		virtual void destroy() = 0;
 
@@ -35,6 +40,7 @@ namespace MRG
 		[[nodiscard]] static Ref<Framebuffer> create(const FramebufferSpecification& spec);
 
 	protected:
+		Framebuffer() = default;
 		FramebufferSpecification m_specification;
 		bool m_isDestroyed = false;
 	};

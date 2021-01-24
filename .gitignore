@@ -4,6 +4,7 @@ build
 cmake-build-release/
 cmake-build-debug/
 .idea/
+temp/
 
 src/Morrigu/Vendor/ImGui/bindings
 src/**/runtime/engine

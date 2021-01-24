@@ -8,8 +8,6 @@
 ///
 #include <ImGuizmo.h>
 
-#include <filesystem>
-
 namespace MRG
 {
 	MachaLayer::MachaLayer() : Layer("Sandbox 2D") {}
@@ -77,8 +75,9 @@ namespace MRG
 
 		// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we
 		// ask Begin() to not render a background.
-		if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+		if ((dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0) {
 			window_flags |= ImGuiWindowFlags_NoBackground;
+		}
 
 		// Important: note that we proceed even if Begin() returns false (aka window is collapsed).
 		// This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
@@ -96,7 +95,7 @@ namespace MRG
 		auto& style = ImGui::GetStyle();
 		float minWinSizeX = style.WindowMinSize.x;
 		style.WindowMinSize.x = 370.f;
-		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
+		if ((io.ConfigFlags & ImGuiConfigFlags_DockingEnable) != 0) {
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, {0.0f, 0.0f}, dockspace_flags);
 		}
@@ -109,15 +108,18 @@ namespace MRG
 				// which we can't undo at the moment without finer window depth/z control.
 				// ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
 
-				if (ImGui::MenuItem("New scene", "Ctrl+N"))
+				if (ImGui::MenuItem("New scene", "Ctrl+N")) {
 					newScene();
-				if (ImGui::MenuItem("Open scene", "Ctrl+O"))
+				}
+				if (ImGui::MenuItem("Open scene", "Ctrl+O")) {
 					openScene();
-				if (ImGui::MenuItem("Save scene as", "Ctrl+Shift+S"))
+				}
+				if (ImGui::MenuItem("Save scene as", "Ctrl+Shift+S")) {
 					saveScene();
-
-				if (ImGui::MenuItem("Exit"))
+				}
+				if (ImGui::MenuItem("Exit")) {
 					Application::get().close();
+				}
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenuBar();
@@ -151,8 +153,9 @@ namespace MRG
 			// Editor camera
 			auto cameraProj = m_editorCamera.getProjection();
 			auto cameraView = m_editorCamera.getViewMatrix();
-			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
+			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan) {
 				cameraProj[1][1] *= -1;
+			}
 
 			// Transform
 			auto& tc = selectedEntity.getComponent<TransformComponent>();
@@ -161,16 +164,17 @@ namespace MRG
 			// Snapping
 			bool snap = Input::isKeyPressed(Key::LeftControl);
 			float snapValue = m_gizmoType == ImGuizmo::OPERATION::ROTATE ? 45.f : 0.5f;
-			float snapValues[3] = {snapValue, snapValue, snapValue};
+			std::array<float, 3> snapValues = {snapValue, snapValue, snapValue};
 
-			if (!Input::isKeyPressed(Key::LeftAlt))
+			if (!Input::isKeyPressed(Key::LeftAlt)) {
 				ImGuizmo::Manipulate(glm::value_ptr(cameraView),
 				                     glm::value_ptr(cameraProj),
 				                     static_cast<ImGuizmo::OPERATION>(m_gizmoType),
 				                     ImGuizmo::LOCAL,
 				                     glm::value_ptr(transform),
 				                     nullptr,
-				                     snap ? snapValues : nullptr);
+				                     snap ? snapValues.data() : nullptr);
+			}
 
 			if (ImGuizmo::IsUsing()) {
 				glm::vec3 translation, rotation, scale;
@@ -211,8 +215,9 @@ namespace MRG
 
 	bool MachaLayer::onKeyPressed(KeyPressedEvent& event)
 	{
-		if (event.getRepeatCount() > 0)
+		if (event.getRepeatCount() > 0) {
 			return false;
+		}
 
 		bool control = Input::isKeyPressed(Key::LeftControl) || Input::isKeyPressed(Key::RightControl);
 		bool shift = Input::isKeyPressed(Key::LeftShift) || Input::isKeyPressed(Key::RightShift);
@@ -221,34 +226,41 @@ namespace MRG
 		switch (event.getKeyCode()) {
 		// File shortcuts
 		case Key::N: {
-			if (control)
+			if (control) {
 				newScene();
+			}
 		} break;
 		case Key::O: {
-			if (control)
+			if (control) {
 				openScene();
+			}
 		} break;
 		case Key::S: {
-			if (control && shift)
+			if (control && shift) {
 				saveScene();
+			}
 		} break;
 
 		// Gizmos
 		case Key::Q: {
-			if (!ImGuizmo::IsUsing())
+			if (!ImGuizmo::IsUsing()) {
 				m_gizmoType = -1;
+			}
 		} break;
 		case Key::W: {
-			if (!ImGuizmo::IsUsing())
+			if (!ImGuizmo::IsUsing()) {
 				m_gizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			}
 		} break;
 		case Key::E: {
-			if (!ImGuizmo::IsUsing())
+			if (!ImGuizmo::IsUsing()) {
 				m_gizmoType = ImGuizmo::OPERATION::ROTATE;
+			}
 		} break;
 		case Key::R: {
-			if (!ImGuizmo::IsUsing())
+			if (!ImGuizmo::IsUsing()) {
 				m_gizmoType = ImGuizmo::OPERATION::SCALE;
+			}
 		} break;
 
 		default: {
@@ -290,8 +302,9 @@ namespace MRG
 	void MachaLayer::openScene()
 	{
 		const auto filepath = FileDialogs::openFile("Open a scene", "Morrigu scene file", {"*.morrigu"}, nullptr);
-		if (!filepath)
+		if (!filepath) {
 			return;
+		}
 
 		newScene();
 		SceneSerializer serializer{m_activeScene};
@@ -301,8 +314,9 @@ namespace MRG
 	void MachaLayer::saveScene()
 	{
 		const auto filepath = FileDialogs::saveFile("Save scene as", "Morrigu scene file", {"*.morrigu"}, nullptr);
-		if (!filepath)
+		if (!filepath) {
 			return;
+		}
 
 		SceneSerializer serializer{m_activeScene};
 		serializer.serialize(filepath.value());

@@ -14,7 +14,13 @@ namespace MRG::OpenGL
 	{
 	public:
 		Shader(const std::string& filePath, MRG::Encoding encoding);
+		Shader(const Shader&) = delete;
+		Shader(Shader&&) = delete;
 		~Shader() override;
+
+		Shader& operator=(const Shader&) = delete;
+		Shader& operator=(Shader&&) = delete;
+
 		void destroy() override;
 
 		void bind() const override;

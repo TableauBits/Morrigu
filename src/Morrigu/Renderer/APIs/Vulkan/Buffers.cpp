@@ -62,8 +62,9 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION()
 
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
@@ -151,8 +152,9 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION()
 
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 

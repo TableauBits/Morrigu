@@ -8,7 +8,13 @@ namespace MRG
 	class ScriptableEntity
 	{
 	public:
+		ScriptableEntity() = default;
+		ScriptableEntity(const ScriptableEntity&) = delete;
+		ScriptableEntity(ScriptableEntity&&) = default;
 		virtual ~ScriptableEntity() = default;
+
+		ScriptableEntity& operator=(const ScriptableEntity&) = delete;
+		ScriptableEntity& operator=(ScriptableEntity&&) = default;
 
 		template<typename T>
 		[[nodiscard]] T& getComponent()

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 project(Morrigu)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(MAIN_PRJ_NAME ${PROJECT_NAME})
 set(EDITOR_PRJ_NAME Macha)
 set(RUNTIME_PRJ_NAME Sandbox)

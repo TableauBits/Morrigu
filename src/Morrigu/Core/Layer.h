@@ -13,7 +13,12 @@ namespace MRG
 	{
 	public:
 		explicit Layer(std::string name) : m_name(std::move(name)) {}
+		Layer(const Layer&) = delete;
+		Layer(Layer&&) = delete;
 		virtual ~Layer() = default;
+
+		Layer& operator=(const Layer&) = delete;
+		Layer& operator=(Layer&&) = delete;
 
 		virtual void onAttach() = 0;
 		virtual void onDetach() = 0;
