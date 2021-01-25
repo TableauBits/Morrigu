@@ -29,11 +29,13 @@ namespace MRG
 		{
 			MRG_PROFILE_SCOPE("glfwCreateWindow")
 #ifdef MRG_DEBUG
-			if (RenderingAPI::getAPI() == RenderingAPI::API::OpenGL)
+			if (RenderingAPI::getAPI() == RenderingAPI::API::OpenGL) {
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+			}
 #endif
-			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
+			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan) {
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+			}
 
 			handle = glfwCreateWindow(props->width, props->height, props->title, nullptr, nullptr);
 			++Window::s_GLFWWindowCount;
