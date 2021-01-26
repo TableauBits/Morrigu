@@ -662,9 +662,11 @@ namespace
 	{
 		VkDescriptorPool descriptorPool;
 
-		std::array<VkDescriptorPoolSize, 1> poolSizes{};
+		std::array<VkDescriptorPoolSize, 2> poolSizes{};
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		poolSizes[0].descriptorCount = data->swapChain.imageCount * textureCount;
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[1].descriptorCount = data->swapChain.imageCount;
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1418,8 +1420,13 @@ namespace MRG::Vulkan
 
 	void Renderer2D::setupScene()
 	{
-		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
-		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
+		MRG_PROFILE_FUNCTION()
+
+		{
+			MRG_PROFILE_SCOPE("Fences")
+			vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
+			vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
+		}
 
 		m_sceneInProgress = true;
 
