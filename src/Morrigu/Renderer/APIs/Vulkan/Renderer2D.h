@@ -64,7 +64,6 @@ namespace MRG::Vulkan
 		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
 		void resetRenderTarget() override;
 		[[nodiscard]] Ref<MRG::Framebuffer> getRenderTarget() const override { return m_renderTarget; }
-		[[nodiscard]] uint32_t objectIDAt(uint32_t x, uint32_t y) override;
 
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
 		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
@@ -98,8 +97,6 @@ namespace MRG::Vulkan
 
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
 		Ref<Framebuffer> m_renderTarget;
-
-		Buffer m_objectIDBuffer{};
 
 		RenderingStatistics m_stats;
 	};

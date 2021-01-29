@@ -53,7 +53,6 @@ namespace MRG::OpenGL
 		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
 		void resetRenderTarget() override;
 		[[nodiscard]] Ref<MRG::Framebuffer> getRenderTarget() const override { return m_framebuffer; }
-		[[nodiscard]] uint32_t objectIDAt(uint32_t x, uint32_t y) override;
 
 		void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override { glViewport(x, y, width, height); }
 		void setClearColor(const glm::vec4& color) override { glClearColor(color.r, color.g, color.b, color.a); }

@@ -25,7 +25,6 @@ namespace MRG::Vulkan
 		VkFormat imageFormat{};
 		VkExtent2D extent{};
 		std::vector<VkImageView> imageViews;
-		std::vector<LightVulkanImage> objectIDBuffers;
 		std::vector<std::array<VkFramebuffer, 3>> frameBuffers;
 		LightVulkanImage depthBuffer{};
 	};

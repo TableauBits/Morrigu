@@ -25,7 +25,7 @@ namespace MRG::OpenGL
 		void bind();
 		static void unbind();
 
-		[[nodiscard]] virtual ImTextureID getImTextureID() override { return (ImTextureID)(uintptr_t)m_colorAttachment; }
+		[[nodiscard]] virtual ImTextureID getImTextureID(uint32_t) override { return (ImTextureID)(uintptr_t)m_colorAttachment; }
 		[[nodiscard]] const std::array<ImVec2, 2>& getUVMapping() const override { return m_UVMapping; }
 
 		[[nodiscard]] virtual const FramebufferSpecification& getSpecification() const override { return m_specification; }

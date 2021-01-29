@@ -30,22 +30,6 @@ namespace MRG::Vulkan
 		m_colorAttachment.imageView =
 		  createImageView(data->device, m_colorAttachment.handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 
-		createImage(data->physicalDevice,
-		            data->device,
-		            m_specification.width,
-		            m_specification.height,
-		            VK_FORMAT_R16G16B16A16_UNORM,
-		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		            m_objectIDBuffer.handle,
-		            m_objectIDBuffer.memoryHandle);
-
-		transitionImageLayout(data, m_objectIDBuffer.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-		m_objectIDBuffer.imageView =
-		  createImageView(data->device, m_objectIDBuffer.handle, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		samplerInfo.magFilter = VK_FILTER_NEAREST;
@@ -105,7 +89,7 @@ namespace MRG::Vulkan
 		m_depthAttachment.imageView =
 		  createImageView(data->device, m_depthAttachment.handle, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-		std::array<VkImageView, 3> attachments{m_colorAttachment.imageView, m_objectIDBuffer.imageView, m_depthAttachment.imageView};
+		std::array<VkImageView, 2> attachments{m_colorAttachment.imageView, m_depthAttachment.imageView};
 
 		VkFramebufferCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -117,13 +101,6 @@ namespace MRG::Vulkan
 		createInfo.renderPass = data->renderingPipeline.renderPass;
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
-
-		createBuffer(data->device,
-		             data->physicalDevice,
-		             data->width * data->height * 8,  // TODO: make this work for something else than 64bits pixel data
-		             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
-		             m_objectIDLocalBuffer);
 	}
 
 	Framebuffer::~Framebuffer() { Framebuffer::destroy(); }
@@ -139,21 +116,15 @@ namespace MRG::Vulkan
 		vkDestroySampler(data->device, m_sampler, nullptr);
 
 		vkDestroyImageView(data->device, m_colorAttachment.imageView, nullptr);
-		vkDestroyImageView(data->device, m_objectIDBuffer.imageView, nullptr);
 		vkDestroyImageView(data->device, m_depthAttachment.imageView, nullptr);
 
 		vkDestroyImage(data->device, m_colorAttachment.handle, nullptr);
-		vkDestroyImage(data->device, m_objectIDBuffer.handle, nullptr);
 		vkDestroyImage(data->device, m_depthAttachment.handle, nullptr);
 
 		vkFreeMemory(data->device, m_colorAttachment.memoryHandle, nullptr);
-		vkFreeMemory(data->device, m_objectIDBuffer.memoryHandle, nullptr);
 		vkFreeMemory(data->device, m_depthAttachment.memoryHandle, nullptr);
 
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
-
-		vkDestroyBuffer(data->device, m_objectIDLocalBuffer.handle, nullptr);
-		vkFreeMemory(data->device, m_objectIDLocalBuffer.memoryHandle, nullptr);
 
 		m_isDestroyed = true;
 	}
@@ -173,21 +144,15 @@ namespace MRG::Vulkan
 		vkDeviceWaitIdle(data->device);
 
 		vkDestroyImageView(data->device, m_colorAttachment.imageView, nullptr);
-		vkDestroyImageView(data->device, m_objectIDBuffer.imageView, nullptr);
 		vkDestroyImageView(data->device, m_depthAttachment.imageView, nullptr);
 
 		vkDestroyImage(data->device, m_colorAttachment.handle, nullptr);
-		vkDestroyImage(data->device, m_objectIDBuffer.handle, nullptr);
 		vkDestroyImage(data->device, m_depthAttachment.handle, nullptr);
 
 		vkFreeMemory(data->device, m_colorAttachment.memoryHandle, nullptr);
-		vkFreeMemory(data->device, m_objectIDBuffer.memoryHandle, nullptr);
 		vkFreeMemory(data->device, m_depthAttachment.memoryHandle, nullptr);
 
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
-
-		vkDestroyBuffer(data->device, m_objectIDLocalBuffer.handle, nullptr);
-		vkFreeMemory(data->device, m_objectIDLocalBuffer.memoryHandle, nullptr);
 
 		createImage(data->physicalDevice,
 		            data->device,
@@ -204,22 +169,6 @@ namespace MRG::Vulkan
 
 		m_colorAttachment.imageView =
 		  createImageView(data->device, m_colorAttachment.handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
-
-		createImage(data->physicalDevice,
-		            data->device,
-		            m_specification.width,
-		            m_specification.height,
-		            VK_FORMAT_R16G16B16A16_UNORM,
-		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		            m_objectIDBuffer.handle,
-		            m_objectIDBuffer.memoryHandle);
-
-		transitionImageLayout(data, m_objectIDBuffer.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-		m_objectIDBuffer.imageView =
-		  createImageView(data->device, m_objectIDBuffer.handle, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 
 		createImage(data->physicalDevice,
 		            data->device,
@@ -260,7 +209,7 @@ namespace MRG::Vulkan
 		m_depthAttachment.imageView =
 		  createImageView(data->device, m_depthAttachment.handle, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-		std::array<VkImageView, 3> attachments{m_colorAttachment.imageView, m_objectIDBuffer.imageView, m_depthAttachment.imageView};
+		std::array<VkImageView, 2> attachments{m_colorAttachment.imageView, m_depthAttachment.imageView};
 
 		VkFramebufferCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -272,13 +221,6 @@ namespace MRG::Vulkan
 		createInfo.renderPass = data->renderingPipeline.renderPass;
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
-
-		createBuffer(data->device,
-		             data->physicalDevice,
-		             data->width * data->height * 8,  // TODO: make this work for something else than 64bits pixel data
-		             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
-		             m_objectIDLocalBuffer);
 
 		if (m_ImTextureID != nullptr) {
 			transitionImageLayout(
@@ -299,7 +241,7 @@ namespace MRG::Vulkan
 		}
 	}
 
-	ImTextureID Framebuffer::getImTextureID()
+	ImTextureID Framebuffer::getImTextureID(uint32_t)
 	{
 		if (m_ImTextureID == nullptr) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));

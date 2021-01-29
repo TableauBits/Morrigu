@@ -280,7 +280,7 @@ namespace
 		}
 		const auto swapChainSupport = MRG::Vulkan::querySwapChainSupport(device, surface);
 		if (swapChainSupport.formats.empty() || swapChainSupport.presentModes.empty()) {
-			return false;
+			return false;  // NOLINT (simplify)
 		}
 
 		return true;

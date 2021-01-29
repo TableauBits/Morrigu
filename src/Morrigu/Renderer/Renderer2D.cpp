@@ -177,13 +177,6 @@ namespace MRG
 		return s_renderer->getRenderTarget();
 	}
 
-	[[nodiscard]] uint32_t Renderer2D::objectIDAt(uint32_t x, uint32_t y)
-	{
-		MRG_PROFILE_FUNCTION()
-
-		return s_renderer->objectIDAt(x, y);
-	}
-
 	void Renderer2D::setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 	{
 		MRG_PROFILE_FUNCTION()

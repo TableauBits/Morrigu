@@ -266,25 +266,6 @@ namespace
 		colorAttachments[2].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		colorAttachments[2].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		std::array<VkAttachmentDescription, 2> objectIDBufferAttachments{};
-		objectIDBufferAttachments[0].format = VK_FORMAT_R16G16B16A16_UNORM;
-		objectIDBufferAttachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-		objectIDBufferAttachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		objectIDBufferAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		objectIDBufferAttachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		objectIDBufferAttachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		objectIDBufferAttachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		objectIDBufferAttachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		objectIDBufferAttachments[1].format = VK_FORMAT_R16G16B16A16_UNORM;
-		objectIDBufferAttachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
-		objectIDBufferAttachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		objectIDBufferAttachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		objectIDBufferAttachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		objectIDBufferAttachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		objectIDBufferAttachments[1].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		objectIDBufferAttachments[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
 		// The clearing subpass needs to clear the z buffer, and the rendering subpass needs to load it instead.
 		// ImGui doesn't care
 		std::array<VkAttachmentDescription, 3> depthAttachments{};
@@ -320,31 +301,17 @@ namespace
 		colorAttachmentRef.attachment = 0;
 		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		VkAttachmentReference objectIDBufferAttachmentRef{};
-		objectIDBufferAttachmentRef.attachment = 1;
-		objectIDBufferAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference ImGuiDepthAttachmentRef{};
-		ImGuiDepthAttachmentRef.attachment = 1;
-		ImGuiDepthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
 		VkAttachmentReference depthAttachmentRef{};
-		depthAttachmentRef.attachment = 2;
+		depthAttachmentRef.attachment = 1;
 		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-		std::array<VkAttachmentReference, 2> colorAttachmentRefs = {colorAttachmentRef, objectIDBufferAttachmentRef};
+		std::array<VkAttachmentReference, 1> colorAttachmentRefs = {colorAttachmentRef};
 
-		VkSubpassDescription mainSubpass{};
-		mainSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		mainSubpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
-		mainSubpass.pColorAttachments = colorAttachmentRefs.data();
-		mainSubpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-		VkSubpassDescription ImGuiSubpass{};
-		ImGuiSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		ImGuiSubpass.colorAttachmentCount = 1;
-		ImGuiSubpass.pColorAttachments = &colorAttachmentRefs[0];
-		ImGuiSubpass.pDepthStencilAttachment = &ImGuiDepthAttachmentRef;
+		VkSubpassDescription subpassDescription{};
+		subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpassDescription.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
+		subpassDescription.pColorAttachments = colorAttachmentRefs.data();
+		subpassDescription.pDepthStencilAttachment = &depthAttachmentRef;
 
 		VkSubpassDependency dependency{};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -354,8 +321,8 @@ namespace
 		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-		std::array<VkAttachmentDescription, 3> clearAttachments = {colorAttachments[0], objectIDBufferAttachments[0], depthAttachments[0]};
-		std::array<VkAttachmentDescription, 3> mainAttachments = {colorAttachments[1], objectIDBufferAttachments[1], depthAttachments[1]};
+		std::array<VkAttachmentDescription, 2> clearAttachments = {colorAttachments[0], depthAttachments[0]};
+		std::array<VkAttachmentDescription, 2> mainAttachments = {colorAttachments[1], depthAttachments[1]};
 		std::array<VkAttachmentDescription, 2> ImGuiAttachments = {colorAttachments[2], depthAttachments[2]};
 
 		VkRenderPassCreateInfo renderPassInfo{};
@@ -364,17 +331,17 @@ namespace
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 
-		renderPassInfo.pSubpasses = &mainSubpass;
+		renderPassInfo.pSubpasses = &subpassDescription;
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(clearAttachments.size());
 		renderPassInfo.pAttachments = clearAttachments.data();
 		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[0]), "failed to create clearing render pass!")
 
-		renderPassInfo.pSubpasses = &mainSubpass;
+		renderPassInfo.pSubpasses = &subpassDescription;
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(mainAttachments.size());
 		renderPassInfo.pAttachments = mainAttachments.data();
 		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[1]), "failed to create main render pass!")
 
-		renderPassInfo.pSubpasses = &ImGuiSubpass;
+		renderPassInfo.pSubpasses = &subpassDescription;
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(ImGuiAttachments.size());
 		renderPassInfo.pAttachments = ImGuiAttachments.data();
 		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[2]), "failed to create ImGui render pass!")
@@ -463,7 +430,7 @@ namespace
 		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
-		std::array<VkPipelineColorBlendAttachmentState, 2> blendAttachments{colorBlendAttachment, colorBlendAttachment};
+		std::array<VkPipelineColorBlendAttachmentState, 1> blendAttachments{colorBlendAttachment};
 
 		VkPipelineColorBlendStateCreateInfo colorBlending{};
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -498,24 +465,21 @@ namespace
 		return pipelines;
 	}
 
-	[[nodiscard]] std::vector<std::array<VkFramebuffer, 3>>
-	createFramebuffers(VkDevice device,
-	                   const std::vector<VkImageView>& swapChainImagesViews,
-	                   const std::vector<MRG::Vulkan::LightVulkanImage>& objectIDBuffers,
-	                   VkImageView depthImageView,
-	                   const std::array<VkRenderPass, 3>& renderPasses,
-	                   const VkExtent2D swapChainExtent)
+	[[nodiscard]] std::vector<std::array<VkFramebuffer, 3>> createFramebuffers(VkDevice device,
+	                                                                           const std::vector<VkImageView>& swapChainImagesViews,
+	                                                                           VkImageView depthImageView,
+	                                                                           const std::array<VkRenderPass, 3>& renderPasses,
+	                                                                           const VkExtent2D swapChainExtent)
 	{
 		std::vector<std::array<VkFramebuffer, 3>> frameBuffers(swapChainImagesViews.size());
 
 		for (std::size_t i = 0; i < swapChainImagesViews.size(); ++i) {
-			std::array<VkImageView, 3> mainAttachments = {swapChainImagesViews[i], objectIDBuffers[i].imageView, depthImageView};
-			std::array<VkImageView, 2> ImGuiAttachments = {swapChainImagesViews[i], depthImageView};
+			std::array<VkImageView, 2> attachments = {swapChainImagesViews[i], depthImageView};
 
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.attachmentCount = static_cast<uint32_t>(mainAttachments.size());
-			framebufferInfo.pAttachments = mainAttachments.data();
+			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebufferInfo.pAttachments = attachments.data();
 			framebufferInfo.width = swapChainExtent.width;
 			framebufferInfo.height = swapChainExtent.height;
 			framebufferInfo.layers = 1;
@@ -528,8 +492,6 @@ namespace
 			MRG_VKVALIDATE(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &frameBuffers[i][1]),
 			               "failed to create main framebuffer!")
 
-			framebufferInfo.attachmentCount = static_cast<uint32_t>(ImGuiAttachments.size());
-			framebufferInfo.pAttachments = ImGuiAttachments.data();
 			framebufferInfo.renderPass = renderPasses[2];
 			MRG_VKVALIDATE(vkCreateFramebuffer(device, &framebufferInfo, nullptr, &frameBuffers[i][2]),
 			               "failed to create ImGui framebuffer!")
@@ -616,45 +578,6 @@ namespace
 		endSingleTimeCommand(data, commandBuffer);
 
 		return depthBuffer;
-	}
-
-	[[nodiscard]] std::vector<MRG::Vulkan::LightVulkanImage> createObjectIDBuffers(MRG::Vulkan::WindowProperties* data)
-	{
-		std::vector<MRG::Vulkan::LightVulkanImage> buffers(data->swapChain.imageCount);
-
-		for (auto& buffer : buffers) {
-			MRG::Vulkan::createImage(data->physicalDevice,
-			                         data->device,
-			                         data->width,
-			                         data->height,
-			                         VK_FORMAT_R16G16B16A16_UNORM,
-			                         VK_IMAGE_TILING_OPTIMAL,
-			                         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-			                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			                         buffer.handle,
-			                         buffer.memoryHandle);
-
-			transitionImageLayout(data, buffer.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-			buffer.imageView =
-			  MRG::Vulkan::createImageView(data->device, buffer.handle, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-		}
-
-		return buffers;
-	}
-
-	[[nodiscard]] MRG::Vulkan::Buffer createObjectIDLocalBuffer(MRG::Vulkan::WindowProperties* data)
-	{
-		MRG::Vulkan::Buffer localBuffer{};
-
-		createBuffer(data->device,
-		             data->physicalDevice,
-		             data->width * data->height * 8,  // TODO: make this work for something else than 64bits pixel data
-		             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
-		             localBuffer);
-
-		return localBuffer;
 	}
 
 	[[nodiscard]] std::pair<VkDescriptorPool, std::vector<VkDescriptorSet>> createDescriptorPool(const MRG::Vulkan::WindowProperties* data,
@@ -770,14 +693,10 @@ namespace MRG::Vulkan
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created")
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
-		m_data->swapChain.objectIDBuffers = createObjectIDBuffers(m_data);
-
-		m_objectIDBuffer = createObjectIDLocalBuffer(m_data);
 
 		m_data->swapChain.frameBuffers =
 		  createFramebuffers(m_data->device,
 		                     m_data->swapChain.imageViews,
-		                     m_data->swapChain.objectIDBuffers,
 		                     m_data->swapChain.depthBuffer.imageView,
 		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiRenderPass},
 		                     m_data->swapChain.extent);
@@ -1299,49 +1218,6 @@ namespace MRG::Vulkan
 		m_sceneInProgress = true;
 	}
 
-	uint32_t Renderer2D::objectIDAt(uint32_t x, uint32_t y)
-	{
-		void* data;
-		auto targetImage = (m_renderTarget == nullptr) ? m_data->swapChain.objectIDBuffers[m_imageIndex].handle
-		                                               : m_renderTarget->getObjectBufferAttachment().handle;
-		auto targetLocalBuffer = (m_renderTarget == nullptr) ? m_objectIDBuffer : m_renderTarget->getObjectIDLocalBuffer();
-		auto width = (m_renderTarget == nullptr) ? m_data->width : m_renderTarget->getSpecification().width;
-		auto height = (m_renderTarget == nullptr) ? m_data->height : m_renderTarget->getSpecification().height;
-
-		auto offset = (y * width + x) * 8;  // TODO: This is for 64 bits per pixel only at the moment
-
-		auto cmdBuffer = beginSingleTimeCommand(m_data);
-		transitionImageLayoutInline(cmdBuffer, targetImage, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-
-		VkBufferImageCopy region{};
-		region.bufferOffset = 0;
-		region.bufferRowLength = 0;
-		region.bufferImageHeight = 0;
-		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		region.imageSubresource.mipLevel = 0;
-		region.imageSubresource.baseArrayLayer = 0;
-		region.imageSubresource.layerCount = 1;
-		region.imageOffset = {0, 0, 0};
-		region.imageExtent = {width, height, 1};
-
-		vkCmdCopyImageToBuffer(cmdBuffer, targetImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, targetLocalBuffer.handle, 1, &region);
-
-		transitionImageLayoutInline(cmdBuffer, targetImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		endSingleTimeCommand(m_data, cmdBuffer);
-
-		MRG_VKVALIDATE(vkMapMemory(m_data->device, targetLocalBuffer.memoryHandle, offset, sizeof(uint64_t), 0, &data),
-		               "Failed to map memory!")
-		// layout in memory is: ABGR, 16 bits for each channel
-		uint64_t pixelData = *((uint64_t*)data);
-		uint32_t objectID = entt::null;
-		if ((pixelData & 0xffff00000000) != 0) {
-			objectID = pixelData & 0xffffffff;
-		}
-		vkUnmapMemory(m_data->device, targetLocalBuffer.memoryHandle);
-
-		return objectID;
-	}
-
 	void Renderer2D::clear()
 	{
 		MRG_PROFILE_FUNCTION()
@@ -1487,15 +1363,6 @@ namespace MRG::Vulkan
 		vkDestroyImage(m_data->device, m_data->swapChain.depthBuffer.handle, nullptr);
 		vkFreeMemory(m_data->device, m_data->swapChain.depthBuffer.memoryHandle, nullptr);
 
-		for (auto objectIDBuffer : m_data->swapChain.objectIDBuffers) {
-			vkDestroyImageView(m_data->device, objectIDBuffer.imageView, nullptr);
-			vkDestroyImage(m_data->device, objectIDBuffer.handle, nullptr);
-			vkFreeMemory(m_data->device, objectIDBuffer.memoryHandle, nullptr);
-		}
-
-		vkDestroyBuffer(m_data->device, m_objectIDBuffer.handle, nullptr);
-		vkFreeMemory(m_data->device, m_objectIDBuffer.memoryHandle, nullptr);
-
 		for (auto framebuffers : m_data->swapChain.frameBuffers) {
 			for (auto framebuffer : framebuffers) { vkDestroyFramebuffer(m_data->device, framebuffer, nullptr); }
 		}
@@ -1543,15 +1410,11 @@ namespace MRG::Vulkan
 		m_data->ImGuiRenderPass = ImGuiRP;
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
-		m_data->swapChain.objectIDBuffers = createObjectIDBuffers(m_data);
-
-		m_objectIDBuffer = createObjectIDLocalBuffer(m_data);
 
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created")
 		m_data->swapChain.frameBuffers =
 		  createFramebuffers(m_data->device,
 		                     m_data->swapChain.imageViews,
-		                     m_data->swapChain.objectIDBuffers,
 		                     m_data->swapChain.depthBuffer.imageView,
 		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiRenderPass},
 		                     m_data->swapChain.extent);
