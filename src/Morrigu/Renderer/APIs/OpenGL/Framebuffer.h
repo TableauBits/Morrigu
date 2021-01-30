@@ -25,7 +25,11 @@ namespace MRG::OpenGL
 		void bind();
 		static void unbind();
 
-		[[nodiscard]] virtual ImTextureID getImTextureID(uint32_t) override { return (ImTextureID)(uintptr_t)m_colorAttachment; }
+		[[nodiscard]] virtual ImTextureID getImTextureID(uint32_t index = 0) override
+		{
+			MRG_CORE_ASSERT(index < m_colorAttachments.size(), "Invalid index!")
+			return (ImTextureID)(uintptr_t)m_colorAttachments[index];
+		}
 		[[nodiscard]] const std::array<ImVec2, 2>& getUVMapping() const override { return m_UVMapping; }
 
 		[[nodiscard]] virtual const FramebufferSpecification& getSpecification() const override { return m_specification; }
@@ -34,7 +38,12 @@ namespace MRG::OpenGL
 	private:
 		uint32_t m_rendererID = 0;
 		std::array<ImVec2, 2> m_UVMapping = {ImVec2{0, 1}, ImVec2{1, 0}};
-		uint32_t m_colorAttachment = 0, m_depthAttachment = 0;
+
+		std::vector<FramebufferTextureSpecification> m_colorAttachmentsSpecifications{};
+		FramebufferTextureSpecification m_depthAttachmentsSpecification = FramebufferTextureFormat::None;
+
+		std::vector<uint32_t> m_colorAttachments{};
+		uint32_t m_depthAttachment = 0;
 	};
 
 }  // namespace MRG::OpenGL

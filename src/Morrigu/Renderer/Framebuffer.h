@@ -47,7 +47,6 @@ namespace MRG
 	{
 		uint32_t width = 0, height = 0;
 		FramebufferAttachmentSpecification attachments;
-		uint32_t samples = 1;
 
 		bool swapChainTarget = false;
 	};

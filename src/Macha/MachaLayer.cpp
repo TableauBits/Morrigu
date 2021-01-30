@@ -16,7 +16,11 @@ namespace MRG
 	{
 		MRG_PROFILE_FUNCTION()
 
-		m_renderTarget = Framebuffer::create({1280, 720});
+		m_renderTarget =
+		  Framebuffer::create({1280,
+		                       720,
+		                       FramebufferAttachmentSpecification{
+		                         FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RGBA16, FramebufferTextureFormat::Depth}});
 		Renderer2D::setRenderTarget(m_renderTarget);
 		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
 
