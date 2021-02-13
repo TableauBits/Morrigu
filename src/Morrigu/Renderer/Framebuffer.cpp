@@ -23,4 +23,20 @@ namespace MRG
 		}
 		}
 	}
+
+	[[nodiscard]] bool MRG::isDepthFormat(MRG::FramebufferTextureFormat format)
+	{
+		switch (format) {
+		case MRG::FramebufferTextureFormat::DEPTH24STENCIL8: {
+			return true;
+		}
+		case MRG::FramebufferTextureFormat::RGBA8:
+		case MRG::FramebufferTextureFormat::RGBA16:
+		case MRG::FramebufferTextureFormat::None: {
+			return false;
+		}
+		}
+
+		return false;
+	}
 }  // namespace MRG

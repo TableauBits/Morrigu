@@ -817,7 +817,7 @@ namespace MRG::Vulkan
 
 		if (m_renderTarget != nullptr) {
 			transitionImageLayout(m_data,
-			                      m_renderTarget->getColorAttachment().handle,
+			                      m_renderTarget->getColorAttachment(0).handle,  // FIXME
 			                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		}
@@ -856,7 +856,7 @@ namespace MRG::Vulkan
 
 		if (m_renderTarget != nullptr) {
 			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][2],
-			                            m_renderTarget->getColorAttachment().handle,
+			                            m_renderTarget->getColorAttachment(0).handle,  // FIXME
 			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		}
@@ -1233,10 +1233,9 @@ namespace MRG::Vulkan
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][0], &beginInfo),
 		               "failed to begin recording command bufer!")
 
-		std::array<VkClearValue, 3> clearColors{};
+		std::array<VkClearValue, 2> clearColors{};
 		clearColors[0].color = {{m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a}};
-		clearColors[1].color = {{0.f, 0.f, 0.f, 1.f}};
-		clearColors[2].depthStencil = {1.f, 0};
+		clearColors[1].depthStencil = {1.f, 0};
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

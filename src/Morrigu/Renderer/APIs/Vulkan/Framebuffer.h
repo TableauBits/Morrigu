@@ -23,19 +23,28 @@ namespace MRG::Vulkan
 
 		void invalidate();
 
-		[[nodiscard]] ImTextureID getImTextureID(uint32_t) override;
+		[[nodiscard]] ImTextureID getImTextureID(uint32_t index) override;
 		[[nodiscard]] const FramebufferSpecification& getSpecification() const override { return m_specification; }
 		[[nodiscard]] const std::array<ImVec2, 2>& getUVMapping() const override { return m_UVMapping; }
 
 		[[nodiscard]] auto getHandle() const { return m_handle; }
-		[[nodiscard]] auto getColorAttachment() const { return m_colorAttachment; }
+		[[nodiscard]] auto getColorAttachment(std::size_t index) const
+		{
+			MRG_CORE_ASSERT(index < m_colorAttachments.size(), "invalid index!")
+			return m_colorAttachments[index];
+		}
 
 	private:
-		ImTextureID m_ImTextureID = nullptr;
-		std::array<ImVec2, 2> m_UVMapping = {ImVec2{0, 0}, ImVec2{1, 1}};
 		VkFramebuffer m_handle{};
-		LightVulkanImage m_colorAttachment{}, m_depthAttachment{};
+		std::array<ImVec2, 2> m_UVMapping = {ImVec2{0, 0}, ImVec2{1, 1}};
+
+		std::vector<ImTextureID> m_ImTextureIDs{};
+		std::vector<LightVulkanImage> m_colorAttachments{};
+		LightVulkanImage m_depthAttachment{};
 		VkSampler m_sampler{};
+
+		VkPipeline m_pipeline{};
+		VkRenderPass m_clearingRP{}, m_mainRP{};
 	};
 
 }  // namespace MRG::Vulkan

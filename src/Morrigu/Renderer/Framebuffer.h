@@ -25,6 +25,8 @@ namespace MRG
 		Depth = DEPTH24STENCIL8
 	};
 
+	[[nodiscard]] bool isDepthFormat(MRG::FramebufferTextureFormat format);
+
 	struct FramebufferTextureSpecification
 	{
 		FramebufferTextureSpecification() = default;
@@ -74,7 +76,11 @@ namespace MRG
 
 	protected:
 		Framebuffer() = default;
+
 		FramebufferSpecification m_specification;
+		std::vector<FramebufferTextureSpecification> m_colorAttachmentsSpecifications{};
+		FramebufferTextureSpecification m_depthAttachmentsSpecification = FramebufferTextureFormat::None;
+
 		bool m_isDestroyed = false;
 	};
 

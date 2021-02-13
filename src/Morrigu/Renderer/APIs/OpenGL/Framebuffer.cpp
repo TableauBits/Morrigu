@@ -27,22 +27,6 @@ namespace
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, GL_TEXTURE_2D, id, 0);
 	}
-
-	[[nodiscard]] bool isDepthFormat(MRG::FramebufferTextureFormat format)
-	{
-		switch (format) {
-		case MRG::FramebufferTextureFormat::DEPTH24STENCIL8: {
-			return true;
-		}
-		case MRG::FramebufferTextureFormat::RGBA8:
-		case MRG::FramebufferTextureFormat::RGBA16:
-		case MRG::FramebufferTextureFormat::None: {
-			return false;
-		}
-		}
-
-		return false;
-	}
 }  // namespace
 
 namespace MRG::OpenGL
