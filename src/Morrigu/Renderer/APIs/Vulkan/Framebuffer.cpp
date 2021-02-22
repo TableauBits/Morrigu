@@ -39,11 +39,12 @@ namespace MRG::Vulkan
 			}
 		}
 
-		m_ImTextureIDs.resize(m_colorAttachments.size(), nullptr);
+		m_colorAttachments.resize(m_colorAttachmentsSpecifications.size());
+		m_ImTextureIDs.resize(m_colorAttachmentsSpecifications.size(), nullptr);
 
-		std::vector<VkImageView> attachments(spec.attachments.attachments.size());
+		std::vector<VkImageView> attachments{};
 
-		for (auto i = 0; i < m_colorAttachmentsSpecifications.size(); ++i) {
+		for (std::size_t i = 0; i < m_colorAttachmentsSpecifications.size(); ++i) {
 			createImage(data->physicalDevice,
 			            data->device,
 			            m_specification.width,
@@ -57,8 +58,10 @@ namespace MRG::Vulkan
 
 			transitionImageLayout(data, m_colorAttachments[i].handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-			m_colorAttachments[i].imageView =
-			  createImageView(data->device, m_colorAttachments[i].handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+			m_colorAttachments[i].imageView = createImageView(data->device,
+			                                                  m_colorAttachments[i].handle,
+			                                                  internalToVulkanFormat(m_colorAttachmentsSpecifications[i].textureFormat),
+			                                                  VK_IMAGE_ASPECT_COLOR_BIT);
 
 			attachments.emplace_back(m_colorAttachments[i].imageView);
 		}
@@ -105,7 +108,7 @@ namespace MRG::Vulkan
 			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.image = m_depthAttachment.handle;
-			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 			barrier.subresourceRange.baseMipLevel = 0;
 			barrier.subresourceRange.levelCount = 1;
 			barrier.subresourceRange.baseArrayLayer = 0;
@@ -201,7 +204,7 @@ namespace MRG::Vulkan
 		  m_colorAttachmentsSpecifications.size() +
 		  static_cast<int>(m_depthAttachmentsSpecification.textureFormat != FramebufferTextureFormat::None));
 
-		for (auto i = 0; i < m_colorAttachmentsSpecifications.size(); ++i) {
+		for (std::size_t i = 0; i < m_colorAttachmentsSpecifications.size(); ++i) {
 			createImage(data->physicalDevice,
 			            data->device,
 			            m_specification.width,
@@ -297,7 +300,7 @@ namespace MRG::Vulkan
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
 
-		for (auto i = 0; i < m_colorAttachments.size(); ++i) {
+		for (std::size_t i = 0; i < m_colorAttachments.size(); ++i) {
 			if (m_ImTextureIDs[i] != nullptr) {
 				transitionImageLayout(
 				  data, m_colorAttachments[i].handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

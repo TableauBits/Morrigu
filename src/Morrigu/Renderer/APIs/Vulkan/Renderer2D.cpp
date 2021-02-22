@@ -690,7 +690,6 @@ namespace MRG::Vulkan
 		                  {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getBindingDescription()});
 		m_data->clearingPipeline.handle = clearingPipeline;
 		m_data->renderingPipeline.handle = renderingPipeline;
-		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created")
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 

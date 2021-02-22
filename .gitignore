@@ -1,16 +1,19 @@
-build
-.vs
-.vscode
+build/
+.vs/
+.vscode/
 cmake-build-release/
 cmake-build-debug/
+Debug/
+Release
 .idea/
 temp/
 
-src/Morrigu/Vendor/ImGui/bindings
-src/**/runtime/engine
+src/Morrigu/Vendor/ImGui/bindings/
+src/**/runtime/engine/
 imgui.ini
-*.json
 *.log
 *.spv
 
 doc/
+.ccls-cache/
+

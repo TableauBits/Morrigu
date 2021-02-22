@@ -43,8 +43,8 @@ namespace MRG::Vulkan
 		LightVulkanImage m_depthAttachment{};
 		VkSampler m_sampler{};
 
-		VkPipeline m_pipeline{};
-		VkRenderPass m_clearingRP{}, m_mainRP{};
+		// VkPipeline m_pipeline{};
+		// VkRenderPass m_clearingRP{}, m_mainRP{};
 	};
 
 }  // namespace MRG::Vulkan

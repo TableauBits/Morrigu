@@ -24,7 +24,7 @@ namespace MRG
 		}
 	}
 
-	[[nodiscard]] bool MRG::isDepthFormat(MRG::FramebufferTextureFormat format)
+	[[nodiscard]] bool isDepthFormat(MRG::FramebufferTextureFormat format)
 	{
 		switch (format) {
 		case MRG::FramebufferTextureFormat::DEPTH24STENCIL8: {
