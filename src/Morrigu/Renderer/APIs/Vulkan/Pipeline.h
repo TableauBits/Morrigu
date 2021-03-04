@@ -20,7 +20,7 @@ namespace MRG::Vulkan
 	class Pipeline
 	{
 	public:
-		explicit Pipeline() {}
+		explicit Pipeline() = default;
 		explicit Pipeline(const PipelineSpec& specification);
 		~Pipeline();
 

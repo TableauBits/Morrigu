@@ -173,7 +173,7 @@ namespace MRG::Vulkan
 
 			attachments.emplace_back(clearingDepthAttachment);
 
-			depthAttachmentRef.attachment = colorAttachmentRefs.size();
+			depthAttachmentRef.attachment = static_cast<uint32_t>(colorAttachmentRefs.size());
 			depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		}
 
@@ -204,6 +204,5 @@ namespace MRG::Vulkan
 
 		return colorAttachmentRefs.size();
 	}
-
 
 }  // namespace MRG::Vulkan

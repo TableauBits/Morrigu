@@ -583,6 +583,8 @@ namespace MRG::Vulkan
 		cleanupSwapChain();
 
 		m_data->clearingPipeline.destroy();
+		m_data->renderingPipeline.destroy();
+		vkDestroyRenderPass(m_data->device, m_data->ImGuiRenderPass, nullptr);
 
 		vkDestroyDescriptorSetLayout(m_data->device, m_data->descriptorSetLayout, nullptr);
 
@@ -658,14 +660,14 @@ namespace MRG::Vulkan
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][2], &beginInfo),
 		               "failed to begin recording command bufer!")
 
-        if (m_renderTarget != nullptr) {
-            for (auto& colorAttachment : m_renderTarget->getColorAttachments()) {
-                transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][2],
-                                            colorAttachment.handle,
-                                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            }
-        }
+		if (m_renderTarget != nullptr) {
+			for (auto& colorAttachment : m_renderTarget->getColorAttachments()) {
+				transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][2],
+				                            colorAttachment.handle,
+				                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+		}
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

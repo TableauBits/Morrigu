@@ -251,6 +251,8 @@ namespace MRG::Vulkan
 
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
 
+		vkDestroySampler(data->device, m_sampler, nullptr);
+
 		std::vector<VkImageView> attachments;
 
 		for (std::size_t i = 0; i < m_colorAttachmentsSpecifications.size(); ++i) {
