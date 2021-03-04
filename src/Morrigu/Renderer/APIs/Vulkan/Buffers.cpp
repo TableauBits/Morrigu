@@ -1,6 +1,7 @@
 #include "Buffers.h"
 
 #include "Debug/Instrumentor.h"
+#include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/Renderer2D.h"
 
 namespace MRG::Vulkan

@@ -10,6 +10,7 @@ layout(location = 3) in float v_tilingFactor;
 layout(location = 4) in flat uint v_objectID;
 
 layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 color2;
 
 void main() {
     color = v_color;
@@ -47,4 +48,5 @@ void main() {
 		case 30: color *= texture(u_textures[30], v_texCoord * v_tilingFactor); break;
 		case 31: color *= texture(u_textures[31], v_texCoord * v_tilingFactor); break;
 	}
+	color2 = vec4(0.8, 0.2, 0.3, 1.0);
 }

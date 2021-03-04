@@ -47,5 +47,7 @@ namespace MRG
 
 		// Panels
 		SceneHierarchyPanel m_sceneHierarchyPanel;
+
+		bool test = false;
 	};
 }  // namespace MRG

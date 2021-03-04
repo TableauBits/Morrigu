@@ -188,19 +188,6 @@ namespace
 		return pushConstantsRange;
 	}
 
-	[[nodiscard]] VkPipelineLayoutCreateInfo populatePipelineLayout(const VkDescriptorSetLayout* descriptorSetLayout,
-	                                                                const VkPushConstantRange* pushConstantsRange)
-	{
-		VkPipelineLayoutCreateInfo pipelineCreateInfo{};
-		pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineCreateInfo.setLayoutCount = 1;
-		pipelineCreateInfo.pSetLayouts = descriptorSetLayout;
-		pipelineCreateInfo.pushConstantRangeCount = 1;
-		pipelineCreateInfo.pPushConstantRanges = pushConstantsRange;
-
-		return pipelineCreateInfo;
-	}
-
 	VkFormat findSupportedFormat(VkPhysicalDevice physicalDevice,
 	                             const std::vector<VkFormat>& candidates,
 	                             VkImageTiling tiling,
@@ -230,72 +217,29 @@ namespace
 		                           VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 	}
 
-	[[nodiscard]] std::array<VkRenderPass, 3> createRenderPasses(VkPhysicalDevice physicalDevice, VkDevice device, VkFormat swapChainFormat)
+	[[nodiscard]] VkRenderPass createImGuiRenderPass(VkPhysicalDevice physicalDevice, VkDevice device, VkFormat swapChainFormat)
 	{
-		/// We need 3 render passes:
-		// - A clearing render pass
-		// - A rendering render pass, that will be used once per scene (or batch), and will flush a batch;
-		// - An ImGui render pass to ensure that it's drawn last.
-		std::array<VkRenderPass, 3> renderpasses{};
+		VkRenderPass renderpass{};
 
-		std::array<VkAttachmentDescription, 3> colorAttachments{};
-		colorAttachments[0].format = swapChainFormat;
-		colorAttachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-		colorAttachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		colorAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		colorAttachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		VkAttachmentDescription colorAttachment{};
+		colorAttachment.format = swapChainFormat;
+		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		colorAttachments[1].format = swapChainFormat;
-		colorAttachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
-		colorAttachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		colorAttachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachments[1].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		colorAttachments[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		colorAttachments[2].format = swapChainFormat;
-		colorAttachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
-		colorAttachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		colorAttachments[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colorAttachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colorAttachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachments[2].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		colorAttachments[2].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		// The clearing subpass needs to clear the z buffer, and the rendering subpass needs to load it instead.
-		// ImGui doesn't care
-		std::array<VkAttachmentDescription, 3> depthAttachments{};
-		const auto format = findDepthFormat(physicalDevice);
-		depthAttachments[0].format = format;
-		depthAttachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-		depthAttachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depthAttachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depthAttachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachments[0].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depthAttachments[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		depthAttachments[1].format = format;
-		depthAttachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
-		depthAttachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		depthAttachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depthAttachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depthAttachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachments[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depthAttachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		depthAttachments[2].format = format;
-		depthAttachments[2].samples = VK_SAMPLE_COUNT_1_BIT;
-		depthAttachments[2].loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depthAttachments[2].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachments[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depthAttachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachments[2].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depthAttachments[2].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		VkAttachmentDescription depthAttachment{};
+		depthAttachment.format = findDepthFormat(physicalDevice);
+		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentReference colorAttachmentRef{};
 		colorAttachmentRef.attachment = 0;
@@ -305,12 +249,10 @@ namespace
 		depthAttachmentRef.attachment = 1;
 		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-		std::array<VkAttachmentReference, 1> colorAttachmentRefs = {colorAttachmentRef};
-
 		VkSubpassDescription subpassDescription{};
 		subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpassDescription.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
-		subpassDescription.pColorAttachments = colorAttachmentRefs.data();
+		subpassDescription.colorAttachmentCount = 1;
+		subpassDescription.pColorAttachments = &colorAttachmentRef;
 		subpassDescription.pDepthStencilAttachment = &depthAttachmentRef;
 
 		VkSubpassDependency dependency{};
@@ -321,9 +263,7 @@ namespace
 		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-		std::array<VkAttachmentDescription, 2> clearAttachments = {colorAttachments[0], depthAttachments[0]};
-		std::array<VkAttachmentDescription, 2> mainAttachments = {colorAttachments[1], depthAttachments[1]};
-		std::array<VkAttachmentDescription, 2> ImGuiAttachments = {colorAttachments[2], depthAttachments[2]};
+		std::array<VkAttachmentDescription, 2> ImGuiAttachments = {colorAttachment, depthAttachment};
 
 		VkRenderPassCreateInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -332,137 +272,11 @@ namespace
 		renderPassInfo.pDependencies = &dependency;
 
 		renderPassInfo.pSubpasses = &subpassDescription;
-		renderPassInfo.attachmentCount = static_cast<uint32_t>(clearAttachments.size());
-		renderPassInfo.pAttachments = clearAttachments.data();
-		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[0]), "failed to create clearing render pass!")
-
-		renderPassInfo.pSubpasses = &subpassDescription;
-		renderPassInfo.attachmentCount = static_cast<uint32_t>(mainAttachments.size());
-		renderPassInfo.pAttachments = mainAttachments.data();
-		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[1]), "failed to create main render pass!")
-
-		renderPassInfo.pSubpasses = &subpassDescription;
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(ImGuiAttachments.size());
 		renderPassInfo.pAttachments = ImGuiAttachments.data();
-		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpasses[2]), "failed to create ImGui render pass!")
+		MRG_VKVALIDATE(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderpass), "failed to create ImGui render pass!")
 
-		return renderpasses;
-	}
-
-	[[nodiscard]] std::array<VkPipeline, 2> createPipelines(const MRG::Vulkan::WindowProperties* data,
-	                                                        const MRG::Ref<MRG::Vulkan::Shader>& textureShader,
-	                                                        const std::vector<VkVertexInputAttributeDescription>& attributeDescriptions,
-	                                                        const std::vector<VkVertexInputBindingDescription>& bindingDescriptions)
-	{
-		std::array<VkPipeline, 2> pipelines{};
-
-		// TODO: Add proper debug logging for selected rendering features
-		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertShaderStageInfo.module = textureShader->m_vertexShaderModule;
-		vertShaderStageInfo.pName = "main";
-
-		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderStageInfo.module = textureShader->m_fragmentShaderModule;
-		fragShaderStageInfo.pName = "main";
-
-		std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = {vertShaderStageInfo, fragShaderStageInfo};
-
-		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-		vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
-		vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
-
-		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssembly.primitiveRestartEnable = VK_FALSE;
-		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-
-		std::array<VkDynamicState, 2> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-		VkPipelineDynamicStateCreateInfo dynamicState{};
-		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-		dynamicState.pDynamicStates = dynamicStates.data();
-
-		VkPipelineViewportStateCreateInfo viewportState{};
-		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		viewportState.viewportCount = 1;
-		viewportState.pViewports = nullptr;  // Dynamic state
-		viewportState.scissorCount = 1;
-		viewportState.pScissors = nullptr;  // Dynamic state
-
-		VkPipelineRasterizationStateCreateInfo rasterizer{};
-		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizer.depthClampEnable = VK_FALSE;
-		rasterizer.rasterizerDiscardEnable = VK_FALSE;
-		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode = VK_CULL_MODE_NONE;
-		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		rasterizer.depthBiasEnable = VK_FALSE;
-
-		VkPipelineMultisampleStateCreateInfo multisampling{};
-		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		multisampling.sampleShadingEnable = VK_FALSE;
-		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-
-		VkPipelineDepthStencilStateCreateInfo depthStencil{};
-		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencil.depthTestEnable = VK_TRUE;
-		depthStencil.depthWriteEnable = VK_TRUE;
-		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-		depthStencil.depthBoundsTestEnable = VK_FALSE;
-		depthStencil.stencilTestEnable = VK_FALSE;
-
-		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-		colorBlendAttachment.blendEnable = VK_TRUE;
-		colorBlendAttachment.colorWriteMask =
-		  VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-
-		std::array<VkPipelineColorBlendAttachmentState, 1> blendAttachments{colorBlendAttachment};
-
-		VkPipelineColorBlendStateCreateInfo colorBlending{};
-		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlending.logicOpEnable = VK_FALSE;
-		colorBlending.attachmentCount = static_cast<uint32_t>(blendAttachments.size());
-		colorBlending.pAttachments = blendAttachments.data();
-
-		VkGraphicsPipelineCreateInfo pipelineInfo{};
-		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
-		pipelineInfo.pStages = shaderStages.data();
-		pipelineInfo.pVertexInputState = &vertexInputInfo;
-		pipelineInfo.pInputAssemblyState = &inputAssembly;
-		pipelineInfo.pViewportState = &viewportState;
-		pipelineInfo.pRasterizationState = &rasterizer;
-		pipelineInfo.pMultisampleState = &multisampling;
-		pipelineInfo.pDepthStencilState = &depthStencil;
-		pipelineInfo.pColorBlendState = &colorBlending;
-		pipelineInfo.layout = data->clearingPipeline.layout;
-		pipelineInfo.renderPass = data->clearingPipeline.renderPass;
-		pipelineInfo.subpass = 0;
-		pipelineInfo.pDynamicState = &dynamicState;
-
-		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[0]),
-		               "failed to create graphics pipeline!")
-
-		pipelineInfo.layout = data->renderingPipeline.layout;
-		pipelineInfo.renderPass = data->renderingPipeline.renderPass;
-		MRG_VKVALIDATE(vkCreateGraphicsPipelines(data->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipelines[1]),
-		               "failed to create graphics pipeline!")
-
-		return pipelines;
+		return renderpass;
 	}
 
 	[[nodiscard]] std::vector<std::array<VkFramebuffer, 3>> createFramebuffers(VkDevice device,
@@ -622,24 +436,21 @@ namespace MRG::Vulkan
 		MRG_PROFILE_FUNCTION()
 
 		m_data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
-		m_textureShader = createRef<Shader>("engine/shaders/texture");
+		m_data->textureShader = createRef<Shader>("engine/shaders/texture");
 
 		m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
 		MRG_ENGINE_INFO("Vulkan swap chain successfully created")
 
-		auto [clearingRP, renderingRP, ImGuiRP] = createRenderPasses(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
-		m_data->clearingPipeline.renderPass = clearingRP;
-		m_data->renderingPipeline.renderPass = renderingRP;
-		m_data->ImGuiRenderPass = ImGuiRP;
+		m_data->ImGuiRenderPass = createImGuiRenderPass(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
 
 		m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
 		MRG_ENGINE_TRACE("Command pool successfully created")
 
-		m_vertexArray = createRef<VertexArray>();
+		m_data->vertexArray = createRef<VertexArray>();
 
 		const auto vertexBuffer = createRef<VertexBuffer>(static_cast<uint32_t>(maxVertices * sizeof(QuadVertex)));
 		vertexBuffer->layout = QuadVertex::getLayout();
-		m_vertexArray->addVertexBuffer(vertexBuffer);
+		m_data->vertexArray->addVertexBuffer(vertexBuffer);
 
 		m_qvbBase = new QuadVertex[maxVertices];
 		auto quadIndices = new uint32_t[maxIndices];
@@ -658,7 +469,7 @@ namespace MRG::Vulkan
 		}
 
 		const auto indexBuffer = std::static_pointer_cast<Vulkan::IndexBuffer>(IndexBuffer::create(quadIndices, maxIndices));
-		m_vertexArray->setIndexBuffer(indexBuffer);
+		m_data->vertexArray->setIndexBuffer(indexBuffer);
 		delete[] quadIndices;
 
 		m_whiteTexture = createRef<Texture2D>(1, 1);
@@ -675,21 +486,58 @@ namespace MRG::Vulkan
 
 		m_data->pushConstantRanges = populatePushConstantsRanges();
 
-		const auto pipelineLayoutCreateInfo = populatePipelineLayout(&m_data->descriptorSetLayout, &m_data->pushConstantRanges);
-		VkPipelineLayout layout;
-		MRG_VKVALIDATE(vkCreatePipelineLayout(m_data->device, &pipelineLayoutCreateInfo, nullptr, &layout),
-		               "failed to create pipeline layout!")
-		m_data->clearingPipeline.layout = layout;
-		m_data->renderingPipeline.layout = layout;
-		MRG_ENGINE_TRACE("Vulkan graphics pipeline layout successfully created")
+		VkAttachmentDescription clearColorAttachment{};
+		clearColorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		clearColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		clearColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		clearColorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		clearColorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		clearColorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		clearColorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		auto [clearingPipeline, renderingPipeline] =
-		  createPipelines(m_data,
-		                  m_textureShader,
-		                  std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getAttributeDescriptions(),
-		                  {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_vertexArray)->getBindingDescription()});
-		m_data->clearingPipeline.handle = clearingPipeline;
-		m_data->renderingPipeline.handle = renderingPipeline;
+		VkAttachmentDescription clearDepthAttachment{};
+		clearDepthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		clearDepthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		clearDepthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		clearDepthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		clearDepthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		clearDepthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		clearDepthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		PipelineSpec clearSpec = {m_data->textureShader,
+		                          {m_data->swapChain.imageFormat},
+		                          findDepthFormat(m_data->physicalDevice),
+		                          clearColorAttachment,
+		                          clearDepthAttachment,
+		                          std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_data->vertexArray)->getAttributeDescriptions(),
+		                          {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_data->vertexArray)->getBindingDescription()}};
+		VkAttachmentDescription renderingColorAttachment{};
+		renderingColorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		renderingColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		renderingColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		renderingColorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		renderingColorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		renderingColorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		renderingColorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentDescription renderingDepthAttachment{};
+		renderingDepthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		renderingDepthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		renderingDepthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		renderingDepthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		renderingDepthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		renderingDepthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		renderingDepthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		PipelineSpec renderingSpec = {m_data->textureShader,
+		                              {m_data->swapChain.imageFormat},
+		                              findDepthFormat(m_data->physicalDevice),
+		                              renderingColorAttachment,
+		                              renderingDepthAttachment,
+		                              std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_data->vertexArray)->getAttributeDescriptions(),
+		                              {std::static_pointer_cast<MRG::Vulkan::VertexArray>(m_data->vertexArray)->getBindingDescription()}};
+		m_data->clearingPipeline.init(clearSpec);
+		m_data->renderingPipeline.init(renderingSpec);
 
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 
@@ -697,7 +545,7 @@ namespace MRG::Vulkan
 		  createFramebuffers(m_data->device,
 		                     m_data->swapChain.imageViews,
 		                     m_data->swapChain.depthBuffer.imageView,
-		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiRenderPass},
+		                     {m_data->clearingPipeline.getRenderpass(), m_data->renderingPipeline.getRenderpass(), m_data->ImGuiRenderPass},
 		                     m_data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created")
 
@@ -734,16 +582,12 @@ namespace MRG::Vulkan
 
 		cleanupSwapChain();
 
-		vkDestroyPipeline(m_data->device, m_data->clearingPipeline.handle, nullptr);
-		vkDestroyPipeline(m_data->device, m_data->renderingPipeline.handle, nullptr);
-
-		// All 3 pipelines have the same VkLayout handle, so destroying only one is necessary
-		vkDestroyPipelineLayout(m_data->device, m_data->clearingPipeline.layout, nullptr);
+		m_data->clearingPipeline.destroy();
 
 		vkDestroyDescriptorSetLayout(m_data->device, m_data->descriptorSetLayout, nullptr);
 
-		m_vertexArray->destroy();
-		m_textureShader->destroy();
+		m_data->vertexArray->destroy();
+		m_data->textureShader->destroy();
 
 		m_whiteTexture->destroy();
 		for (const auto& texture : m_textureSlots) {
@@ -803,7 +647,7 @@ namespace MRG::Vulkan
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
 
 		VkSemaphore waitSemaphores = m_imageAvailableSemaphores[m_data->currentFrame];
-		VkSemaphore signalSempahores = m_imageAvailableSemaphores[m_data->currentFrame];
+		VkSemaphore signalSempaphores = m_imageAvailableSemaphores[m_data->currentFrame];
 		VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkCommandBufferBeginInfo beginInfo{};
@@ -814,12 +658,14 @@ namespace MRG::Vulkan
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][2], &beginInfo),
 		               "failed to begin recording command bufer!")
 
-		if (m_renderTarget != nullptr) {
-			transitionImageLayout(m_data,
-			                      m_renderTarget->getColorAttachment(0).handle,  // FIXME
-			                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		}
+        if (m_renderTarget != nullptr) {
+            for (auto& colorAttachment : m_renderTarget->getColorAttachments()) {
+                transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][2],
+                                            colorAttachment.handle,
+                                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            }
+        }
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -837,7 +683,7 @@ namespace MRG::Vulkan
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex][2];
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &signalSempahores;
+		submitInfo.pSignalSemaphores = &signalSempaphores;
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][2], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -854,10 +700,12 @@ namespace MRG::Vulkan
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][2]);
 
 		if (m_renderTarget != nullptr) {
-			transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][2],
-			                            m_renderTarget->getColorAttachment(0).handle,  // FIXME
-			                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			for (auto& colorAttachment : m_renderTarget->getColorAttachments()) {
+				transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][2],
+				                            colorAttachment.handle,
+				                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			}
 		}
 
 		MRG_VKVALIDATE(vkEndCommandBuffer(m_data->commandBuffers[m_imageIndex][2]), "failed to record command buffer!")
@@ -920,7 +768,7 @@ namespace MRG::Vulkan
 		MRG_PROFILE_FUNCTION()
 
 		VkSemaphore waitSemaphores = m_imageAvailableSemaphores[m_data->currentFrame];
-		VkSemaphore signalSempahores = m_imageAvailableSemaphores[m_data->currentFrame];
+		VkSemaphore signalSemaphores = m_imageAvailableSemaphores[m_data->currentFrame];
 		VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkSubmitInfo submitInfo{};
@@ -931,7 +779,7 @@ namespace MRG::Vulkan
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex][1];
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &signalSempahores;
+		submitInfo.pSignalSemaphores = &signalSemaphores;
 
 		if (m_quadIndexCount == 0) {
 			vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][1]);
@@ -943,12 +791,12 @@ namespace MRG::Vulkan
 		}
 
 		auto dataSize = static_cast<uint32_t>((uint8_t*)m_qvbPtr - (uint8_t*)m_qvbBase);
-		m_vertexArray->getVertexBuffers()[0]->setData(m_qvbBase, dataSize);
+		m_data->vertexArray->getVertexBuffers()[0]->setData(m_qvbBase, dataSize);
 
 		updateDescriptor();
 
 		vkCmdPushConstants(m_data->commandBuffers[m_imageIndex][1],
-		                   m_data->renderingPipeline.layout,
+		                   m_data->renderingPipeline.getLayout(),
 		                   VK_SHADER_STAGE_VERTEX_BIT,
 		                   0,
 		                   sizeof(PushConstants),
@@ -956,7 +804,7 @@ namespace MRG::Vulkan
 
 		vkCmdBindDescriptorSets(m_data->commandBuffers[m_imageIndex][1],
 		                        VK_PIPELINE_BIND_POINT_GRAPHICS,
-		                        m_data->renderingPipeline.layout,
+		                        m_data->renderingPipeline.getLayout(),
 		                        0,
 		                        1,
 		                        &m_descriptorSets[m_imageIndex],
@@ -1092,6 +940,7 @@ namespace MRG::Vulkan
 
 		if (!m_sceneInProgress) {
 			m_renderTarget = std::static_pointer_cast<Framebuffer>(renderTarget);
+			m_renderTarget->setClearColor(m_clearColor);
 
 			return;
 		}
@@ -1099,6 +948,7 @@ namespace MRG::Vulkan
 		endScene();
 
 		m_renderTarget = std::static_pointer_cast<Framebuffer>(renderTarget);
+		m_renderTarget->setClearColor(m_clearColor);
 
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
@@ -1113,7 +963,7 @@ namespace MRG::Vulkan
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
+		renderPassInfo.renderPass = m_renderTarget->getRenderingPipeline().getRenderpass();
 		renderPassInfo.framebuffer = m_renderTarget->getHandle();
 		renderPassInfo.renderArea.offset = {0, 0};
 		renderPassInfo.renderArea.extent = VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
@@ -1135,11 +985,13 @@ namespace MRG::Vulkan
 		scissor.extent = VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
 		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
 
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+		vkCmdBindPipeline(
+		  m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_renderTarget->getRenderingPipeline().getHandle());
 
-		VkBuffer vertexBuffer = std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle();
+		VkBuffer vertexBuffer =
+		  std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_data->vertexArray->getVertexBuffers()[0])->getHandle();
 		VkDeviceSize offset = 0;
-		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
+		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_data->vertexArray->getIndexBuffer());
 		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, &vertexBuffer, &offset);
 
 		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
@@ -1178,7 +1030,7 @@ namespace MRG::Vulkan
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
+		renderPassInfo.renderPass = m_data->renderingPipeline.getRenderpass();
 		renderPassInfo.framebuffer = m_data->swapChain.frameBuffers[m_imageIndex][1];
 		renderPassInfo.renderArea.offset = {0, 0};
 		renderPassInfo.renderArea.extent = m_data->swapChain.extent;
@@ -1200,11 +1052,12 @@ namespace MRG::Vulkan
 		scissor.extent = m_data->swapChain.extent;
 		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
 
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.getHandle());
 
-		VkBuffer vertexBuffer = std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle();
+		VkBuffer vertexBuffer =
+		  std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_data->vertexArray->getVertexBuffers()[0])->getHandle();
 		VkDeviceSize offset = 0;
-		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
+		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_data->vertexArray->getIndexBuffer());
 		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, &vertexBuffer, &offset);
 
 		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
@@ -1232,24 +1085,36 @@ namespace MRG::Vulkan
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][0], &beginInfo),
 		               "failed to begin recording command bufer!")
 
-		std::array<VkClearValue, 2> clearColors{};
-		clearColors[0].color = {{m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a}};
-		clearColors[1].depthStencil = {1.f, 0};
+		std::vector<VkClearValue> correctClearValues{};
+		if (m_renderTarget != nullptr) {
+			correctClearValues = m_renderTarget->getClearValues();
+		} else {
+			correctClearValues.resize(2);
+			correctClearValues[0].color = {{m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a}};
+			correctClearValues[1].depthStencil = {1.f, 0};
+		}
+
+		const auto hasRenderTarget = m_renderTarget != nullptr;
+		const auto correctRP =
+		  (hasRenderTarget) ? m_renderTarget->getClearingPipeline().getRenderpass() : m_data->clearingPipeline.getRenderpass();
+		const auto correctFB = (hasRenderTarget) ? m_renderTarget->getHandle() : m_data->swapChain.frameBuffers[m_imageIndex][0];
+		const auto correctRenderExtent = (hasRenderTarget)
+		                                   ? VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height}
+		                                   : m_data->swapChain.extent;
+		const auto correctPipeline =
+		  (hasRenderTarget) ? m_renderTarget->getClearingPipeline().getHandle() : m_data->clearingPipeline.getHandle();
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_data->clearingPipeline.renderPass;
-		renderPassInfo.framebuffer =
-		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][0] : m_renderTarget->getHandle();
+		renderPassInfo.renderPass = correctRP;
+		renderPassInfo.framebuffer = correctFB;
 		renderPassInfo.renderArea.offset = {0, 0};
-		renderPassInfo.renderArea.extent =
-		  m_renderTarget == nullptr ? m_data->swapChain.extent
-		                            : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
-		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearColors.size());
-		renderPassInfo.pClearValues = clearColors.data();
+		renderPassInfo.renderArea.extent = correctRenderExtent;
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(correctClearValues.size());
+		renderPassInfo.pClearValues = correctClearValues.data();
 
 		VkSemaphore waitSemaphores = m_imageAvailableSemaphores[m_data->currentFrame];
-		VkSemaphore signalSempahores = m_imageAvailableSemaphores[m_data->currentFrame];
+		VkSemaphore signalSemaphores = m_imageAvailableSemaphores[m_data->currentFrame];
 		VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkSubmitInfo submitInfo{};
@@ -1260,7 +1125,7 @@ namespace MRG::Vulkan
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &m_data->commandBuffers[m_imageIndex][0];
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &signalSempahores;
+		submitInfo.pSignalSemaphores = &signalSemaphores;
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][0], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -1282,7 +1147,7 @@ namespace MRG::Vulkan
 		                   : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
 		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][0], 0, 1, &scissor);
 
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][0], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->clearingPipeline.handle);
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][0], VK_PIPELINE_BIND_POINT_GRAPHICS, correctPipeline);
 
 		vkCmdEndRenderPass(m_data->commandBuffers[m_imageIndex][0]);
 
@@ -1310,17 +1175,24 @@ namespace MRG::Vulkan
 		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][1], 0);
 
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][1], &beginInfo),
-		               "failed to begin recording command bufer!")
+		               "failed to begin recording command buffer!")
+
+		const auto hasRenderTarget = m_renderTarget != nullptr;
+		const auto correctRP =
+		  (hasRenderTarget) ? m_renderTarget->getRenderingPipeline().getRenderpass() : m_data->renderingPipeline.getRenderpass();
+		const auto correctFB = (hasRenderTarget) ? m_renderTarget->getHandle() : m_data->swapChain.frameBuffers[m_imageIndex][1];
+		const auto correctRenderExtent = (hasRenderTarget)
+		                                   ? VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height}
+		                                   : m_data->swapChain.extent;
+		const auto correctPipeline =
+		  (hasRenderTarget) ? m_renderTarget->getRenderingPipeline().getHandle() : m_data->renderingPipeline.getHandle();
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
-		renderPassInfo.framebuffer =
-		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][1] : m_renderTarget->getHandle();
+		renderPassInfo.renderPass = correctRP;
+		renderPassInfo.framebuffer = correctFB;
 		renderPassInfo.renderArea.offset = {0, 0};
-		renderPassInfo.renderArea.extent =
-		  m_renderTarget == nullptr ? m_data->swapChain.extent
-		                            : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
+		renderPassInfo.renderArea.extent = correctRenderExtent;
 		renderPassInfo.clearValueCount = 0;
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -1343,11 +1215,12 @@ namespace MRG::Vulkan
 		                   : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
 		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
 
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, correctPipeline);
 
-		VkBuffer vertexBuffer = std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle();
+		VkBuffer vertexBuffer =
+		  std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_data->vertexArray->getVertexBuffers()[0])->getHandle();
 		VkDeviceSize offset = 0;
-		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
+		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_data->vertexArray->getIndexBuffer());
 		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, &vertexBuffer, &offset);
 
 		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
@@ -1369,9 +1242,7 @@ namespace MRG::Vulkan
 			vkFreeCommandBuffers(m_data->device, m_data->commandPool, 3, commandBuffer.data());
 		}
 
-		vkDestroyRenderPass(m_data->device, m_data->clearingPipeline.renderPass, nullptr);
-		vkDestroyRenderPass(m_data->device, m_data->renderingPipeline.renderPass, nullptr);
-		vkDestroyRenderPass(m_data->device, m_data->ImGuiRenderPass, nullptr);
+		// TODO: The renderpasses should be recreated here to handle when/if the swapchain format changes.
 
 		for (auto imageView : m_data->swapChain.imageViews) { vkDestroyImageView(m_data->device, imageView, nullptr); }
 
@@ -1402,11 +1273,6 @@ namespace MRG::Vulkan
 		m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
 		MRG_ENGINE_INFO("Vulkan swap chain succesfully recreated")
 
-		auto [clearingRP, renderingRP, ImGuiRP] = createRenderPasses(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
-		m_data->clearingPipeline.renderPass = clearingRP;
-		m_data->renderingPipeline.renderPass = renderingRP;
-		m_data->ImGuiRenderPass = ImGuiRP;
-
 		m_data->swapChain.depthBuffer = createDepthBuffer(m_data);
 
 		MRG_ENGINE_INFO("Vulkan graphics pipeline successfully created")
@@ -1414,7 +1280,7 @@ namespace MRG::Vulkan
 		  createFramebuffers(m_data->device,
 		                     m_data->swapChain.imageViews,
 		                     m_data->swapChain.depthBuffer.imageView,
-		                     {m_data->clearingPipeline.renderPass, m_data->renderingPipeline.renderPass, m_data->ImGuiRenderPass},
+		                     {m_data->clearingPipeline.getRenderpass(), m_data->renderingPipeline.getRenderpass(), m_data->ImGuiRenderPass},
 		                     m_data->swapChain.extent);
 		MRG_ENGINE_TRACE("Framebuffers successfully created")
 
@@ -1471,17 +1337,24 @@ namespace MRG::Vulkan
 		vkResetCommandBuffer(m_data->commandBuffers[m_imageIndex][1], 0);
 
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][1], &beginInfo),
-		               "failed to begin recording command bufer!")
+		               "failed to begin recording command buffer!")
+
+		const auto hasRenderTarget = m_renderTarget != nullptr;
+		const auto correctRP =
+		  (hasRenderTarget) ? m_renderTarget->getRenderingPipeline().getRenderpass() : m_data->renderingPipeline.getRenderpass();
+		const auto correctFB = (hasRenderTarget) ? m_renderTarget->getHandle() : m_data->swapChain.frameBuffers[m_imageIndex][1];
+		const auto correctRenderExtent = (hasRenderTarget)
+		                                   ? VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height}
+		                                   : m_data->swapChain.extent;
+		const auto correctPipeline =
+		  (hasRenderTarget) ? m_renderTarget->getRenderingPipeline().getHandle() : m_data->renderingPipeline.getHandle();
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_data->renderingPipeline.renderPass;
-		renderPassInfo.framebuffer =
-		  m_renderTarget == nullptr ? m_data->swapChain.frameBuffers[m_imageIndex][1] : m_renderTarget->getHandle();
+		renderPassInfo.renderPass = correctRP;
+		renderPassInfo.framebuffer = correctFB;
 		renderPassInfo.renderArea.offset = {0, 0};
-		renderPassInfo.renderArea.extent =
-		  m_renderTarget == nullptr ? m_data->swapChain.extent
-		                            : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
+		renderPassInfo.renderArea.extent = correctRenderExtent;
 		renderPassInfo.clearValueCount = 0;
 
 		vkCmdBeginRenderPass(m_data->commandBuffers[m_imageIndex][1], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -1504,11 +1377,12 @@ namespace MRG::Vulkan
 		                   : VkExtent2D{m_renderTarget->getSpecification().width, m_renderTarget->getSpecification().height};
 		vkCmdSetScissor(m_data->commandBuffers[m_imageIndex][1], 0, 1, &scissor);
 
-		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, m_data->renderingPipeline.handle);
+		vkCmdBindPipeline(m_data->commandBuffers[m_imageIndex][1], VK_PIPELINE_BIND_POINT_GRAPHICS, correctPipeline);
 
-		VkBuffer vertexBuffer = std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_vertexArray->getVertexBuffers()[0])->getHandle();
+		VkBuffer vertexBuffer =
+		  std::static_pointer_cast<MRG::Vulkan::VertexBuffer>(m_data->vertexArray->getVertexBuffers()[0])->getHandle();
 		VkDeviceSize offset = 0;
-		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_vertexArray->getIndexBuffer());
+		auto indexBuffer = std::static_pointer_cast<MRG::Vulkan::IndexBuffer>(m_data->vertexArray->getIndexBuffer());
 		vkCmdBindVertexBuffers(m_data->commandBuffers[m_imageIndex][1], 0, 1, &vertexBuffer, &offset);
 
 		vkCmdBindIndexBuffer(m_data->commandBuffers[m_imageIndex][1], indexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);

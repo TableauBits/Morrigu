@@ -16,4 +16,5 @@ imgui.ini
 
 doc/
 .ccls-cache/
+*.vim
 

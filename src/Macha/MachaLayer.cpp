@@ -143,7 +143,10 @@ namespace MRG
 		auto viewportSize = ImGui::GetContentRegionAvail();
 		m_viewportSize = {viewportSize.x, viewportSize.y};
 
-		ImGui::Image(m_renderTarget->getImTextureID(), viewportSize, m_renderTarget->getUVMapping()[0], m_renderTarget->getUVMapping()[1]);
+		ImGui::Image(m_renderTarget->getImTextureID((test) ? 1 : 0),
+		             viewportSize,
+		             m_renderTarget->getUVMapping()[0],
+		             m_renderTarget->getUVMapping()[1]);
 
 		// Drawing gizmos
 		auto selectedEntity = m_sceneHierarchyPanel.selectedEntity;
@@ -195,6 +198,7 @@ namespace MRG
 
 		ImGui::Begin("Debug");
 		{
+			ImGui::Checkbox("swap color attachment", &test);
 			ImGui::Text("Renderer2D stats:");
 			ImGui::Text("Draw calls: %d", stats.drawCalls);
 			ImGui::Text("Quads: %d", stats.quadCount);

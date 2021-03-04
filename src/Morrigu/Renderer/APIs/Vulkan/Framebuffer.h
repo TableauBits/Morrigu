@@ -1,12 +1,15 @@
 #ifndef MRG_VULKAN_IMPL_FRAMEBUFFER
 #define MRG_VULKAN_IMPL_FRAMEBUFFER
 
+#include "Renderer/APIs/Vulkan/Pipeline.h"
 #include "Renderer/APIs/Vulkan/Textures.h"
 #include "Renderer/APIs/Vulkan/WindowProperties.h"
 #include "Renderer/Framebuffer.h"
 
 namespace MRG::Vulkan
 {
+	[[nodiscard]] VkFormat internalToVulkanFormat(MRG::FramebufferTextureFormat format);
+
 	class Framebuffer : public MRG::Framebuffer
 	{
 	public:
@@ -28,11 +31,12 @@ namespace MRG::Vulkan
 		[[nodiscard]] const std::array<ImVec2, 2>& getUVMapping() const override { return m_UVMapping; }
 
 		[[nodiscard]] auto getHandle() const { return m_handle; }
-		[[nodiscard]] auto getColorAttachment(std::size_t index) const
-		{
-			MRG_CORE_ASSERT(index < m_colorAttachments.size(), "invalid index!")
-			return m_colorAttachments[index];
-		}
+		[[nodiscard]] auto getColorAttachments() const { return m_colorAttachments; }
+		[[nodiscard]] Pipeline& getRenderingPipeline() { return m_renderingPipeline; }
+		[[nodiscard]] Pipeline& getClearingPipeline() { return m_clearingPipeline; }
+		[[nodiscard]] const auto& getClearValues() const { return m_clearValues; }
+
+		void setClearColor(const glm::vec4& color);
 
 	private:
 		VkFramebuffer m_handle{};
@@ -43,8 +47,9 @@ namespace MRG::Vulkan
 		LightVulkanImage m_depthAttachment{};
 		VkSampler m_sampler{};
 
-		// VkPipeline m_pipeline{};
-		// VkRenderPass m_clearingRP{}, m_mainRP{};
+		std::vector<VkClearValue> m_clearValues;
+
+		Pipeline m_renderingPipeline{}, m_clearingPipeline{};
 	};
 
 }  // namespace MRG::Vulkan

@@ -4,15 +4,20 @@
 
 #include <Vendor/ImGui/bindings/imgui_impl_vulkan.h>
 
-// clang-format off
-namespace
-{
-	[[nodiscard]] VkFormat internalToVulkanFormat(MRG::FramebufferTextureFormat format) {
-		switch (format) {
-		case MRG::FramebufferTextureFormat::RGBA8: return VK_FORMAT_R8G8B8A8_UNORM;
-		case MRG::FramebufferTextureFormat::RGBA16: return VK_FORMAT_R16G16B16A16_UNORM;
+#include <algorithm>
 
-		case MRG::FramebufferTextureFormat::DEPTH24STENCIL8: return VK_FORMAT_D24_UNORM_S8_UINT;
+namespace MRG::Vulkan
+{
+	[[nodiscard]] VkFormat internalToVulkanFormat(MRG::FramebufferTextureFormat format)
+	{
+		switch (format) {
+		case MRG::FramebufferTextureFormat::RGBA8:
+			return VK_FORMAT_R8G8B8A8_UNORM;
+		case MRG::FramebufferTextureFormat::RGBA16:
+			return VK_FORMAT_R16G16B16A16_UNORM;
+
+		case MRG::FramebufferTextureFormat::DEPTH24STENCIL8:
+			return VK_FORMAT_D24_UNORM_S8_UINT;
 
 		case MRG::FramebufferTextureFormat::None: {
 			MRG_CORE_ASSERT(false, "invalid format!")
@@ -21,11 +26,7 @@ namespace
 		}
 		return VK_FORMAT_R8G8B8A8_UNORM;
 	}
-}
-// clang-format on
 
-namespace MRG::Vulkan
-{
 	Framebuffer::Framebuffer(const FramebufferSpecification& spec)
 	{
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
@@ -38,6 +39,51 @@ namespace MRG::Vulkan
 				m_depthAttachmentsSpecification = attachment;
 			}
 		}
+
+		m_clearValues.resize(spec.attachments.attachments.size());
+
+		std::vector<VkFormat> vulkanFormats{};
+		VkFormat depthFormat{};
+
+		for (const auto& attachment : m_specification.attachments.attachments) {
+			if (!isDepthFormat(attachment.textureFormat)) {
+				vulkanFormats.emplace_back(internalToVulkanFormat(attachment.textureFormat));
+			} else {
+				depthFormat = internalToVulkanFormat(attachment.textureFormat);
+			}
+		}
+
+		VkAttachmentDescription colorAttachment{};
+		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentDescription depthAttachment{};
+		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		PipelineSpec pipelineSpec{data->textureShader,
+		                          vulkanFormats,
+		                          depthFormat,
+		                          colorAttachment,
+		                          depthAttachment,
+		                          std::static_pointer_cast<MRG::Vulkan::VertexArray>(data->vertexArray)->getAttributeDescriptions(),
+		                          {std::static_pointer_cast<MRG::Vulkan::VertexArray>(data->vertexArray)->getBindingDescription()}};
+		m_clearingPipeline.init(pipelineSpec);
+
+		pipelineSpec.colorAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		pipelineSpec.depthAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+		m_renderingPipeline.init(pipelineSpec);
 
 		m_colorAttachments.resize(m_colorAttachmentsSpecifications.size());
 		m_ImTextureIDs.resize(m_colorAttachmentsSpecifications.size(), nullptr);
@@ -138,10 +184,12 @@ namespace MRG::Vulkan
 		createInfo.width = m_specification.width;
 		createInfo.height = m_specification.height;
 		createInfo.layers = 1;
-		createInfo.renderPass = data->renderingPipeline.renderPass;
+		createInfo.renderPass = m_renderingPipeline.getRenderpass();  // We can use either RP, as we define them as compatible
+		// RP compatibility is defined here:
+		// https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#renderpass-compatibility
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
-	}
+	}  // namespace MRG::Vulkan
 
 	Framebuffer::~Framebuffer() { Framebuffer::destroy(); }
 
@@ -152,6 +200,8 @@ namespace MRG::Vulkan
 		}
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
+
+		vkDestroyFramebuffer(data->device, m_handle, nullptr);
 
 		vkDestroySampler(data->device, m_sampler, nullptr);
 
@@ -167,7 +217,8 @@ namespace MRG::Vulkan
 			vkFreeMemory(data->device, m_depthAttachment.memoryHandle, nullptr);
 		}
 
-		vkDestroyFramebuffer(data->device, m_handle, nullptr);
+		m_clearingPipeline.destroy();
+		m_renderingPipeline.destroy();
 
 		m_isDestroyed = true;
 	}
@@ -200,16 +251,15 @@ namespace MRG::Vulkan
 
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
 
-		std::vector<VkImageView> attachments(
-		  m_colorAttachmentsSpecifications.size() +
-		  static_cast<int>(m_depthAttachmentsSpecification.textureFormat != FramebufferTextureFormat::None));
+		std::vector<VkImageView> attachments;
 
 		for (std::size_t i = 0; i < m_colorAttachmentsSpecifications.size(); ++i) {
+			const auto format = internalToVulkanFormat(m_colorAttachmentsSpecifications[i].textureFormat);
 			createImage(data->physicalDevice,
 			            data->device,
 			            m_specification.width,
 			            m_specification.height,
-			            internalToVulkanFormat(m_colorAttachmentsSpecifications[i].textureFormat),
+			            format,
 			            VK_IMAGE_TILING_OPTIMAL,
 			            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 			            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -219,7 +269,7 @@ namespace MRG::Vulkan
 			transitionImageLayout(data, m_colorAttachments[i].handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 			m_colorAttachments[i].imageView =
-			  createImageView(data->device, m_colorAttachments[i].handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+			  createImageView(data->device, m_colorAttachments[i].handle, format, VK_IMAGE_ASPECT_COLOR_BIT);
 
 			attachments.emplace_back(m_colorAttachments[i].imageView);
 		}
@@ -266,7 +316,7 @@ namespace MRG::Vulkan
 			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.image = m_depthAttachment.handle;
-			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 			barrier.subresourceRange.baseMipLevel = 0;
 			barrier.subresourceRange.levelCount = 1;
 			barrier.subresourceRange.baseArrayLayer = 0;
@@ -296,7 +346,7 @@ namespace MRG::Vulkan
 		createInfo.width = m_specification.width;
 		createInfo.height = m_specification.height;
 		createInfo.layers = 1;
-		createInfo.renderPass = data->renderingPipeline.renderPass;
+		createInfo.renderPass = m_renderingPipeline.getRenderpass();
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
 
@@ -335,5 +385,11 @@ namespace MRG::Vulkan
 		}
 
 		return m_ImTextureIDs[index];
+	}
+
+	void Framebuffer::setClearColor(const glm::vec4& color)
+	{
+		for (auto& clearValue : m_clearValues) { clearValue.color = {{color.r, color.g, color.b, color.a}}; }
+		m_clearValues.back().depthStencil = {1.f, 0};
 	}
 }  // namespace MRG::Vulkan

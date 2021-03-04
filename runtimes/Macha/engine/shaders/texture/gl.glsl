@@ -73,6 +73,5 @@ void main() {
 		case 30: color *= texture(u_textures[30], v_texCoord * v_tilingFactor); break;
 		case 31: color *= texture(u_textures[31], v_texCoord * v_tilingFactor); break;
 	}
-
 	color2 = vec4(0.8, 0.2, 0.3, 1.0);
 }

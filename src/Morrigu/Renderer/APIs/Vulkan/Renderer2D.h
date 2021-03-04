@@ -66,7 +66,13 @@ namespace MRG::Vulkan
 		[[nodiscard]] Ref<MRG::Framebuffer> getRenderTarget() const override { return m_renderTarget; }
 
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
-		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
+		void setClearColor(const glm::vec4& color) override
+		{
+			m_clearColor = color;
+			if (m_renderTarget != nullptr) {
+				m_renderTarget->setClearColor(color);
+			}
+		}
 		void clear() override;
 
 		void resetStats() override { m_stats = {}; };
@@ -80,12 +86,10 @@ namespace MRG::Vulkan
 		void flushAndReset();
 
 		WindowProperties* m_data{};
-		Ref<Shader> m_textureShader;
 		uint32_t m_imageIndex{};
 		std::size_t m_maxFramesInFlight = 2;
 		std::vector<VkSemaphore> m_imageAvailableSemaphores;
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
-		Ref<VertexArray> m_vertexArray;
 		Ref<Texture2D> m_whiteTexture;
 		VkDescriptorPool m_descriptorPool{};
 		std::vector<VkDescriptorSet> m_descriptorSets;
