@@ -27,14 +27,15 @@ void main()
 #type fragment
 #version 450 core
 
+layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 color2;
+
 in vec4 v_color;
 in vec2 v_texCoord;
 in flat float v_texIndex;
 in float v_tilingFactor;
 
 uniform sampler2D u_textures[32];
-
-layout(location = 0) out vec4 color;
 
 void main() {
 	color = v_color;
@@ -72,4 +73,5 @@ void main() {
 		case 30: color *= texture(u_textures[30], v_texCoord * v_tilingFactor); break;
 		case 31: color *= texture(u_textures[31], v_texCoord * v_tilingFactor); break;
 	}
+	color2 = vec4(1 - color.r, 1 - color.g, 1 - color.b, 1);
 }

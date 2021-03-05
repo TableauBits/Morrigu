@@ -1,16 +1,15 @@
 // clang-format off
 #version 450
 
-layout(binding = 1) uniform sampler2D u_textures[32];
-
 layout(location = 0) in vec4 v_color;
 layout(location = 1) in vec2 v_texCoord;
 layout(location = 2) in flat float v_texIndex;
 layout(location = 3) in float v_tilingFactor;
 layout(location = 4) in flat uint v_objectID;
 
+layout(binding = 1) uniform sampler2D u_textures[32];
+
 layout(location = 0) out vec4 color;
-layout(location = 1) out vec4 color2;
 
 void main() {
     color = v_color;
@@ -48,5 +47,4 @@ void main() {
 		case 30: color *= texture(u_textures[30], v_texCoord * v_tilingFactor); break;
 		case 31: color *= texture(u_textures[31], v_texCoord * v_tilingFactor); break;
 	}
-	color2 = vec4(0.8, 0.2, 0.3, 1.0);
 }

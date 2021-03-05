@@ -2,6 +2,7 @@
 #define MRG_CLASS_FRAMEBUFFER
 
 #include "Core/Core.h"
+#include "Renderer/Shader.h"
 
 #include <imgui.h>
 
@@ -49,6 +50,7 @@ namespace MRG
 	{
 		uint32_t width = 0, height = 0;
 		FramebufferAttachmentSpecification attachments;
+		Ref<Shader> shaderModule = nullptr;
 
 		bool swapChainTarget = false;
 	};

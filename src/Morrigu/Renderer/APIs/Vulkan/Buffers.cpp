@@ -127,7 +127,6 @@ namespace MRG::Vulkan
 		vkMapMemory(data->device, stagingBuffer.memoryHandle, 0, bufferSize, 0, &dataPointer);
 		memcpy(dataPointer, indices, bufferSize);
 		vkUnmapMemory(data->device, stagingBuffer.memoryHandle);
-		MRG_ENGINE_TRACE("Index buffer data successfully bound and updloaded")
 
 		MRG::Vulkan::createBuffer(data->device,
 		                          data->physicalDevice,

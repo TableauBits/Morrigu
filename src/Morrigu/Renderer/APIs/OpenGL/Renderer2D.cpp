@@ -91,8 +91,10 @@ namespace MRG::OpenGL
 
 		const auto& viewProjection = camera.getProjection() * glm::inverse(transform);
 
-		m_textureShader->bind();
-		m_textureShader->upload("u_viewProjection", viewProjection);
+        const auto correctShader = (m_framebuffer != nullptr) ? m_framebuffer->getShader() : m_textureShader;
+
+        correctShader->bind();
+        correctShader->upload("u_viewProjection", viewProjection);
 
 		m_quadIndexCount = 0;
 		m_qvbPtr = m_qvbBase;
@@ -105,8 +107,10 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION()
 
-		m_textureShader->bind();
-		m_textureShader->upload("u_viewProjection", camera.getViewProjection());
+		const auto correctShader = (m_framebuffer != nullptr) ? m_framebuffer->getShader() : m_textureShader;
+
+		correctShader->bind();
+		correctShader->upload("u_viewProjection", camera.getViewProjection());
 
 		m_quadIndexCount = 0;
 		m_qvbPtr = m_qvbBase;

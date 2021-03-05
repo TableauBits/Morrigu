@@ -29,6 +29,11 @@ namespace MRG::Vulkan
 	{
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(MRG::Renderer2D::getGLFWWindow()));
 
+		auto shaderModule = specification.shader;
+		if (specification.shader == nullptr) {
+			shaderModule = data->textureShader;
+		}
+
 		VkPipelineLayoutCreateInfo layoutCreateInfo{};
 		layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
@@ -44,13 +49,13 @@ namespace MRG::Vulkan
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertShaderStageInfo.module = specification.shader->m_vertexShaderModule;
+		vertShaderStageInfo.module = shaderModule->vertexShaderModule;
 		vertShaderStageInfo.pName = "main";
 
 		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
 		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderStageInfo.module = specification.shader->m_fragmentShaderModule;
+		fragShaderStageInfo.module = shaderModule->fragmentShaderModule;
 		fragShaderStageInfo.pName = "main";
 
 		std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = {vertShaderStageInfo, fragShaderStageInfo};

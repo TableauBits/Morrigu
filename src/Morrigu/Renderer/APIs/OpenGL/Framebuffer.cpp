@@ -42,6 +42,8 @@ namespace MRG::OpenGL
 			}
 		}
 
+		m_shader = spec.shaderModule;
+
 		m_isDestroyed = true;
 		invalidate();
 	}
@@ -53,6 +55,8 @@ namespace MRG::OpenGL
 		if (m_isDestroyed) {
 			return;
 		}
+
+		m_shader->destroy();
 
 		glDeleteFramebuffers(1, &m_rendererID);
 		glDeleteTextures(static_cast<int>(m_colorAttachments.size()), m_colorAttachments.data());
@@ -74,8 +78,14 @@ namespace MRG::OpenGL
 
 	void Framebuffer::invalidate()
 	{
-		destroy();
-		m_isDestroyed = false;
+		if (!m_isDestroyed) {
+            glDeleteFramebuffers(1, &m_rendererID);
+            glDeleteTextures(static_cast<int>(m_colorAttachments.size()), m_colorAttachments.data());
+            glDeleteTextures(1, &m_depthAttachment);
+
+            m_colorAttachments.clear();
+            m_depthAttachment = 0;
+        }
 
 		glCreateFramebuffers(1, &m_rendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID);
@@ -129,6 +139,8 @@ namespace MRG::OpenGL
 		MRG_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!")
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        m_isDestroyed = false;
 	}
 
 	void Framebuffer::bind()
@@ -136,5 +148,8 @@ namespace MRG::OpenGL
 		glBindFramebuffer(GL_FRAMEBUFFER, m_rendererID);
 		glViewport(0, 0, m_specification.width, m_specification.height);
 	}
-	void Framebuffer::unbind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+	void Framebuffer::unbind()
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 }  // namespace MRG::OpenGL

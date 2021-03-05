@@ -33,7 +33,7 @@ namespace MRG::Vulkan
 
 		[[nodiscard]] const std::string& getName() const override { return m_name; }
 
-		VkShaderModule m_vertexShaderModule, m_fragmentShaderModule;
+		VkShaderModule vertexShaderModule, fragmentShaderModule;
 
 	private:
 		std::string m_name;

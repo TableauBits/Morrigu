@@ -20,7 +20,8 @@ namespace MRG
 		  Framebuffer::create({1280,
 		                       720,
 		                       FramebufferAttachmentSpecification{
-		                         FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RGBA16, FramebufferTextureFormat::Depth}});
+		                         FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RGBA16, FramebufferTextureFormat::Depth},
+		                         Shader::create("engine/shaders/machaGeneral")});
 		Renderer2D::setRenderTarget(m_renderTarget);
 		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
 
@@ -143,7 +144,7 @@ namespace MRG
 		auto viewportSize = ImGui::GetContentRegionAvail();
 		m_viewportSize = {viewportSize.x, viewportSize.y};
 
-		ImGui::Image(m_renderTarget->getImTextureID((test) ? 1 : 0),
+		ImGui::Image(m_renderTarget->getImTextureID(static_cast<uint32_t>(test)),
 		             viewportSize,
 		             m_renderTarget->getUVMapping()[0],
 		             m_renderTarget->getUVMapping()[1]);

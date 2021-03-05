@@ -31,6 +31,8 @@ namespace MRG::Vulkan
 	{
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
+		m_shader = std::static_pointer_cast<Shader>(spec.shaderModule);
+
 		m_specification = spec;
 		for (const auto& attachment : spec.attachments.attachments) {
 			if (!isDepthFormat(attachment.textureFormat)) {
@@ -71,7 +73,7 @@ namespace MRG::Vulkan
 		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-		PipelineSpec pipelineSpec{data->textureShader,
+		PipelineSpec pipelineSpec{m_shader,
 		                          vulkanFormats,
 		                          depthFormat,
 		                          colorAttachment,
@@ -219,6 +221,8 @@ namespace MRG::Vulkan
 
 		m_clearingPipeline.destroy();
 		m_renderingPipeline.destroy();
+
+        m_shader->destroy();
 
 		m_isDestroyed = true;
 	}

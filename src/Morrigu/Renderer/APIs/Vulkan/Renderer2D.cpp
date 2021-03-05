@@ -343,7 +343,6 @@ namespace
 		for (auto& commandBuffer : commandBuffers) {
 			MRG_VKVALIDATE(vkAllocateCommandBuffers(data->device, &allocInfo, commandBuffer.data()), "failed to allocate command buffers!")
 		}
-		MRG_ENGINE_TRACE("{} command buffers successfully allocated", commandBuffers.size())
 
 		return commandBuffers;
 	}
@@ -439,12 +438,10 @@ namespace MRG::Vulkan
 		m_data->textureShader = createRef<Shader>("engine/shaders/texture");
 
 		m_data->swapChain = createSwapChain(m_data->physicalDevice, m_data->surface, m_data->device, m_data);
-		MRG_ENGINE_INFO("Vulkan swap chain successfully created")
 
 		m_data->ImGuiRenderPass = createImGuiRenderPass(m_data->physicalDevice, m_data->device, m_data->swapChain.imageFormat);
 
 		m_data->commandPool = createCommandPool(m_data->device, m_data->physicalDevice, m_data->surface);
-		MRG_ENGINE_TRACE("Command pool successfully created")
 
 		m_data->vertexArray = createRef<VertexArray>();
 
@@ -547,7 +544,6 @@ namespace MRG::Vulkan
 		                     m_data->swapChain.depthBuffer.imageView,
 		                     {m_data->clearingPipeline.getRenderpass(), m_data->renderingPipeline.getRenderpass(), m_data->ImGuiRenderPass},
 		                     m_data->swapChain.extent);
-		MRG_ENGINE_TRACE("Framebuffers successfully created")
 
 		m_data->commandBuffers = allocateCommandBuffers(m_data);
 
@@ -644,6 +640,13 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION()
 
+		if (m_renderTarget != nullptr) {
+			for (auto& colorAttachment : m_renderTarget->getColorAttachments()) {
+				transitionImageLayout(
+				  m_data, colorAttachment.handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			}
+		}
+
 		// Execute the command buffer with the current image
 		vkWaitForFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame], VK_TRUE, UINT64_MAX);
 		vkResetFences(m_data->device, 1, &m_inFlightFences[m_data->currentFrame]);
@@ -659,15 +662,6 @@ namespace MRG::Vulkan
 
 		MRG_VKVALIDATE(vkBeginCommandBuffer(m_data->commandBuffers[m_imageIndex][2], &beginInfo),
 		               "failed to begin recording command bufer!")
-
-		if (m_renderTarget != nullptr) {
-			for (auto& colorAttachment : m_renderTarget->getColorAttachments()) {
-				transitionImageLayoutInline(m_data->commandBuffers[m_imageIndex][2],
-				                            colorAttachment.handle,
-				                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			}
-		}
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

@@ -27,18 +27,19 @@ namespace MRG::OpenGL
 
 		[[nodiscard]] virtual ImTextureID getImTextureID(uint32_t index = 0) override
 		{
-			MRG_CORE_ASSERT(index < m_colorAttachments.size(), "Invalid index!")
 			return (ImTextureID)(uintptr_t)m_colorAttachments[index];
 		}
 		[[nodiscard]] const std::array<ImVec2, 2>& getUVMapping() const override { return m_UVMapping; }
 
 		[[nodiscard]] virtual const FramebufferSpecification& getSpecification() const override { return m_specification; }
 		[[nodiscard]] uint32_t getHandle() { return m_rendererID; }
+		[[nodiscard]] Ref<Shader> getShader() { return m_shader; }
 
 	private:
 		uint32_t m_rendererID = 0;
 		std::array<ImVec2, 2> m_UVMapping = {ImVec2{0, 1}, ImVec2{1, 0}};
 
+		Ref<Shader> m_shader;
 		std::vector<uint32_t> m_colorAttachments{};
 		uint32_t m_depthAttachment = 0;
 	};

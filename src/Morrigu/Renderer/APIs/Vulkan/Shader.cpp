@@ -62,8 +62,8 @@ namespace MRG::Vulkan
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
-		m_vertexShaderModule = createShader(vertShaderSrc, data->device);
-		m_fragmentShaderModule = createShader(fragShaderSrc, data->device);
+		vertexShaderModule = createShader(vertShaderSrc, data->device);
+		fragmentShaderModule = createShader(fragShaderSrc, data->device);
 	}
 
 	Shader::~Shader() { Shader::destroy(); }
@@ -78,8 +78,8 @@ namespace MRG::Vulkan
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
-		vkDestroyShaderModule(data->device, m_vertexShaderModule, nullptr);
-		vkDestroyShaderModule(data->device, m_fragmentShaderModule, nullptr);
+		vkDestroyShaderModule(data->device, vertexShaderModule, nullptr);
+		vkDestroyShaderModule(data->device, fragmentShaderModule, nullptr);
 
 		m_isDestroyed = true;
 	}

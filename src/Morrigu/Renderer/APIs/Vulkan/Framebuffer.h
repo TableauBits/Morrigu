@@ -47,8 +47,8 @@ namespace MRG::Vulkan
 		LightVulkanImage m_depthAttachment{};
 		VkSampler m_sampler{};
 
+		Ref<Shader> m_shader;
 		std::vector<VkClearValue> m_clearValues;
-
 		Pipeline m_renderingPipeline{}, m_clearingPipeline{};
 	};
 
