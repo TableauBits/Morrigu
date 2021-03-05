@@ -159,14 +159,14 @@ namespace MRG::Vulkan
 		std::vector<VkAttachmentReference> colorAttachmentRefs{};
 		VkAttachmentReference depthAttachmentRef{};
 
-		for (const auto& format : specification.colorFormats) {
+		for (uint32_t i = 0; i < specification.colorFormats.size(); ++i) {
 			VkAttachmentDescription clearingColorAttachment = specification.colorAttachmentDescription;
-			clearingColorAttachment.format = format;
+			clearingColorAttachment.format = specification.colorFormats[i];
 
 			attachments.emplace_back(clearingColorAttachment);
 
 			VkAttachmentReference colorAttachmentRef{};
-			colorAttachmentRef.attachment = 0;
+			colorAttachmentRef.attachment = i;
 			colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 			colorAttachmentRefs.emplace_back(colorAttachmentRef);

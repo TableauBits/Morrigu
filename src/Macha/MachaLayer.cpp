@@ -21,7 +21,7 @@ namespace MRG
 		                       720,
 		                       FramebufferAttachmentSpecification{
 		                         FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RGBA16, FramebufferTextureFormat::Depth},
-		                         Shader::create("engine/shaders/machaGeneral")});
+		                       Shader::create("engine/shaders/machaGeneral")});
 		Renderer2D::setRenderTarget(m_renderTarget);
 		Renderer2D::setClearColor({0.1f, 0.1f, 0.1f, 1.0f});
 
