@@ -1,6 +1,5 @@
 #include "SceneSerializer.h"
 
-#include "Core/GLMIncludeHelper.h"
 #include "Core/Warnings.h"
 #include "Scene/Components.h"
 
@@ -29,8 +28,9 @@ namespace YAML
 
 		[[maybe_unused]] static bool decode(const Node& node, glm::vec3& rhs)
 		{
-			if (!node.IsSequence() || node.size() != 3)
+			if (!node.IsSequence() || node.size() != 3) {
 				return false;
+}
 
 			rhs.x = node[0].as<float>();
 			rhs.y = node[1].as<float>();
@@ -54,8 +54,9 @@ namespace YAML
 
 		[[maybe_unused]] static bool decode(const Node& node, glm::vec4& rhs)
 		{
-			if (!node.IsSequence() || node.size() != 4)
+			if (!node.IsSequence() || node.size() != 4) {
 				return false;
+}
 
 			rhs.x = node[0].as<float>();
 			rhs.y = node[1].as<float>();
@@ -135,8 +136,9 @@ namespace
 		{
 			out << YAML::Key << SceneKeys::Entities::entityID << YAML::Value << "0000000000000000";  // TODO
 
-			if (entity.hasComponent<MRG::TagComponent>())
+			if (entity.hasComponent<MRG::TagComponent>()) {
 				out << YAML::Key << SceneKeys::Entities::Tag::key << YAML::Value << entity.getComponent<MRG::TagComponent>().tag;
+}
 
 			if (entity.hasComponent<MRG::TransformComponent>()) {
 				out << YAML::Key << SceneKeys::Entities::Transform::key << YAML::BeginMap;
@@ -203,8 +205,9 @@ namespace MRG
 			{
 				m_scene->m_registry.each([&](auto& entityID) {
 					Entity entity = {entityID, m_scene.get()};
-					if (!entity)
+					if (!entity) {
 						return;
+					}
 
 					serializeEntity(out, entity);
 				});
@@ -223,25 +226,27 @@ namespace MRG
 		MRG_CORE_ASSERT(std::filesystem::is_regular_file(filepath), "file {} does not reference a file!", filepath)
 
 		const auto data = YAML::LoadFile(filepath);
-		if (!data[SceneKeys::key])
+		if (!data[SceneKeys::key]) {
 			return false;
+		}
 
 		MRG_ENGINE_TRACE("Deserializing scene '{}'", data[SceneKeys::key].as<std::string>())
 
 		auto entities = data[SceneKeys::Entities::key];
-		if (!entities)
+		if (!entities) {
 			return true;
+		}
 
 		for (const auto& entity : entities) {
 			const auto tag = entity[SceneKeys::Entities::Tag::key];
-			std::string eName = tag ? tag.as<std::string>() : "Entity";
+			std::string eName = (tag != nullptr) ? tag.as<std::string>() : "Entity";
 
 			MRG_ENGINE_TRACE("\tDeserialized entity '{}' {{ID{}}}", eName, entity[SceneKeys::Entities::entityID].as<uint64_t>())
 
 			auto newEntity = m_scene->createEntity(eName);
 
 			const auto transform = entity[SceneKeys::Entities::Transform::key];
-			if (transform) {
+			if (transform != nullptr) {
 				auto& tc = newEntity.getComponent<TransformComponent>();
 
 				tc.translation = transform[SceneKeys::Entities::Transform::translation].as<glm::vec3>();
@@ -250,7 +255,7 @@ namespace MRG
 			}
 
 			const auto camera = entity[SceneKeys::Entities::Camera::key];
-			if (camera) {
+			if (camera != nullptr) {
 				const auto cameraObj = camera[SceneKeys::Entities::Camera::camera::key];
 				auto& cc = newEntity.addComponent<CameraComponent>();
 
@@ -270,7 +275,7 @@ namespace MRG
 			}
 
 			const auto spriteRenderer = entity[SceneKeys::Entities::SpriteRenderer::key];
-			if (spriteRenderer) {
+			if (spriteRenderer != nullptr) {
 				auto& src = newEntity.addComponent<SpriteRendererComponent>();
 
 				src.color = spriteRenderer[SceneKeys::Entities::SpriteRenderer::color].as<glm::vec4>();

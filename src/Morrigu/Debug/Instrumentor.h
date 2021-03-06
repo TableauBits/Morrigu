@@ -43,10 +43,13 @@ namespace MRG
 		Instrumentor(const Instrumentor&) = delete;
 		Instrumentor(Instrumentor&&) = delete;
 
+		Instrumentor& operator=(const Instrumentor&) = delete;
+		Instrumentor& operator=(Instrumentor&&) = delete;
+
 		void beginSession(const std::string& name, const std::string& filepath)
 		{
 			std::lock_guard lock(m_mutex);
-			if (m_currentSession) {
+			if (m_currentSession != nullptr) {
 				if (Logger::getEngineLogger()) {
 					MRG_ENGINE_ERROR(
 					  "Instrumentor::beginSession('{}') called when session '{}' was already active!", name, m_currentSession->name)
@@ -91,7 +94,7 @@ namespace MRG
 			json << '}';
 
 			std::lock_guard lock(m_mutex);
-			if (m_currentSession) {
+			if (m_currentSession != nullptr) {
 				m_outputStream << json.str();
 				m_outputStream.flush();
 			}
@@ -121,7 +124,7 @@ namespace MRG
 
 		void internalEndSession()
 		{
-			if (m_currentSession) {
+			if (m_currentSession != nullptr) {
 				writeEpilogue();
 				m_outputStream.close();
 				delete m_currentSession;
@@ -137,6 +140,12 @@ namespace MRG
 	class InstrumentationTimer
 	{
 	public:
+		InstrumentationTimer(const InstrumentationTimer&) = delete;
+		InstrumentationTimer(InstrumentationTimer&&) = delete;
+
+		InstrumentationTimer& operator=(const InstrumentationTimer&) = delete;
+		InstrumentationTimer& operator=(InstrumentationTimer&&) = delete;
+
 		explicit InstrumentationTimer(const char* name) : m_name(name), m_stopped(false)
 		{
 			m_startTimePoint = std::chrono::steady_clock::now();
@@ -144,8 +153,9 @@ namespace MRG
 
 		~InstrumentationTimer()
 		{
-			if (!m_stopped)
+			if (!m_stopped) {
 				stop();
+			}
 		}
 
 		void stop()

@@ -11,10 +11,12 @@ namespace
 {
 	[[nodiscard]] GLenum shaderTypeFromString(const std::string& type)
 	{
-		if (type == "vertex")
+		if (type == "vertex") {
 			return GL_VERTEX_SHADER;
-		if (type == "fragment" || type == "pixel")
+		}
+		if (type == "fragment" || type == "pixel") {
 			return GL_FRAGMENT_SHADER;
+		}
 
 		MRG_CORE_ASSERT(false, fmt::format("Invalid shader type '{}'!", type))
 		return 0;
@@ -22,10 +24,12 @@ namespace
 
 	[[nodiscard]] std::string shaderTypeFromEnum(GLenum type)
 	{
-		if (type == GL_VERTEX_SHADER)
+		if (type == GL_VERTEX_SHADER) {
 			return "GL_VERTEX_SHADER";
-		if (type == GL_FRAGMENT_SHADER)
+		}
+		if (type == GL_FRAGMENT_SHADER) {
 			return "GL_FRAGMENT_SHADER";
+		}
 
 		MRG_CORE_ASSERT(false, fmt::format("Invalid shader type '{}'!", type))
 		return {};
@@ -73,8 +77,9 @@ namespace MRG::OpenGL
 	{
 		MRG_PROFILE_FUNCTION()
 
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		glDeleteProgram(m_rendererID);
 
@@ -268,17 +273,18 @@ namespace MRG::OpenGL
 			glGetProgramInfoLog(program, logLength, &logLength, infoLog.data());
 
 			glDeleteProgram(program);
-			for (auto id : shaderIDs) glDeleteShader(id);
+			for (auto id : shaderIDs) { glDeleteShader(id); }
 
 			MRG_ENGINE_ERROR("Could not link program: {0}", infoLog.data())
 			MRG_CORE_ASSERT(false, "Program linking failed!")
 			return;
 		}
 
-		for (auto id : shaderIDs)
+		for (auto id : shaderIDs) {
 			if (id != 0) {
 				glDetachShader(program, id);
 				glDeleteShader(id);
 			}
+		}
 	}
 }  // namespace MRG::OpenGL

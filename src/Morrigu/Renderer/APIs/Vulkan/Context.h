@@ -11,7 +11,11 @@ namespace MRG::Vulkan
 	{
 	public:
 		explicit Context(GLFWwindow* window);
+		Context(Context&&) = delete;
 		~Context() override;
+
+		Context& operator=(const Context&) = delete;
+		Context& operator=(Context&&) = delete;
 
 		void swapBuffers() override;
 		void swapInterval(int interval) override;

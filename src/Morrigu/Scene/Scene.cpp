@@ -69,20 +69,20 @@ namespace MRG
 		auto view = m_registry.view<CameraComponent>();
 		for (const auto& entity : view) {
 			auto& cc = view.get<CameraComponent>(entity);
-			if (!cc.fixedAspectRatio)
+			if (!cc.fixedAspectRatio) {
 				cc.camera.setViewportSize(width, height);
+			}
 		}
 	}
-
-	uint32_t Scene::objectIDAt(uint32_t x, uint32_t y) { return Renderer2D::objectIDAt(x, y); }
 
 	std::optional<Entity> Scene::getPrimaryCameraEntity()
 	{
 		const auto view = m_registry.view<CameraComponent>();
 
 		for (const auto& entity : view) {
-			if (view.get<CameraComponent>(entity).primary)
+			if (view.get<CameraComponent>(entity).primary) {
 				return Entity{entity, this};
+			}
 		}
 
 		return std::nullopt;

@@ -9,7 +9,12 @@ namespace MRG
 	{
 	public:
 		MachaLayer();
+		MachaLayer(const MachaLayer&) = delete;
+		MachaLayer(MachaLayer&&) = delete;
 		~MachaLayer() override = default;
+
+		MachaLayer& operator=(const MachaLayer&) = delete;
+		MachaLayer& operator=(MachaLayer&&) = delete;
 
 		void onAttach() override;
 		void onDetach() override;
@@ -42,5 +47,7 @@ namespace MRG
 
 		// Panels
 		SceneHierarchyPanel m_sceneHierarchyPanel;
+
+		bool test = false;
 	};
 }  // namespace MRG

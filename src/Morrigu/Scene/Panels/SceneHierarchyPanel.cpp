@@ -30,8 +30,9 @@ namespace
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.9f, 0.2f, 0.2f, 1.f});
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.8f, 0.1f, 0.15f, 1.f});
 		ImGui::PushFont(boldFont);
-		if (ImGui::Button("X", buttonSize))
+		if (ImGui::Button("X", buttonSize)) {
 			values.x = resetValue;
+		}
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
@@ -44,8 +45,9 @@ namespace
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3f, 0.8f, 0.3f, 1.f});
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.2f, 0.7f, 0.2f, 1.f});
 		ImGui::PushFont(boldFont);
-		if (ImGui::Button("Y", buttonSize))
+		if (ImGui::Button("Y", buttonSize)) {
 			values.y = resetValue;
+		}
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
@@ -58,8 +60,9 @@ namespace
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.2f, 0.35f, 0.9f, 1.f});
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.1f, 0.25f, 0.8f, 1.f});
 		ImGui::PushFont(boldFont);
-		if (ImGui::Button("Z", buttonSize))
+		if (ImGui::Button("Z", buttonSize)) {
 			values.z = resetValue;
+		}
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
@@ -91,13 +94,15 @@ namespace
 			ImGui::PopStyleVar();
 
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
-			if (ImGui::Button("+", ImVec2{lineHeight, lineHeight}))
+			if (ImGui::Button("+", ImVec2{lineHeight, lineHeight})) {
 				ImGui::OpenPopup("ComponentSettings");
+			}
 
 			bool removeComponent = false;
 			if (ImGui::BeginPopup("ComponentSettings")) {
-				if (ImGui::MenuItem("Remove component"))
+				if (ImGui::MenuItem("Remove component")) {
 					removeComponent = true;
+				}
 
 				ImGui::EndPopup();
 			}
@@ -107,8 +112,9 @@ namespace
 				ImGui::TreePop();
 			}
 
-			if (removeComponent)
+			if (removeComponent) {
 				entity.removeComponent<T>();
+			}
 		}
 	}
 }  // namespace
@@ -132,12 +138,14 @@ namespace MRG
 			drawEntityNode(entity);
 		});
 
-		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
 			selectedEntity = {};
+		}
 
 		if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
-			if (ImGui::MenuItem("Create empty entity"))
+			if (ImGui::MenuItem("Create empty entity")) {
 				m_context->createEntity("Empty entity");
+			}
 
 			ImGui::EndPopup();
 		}
@@ -146,8 +154,9 @@ namespace MRG
 
 		ImGui::Begin("Properties");
 
-		if (selectedEntity)
+		if (selectedEntity) {
 			drawComponents(selectedEntity);
+		}
 
 		ImGui::End();
 	}
@@ -165,8 +174,9 @@ namespace MRG
 
 		auto entityDeleted = false;
 		if (ImGui::BeginPopupContextItem()) {
-			if (ImGui::MenuItem("Delete entity"))
+			if (ImGui::MenuItem("Delete entity")) {
 				entityDeleted = true;
+			}
 
 			ImGui::EndPopup();
 		}
@@ -174,15 +184,17 @@ namespace MRG
 		if (opened) {
 			flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 			opened = ImGui::TreeNodeEx((void*)9817239, flags, "%s", tag.c_str());
-			if (opened)
+			if (opened) {
 				ImGui::TreePop();
+			}
 			ImGui::TreePop();
 		}
 
 		if (entityDeleted) {
 			m_context->destroyEntity(entity);
-			if (selectedEntity == entity)
+			if (selectedEntity == entity) {
 				selectedEntity = {};
+			}
 		}
 	}
 
@@ -191,35 +203,36 @@ namespace MRG
 		if (entity.hasComponent<TagComponent>()) {
 			auto& tag = entity.getComponent<TagComponent>().tag;
 
-			char buffer[256];
-			memset(buffer, 0, sizeof(buffer));
+			std::array<char, 256> buffer{};
+			memset(buffer.data(), 0, sizeof(buffer));
 			DISABLE_WARNING_PUSH
 			DISABLE_WARNING_UNSAFE_FUNCTIONS
-			strncat(buffer, tag.c_str(), tag.length());
+			strncat(buffer.data(), tag.c_str(), tag.length());
 			DISABLE_WARNING_POP
-			if (ImGui::InputText("##Tag", buffer, sizeof(buffer))) {
-				tag = std::string(buffer);
+			if (ImGui::InputText("##Tag", buffer.data(), sizeof(buffer))) {
+				tag = std::string(buffer.data());
 			}
 		}
 
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1);
 
-		if (ImGui::Button("Add component"))
+		if (ImGui::Button("Add component")) {
 			ImGui::OpenPopup("AddComponent");
+		}
 
 		if (ImGui::BeginPopup("AddComponent")) {
 			if (ImGui::MenuItem("Camera")) {
-				if (!selectedEntity.hasComponent<CameraComponent>())
+				if (!selectedEntity.hasComponent<CameraComponent>()) {
 					selectedEntity.addComponent<CameraComponent>();
-				else
+				} else
 					MRG_ENGINE_WARN("Tried to add a CameraComponent to an entity that already has one!")
 				ImGui::CloseCurrentPopup();
 			}
 			if (ImGui::MenuItem("Sprite renderer")) {
-				if (!selectedEntity.hasComponent<SpriteRendererComponent>())
+				if (!selectedEntity.hasComponent<SpriteRendererComponent>()) {
 					selectedEntity.addComponent<SpriteRendererComponent>();
-				else
+				} else
 					MRG_ENGINE_WARN("Tried to add a SpriteRendererComponent to an entity that already has one!")
 				ImGui::CloseCurrentPopup();
 			}
@@ -243,7 +256,7 @@ namespace MRG
 
 			ImGui::Checkbox("Primary", &component.primary);
 
-			const char* projectionTypeStrings[] = {"Orthographic", "Perspective"};
+			std::array<const char*, 2> projectionTypeStrings = {"Orthographic", "Perspective"};
 			const char* currentProjectionTypeString = projectionTypeStrings[static_cast<int>(camera.getProjectionType())];
 			if (ImGui::BeginCombo("Projection type", currentProjectionTypeString)) {
 				for (auto i = 0; i < 2; ++i) {
@@ -254,34 +267,41 @@ namespace MRG
 						camera.setProjectionType(static_cast<SceneCamera::ProjectionType>(i));
 					}
 
-					if (isSelected)
+					if (isSelected) {
 						ImGui::SetItemDefaultFocus();
+					}
 				}
 				ImGui::EndCombo();
 			}
 
 			if (camera.getProjectionType() == SceneCamera::ProjectionType::Orthographic) {
 				auto size = camera.getOrthographicSize();
-				if (ImGui::DragFloat("Size", &size))
+				if (ImGui::DragFloat("Size", &size)) {
 					camera.setOrthographicSize(size);
+				}
 				auto OrthographicNear = camera.getOrthographicNear();
-				if (ImGui::DragFloat("Near clip", &OrthographicNear))
+				if (ImGui::DragFloat("Near clip", &OrthographicNear)) {
 					camera.setOrthographicNear(OrthographicNear);
+				}
 				auto OrthographicFar = camera.getOrthographicFar();
-				if (ImGui::DragFloat("Far clip", &OrthographicFar))
+				if (ImGui::DragFloat("Far clip", &OrthographicFar)) {
 					camera.setOrthographicFar(OrthographicFar);
+				}
 			}
 
 			if (camera.getProjectionType() == SceneCamera::ProjectionType::Perspective) {
 				auto verticalFOV = glm::degrees(camera.getPerspectiveFOV());
-				if (ImGui::DragFloat("Vertical FOV", &verticalFOV, 1.f, 0.f, 180.f))
+				if (ImGui::DragFloat("Vertical FOV", &verticalFOV, 1.f, 0.f, 180.f)) {
 					camera.setPerspectiveFOV(glm::radians(verticalFOV));
+				}
 				auto perspectiveNear = camera.getPerspectiveNear();
-				if (ImGui::DragFloat("Near clip", &perspectiveNear))
+				if (ImGui::DragFloat("Near clip", &perspectiveNear)) {
 					camera.setPerspectiveNear(perspectiveNear);
+				}
 				auto perspectiveFar = camera.getPerspectiveFar();
-				if (ImGui::DragFloat("Far clip", &perspectiveFar))
+				if (ImGui::DragFloat("Far clip", &perspectiveFar)) {
 					camera.setPerspectiveFar(perspectiveFar);
+				}
 
 				ImGui::Checkbox("Fixed aspect ratio", &component.fixedAspectRatio);
 			}

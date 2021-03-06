@@ -10,7 +10,12 @@ namespace MRG
 	{
 	public:
 		Camera() = default;
+		Camera(const Camera&) = default;
+		Camera(Camera&&) = default;
 		explicit Camera(const glm::mat4& projection) : m_projection(projection) {}
+
+		Camera& operator=(const Camera&) = default;
+		Camera& operator=(Camera&&) = default;
 
 		virtual ~Camera() = default;
 
@@ -19,8 +24,9 @@ namespace MRG
 		void setProjection(const glm::mat4& projection)
 		{
 			m_projection = projection;
-			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan)
+			if (RenderingAPI::getAPI() == RenderingAPI::API::Vulkan) {
 				m_projection[1][1] *= -1;
+			}
 		}
 
 	private:

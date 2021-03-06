@@ -22,7 +22,13 @@ namespace MRG::Vulkan
 	class Renderer2D : public Generic2DRenderer
 	{
 	public:
+		Renderer2D() = default;
+		Renderer2D(const Renderer2D&) = delete;
+		Renderer2D(Renderer2D&&) = delete;
 		~Renderer2D() override = default;
+
+		Renderer2D& operator=(const Renderer2D&) = delete;
+		Renderer2D& operator=(Renderer2D&&) = delete;
 
 		void init() override;
 		void shutdown() override;
@@ -58,10 +64,15 @@ namespace MRG::Vulkan
 		void setRenderTarget(Ref<MRG::Framebuffer> renderTarget) override;
 		void resetRenderTarget() override;
 		[[nodiscard]] Ref<MRG::Framebuffer> getRenderTarget() const override { return m_renderTarget; }
-		[[nodiscard]] uint32_t objectIDAt(uint32_t x, uint32_t y) override;
 
 		void setViewport(uint32_t, uint32_t, uint32_t, uint32_t) override {}
-		void setClearColor(const glm::vec4& color) override { m_clearColor = color; }
+		void setClearColor(const glm::vec4& color) override
+		{
+			m_clearColor = color;
+			if (m_renderTarget != nullptr) {
+				m_renderTarget->setClearColor(color);
+			}
+		}
 		void clear() override;
 
 		void resetStats() override { m_stats = {}; };
@@ -74,26 +85,22 @@ namespace MRG::Vulkan
 		void updateDescriptor();
 		void flushAndReset();
 
-		WindowProperties* m_data;
-		Ref<Shader> m_textureShader;
-		uint32_t m_imageIndex;
+		WindowProperties* m_data{};
+		uint32_t m_imageIndex{};
 		std::size_t m_maxFramesInFlight = 2;
 		std::vector<VkSemaphore> m_imageAvailableSemaphores;
 		std::vector<VkFence> m_inFlightFences, m_imagesInFlight;
-		Ref<VertexArray> m_vertexArray;
 		Ref<Texture2D> m_whiteTexture;
-		VkDescriptorPool m_descriptorPool;
+		VkDescriptorPool m_descriptorPool{};
 		std::vector<VkDescriptorSet> m_descriptorSets;
 		bool m_shouldRecreateSwapChain = false;
 
 		bool m_sceneInProgress = false;
 
-		PushConstants m_modelMatrix;
+		PushConstants m_modelMatrix{};
 
 		glm::vec4 m_clearColor = {0.f, 0.f, 0.f, 1.f};
 		Ref<Framebuffer> m_renderTarget;
-
-		Buffer m_objectIDBuffer{};
 
 		RenderingStatistics m_stats;
 	};

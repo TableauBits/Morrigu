@@ -13,7 +13,6 @@ namespace MRG
 	public:
 		Entity() = default;
 		Entity(entt::entity handle, Scene* scene);
-		Entity(const Entity& other) = default;
 
 		template<typename T, typename... Args>
 		T& addComponent(Args&&... args)

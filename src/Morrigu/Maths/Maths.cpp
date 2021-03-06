@@ -1,5 +1,7 @@
 #include "Maths.h"
 
+#include <array>
+
 namespace MRG::Maths
 {
 	bool decomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale)
@@ -12,8 +14,9 @@ namespace MRG::Maths
 		mat4 LocalMatrix(transform);
 
 		// Normalize the matrix.
-		if (epsilonEqual(LocalMatrix[3][3], static_cast<float>(0), epsilon<T>()))
+		if (epsilonEqual(LocalMatrix[3][3], static_cast<float>(0), epsilon<T>())) {
 			return false;
+		}
 
 		// First, isolate perspective.  This is the messiest.
 		if (epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>()) ||
@@ -28,12 +31,12 @@ namespace MRG::Maths
 		translation = vec3(LocalMatrix[3]);
 		LocalMatrix[3] = vec4(0, 0, 0, LocalMatrix[3].w);
 
-		vec3 Row[3];
+		std::array<vec3, 3> Row{};
 
 		// Now get scale and shear.
-		for (length_t i = 0; i < 3; ++i)
-			for (length_t j = 0; j < 3; ++j) Row[i][j] = LocalMatrix[i][j];
-
+		for (length_t i = 0; i < 3; ++i) {
+			for (length_t j = 0; j < 3; ++j) { Row[i][j] = LocalMatrix[i][j]; }
+		}
 		// Compute X scale factor and normalize first row.
 		scale.x = length(Row[0]);
 		Row[0] = detail::scale(Row[0], static_cast<T>(1));

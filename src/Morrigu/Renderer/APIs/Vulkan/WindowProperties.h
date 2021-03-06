@@ -1,6 +1,8 @@
 #ifndef MRG_VULKAN_IMPL_WINDOWPROPERTIES
 #define MRG_VULKAN_IMPL_WINDOWPROPERTIES
 
+#include "Renderer/APIs/Vulkan/Pipeline.h"
+#include "Renderer/APIs/Vulkan/VertexArray.h"
 #include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
 #include "Renderer/WindowProperties.h"
 
@@ -9,46 +11,6 @@
 
 namespace MRG::Vulkan
 {
-	struct LightVulkanImage
-	{
-		VkImage handle;
-		VkDeviceMemory memoryHandle;
-		VkImageView imageView;
-	};
-
-	struct SwapChain
-	{
-		VkSwapchainKHR handle{};
-		uint32_t minImageCount{};
-		uint32_t imageCount{};
-		std::vector<VkImage> images;
-		VkFormat imageFormat{};
-		VkExtent2D extent{};
-		std::vector<VkImageView> imageViews;
-		std::vector<LightVulkanImage> objectIDBuffers;
-		std::vector<std::array<VkFramebuffer, 3>> frameBuffers;
-		LightVulkanImage depthBuffer{};
-	};
-
-	struct Queue
-	{
-		VkQueue handle;
-		uint32_t index;
-	};
-
-	struct Pipeline
-	{
-		VkPipeline handle;
-		VkRenderPass renderPass;
-		VkPipelineLayout layout;
-	};
-
-	struct Buffer
-	{
-		VkBuffer handle;
-		VkDeviceMemory memoryHandle;
-	};
-
 	class WindowProperties : public MRG::WindowProperties
 	{
 	public:
@@ -64,14 +26,16 @@ namespace MRG::Vulkan
 		Queue graphicsQueue{}, presentQueue{};
 		SwapChain swapChain;
 		VkDescriptorSetLayout descriptorSetLayout{};
-		Pipeline clearingPipeline{};
-		Pipeline renderingPipeline{};
+		Pipeline clearingPipeline;
+		Pipeline renderingPipeline;
 		VkRenderPass ImGuiRenderPass{};
 		VkCommandPool commandPool{};
 		std::vector<std::array<VkCommandBuffer, 3>> commandBuffers;
 		std::size_t currentFrame = 0;
 		VkPushConstantRange pushConstantRanges{};
 		VkDescriptorPool ImGuiPool{};
+		Ref<Shader> textureShader;
+		Ref<VertexArray> vertexArray;
 	};
 }  // namespace MRG::Vulkan
 

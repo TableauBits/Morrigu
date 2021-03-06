@@ -13,8 +13,9 @@ namespace
 	{
 		std::ifstream file(fileName, std::ios::ate | std::ios::binary);
 
-		if (!file.is_open())
+		if (!file.is_open()) {
 			throw std::runtime_error("Could not open file!");
+		}
 
 		std::size_t fileSize = static_cast<std::size_t>(file.tellg());
 		std::vector<char> buffer(fileSize);
@@ -61,8 +62,8 @@ namespace MRG::Vulkan
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
-		m_vertexShaderModule = createShader(vertShaderSrc, data->device);
-		m_fragmentShaderModule = createShader(fragShaderSrc, data->device);
+		vertexShaderModule = createShader(vertShaderSrc, data->device);
+		fragmentShaderModule = createShader(fragShaderSrc, data->device);
 	}
 
 	Shader::~Shader() { Shader::destroy(); }
@@ -71,13 +72,14 @@ namespace MRG::Vulkan
 	{
 		MRG_PROFILE_FUNCTION()
 
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
-		vkDestroyShaderModule(data->device, m_vertexShaderModule, nullptr);
-		vkDestroyShaderModule(data->device, m_fragmentShaderModule, nullptr);
+		vkDestroyShaderModule(data->device, vertexShaderModule, nullptr);
+		vkDestroyShaderModule(data->device, fragmentShaderModule, nullptr);
 
 		m_isDestroyed = true;
 	}

@@ -31,8 +31,9 @@ namespace MRG::Vulkan
 		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
 		for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i) {
-			if ((typeFilter & MRG_BIT(i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			if (((typeFilter & MRG_BIT(i)) != 0) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
 				return i;
+			}
 		}
 		throw std::runtime_error("failed to find suitable memory type!");
 	}

@@ -4,47 +4,115 @@
 
 #include <Vendor/ImGui/bindings/imgui_impl_vulkan.h>
 
-#include <array>
+#include <algorithm>
 
 namespace MRG::Vulkan
 {
+	[[nodiscard]] VkFormat internalToVulkanFormat(MRG::FramebufferTextureFormat format)
+	{
+		switch (format) {
+		case MRG::FramebufferTextureFormat::RGBA8:
+			return VK_FORMAT_R8G8B8A8_UNORM;
+		case MRG::FramebufferTextureFormat::RGBA16:
+			return VK_FORMAT_R16G16B16A16_UNORM;
+
+		case MRG::FramebufferTextureFormat::DEPTH24STENCIL8:
+			return VK_FORMAT_D24_UNORM_S8_UINT;
+
+		case MRG::FramebufferTextureFormat::None: {
+			MRG_CORE_ASSERT(false, "invalid format!")
+			return VK_FORMAT_R8G8B8A8_UNORM;
+		}
+		}
+		return VK_FORMAT_R8G8B8A8_UNORM;
+	}
+
 	Framebuffer::Framebuffer(const FramebufferSpecification& spec)
 	{
 		auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
+		m_shader = std::static_pointer_cast<Shader>(spec.shaderModule);
+
 		m_specification = spec;
+		for (const auto& attachment : spec.attachments.attachments) {
+			if (!isDepthFormat(attachment.textureFormat)) {
+				m_colorAttachmentsSpecifications.emplace_back(attachment);
+			} else {
+				m_depthAttachmentsSpecification = attachment;
+			}
+		}
 
-		createImage(data->physicalDevice,
-		            data->device,
-		            m_specification.width,
-		            m_specification.height,
-		            data->swapChain.imageFormat,
-		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		            m_colorAttachment.handle,
-		            m_colorAttachment.memoryHandle);
+		m_clearValues.resize(spec.attachments.attachments.size());
 
-		transitionImageLayout(data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		std::vector<VkFormat> vulkanFormats{};
+		VkFormat depthFormat{};
 
-		m_colorAttachment.imageView =
-		  createImageView(data->device, m_colorAttachment.handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+		for (const auto& attachment : m_specification.attachments.attachments) {
+			if (!isDepthFormat(attachment.textureFormat)) {
+				vulkanFormats.emplace_back(internalToVulkanFormat(attachment.textureFormat));
+			} else {
+				depthFormat = internalToVulkanFormat(attachment.textureFormat);
+			}
+		}
 
-		createImage(data->physicalDevice,
-		            data->device,
-		            m_specification.width,
-		            m_specification.height,
-		            VK_FORMAT_R16G16B16A16_UNORM,
-		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		            m_objectIDBuffer.handle,
-		            m_objectIDBuffer.memoryHandle);
+		VkAttachmentDescription colorAttachment{};
+		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		transitionImageLayout(data, m_objectIDBuffer.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkAttachmentDescription depthAttachment{};
+		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-		m_objectIDBuffer.imageView =
-		  createImageView(data->device, m_objectIDBuffer.handle, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+		PipelineSpec pipelineSpec{m_shader,
+		                          vulkanFormats,
+		                          depthFormat,
+		                          colorAttachment,
+		                          depthAttachment,
+		                          std::static_pointer_cast<MRG::Vulkan::VertexArray>(data->vertexArray)->getAttributeDescriptions(),
+		                          {std::static_pointer_cast<MRG::Vulkan::VertexArray>(data->vertexArray)->getBindingDescription()}};
+		m_clearingPipeline.init(pipelineSpec);
+
+		pipelineSpec.colorAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		pipelineSpec.depthAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+
+		m_renderingPipeline.init(pipelineSpec);
+
+		m_colorAttachments.resize(m_colorAttachmentsSpecifications.size());
+		m_ImTextureIDs.resize(m_colorAttachmentsSpecifications.size(), nullptr);
+
+		std::vector<VkImageView> attachments{};
+
+		for (std::size_t i = 0; i < m_colorAttachmentsSpecifications.size(); ++i) {
+			createImage(data->physicalDevice,
+			            data->device,
+			            m_specification.width,
+			            m_specification.height,
+			            internalToVulkanFormat(m_colorAttachmentsSpecifications[i].textureFormat),
+			            VK_IMAGE_TILING_OPTIMAL,
+			            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			            m_colorAttachments[i].handle,
+			            m_colorAttachments[i].memoryHandle);
+
+			transitionImageLayout(data, m_colorAttachments[i].handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+			m_colorAttachments[i].imageView = createImageView(data->device,
+			                                                  m_colorAttachments[i].handle,
+			                                                  internalToVulkanFormat(m_colorAttachmentsSpecifications[i].textureFormat),
+			                                                  VK_IMAGE_ASPECT_COLOR_BIT);
+
+			attachments.emplace_back(m_colorAttachments[i].imageView);
+		}
 
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -66,46 +134,50 @@ namespace MRG::Vulkan
 
 		MRG_VKVALIDATE(vkCreateSampler(data->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!")
 
-		createImage(data->physicalDevice,
-		            data->device,
-		            m_specification.width,
-		            m_specification.height,
-		            VK_FORMAT_D32_SFLOAT,
-		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		            m_depthAttachment.handle,
-		            m_depthAttachment.memoryHandle);
+		if (m_depthAttachmentsSpecification.textureFormat != FramebufferTextureFormat::None) {
+			createImage(data->physicalDevice,
+			            data->device,
+			            m_specification.width,
+			            m_specification.height,
+			            internalToVulkanFormat(m_depthAttachmentsSpecification.textureFormat),
+			            VK_IMAGE_TILING_OPTIMAL,
+			            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+			            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			            m_depthAttachment.handle,
+			            m_depthAttachment.memoryHandle);
 
-		const auto commandBuffer = beginSingleTimeCommand(data);
+			const auto commandBuffer = beginSingleTimeCommand(data);
 
-		VkPipelineStageFlags sourceStage, destinationStage;
-		VkImageMemoryBarrier barrier{};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.image = m_depthAttachment.handle;
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			VkPipelineStageFlags sourceStage, destinationStage;
+			VkImageMemoryBarrier barrier{};
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.image = m_depthAttachment.handle;
+			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+			barrier.subresourceRange.baseMipLevel = 0;
+			barrier.subresourceRange.levelCount = 1;
+			barrier.subresourceRange.baseArrayLayer = 0;
+			barrier.subresourceRange.layerCount = 1;
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
-		vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+			vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-		endSingleTimeCommand(data, commandBuffer);
+			endSingleTimeCommand(data, commandBuffer);
 
-		m_depthAttachment.imageView =
-		  createImageView(data->device, m_depthAttachment.handle, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
+			m_depthAttachment.imageView = createImageView(data->device,
+			                                              m_depthAttachment.handle,
+			                                              internalToVulkanFormat(m_depthAttachmentsSpecification.textureFormat),
+			                                              VK_IMAGE_ASPECT_DEPTH_BIT);
 
-		std::array<VkImageView, 3> attachments{m_colorAttachment.imageView, m_objectIDBuffer.imageView, m_depthAttachment.imageView};
+			attachments.emplace_back(m_depthAttachment.imageView);
+		}
 
 		VkFramebufferCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -114,45 +186,43 @@ namespace MRG::Vulkan
 		createInfo.width = m_specification.width;
 		createInfo.height = m_specification.height;
 		createInfo.layers = 1;
-		createInfo.renderPass = data->renderingPipeline.renderPass;
+		createInfo.renderPass = m_renderingPipeline.getRenderpass();  // We can use either RP, as we define them as compatible
+		// RP compatibility is defined here:
+		// https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#renderpass-compatibility
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
-
-		createBuffer(data->device,
-		             data->physicalDevice,
-		             data->width * data->height * 8,  // TODO: make this work for something else than 64bits pixel data
-		             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
-		             m_objectIDLocalBuffer);
-	}
+	}  // namespace MRG::Vulkan
 
 	Framebuffer::~Framebuffer() { Framebuffer::destroy(); }
 
 	void Framebuffer::destroy()
 	{
-		if (m_isDestroyed)
+		if (m_isDestroyed) {
 			return;
+		}
 
 		const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
-		vkDestroySampler(data->device, m_sampler, nullptr);
-
-		vkDestroyImageView(data->device, m_colorAttachment.imageView, nullptr);
-		vkDestroyImageView(data->device, m_objectIDBuffer.imageView, nullptr);
-		vkDestroyImageView(data->device, m_depthAttachment.imageView, nullptr);
-
-		vkDestroyImage(data->device, m_colorAttachment.handle, nullptr);
-		vkDestroyImage(data->device, m_objectIDBuffer.handle, nullptr);
-		vkDestroyImage(data->device, m_depthAttachment.handle, nullptr);
-
-		vkFreeMemory(data->device, m_colorAttachment.memoryHandle, nullptr);
-		vkFreeMemory(data->device, m_objectIDBuffer.memoryHandle, nullptr);
-		vkFreeMemory(data->device, m_depthAttachment.memoryHandle, nullptr);
-
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
 
-		vkDestroyBuffer(data->device, m_objectIDLocalBuffer.handle, nullptr);
-		vkFreeMemory(data->device, m_objectIDLocalBuffer.memoryHandle, nullptr);
+		vkDestroySampler(data->device, m_sampler, nullptr);
+
+		for (auto& attachment : m_colorAttachments) {
+			vkDestroyImageView(data->device, attachment.imageView, nullptr);
+			vkDestroyImage(data->device, attachment.handle, nullptr);
+			vkFreeMemory(data->device, attachment.memoryHandle, nullptr);
+		}
+
+		if (m_depthAttachmentsSpecification.textureFormat != FramebufferTextureFormat::None) {
+			vkDestroyImageView(data->device, m_depthAttachment.imageView, nullptr);
+			vkDestroyImage(data->device, m_depthAttachment.handle, nullptr);
+			vkFreeMemory(data->device, m_depthAttachment.memoryHandle, nullptr);
+		}
+
+		m_clearingPipeline.destroy();
+		m_renderingPipeline.destroy();
+
+        m_shader->destroy();
 
 		m_isDestroyed = true;
 	}
@@ -171,95 +241,109 @@ namespace MRG::Vulkan
 
 		vkDeviceWaitIdle(data->device);
 
-		vkDestroyImageView(data->device, m_colorAttachment.imageView, nullptr);
-		vkDestroyImageView(data->device, m_objectIDBuffer.imageView, nullptr);
-		vkDestroyImageView(data->device, m_depthAttachment.imageView, nullptr);
+		for (auto& attachment : m_colorAttachments) {
+			vkDestroyImageView(data->device, attachment.imageView, nullptr);
+			vkDestroyImage(data->device, attachment.handle, nullptr);
+			vkFreeMemory(data->device, attachment.memoryHandle, nullptr);
+		}
 
-		vkDestroyImage(data->device, m_colorAttachment.handle, nullptr);
-		vkDestroyImage(data->device, m_objectIDBuffer.handle, nullptr);
-		vkDestroyImage(data->device, m_depthAttachment.handle, nullptr);
-
-		vkFreeMemory(data->device, m_colorAttachment.memoryHandle, nullptr);
-		vkFreeMemory(data->device, m_objectIDBuffer.memoryHandle, nullptr);
-		vkFreeMemory(data->device, m_depthAttachment.memoryHandle, nullptr);
+		if (m_depthAttachmentsSpecification.textureFormat != FramebufferTextureFormat::None) {
+			vkDestroyImageView(data->device, m_depthAttachment.imageView, nullptr);
+			vkDestroyImage(data->device, m_depthAttachment.handle, nullptr);
+			vkFreeMemory(data->device, m_depthAttachment.memoryHandle, nullptr);
+		}
 
 		vkDestroyFramebuffer(data->device, m_handle, nullptr);
 
-		vkDestroyBuffer(data->device, m_objectIDLocalBuffer.handle, nullptr);
-		vkFreeMemory(data->device, m_objectIDLocalBuffer.memoryHandle, nullptr);
+		vkDestroySampler(data->device, m_sampler, nullptr);
 
-		createImage(data->physicalDevice,
-		            data->device,
-		            m_specification.width,
-		            m_specification.height,
-		            data->swapChain.imageFormat,
-		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		            m_colorAttachment.handle,
-		            m_colorAttachment.memoryHandle);
+		std::vector<VkImageView> attachments;
 
-		transitionImageLayout(data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		for (std::size_t i = 0; i < m_colorAttachmentsSpecifications.size(); ++i) {
+			const auto format = internalToVulkanFormat(m_colorAttachmentsSpecifications[i].textureFormat);
+			createImage(data->physicalDevice,
+			            data->device,
+			            m_specification.width,
+			            m_specification.height,
+			            format,
+			            VK_IMAGE_TILING_OPTIMAL,
+			            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			            m_colorAttachments[i].handle,
+			            m_colorAttachments[i].memoryHandle);
 
-		m_colorAttachment.imageView =
-		  createImageView(data->device, m_colorAttachment.handle, data->swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+			transitionImageLayout(data, m_colorAttachments[i].handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-		createImage(data->physicalDevice,
-		            data->device,
-		            m_specification.width,
-		            m_specification.height,
-		            VK_FORMAT_R16G16B16A16_UNORM,
-		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		            m_objectIDBuffer.handle,
-		            m_objectIDBuffer.memoryHandle);
+			m_colorAttachments[i].imageView =
+			  createImageView(data->device, m_colorAttachments[i].handle, format, VK_IMAGE_ASPECT_COLOR_BIT);
 
-		transitionImageLayout(data, m_objectIDBuffer.handle, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			attachments.emplace_back(m_colorAttachments[i].imageView);
+		}
 
-		m_objectIDBuffer.imageView =
-		  createImageView(data->device, m_objectIDBuffer.handle, VK_FORMAT_R16G16B16A16_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_NEAREST;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = 16.f;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.f;
+		samplerInfo.minLod = 0.f;
+		samplerInfo.maxLod = 0.f;
 
-		createImage(data->physicalDevice,
-		            data->device,
-		            m_specification.width,
-		            m_specification.height,
-		            VK_FORMAT_D32_SFLOAT,
-		            VK_IMAGE_TILING_OPTIMAL,
-		            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-		            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		            m_depthAttachment.handle,
-		            m_depthAttachment.memoryHandle);
+		MRG_VKVALIDATE(vkCreateSampler(data->device, &samplerInfo, nullptr, &m_sampler), "failed to create texture sampler!")
 
-		const auto commandBuffer = beginSingleTimeCommand(data);
+		if (m_depthAttachmentsSpecification.textureFormat != FramebufferTextureFormat::None) {
+			createImage(data->physicalDevice,
+			            data->device,
+			            m_specification.width,
+			            m_specification.height,
+			            internalToVulkanFormat(m_depthAttachmentsSpecification.textureFormat),
+			            VK_IMAGE_TILING_OPTIMAL,
+			            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+			            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			            m_depthAttachment.handle,
+			            m_depthAttachment.memoryHandle);
 
-		VkPipelineStageFlags sourceStage, destinationStage;
-		VkImageMemoryBarrier barrier{};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.image = m_depthAttachment.handle;
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			const auto commandBuffer = beginSingleTimeCommand(data);
 
-		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			VkPipelineStageFlags sourceStage, destinationStage;
+			VkImageMemoryBarrier barrier{};
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.image = m_depthAttachment.handle;
+			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+			barrier.subresourceRange.baseMipLevel = 0;
+			barrier.subresourceRange.levelCount = 1;
+			barrier.subresourceRange.baseArrayLayer = 0;
+			barrier.subresourceRange.layerCount = 1;
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-		vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
-		endSingleTimeCommand(data, commandBuffer);
+			vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-		m_depthAttachment.imageView =
-		  createImageView(data->device, m_depthAttachment.handle, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
+			endSingleTimeCommand(data, commandBuffer);
 
-		std::array<VkImageView, 3> attachments{m_colorAttachment.imageView, m_objectIDBuffer.imageView, m_depthAttachment.imageView};
+			m_depthAttachment.imageView = createImageView(data->device,
+			                                              m_depthAttachment.handle,
+			                                              internalToVulkanFormat(m_depthAttachmentsSpecification.textureFormat),
+			                                              VK_IMAGE_ASPECT_DEPTH_BIT);
+
+			attachments.emplace_back(m_depthAttachment.imageView);
+		}
 
 		VkFramebufferCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -268,48 +352,50 @@ namespace MRG::Vulkan
 		createInfo.width = m_specification.width;
 		createInfo.height = m_specification.height;
 		createInfo.layers = 1;
-		createInfo.renderPass = data->renderingPipeline.renderPass;
+		createInfo.renderPass = m_renderingPipeline.getRenderpass();
 
 		MRG_VKVALIDATE(vkCreateFramebuffer(data->device, &createInfo, nullptr, &m_handle), "failed to create framebuffer!")
 
-		createBuffer(data->device,
-		             data->physicalDevice,
-		             data->width * data->height * 8,  // TODO: make this work for something else than 64bits pixel data
-		             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-		             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
-		             m_objectIDLocalBuffer);
-
-		if (m_ImTextureID != nullptr) {
-			transitionImageLayout(
-			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			VkDescriptorImageInfo desc_image[1] = {};
-			desc_image[0].sampler = m_sampler;
-			desc_image[0].imageView = m_colorAttachment.imageView;
-			desc_image[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			VkWriteDescriptorSet write_desc[1] = {};
-			write_desc[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			write_desc[0].dstSet = (VkDescriptorSet)m_ImTextureID;
-			write_desc[0].descriptorCount = 1;
-			write_desc[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			write_desc[0].pImageInfo = desc_image;
-			vkUpdateDescriptorSets(data->device, 1, write_desc, 0, nullptr);
-			transitionImageLayout(
-			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		for (std::size_t i = 0; i < m_colorAttachments.size(); ++i) {
+			if (m_ImTextureIDs[i] != nullptr) {
+				transitionImageLayout(
+				  data, m_colorAttachments[i].handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				VkDescriptorImageInfo desc_image{};
+				desc_image.sampler = m_sampler;
+				desc_image.imageView = m_colorAttachments[i].imageView;
+				desc_image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				VkWriteDescriptorSet write_desc{};
+				write_desc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				write_desc.dstSet = (VkDescriptorSet)m_ImTextureIDs[i];
+				write_desc.descriptorCount = 1;
+				write_desc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				write_desc.pImageInfo = &desc_image;
+				vkUpdateDescriptorSets(data->device, 1, &write_desc, 0, nullptr);
+				transitionImageLayout(
+				  data, m_colorAttachments[i].handle, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			}
 		}
 	}
 
-	ImTextureID Framebuffer::getImTextureID()
+	ImTextureID Framebuffer::getImTextureID(uint32_t index)
 	{
-		if (m_ImTextureID == nullptr) {
+		if (m_ImTextureIDs[index] == nullptr) {
 			const auto data = static_cast<WindowProperties*>(glfwGetWindowUserPointer(Renderer2D::getGLFWWindow()));
 
 			transitionImageLayout(
-			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			m_ImTextureID = ImGui_ImplVulkan_AddTexture(m_sampler, m_colorAttachment.imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			  data, m_colorAttachments[index].handle, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			m_ImTextureIDs[index] =
+			  ImGui_ImplVulkan_AddTexture(m_sampler, m_colorAttachments[index].imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			transitionImageLayout(
-			  data, m_colorAttachment.handle, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			  data, m_colorAttachments[index].handle, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		}
 
-		return m_ImTextureID;
+		return m_ImTextureIDs[index];
+	}
+
+	void Framebuffer::setClearColor(const glm::vec4& color)
+	{
+		for (auto& clearValue : m_clearValues) { clearValue.color = {{color.r, color.g, color.b, color.a}}; }
+		m_clearValues.back().depthStencil = {1.f, 0};
 	}
 }  // namespace MRG::Vulkan

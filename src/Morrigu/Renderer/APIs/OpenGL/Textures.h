@@ -13,7 +13,12 @@ namespace MRG::OpenGL
 	public:
 		Texture2D(uint32_t width, uint32_t height);
 		explicit Texture2D(const std::string& path);
+		Texture2D(const Texture2D&) = delete;
+		Texture2D(Texture2D&&) = delete;
 		~Texture2D() override;
+
+		Texture2D& operator=(const Texture2D&) = delete;
+		Texture2D& operator=(Texture2D&&) = delete;
 
 		bool operator==(const Texture& other) const override { return m_rendererID == ((OpenGL::Texture2D&)other).m_rendererID; }
 

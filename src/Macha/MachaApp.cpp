@@ -6,7 +6,7 @@ namespace MRG
 	{
 	public:
 		Macha() : Application("Macha - The Morrigu graphical editor") { pushLayer(new MachaLayer{}); }
-		~Macha() {}
+		~Macha() override = default;
 	};
 
 	Application* createApplication() { return new Macha(); }

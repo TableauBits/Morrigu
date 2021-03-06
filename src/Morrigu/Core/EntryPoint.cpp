@@ -10,7 +10,7 @@ int main()
 	MRG_ENGINE_INFO("Finished engine initialisation.")
 
 	MRG_PROFILE_BEGIN_SESSION("Startup", "MRGProfile-Startup.json")
-	auto app = MRG::createApplication();
+	auto* app = MRG::createApplication();
 	MRG_PROFILE_END_SESSION()
 
 	MRG_PROFILE_BEGIN_SESSION("Runtime", "MRGProfile-Runtime.json")

@@ -41,17 +41,19 @@ namespace
 
 		int i = 0;
 		for (const auto& queueFamily : queueFamilies) {
-			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+			if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
 				indices.graphicsFamily = i;
+			}
 
 			VkBool32 presentSupport = VK_FALSE;
 			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-			if (presentSupport) {
+			if (presentSupport == VK_TRUE) {
 				indices.presentFamily = i;
 			}
 
-			if (indices.isComplete())
+			if (indices.isComplete()) {
 				break;
+			}
 			++i;
 		}
 
@@ -141,8 +143,9 @@ namespace
 
 		// this if statement is split to allow constexpr if
 		if (enableValidation) {
-			if (!checkValidationLayerSupport())
+			if (!checkValidationLayerSupport()) {
 				throw std::runtime_error("Validation layers requested but not found!");
+			}
 		}
 
 		VkInstance returnInstance;
@@ -215,16 +218,18 @@ namespace
 		MRG_PROFILE_FUNCTION()
 
 		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-		if (func != nullptr)
+		if (func != nullptr) {
 			return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+		}
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 
 	void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator)
 	{
 		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-		if (func != nullptr)
+		if (func != nullptr) {
 			func(instance, messenger, pAllocator);
+		}
 	}
 
 	[[nodiscard]] VkDebugUtilsMessengerEXT setupDebugMessenger(VkInstance instance)
@@ -248,7 +253,7 @@ namespace
 
 		std::set<std::string> requiredExtensions{getDeviceExtensions().begin(), getDeviceExtensions().end()};
 		for (const auto& extension : extensions) {
-			if (requiredExtensions.erase(extension.extensionName))
+			if (requiredExtensions.erase(extension.extensionName) != 0)
 				MRG_ENGINE_TRACE("\t\tFound required extension {} (version {})", extension.extensionName, extension.specVersion)
 		}
 
@@ -264,16 +269,19 @@ namespace
 
 	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface, const VkPhysicalDeviceFeatures features)
 	{
-		if (!features.samplerAnisotropy)
+		if (features.samplerAnisotropy == VK_FALSE) {
 			return false;
-		if (!findQueueFamilies(device, surface).isComplete())
+		}
+		if (!findQueueFamilies(device, surface).isComplete()) {
 			return false;
-		if (!checkDeviceExtensionsSupport(device))
+		}
+		if (!checkDeviceExtensionsSupport(device)) {
 			return false;
-
+		}
 		const auto swapChainSupport = MRG::Vulkan::querySwapChainSupport(device, surface);
-		if (swapChainSupport.formats.empty() || swapChainSupport.presentModes.empty())
-			return false;
+		if (swapChainSupport.formats.empty() || swapChainSupport.presentModes.empty()) {
+			return false;  // NOLINT (simplify)
+		}
 
 		return true;
 	}
@@ -293,8 +301,9 @@ namespace
 		}
 
 		// Favor discrete GPUs over anything else
-		if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+		if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
 			score += 10000;  // This value is completely arbitrary, and subject to change
+		}
 
 		score += properties.limits.maxFramebufferHeight;
 		score += properties.limits.maxFramebufferWidth;
@@ -328,8 +337,9 @@ namespace
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
-		if (deviceCount == 0)
+		if (deviceCount == 0) {
 			throw std::runtime_error("no available GPUs available for Vulkan!");
+		}
 
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
@@ -347,8 +357,9 @@ namespace
 		}
 
 		// It's possible that no suitable devices have been found
-		if (candidates.rbegin()->first == 0)
+		if (candidates.rbegin()->first == 0) {
 			throw std::runtime_error("no suitable GPU found!");
+		}
 
 		return candidates.rbegin()->second;
 	}
@@ -417,8 +428,9 @@ namespace MRG::Vulkan
 			data->instance = createInstance(data->title);
 			MRG_ENGINE_INFO("Vulkan instance successfully created")
 
-			if (enableValidation)
+			if (enableValidation) {
 				data->messenger = setupDebugMessenger(data->instance);
+			}
 
 			MRG_VKVALIDATE(glfwCreateWindowSurface(data->instance, window, nullptr, &data->surface), "failed to create window surface!")
 
@@ -448,8 +460,9 @@ namespace MRG::Vulkan
 
 		vkDestroyDevice(data->device, nullptr);
 
-		if (enableValidation)
+		if (enableValidation) {
 			destroyDebugUtilsMessengerEXT(data->instance, data->messenger, nullptr);
+		}
 
 		vkDestroySurfaceKHR(data->instance, data->surface, nullptr);
 		vkDestroyInstance(data->instance, nullptr);

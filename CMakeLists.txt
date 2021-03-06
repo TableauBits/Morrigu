@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 project(Morrigu)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(MAIN_PRJ_NAME ${PROJECT_NAME})
 set(EDITOR_PRJ_NAME Macha)
 set(RUNTIME_PRJ_NAME Sandbox)
@@ -20,7 +22,7 @@ add_subdirectory(src/${EDITOR_PRJ_NAME})
 add_subdirectory(src/${RUNTIME_PRJ_NAME})
 
 if (MSVC)
-    message("DETECTED MSVC COMPILER")
+    message("Detected msvc compiler")
     # the permissive flag is only supported in VS2017+, so please delete this line if your version is not new enough,
     # although the codebase is in C++17, so the compiler you're using is probably supporting it :p
     target_compile_options(${MAIN_PRJ_NAME} PRIVATE /permissive- /W4 /WX)
@@ -29,19 +31,19 @@ if (MSVC)
 
     # this line removes the console from the windows build. You probably want to uncomment this for a release build.
     ## target_link_options(${RUNTIME_PRJ_NAME} PRIVATE /SUBSYSTEM:windows /ENTRY:mainCRTStartup)
-    
+
     # setting the default project in the solution
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EDITOR_PRJ_NAME})
-    set_property(TARGET ${EDITOR_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/${EDITOR_PRJ_NAME}/runtime)
-    set_property(TARGET ${RUNTIME_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src/${RUNTIME_PRJ_NAME}/runtime)
-else()
-    message("DETECTED NON MSVC COMPILER")
+    set_property(TARGET ${EDITOR_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtimes/${EDITOR_PRJ_NAME})
+    set_property(TARGET ${RUNTIME_PRJ_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtimes/${RUNTIME_PRJ_NAME})
+else ()
+    message("Detected non msvc compiler")
     # we consider that the majority of C++ compilers other than MSVC recognise the following flags,
     # otherwise feel free to modify them
     target_compile_options(${MAIN_PRJ_NAME} PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Werror)
     target_compile_options(${EDITOR_PRJ_NAME} PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Werror)
     target_compile_options(${RUNTIME_PRJ_NAME} PRIVATE -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Werror)
-endif()
+endif ()
 
 # Finding and adding vulkan to the list of libraries
 find_package(Vulkan REQUIRED)
@@ -53,17 +55,3 @@ target_include_directories(${EDITOR_PRJ_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 target_include_directories(${RUNTIME_PRJ_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
 
 conan_target_link_libraries(${MAIN_PRJ_NAME})
-
-add_custom_target(
-    copyFilesToEditor ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/resources ${CMAKE_SOURCE_DIR}/src/${EDITOR_PRJ_NAME}/runtime/engine
-    DEPENDS ${MAIN_PRJ_NAME}
-)
-
-add_custom_target(
-    copyFilesToRuntime ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/resources ${CMAKE_SOURCE_DIR}/src/${RUNTIME_PRJ_NAME}/runtime/engine
-    DEPENDS ${MAIN_PRJ_NAME}
-)

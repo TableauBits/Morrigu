@@ -15,7 +15,12 @@ namespace MRG
 		};
 
 		SceneCamera();
+		SceneCamera(const SceneCamera&) = default;
+		SceneCamera(SceneCamera&&) = default;
 		~SceneCamera() override = default;
+
+		SceneCamera& operator=(const SceneCamera&) = default;
+		SceneCamera& operator=(SceneCamera&&) = default;
 
 		void setOrthographic(float size, float nearClip, float farClip);
 		void setPerspective(float verticalFOV, float nearClip, float farClip);

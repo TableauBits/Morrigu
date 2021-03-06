@@ -54,7 +54,13 @@ namespace MRG
 	class Event
 	{
 	public:
+		Event() = default;
+		Event(const Event&) = default;
+		Event(Event&&) = default;
 		virtual ~Event() = default;
+
+		Event& operator=(const Event&) = default;
+		Event& operator=(Event&&) = default;
 
 		bool handled = false;
 
@@ -63,7 +69,7 @@ namespace MRG
 		[[nodiscard]] virtual int getCategoryFlags() const = 0;
 		[[nodiscard]] virtual std::string toString() const { return getName(); }
 
-		[[nodiscard]] bool isInCategory(EventCategory category) const { return getCategoryFlags() & category; }
+		[[nodiscard]] bool isInCategory(EventCategory category) const { return (getCategoryFlags() & category) != 0; }
 	};
 
 	class EventDispatcher

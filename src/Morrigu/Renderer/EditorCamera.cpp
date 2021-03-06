@@ -17,12 +17,13 @@ namespace MRG
 			glm::vec2 delta = (mouse - m_initialMousePosition) * 0.003f;
 			m_initialMousePosition = mouse;
 
-			if (Input::isMouseButtonPressed(Mouse::ButtonMiddle))
+			if (Input::isMouseButtonPressed(Mouse::ButtonMiddle)) {
 				mousePan(delta);
-			else if (Input::isMouseButtonPressed(Mouse::ButtonLeft))
+			} else if (Input::isMouseButtonPressed(Mouse::ButtonLeft)) {
 				mouseRotate(delta);
-			else if (Input::isMouseButtonPressed(Mouse::ButtonRight))
+			} else if (Input::isMouseButtonPressed(Mouse::ButtonRight)) {
 				mouseZoom(delta.y);
+			}
 		}
 
 		updateView();

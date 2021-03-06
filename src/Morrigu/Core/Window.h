@@ -16,7 +16,12 @@ namespace MRG
 	{
 	public:
 		explicit GLFWWindowWrapper(WindowProperties* props);
+		GLFWWindowWrapper(const GLFWWindowWrapper&) = delete;
+		GLFWWindowWrapper(GLFWWindowWrapper&&) = delete;
 		~GLFWWindowWrapper();
+
+		GLFWWindowWrapper& operator=(const GLFWWindowWrapper&) = delete;
+		GLFWWindowWrapper& operator=(GLFWWindowWrapper&&) = delete;
 
 		GLFWwindow* handle;
 	};

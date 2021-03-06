@@ -12,7 +12,13 @@ namespace MRG::Vulkan
 	{
 	public:
 		explicit Shader(const std::string& filePath);
+		Shader(const Shader&) = delete;
+		Shader(Shader&&) = delete;
 		~Shader() override;
+
+		Shader& operator=(const Shader&) = delete;
+		Shader& operator=(Shader&&) = delete;
+
 		void destroy() override;
 
 		void bind() const override;
@@ -27,7 +33,7 @@ namespace MRG::Vulkan
 
 		[[nodiscard]] const std::string& getName() const override { return m_name; }
 
-		VkShaderModule m_vertexShaderModule, m_fragmentShaderModule;
+		VkShaderModule vertexShaderModule, fragmentShaderModule;
 
 	private:
 		std::string m_name;

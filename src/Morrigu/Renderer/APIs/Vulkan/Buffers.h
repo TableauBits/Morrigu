@@ -1,9 +1,7 @@
 #ifndef MRG_VULKAN_IMPL_BUFFERS
 #define MRG_VULKAN_IMPL_BUFFERS
 
-#include "Renderer/APIs/Vulkan/Helper.h"
 #include "Renderer/APIs/Vulkan/VulkanHPPIncludeHelper.h"
-#include "Renderer/APIs/Vulkan/WindowProperties.h"
 #include "Renderer/Buffers.h"
 
 namespace MRG::Vulkan
@@ -13,7 +11,12 @@ namespace MRG::Vulkan
 	public:
 		explicit VertexBuffer(uint32_t size);
 		VertexBuffer(const void* vertices, uint32_t size);
+		VertexBuffer(const VertexBuffer&) = delete;
+		VertexBuffer(VertexBuffer&&) = delete;
 		~VertexBuffer() override;
+
+		VertexBuffer& operator=(const VertexBuffer&) = delete;
+		VertexBuffer& operator=(VertexBuffer&&) = delete;
 
 		void destroy() override;
 
@@ -33,7 +36,12 @@ namespace MRG::Vulkan
 	{
 	public:
 		IndexBuffer(const uint32_t* indices, uint32_t count);
+		IndexBuffer(const IndexBuffer&) = delete;
+		IndexBuffer(IndexBuffer&&) = delete;
 		~IndexBuffer() override;
+
+		IndexBuffer& operator=(const IndexBuffer&) = delete;
+		IndexBuffer& operator=(IndexBuffer&&) = delete;
 
 		void destroy() override;
 
