@@ -1,0 +1,3 @@
+set(
+		MRG_CORE_SOURCES ${CMAKE_CURRENT_LIST_DIR}/entryPoint.cpp
+)
