@@ -4,17 +4,8 @@ build/
 cmake-build-release/
 cmake-build-debug/
 Debug/
-Release
+Release/
 .idea/
 temp/
 
 src/Morrigu/Vendor/ImGui/bindings/
-src/**/runtime/engine/
-imgui.ini
-*.log
-*.spv
-
-doc/
-.ccls-cache/
-*.vim
-
