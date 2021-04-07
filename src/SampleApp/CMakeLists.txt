@@ -1,3 +1,6 @@
 set(
-		SA_SOURCES "${CMAKE_CURRENT_LIST_DIR}/sampleApp.cpp"
+		SA_SOURCES
+
+		# Main file
+		${CMAKE_CURRENT_LIST_DIR}/SampleApp.cpp
 )

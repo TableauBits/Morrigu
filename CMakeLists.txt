@@ -40,6 +40,20 @@ option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" OFF)
 option(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
 
+# define conan required libraries
+set(
+		CONAN_REQUIRES
+		spdlog/1.8.5
+		glm/0.9.9.8
+		glfw/3.3.2
+		imgui/1.82
+		stb/20200203
+		tinyobjloader/1.0.6
+		vulkan-headers/1.2.170.0
+		vk-bootstrap/0.2
+		vulkan-memory-allocator/2.3.0
+)
+
 include(cmake/Conan.cmake)
 run_conan()
 

@@ -9,15 +9,7 @@ macro(run_conan)
 
 	conan_cmake_run(
 			REQUIRES
-			${CONAN_EXTRA_REQUIRES}
-			glm/0.9.9.8
-			glfw/3.3.2
-			imgui/1.82
-			stb/20200203
-			tinyobjloader/1.0.6
-			vulkan-headers/1.2.170.0
-			vk-bootstrap/0.2
-			vulkan-memory-allocator/2.3.0
+			${CONAN_REQUIRES}
 			OPTIONS
 			${CONAN_EXTRA_OPTIONS}
 			BASIC_SETUP

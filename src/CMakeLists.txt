@@ -5,12 +5,18 @@ add_library(
 		${MRG_SOURCES}
 )
 
+target_include_directories(
+		Morrigu
+		PUBLIC
+		${CMAKE_CURRENT_LIST_DIR}/Morrigu
+)
+
 target_link_libraries(
 		Morrigu
-		PRIVATE
+		PUBLIC
 		project_options
 		project_warnings
-		CONAN_PKG::glfw
+		CONAN_PKG::spdlog
 )
 
 include("SampleApp/CMakeLists.txt")
