@@ -17,6 +17,8 @@ target_link_libraries(
 		project_options
 		project_warnings
 		CONAN_PKG::spdlog
+		CONAN_PKG::glfw
+		CONAN_PKG::vulkan-headers
 )
 
 include("SampleApp/CMakeLists.txt")

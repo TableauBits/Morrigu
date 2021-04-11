@@ -9,6 +9,7 @@ namespace MRG
 	// Stores times as milliseconds
 	class Timestep
 	{
+	public:
 		Timestep(float time) : m_time{time} {}     // NOLINT (explicit)
 		operator float() const { return m_time; }  // NOLINT (explicit)
 
