@@ -16,9 +16,11 @@ target_link_libraries(
 		PUBLIC
 		project_options
 		project_warnings
+		Vulkan::Vulkan
 		CONAN_PKG::spdlog
 		CONAN_PKG::glfw
 		CONAN_PKG::vulkan-headers
+		CONAN_PKG::vk-bootstrap
 )
 
 include("SampleApp/CMakeLists.txt")

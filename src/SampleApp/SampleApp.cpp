@@ -18,7 +18,9 @@ class SampleApp : public MRG::Application
 public:
 	SampleApp()
 	    : MRG::Application(MRG::ApplicationSpecification{
-	        .name = "SampleApp", .rendererSpecification = {.windowName = "SampleApp", .windowWidth = 1280, .windowHeight = 720}})
+	        .windowName = "Morrigu sample app",
+	        .rendererSpecification = {
+	          .applicationName = "SampleApp", .windowWidth = 1280, .windowHeight = 720, .presentMode = VK_PRESENT_MODE_FIFO_KHR}})
 	{
 		pushLayer(new SampleLayer());
 	};

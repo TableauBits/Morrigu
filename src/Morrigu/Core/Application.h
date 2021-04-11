@@ -16,7 +16,7 @@ namespace MRG
 {
 	struct ApplicationSpecification
 	{
-		std::string name;
+		std::string windowName;
 		RendererSpecification rendererSpecification;
 	};
 

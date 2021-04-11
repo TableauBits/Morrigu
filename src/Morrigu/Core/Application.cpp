@@ -33,7 +33,7 @@ namespace MRG
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		auto window = glfwCreateWindow(m_specification.rendererSpecification.windowWidth,
 		                               m_specification.rendererSpecification.windowHeight,
-		                               m_specification.rendererSpecification.windowName.c_str(),
+		                               m_specification.windowName.c_str(),
 		                               nullptr,
 		                               nullptr);
 
@@ -163,6 +163,9 @@ namespace MRG
 	bool Application::onResize(WindowResizeEvent& resize)
 	{
 		int width = resize.getWidth(), height = resize.getHeight();
+		if (width != 0 && height != 0) {
+			m_renderer.onResize();
+		}
 		while (width == 0 || height == 0) {
 			glfwGetFramebufferSize(m_renderer.window, &width, &height);
 			glfwWaitEvents();

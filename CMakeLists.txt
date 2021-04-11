@@ -54,6 +54,9 @@ set(
 		vulkan-memory-allocator/2.3.0
 )
 
+# require vulkan
+find_package(Vulkan REQUIRED)
+
 include(cmake/Conan.cmake)
 run_conan()
 
