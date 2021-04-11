@@ -8,7 +8,7 @@ class SampleLayer : public MRG::Layer
 {
 public:
 	void onAttach() override { MRG_INFO("Hello from SampleLayer!") }
-	void onDetach() override {}
+	void onDetach() override { MRG_INFO("my final message. goodb ye") }
 	void onUpdate(MRG::Timestep) override {}
 	void onEvent(const MRG::Event&) override {}
 };

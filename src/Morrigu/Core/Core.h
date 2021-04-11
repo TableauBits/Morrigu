@@ -26,6 +26,7 @@
 #define MRG_FUNCSIG __PRETTY_FUNCTION__
 #endif
 
+#include "Core/Logging.h"
 // defining debug Macros
 #ifdef MRG_DEBUG
 // defining platform specific debug break
@@ -42,7 +43,6 @@
 #endif
 
 // Defining ASSERT macros
-#include "Core/Logging.h"
 
 #define MRG_ASSERT(x, ...)                                                                                                                 \
 	{                                                                                                                                      \
@@ -63,26 +63,5 @@
 #define MRG_CORE_ASSERT(x, ...)
 #endif
 // clang-format on
-
-#include <memory>
-
-namespace MRG
-{
-	template<typename T>
-	using Scope = std::unique_ptr<T>;
-	template<typename T, typename... Args>
-	[[nodiscard]] constexpr Scope<T> createScope(Args&&... args)
-	{
-		return std::make_unique<T>(std::forward<Args>(args)...);
-	}
-
-	template<typename T>
-	using Ref = std::shared_ptr<T>;
-	template<typename T, typename... Args>
-	[[nodiscard]] constexpr Ref<T> createRef(Args&&... args)
-	{
-		return std::make_shared<T>(std::forward<Args>(args)...);
-	}
-}  // namespace MRG
 
 #endif  // MORRIGU_CORE_H

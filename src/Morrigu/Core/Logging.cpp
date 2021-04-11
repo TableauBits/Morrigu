@@ -13,32 +13,32 @@
 
 namespace MRG
 {
-    std::shared_ptr<spdlog::logger> Logger::s_engineLogger;
-    std::shared_ptr<spdlog::logger> Logger::s_clientLogger;
+	Ref<spdlog::logger> Logger::s_engineLogger;
+	Ref<spdlog::logger> Logger::s_clientLogger;
 
-    void Logger::init()
-    {
-        std::vector<spdlog::sink_ptr> logSinks;
-        logSinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-        logSinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("Morrigu.log", true));
+	void Logger::init()
+	{
+		std::vector<spdlog::sink_ptr> logSinks;
+		logSinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+		logSinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("Morrigu.log", true));
 
-        logSinks[0]->set_pattern("%^[%T] %n: %v%$");
-        logSinks[1]->set_pattern("[%T] [%l] %n: %v");
+		logSinks[0]->set_pattern("%^[%T] %n: %v%$");
+		logSinks[1]->set_pattern("[%T] [%l] %n: %v");
 
 #ifdef MRG_DEBUG
-        const auto level = spdlog::level::trace;
+		const auto level = spdlog::level::trace;
 #else
-        const auto level = spdlog::level::info;
+		const auto level = spdlog::level::info;
 #endif
 
-        s_engineLogger = std::make_shared<spdlog::logger>("MORRIGU", begin(logSinks), end(logSinks));
-        spdlog::register_logger(s_engineLogger);
-        s_engineLogger->set_level(level);
-        s_engineLogger->flush_on(level);
+		s_engineLogger = createRef<spdlog::logger>("MORRIGU", begin(logSinks), end(logSinks));
+		spdlog::register_logger(s_engineLogger);
+		s_engineLogger->set_level(level);
+		s_engineLogger->flush_on(level);
 
-        s_clientLogger = std::make_shared<spdlog::logger>("APP", begin(logSinks), end(logSinks));
-        spdlog::register_logger(s_clientLogger);
-        s_clientLogger->set_level(level);
-        s_clientLogger->flush_on(level);
-    }
+		s_clientLogger = createRef<spdlog::logger>("APP", begin(logSinks), end(logSinks));
+		spdlog::register_logger(s_clientLogger);
+		s_clientLogger->set_level(level);
+		s_clientLogger->flush_on(level);
+	}
 }  // namespace MRG

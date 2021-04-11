@@ -6,15 +6,15 @@
 
 namespace MRG
 {
-	// Stores times as milliseconds
+	// Stores times as seconds
 	class Timestep
 	{
 	public:
 		Timestep(float time) : m_time{time} {}     // NOLINT (explicit)
 		operator float() const { return m_time; }  // NOLINT (explicit)
 
-		[[nodiscard]] float getSeconds() const { return m_time / 1000; }
-		[[nodiscard]] float getMilliseconds() const { return m_time; }
+		[[nodiscard]] float getSeconds() const { return m_time; }
+		[[nodiscard]] float getMilliseconds() const { return m_time  * 1000; }
 
 	private:
 		float m_time;

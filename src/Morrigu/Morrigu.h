@@ -7,11 +7,11 @@
 
 #include "Core/Application.h"
 #include "Core/Layer.h"
-#include "Core/Timestep.h"
 #include "Core/Logging.h"
+#include "Core/Timestep.h"
 
-#include "Events/Event.h"
 #include "Events/ApplicationEvent.h"
+#include "Events/Event.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 

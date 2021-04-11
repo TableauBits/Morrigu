@@ -10,6 +10,11 @@
 #include <ranges>
 #include <utility>
 
+namespace
+{
+	void glfwErrorCallback(int errorCode, const char* description) { MRG_ENGINE_ERROR("GLFW error #{}: \"{}\"", errorCode, description) }
+}  // namespace
+
 namespace MRG
 {
 	Application::Application(ApplicationSpecification spec) : m_specification(std::move(spec)) {}
@@ -20,7 +25,10 @@ namespace MRG
 
 	void Application::init()
 	{
-		MRG_CORE_ASSERT(glfwInit() == GLFW_TRUE, "failed to initialise GLFW!")
+		[[maybe_unused]] const auto result = glfwInit();
+		MRG_CORE_ASSERT(result == GLFW_TRUE, "failed to initialise GLFW!")
+
+		glfwSetErrorCallback(glfwErrorCallback);
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		auto window = glfwCreateWindow(m_specification.rendererSpecification.windowWidth,
@@ -120,9 +128,9 @@ namespace MRG
 
 			m_renderer.beginFrame();
 			for (auto& layer : m_layers) { layer->onUpdate(ts); }
-            m_renderer.endFrame();
+			m_renderer.endFrame();
 
-            glfwPollEvents();
+			glfwPollEvents();
 		}
 	}
 

@@ -5,8 +5,8 @@
 #ifndef MORRIGU_LAYER_H
 #define MORRIGU_LAYER_H
 
-#include "Events/Event.h"
 #include "Core/Timestep.h"
+#include "Events/Event.h"
 
 namespace MRG
 {

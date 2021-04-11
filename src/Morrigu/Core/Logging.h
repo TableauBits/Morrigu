@@ -11,18 +11,34 @@
 
 namespace MRG
 {
-    class Logger
-    {
-    public:
-        static void init();
+	template<typename T>
+	using Scope = std::unique_ptr<T>;
+	template<typename T, typename... Args>
+	[[nodiscard]] constexpr Scope<T> createScope(Args&&... args)
+	{
+		return std::make_unique<T>(std::forward<Args>(args)...);
+	}
 
-        [[nodiscard]] static std::shared_ptr<spdlog::logger>& getEngineLogger() { return s_engineLogger; };
-        [[nodiscard]] static std::shared_ptr<spdlog::logger>& getClientLogger() { return s_clientLogger; };
+	template<typename T>
+	using Ref = std::shared_ptr<T>;
+	template<typename T, typename... Args>
+	[[nodiscard]] constexpr Ref<T> createRef(Args&&... args)
+	{
+		return std::make_shared<T>(std::forward<Args>(args)...);
+	}
 
-    private:
-        static std::shared_ptr<spdlog::logger> s_engineLogger;
-        static std::shared_ptr<spdlog::logger> s_clientLogger;
-    };
+	class Logger
+	{
+	public:
+		static void init();
+
+		[[nodiscard]] static auto& getEngineLogger() { return s_engineLogger; };
+		[[nodiscard]] static auto& getClientLogger() { return s_clientLogger; };
+
+	private:
+		static Ref<spdlog::logger> s_engineLogger;
+		static Ref<spdlog::logger> s_clientLogger;
+	};
 
 }  // namespace MRG
 
