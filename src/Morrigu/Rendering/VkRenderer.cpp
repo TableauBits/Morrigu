@@ -4,6 +4,8 @@
 
 #include "VkRenderer.h"
 
+#include "Rendering/VkInitialize.h"
+
 #include <VkBootstrap.h>
 
 namespace
@@ -41,6 +43,7 @@ namespace MRG
 
 		initVulkan();
 		initSwapchain();
+		initCommands();
 
 		isInitalized = true;
 	}
@@ -50,6 +53,8 @@ namespace MRG
 		if (!isInitalized) {
 			return;
 		}
+
+		vkDestroyCommandPool(m_device, m_cmdPool, nullptr);
 
 		destroySwapchain();
 
@@ -103,6 +108,8 @@ namespace MRG
 		const auto vkbDevice = deviceBuilder.build().value();
 
 		m_device = vkbDevice.device;
+		m_graphicsQueue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
+        m_graphicsQueueIndex = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
 	}
 
 	void VkRenderer::initSwapchain()
@@ -118,6 +125,17 @@ namespace MRG
 		m_swapchainFormat = vkbSwapchain.image_format;
 		m_swapchainImages = vkbSwapchain.get_images().value();
 		m_swapchainImageViews = vkbSwapchain.get_image_views().value();
+	}
+
+	void VkRenderer::initCommands()
+	{
+		// create command pool
+		const auto cmdPoolInfo = VkInit::cmdPoolCreateInfo(m_graphicsQueueIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+		MRG_VK_CHECK(vkCreateCommandPool(m_device, &cmdPoolInfo, nullptr, &m_cmdPool), "Command pool creation failed!")
+
+		// allocate main command buffer from created command pool
+		const auto mainCmdBufferInfo = VkInit::cmdBufferAllocateInfo(m_cmdPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+		MRG_VK_CHECK(vkAllocateCommandBuffers(m_device, &mainCmdBufferInfo, &m_mainCmdBuffer), "Main command buffer allocation failed!")
 	}
 
 	void VkRenderer::destroySwapchain()

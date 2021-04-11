@@ -14,7 +14,7 @@
 #define MRG_VK_CHECK(expression, error_message)                                                                                            \
 	{                                                                                                                                      \
 		if ((expression) != VK_SUCCESS) {                                                                                                  \
-			throw std::runtime_error(failure_message);                                                                                     \
+			throw std::runtime_error(error_message);                                                                                     \
 		}                                                                                                                                  \
 	}
 

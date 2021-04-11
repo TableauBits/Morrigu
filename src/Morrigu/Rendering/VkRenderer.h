@@ -52,8 +52,14 @@ namespace MRG
 		std::vector<VkImage> m_swapchainImages{};
 		std::vector<VkImageView> m_swapchainImageViews{};
 
+		VkQueue m_graphicsQueue{};
+		std::uint32_t m_graphicsQueueIndex{};
+		VkCommandPool m_cmdPool{};
+		VkCommandBuffer m_mainCmdBuffer{};
+
 		void initVulkan();
 		void initSwapchain();
+		void initCommands();
 
 		void destroySwapchain();
 	};
