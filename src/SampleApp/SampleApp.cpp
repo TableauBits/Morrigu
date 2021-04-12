@@ -18,7 +18,7 @@ class SampleApp : public MRG::Application
 public:
 	SampleApp()
 	    : MRG::Application(MRG::ApplicationSpecification{
-	        .windowName = "Morrigu sample app",
+	        .windowName            = "Morrigu sample app",
 	        .rendererSpecification = {
 	          .applicationName = "SampleApp", .windowWidth = 1280, .windowHeight = 720, .presentMode = VK_PRESENT_MODE_FIFO_KHR}})
 	{

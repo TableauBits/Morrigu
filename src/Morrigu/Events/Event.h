@@ -39,11 +39,11 @@ namespace MRG
 
 	enum EventCategory
 	{
-		None = 0,
+		None                     = 0,
 		EventCategoryApplication = MRG_BIT(0),
-		EventCategoryInput = MRG_BIT(1),
-		EventCategoryKeyboard = MRG_BIT(2),
-		EventCategoryMouse = MRG_BIT(3),
+		EventCategoryInput       = MRG_BIT(1),
+		EventCategoryKeyboard    = MRG_BIT(2),
+		EventCategoryMouse       = MRG_BIT(3),
 		EventCategoryMouseButton = MRG_BIT(4)
 	};
 
@@ -58,10 +58,10 @@ namespace MRG
 	class Event
 	{
 	public:
-		Event() = default;
+		Event()             = default;
 		Event(const Event&) = default;
-		Event(Event&&) = default;
-		virtual ~Event() = default;
+		Event(Event&&)      = default;
+		virtual ~Event()    = default;
 
 		Event& operator=(const Event&) = default;
 		Event& operator=(Event&&) = default;
@@ -69,8 +69,8 @@ namespace MRG
 		bool handled = false;
 
 		[[nodiscard]] virtual EventType getEventType() const = 0;
-		[[nodiscard]] virtual const char* getName() const = 0;
-		[[nodiscard]] virtual int getCategoryFlags() const = 0;
+		[[nodiscard]] virtual const char* getName() const    = 0;
+		[[nodiscard]] virtual int getCategoryFlags() const   = 0;
 		[[nodiscard]] virtual std::string toString() const { return getName(); }
 
 		[[nodiscard]] bool isInCategory(EventCategory category) const { return (getCategoryFlags() & category) != 0; }

@@ -13,18 +13,18 @@ namespace MRG
 	class Layer
 	{
 	public:
-		Layer() = default;
+		Layer()             = default;
 		Layer(const Layer&) = delete;
-		Layer(Layer&&) = delete;
+		Layer(Layer&&)      = delete;
 
 		virtual ~Layer() = default;
 
 		Layer& operator=(const Layer&) = delete;
 		Layer& operator=(Layer&&) = delete;
 
-		virtual void onAttach() = 0;
-		virtual void onDetach() = 0;
-		virtual void onUpdate(Timestep) = 0;
+		virtual void onAttach()            = 0;
+		virtual void onDetach()            = 0;
+		virtual void onUpdate(Timestep)    = 0;
 		virtual void onEvent(const Event&) = 0;
 	};
 }  // namespace MRG

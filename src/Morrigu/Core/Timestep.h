@@ -14,7 +14,7 @@ namespace MRG
 		operator float() const { return m_time; }  // NOLINT (explicit)
 
 		[[nodiscard]] float getSeconds() const { return m_time; }
-		[[nodiscard]] float getMilliseconds() const { return m_time  * 1000; }
+		[[nodiscard]] float getMilliseconds() const { return m_time * 1000; }
 
 	private:
 		float m_time;

@@ -9,8 +9,8 @@
 
 namespace MRG::VkInit
 {
-	VkCommandPoolCreateInfo cmdPoolCreateInfo(uint32_t queueFamiliyIndex, VkCommandPoolCreateFlags flags);
-	VkCommandBufferAllocateInfo cmdBufferAllocateInfo(VkCommandPool pool, uint32_t count, VkCommandBufferLevel level);
+	vk::CommandPoolCreateInfo cmdPoolCreateInfo(vk::CommandPoolCreateFlags flags, uint32_t queueFamiliyIndex);
+	vk::CommandBufferAllocateInfo cmdBufferAllocateInfo(VkCommandPool pool, vk::CommandBufferLevel level, uint32_t count);
 }  // namespace MRG::VkInit
 
 #endif  // MORRIGU_VKINITIALIZE_H

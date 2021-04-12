@@ -7,15 +7,14 @@
 
 #include "Core/Core.h"
 
-#include <vulkan/vulkan.h>
+#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
+#include <vulkan/vulkan.hpp>
 
 #include <exception>
 
 #define MRG_VK_CHECK(expression, error_message)                                                                                            \
 	{                                                                                                                                      \
-		if ((expression) != VK_SUCCESS) {                                                                                                  \
-			throw std::runtime_error(error_message);                                                                                     \
-		}                                                                                                                                  \
+		if ((expression) != VK_SUCCESS) { throw std::runtime_error(error_message); }                                                       \
 	}
 
 #endif  // MORRIGU_VKTYPES_H

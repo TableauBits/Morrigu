@@ -8,7 +8,7 @@
 #define MRG_BIT(x) (1 << (x))
 
 // This is a workaround to ensure that both parameters a and b are getting evaluated in time.
-#define MRG_PREPOC_PASTER(a, b) a##b
+#define MRG_PREPOC_PASTER(a, b)    a##b
 #define MRG_PREPOC_EVALUATOR(a, b) MRG_PREPOC_PASTER(a, b)
 
 // disabling clang-format indentation temporarily makes for more readable code

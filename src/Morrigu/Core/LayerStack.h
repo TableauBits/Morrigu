@@ -14,9 +14,9 @@ namespace MRG
 	class LayerStack
 	{
 	public:
-		LayerStack() = default;
+		LayerStack()                  = default;
 		LayerStack(const LayerStack&) = delete;
-		LayerStack(LayerStack&&) = delete;
+		LayerStack(LayerStack&&)      = delete;
 		~LayerStack();
 
 		LayerStack& operator=(const LayerStack&) = delete;

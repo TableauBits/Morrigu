@@ -43,7 +43,7 @@ namespace MRG
 		glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height) {
 			auto application = static_cast<Application*>(glfwGetWindowUserPointer(window));
 
-			application->m_specification.rendererSpecification.windowWidth = width;
+			application->m_specification.rendererSpecification.windowWidth  = width;
 			application->m_specification.rendererSpecification.windowHeight = height;
 
 			auto resize = WindowResizeEvent(width, height);
@@ -147,9 +147,7 @@ namespace MRG
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) { return onResize(event); });
 
 		for (auto& m_layer : std::ranges::reverse_view(m_layers)) {
-			if (event.handled) {
-				break;
-			}
+			if (event.handled) { break; }
 			m_layer->onEvent(event);
 		}
 	}
@@ -163,9 +161,7 @@ namespace MRG
 	bool Application::onResize(WindowResizeEvent& resize)
 	{
 		int width = resize.getWidth(), height = resize.getHeight();
-		if (width != 0 && height != 0) {
-			m_renderer.onResize();
-		}
+		if (width != 0 && height != 0) { m_renderer.onResize(); }
 		while (width == 0 || height == 0) {
 			glfwGetFramebufferSize(m_renderer.window, &width, &height);
 			glfwWaitEvents();
