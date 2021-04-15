@@ -28,6 +28,8 @@ namespace MRG
 		void pushLayer(Layer* newLayer);
 		Layer* popLayer();
 
+		void setWindowTitle(const char* title) const;
+
 	private:
 		void init();
 		void run();

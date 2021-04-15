@@ -10,6 +10,8 @@
 
 namespace MRG
 {
+	class Application;
+
 	class Layer
 	{
 	public:
@@ -26,6 +28,8 @@ namespace MRG
 		virtual void onDetach()            = 0;
 		virtual void onUpdate(Timestep)    = 0;
 		virtual void onEvent(const Event&) = 0;
+
+		const Application* application{nullptr};
 	};
 }  // namespace MRG
 
