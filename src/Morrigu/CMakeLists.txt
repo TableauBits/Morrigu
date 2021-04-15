@@ -1,6 +1,6 @@
-include("${CMAKE_CURRENT_LIST_DIR}/Core/CMakeLists.txt")
-include("${CMAKE_CURRENT_LIST_DIR}/Events/CMakeLists.txt")
-include("${CMAKE_CURRENT_LIST_DIR}/Rendering/CMakeLists.txt")
+include(${CMAKE_CURRENT_LIST_DIR}/Core/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/Events/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/Rendering/CMakeLists.txt)
 
 set(
 		MRG_SOURCES

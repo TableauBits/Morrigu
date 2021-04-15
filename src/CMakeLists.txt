@@ -1,4 +1,4 @@
-include("Morrigu/CMakeLists.txt")
+include(Morrigu/CMakeLists.txt)
 
 add_library(
 		Morrigu
@@ -23,7 +23,7 @@ target_link_libraries(
 		CONAN_PKG::vk-bootstrap
 )
 
-include("SampleApp/CMakeLists.txt")
+include(SampleApp/CMakeLists.txt)
 
 add_executable(
 		SampleApp
@@ -36,4 +36,14 @@ target_link_libraries(
 		project_options
 		project_warnings
 		Morrigu
+)
+
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SampleApp)
+set_property(TARGET SampleApp PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtime)
+
+include(Shaders/CMakeLists.txt)
+
+add_dependencies(
+		SampleApp
+		Shaders
 )
