@@ -26,4 +26,11 @@ public:
 	};
 };
 
-MRG::Application* MRG::createApplication() { return new SampleApp(); }
+int main() {
+    MRG::Logger::init();
+    SampleApp application{};
+
+    application.init();
+    application.run();
+    application.cleanup();
+}

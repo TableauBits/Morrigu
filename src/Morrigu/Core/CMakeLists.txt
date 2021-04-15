@@ -11,9 +11,6 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/Logging.h
 		${CMAKE_CURRENT_LIST_DIR}/Logging.cpp
 
-		# Entry point
-		${CMAKE_CURRENT_LIST_DIR}/EntryPoint.cpp
-
 		# Application class
 		${CMAKE_CURRENT_LIST_DIR}/Application.h
 		${CMAKE_CURRENT_LIST_DIR}/Application.cpp

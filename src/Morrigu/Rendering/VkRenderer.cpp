@@ -44,13 +44,73 @@ namespace MRG
 		initVulkan();
 		initSwapchain();
 		initCommands();
+		initDefaultRenderPass();
+		initFramebuffers();
+		initSyncSructs();
 
 		isInitalized = true;
+	}
+
+	void VkRenderer::beginFrame()
+	{
+		MRG_VK_CHECK(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "")
+		m_device.resetFences(m_renderFence);
+
+		m_imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, m_presentSemaphore).value;
+
+		m_mainCmdBuffer.reset();
+		vk::CommandBufferBeginInfo beginInfo{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+		m_mainCmdBuffer.begin(beginInfo);
+
+		vk::ClearValue clearValue{{std::array<float, 4>{0.f, 0.f, std::abs(std::sin(static_cast<float>(frameNumber) / 120.f)), 1.f}}};
+
+		vk::RenderPassBeginInfo renderPassInfo{
+		  .renderPass  = m_renderPass,
+		  .framebuffer = m_framebuffers[m_imageIndex],
+		  .renderArea =
+		    vk::Rect2D{.offset = {0, 0}, .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)}},
+		  .clearValueCount = 1,
+		  .pClearValues    = &clearValue};
+		m_mainCmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+	}
+
+	void VkRenderer::endFrame()
+	{
+		m_mainCmdBuffer.endRenderPass();
+		m_mainCmdBuffer.end();
+
+		vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
+		vk::SubmitInfo submitInfo{.waitSemaphoreCount   = 1,
+		                          .pWaitSemaphores      = &m_presentSemaphore,
+		                          .pWaitDstStageMask    = &waitStage,
+		                          .commandBufferCount   = 1,
+		                          .pCommandBuffers      = &m_mainCmdBuffer,
+		                          .signalSemaphoreCount = 1,
+		                          .pSignalSemaphores    = &m_renderSemaphore};
+		m_graphicsQueue.submit(submitInfo, m_renderFence);
+
+		vk::PresentInfoKHR presentInfo{
+          .waitSemaphoreCount = 1,
+          .pWaitSemaphores = &m_renderSemaphore,
+		  .swapchainCount = 1,
+		  .pSwapchains = &m_swapchain,
+		  .pImageIndices = &m_imageIndex
+		};
+
+		MRG_VK_CHECK(m_graphicsQueue.presentKHR(presentInfo), "failed to present imaeg to screen !")
+		++frameNumber;
 	}
 
 	void VkRenderer::cleanup()
 	{
 		if (!isInitalized) { return; }
+
+		m_device.waitIdle();
+
+		m_device.destroySemaphore(m_renderSemaphore);
+        m_device.destroySemaphore(m_presentSemaphore);
+		m_device.destroyFence(m_renderFence);
 
 		m_device.destroyCommandPool(m_cmdPool);
 
@@ -179,6 +239,15 @@ namespace MRG
 			framebufferInfo.pAttachments = &m_swapchainImageViews[i];
 			m_framebuffers[i]            = m_device.createFramebuffer(framebufferInfo);
 		}
+	}
+
+	void VkRenderer::initSyncSructs()
+	{
+		vk::FenceCreateInfo fenceInfo{.flags = vk::FenceCreateFlagBits::eSignaled};
+		m_renderFence = m_device.createFence(fenceInfo);
+
+		m_presentSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
+		m_renderSemaphore  = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
 	}
 
 	void VkRenderer::destroySwapchain()

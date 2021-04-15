@@ -14,7 +14,7 @@
 
 #define MRG_VK_CHECK(expression, error_message)                                                                                            \
 	{                                                                                                                                      \
-		if ((expression) != VK_SUCCESS) { throw std::runtime_error(error_message); }                                                       \
+		if ((expression) != vk::Result::eSuccess) { throw std::runtime_error(error_message); }                                                       \
 	}
 
 #endif  // MORRIGU_VKTYPES_H

@@ -49,8 +49,6 @@ namespace MRG
 
 		VkRenderer m_renderer;
 	};
-
-	[[nodiscard]] extern Application* createApplication();
 }  // namespace MRG
 
 #endif  // MORRIGU_APPLICATION_H
