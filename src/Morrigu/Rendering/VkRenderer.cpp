@@ -1,12 +1,16 @@
 //
-// Created by mathi on 2021-04-11.
+// Created by Mathis Lamidey on 2021-04-11.
 //
 
 #include "VkRenderer.h"
 
+#include "Rendering/PipelineBuilder.h"
 #include "Rendering/VkInitialize.h"
 
 #include <VkBootstrap.h>
+
+#include <filesystem>
+#include <fstream>
 
 namespace
 {
@@ -47,13 +51,14 @@ namespace MRG
 		initDefaultRenderPass();
 		initFramebuffers();
 		initSyncSructs();
+		initPipelines();
 
 		isInitalized = true;
 	}
 
 	void VkRenderer::beginFrame()
 	{
-		MRG_VK_CHECK(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "")
+		MRG_VK_CHECK(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
 		m_device.resetFences(m_renderFence);
 
 		m_imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, m_presentSemaphore).value;
@@ -72,6 +77,10 @@ namespace MRG
 		  .clearValueCount = 1,
 		  .pClearValues    = &clearValue};
 		m_mainCmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+
+		//@TODO(Ithyx): This is super temporary, just to test the triangle pipeline:
+		m_mainCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_trianglePipeline);
+		m_mainCmdBuffer.draw(3, 1, 0, 0);
 	}
 
 	void VkRenderer::endFrame()
@@ -90,15 +99,13 @@ namespace MRG
 		                          .pSignalSemaphores    = &m_renderSemaphore};
 		m_graphicsQueue.submit(submitInfo, m_renderFence);
 
-		vk::PresentInfoKHR presentInfo{
-          .waitSemaphoreCount = 1,
-          .pWaitSemaphores = &m_renderSemaphore,
-		  .swapchainCount = 1,
-		  .pSwapchains = &m_swapchain,
-		  .pImageIndices = &m_imageIndex
-		};
+		vk::PresentInfoKHR presentInfo{.waitSemaphoreCount = 1,
+		                               .pWaitSemaphores    = &m_renderSemaphore,
+		                               .swapchainCount     = 1,
+		                               .pSwapchains        = &m_swapchain,
+		                               .pImageIndices      = &m_imageIndex};
 
-		MRG_VK_CHECK(m_graphicsQueue.presentKHR(presentInfo), "failed to present imaeg to screen !")
+		MRG_VK_CHECK(m_graphicsQueue.presentKHR(presentInfo), "failed to present image to screen!")
 		++frameNumber;
 	}
 
@@ -108,8 +115,12 @@ namespace MRG
 
 		m_device.waitIdle();
 
+		m_device.destroyPipeline(m_trianglePipeline);
+		m_device.destroyPipelineCache(m_pipelineCache);
+		m_device.destroyPipelineLayout(m_trianglePipelineLayout);
+
 		m_device.destroySemaphore(m_renderSemaphore);
-        m_device.destroySemaphore(m_presentSemaphore);
+		m_device.destroySemaphore(m_presentSemaphore);
 		m_device.destroyFence(m_renderFence);
 
 		m_device.destroyCommandPool(m_cmdPool);
@@ -133,6 +144,21 @@ namespace MRG
 
 		destroySwapchain();
 		initSwapchain();
+	}
+
+	vk::ShaderModule VkRenderer::loadShaderModule(const char* filePath)
+	{
+		MRG_CORE_ASSERT(std::filesystem::exists(filePath), "Provided shader path does not exist!")
+
+		std::ifstream file{filePath, std::ios::binary | std::ios::ate};
+		const auto fileSize = static_cast<std::size_t>(file.tellg());
+		std::vector<std::uint32_t> buffer(fileSize / sizeof(std::uint32_t));
+		file.seekg(std::ios::beg);
+		file.read((char*)buffer.data(), static_cast<std::streamsize>(fileSize));
+		file.close();
+
+		vk::ShaderModuleCreateInfo moduleInfo{.codeSize = fileSize, .pCode = buffer.data()};
+		return m_device.createShaderModule(moduleInfo);
 	}
 
 	void VkRenderer::initVulkan()
@@ -248,6 +274,44 @@ namespace MRG
 
 		m_presentSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
 		m_renderSemaphore  = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
+	}
+
+	void VkRenderer::initPipelines()
+	{
+		auto triangleVertShader = loadShaderModule("shaders/Triangle.vert.spv");
+		auto triangleFragShader = loadShaderModule("shaders/Triangle.frag.spv");
+		MRG_ENGINE_TRACE("Loaded vertex and fragment shaders")
+
+		const auto pipelineLayoutInfo = VkInit::pipelineLayoutCreateInfo();
+		m_trianglePipelineLayout      = m_device.createPipelineLayout(pipelineLayoutInfo);
+
+		//@TODO(Ithyx): save/load pipeline cache to/from disk
+		m_pipelineCache = m_device.createPipelineCache(vk::PipelineCacheCreateInfo{});
+
+		PipelineBuilder builder{
+		  .shaderStages{VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, triangleVertShader),
+		                VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment, triangleFragShader)},
+		  .vertexInputInfo{VkInit::pipelineVertexInputStateCreateInfo()},
+		  .inputAssemblyInfo{VkInit::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList)},
+		  .viewport{
+		    .x        = 0.f,
+		    .y        = 0.f,
+		    .width    = static_cast<float>(spec.windowWidth),
+		    .height   = static_cast<float>(spec.windowHeight),
+		    .minDepth = 0.f,
+		    .maxDepth = 1.f,
+		  },
+		  .scissor{.offset{0, 0}, .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)}},
+		  .rasterizerInfo{VkInit::pipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)},
+		  .colorBlendAttachment{VkInit::pipelineColorBlendAttachmentState()},
+		  .multisamplingInfo{VkInit::pipelineMultisampleStateCreateInfo()},
+		  .pipelineLayout{m_trianglePipelineLayout},
+		  .pipelineCache{m_pipelineCache}};
+
+		m_trianglePipeline = builder.build_pipeline(m_device, m_renderPass);
+
+		m_device.destroyShaderModule(triangleFragShader);
+		m_device.destroyShaderModule(triangleVertShader);
 	}
 
 	void VkRenderer::destroySwapchain()

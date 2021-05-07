@@ -8,6 +8,10 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/VkInitialize.h
 		${CMAKE_CURRENT_LIST_DIR}/VkInitialize.cpp
 
+		# Pipeline builder class
+		${CMAKE_CURRENT_LIST_DIR}/PipelineBuilder.h
+		${CMAKE_CURRENT_LIST_DIR}/PipelineBuilder.cpp
+
 		# Vulkan renderer files
 		${CMAKE_CURRENT_LIST_DIR}/VkRenderer.h
 		${CMAKE_CURRENT_LIST_DIR}/VkRenderer.cpp

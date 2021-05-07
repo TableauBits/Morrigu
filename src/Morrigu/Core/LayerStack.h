@@ -1,5 +1,5 @@
 //
-// Created by mathi on 2021-04-06.
+// Created by Mathis Lamidey on 2021-04-06.
 //
 
 #ifndef MORRIGU_LAYERSTACK_H

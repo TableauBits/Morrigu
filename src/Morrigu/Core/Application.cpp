@@ -27,9 +27,7 @@ namespace MRG
 
 	Layer* Application::popLayer() { return m_layers.popLayer(); }
 
-    void Application::setWindowTitle(const char* title) const {
-		glfwSetWindowTitle(m_renderer.window, title);
-	}
+	void Application::setWindowTitle(const char* title) const { glfwSetWindowTitle(m_renderer.window, title); }
 
 	void Application::init()
 	{

@@ -1,5 +1,5 @@
 //
-// Created by mathi on 2021-04-11.
+// Created by Mathis Lamidey on 2021-04-11.
 //
 
 #ifndef MORRIGU_VKRENDERER_H
@@ -34,6 +34,8 @@ namespace MRG
 
 		void onResize();
 
+		[[nodiscard]] vk::ShaderModule loadShaderModule(const char* filePath);
+
 		RendererSpecification spec;
 
 		bool isInitalized{false};
@@ -51,9 +53,9 @@ namespace MRG
 		vk::Format m_swapchainFormat{};
 		std::vector<vk::Image> m_swapchainImages{};
 		std::vector<vk::ImageView> m_swapchainImageViews{};
-        uint32_t m_imageIndex{};
+		uint32_t m_imageIndex{};
 
-        vk::Queue m_graphicsQueue{};
+		vk::Queue m_graphicsQueue{};
 		std::uint32_t m_graphicsQueueIndex{};
 		vk::CommandPool m_cmdPool{};
 		vk::CommandBuffer m_mainCmdBuffer{};
@@ -64,12 +66,17 @@ namespace MRG
 		vk::Semaphore m_presentSemaphore{}, m_renderSemaphore{};
 		vk::Fence m_renderFence{};
 
+		vk::PipelineCache m_pipelineCache{};
+		vk::PipelineLayout m_trianglePipelineLayout{};
+		vk::Pipeline m_trianglePipeline{};
+
 		void initVulkan();
 		void initSwapchain();
 		void initCommands();
 		void initDefaultRenderPass();
 		void initFramebuffers();
 		void initSyncSructs();
+		void initPipelines();
 
 		void destroySwapchain();
 	};

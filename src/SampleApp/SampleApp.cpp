@@ -26,11 +26,12 @@ public:
 	};
 };
 
-int main() {
-    MRG::Logger::init();
-    SampleApp application{};
+int main()
+{
+	MRG::Logger::init();
+	SampleApp application{};
 
-    application.init();
-    application.run();
-    application.cleanup();
+	application.init();
+	application.run();
+	application.cleanup();
 }
