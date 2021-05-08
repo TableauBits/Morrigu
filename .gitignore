@@ -8,4 +8,4 @@ Release/
 .idea/
 temp/
 
-*.log
+runtime/

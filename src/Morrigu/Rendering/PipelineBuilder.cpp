@@ -8,11 +8,14 @@ namespace MRG
 {
 	vk::Pipeline PipelineBuilder::build_pipeline(const vk::Device& device, const vk::RenderPass& renderPass)
 	{
-		vk::PipelineViewportStateCreateInfo viewportStateInfo{
-		  .viewportCount = 1, .pViewports = &viewport, .scissorCount = 1, .pScissors = &scissor};
+		vk::PipelineViewportStateCreateInfo viewportStateInfo{.viewportCount = 1, .scissorCount = 1};
 
 		vk::PipelineColorBlendStateCreateInfo colorBlendInfo{
 		  .logicOpEnable = VK_FALSE, .attachmentCount = 1, .pAttachments = &colorBlendAttachment};
+
+		std::array<vk::DynamicState, 2> dynamicStates{vk::DynamicState::eViewport, vk::DynamicState::eScissor};
+		vk::PipelineDynamicStateCreateInfo dynamicStatesInfo{.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),
+		                                                     .pDynamicStates    = dynamicStates.data()};
 
 		vk::GraphicsPipelineCreateInfo pipelineInfo{.stageCount          = static_cast<uint32_t>(shaderStages.size()),
 		                                            .pStages             = shaderStages.data(),
@@ -22,6 +25,7 @@ namespace MRG
 		                                            .pRasterizationState = &rasterizerInfo,
 		                                            .pMultisampleState   = &multisamplingInfo,
 		                                            .pColorBlendState    = &colorBlendInfo,
+		                                            .pDynamicState       = &dynamicStatesInfo,
 		                                            .layout              = pipelineLayout,
 		                                            .renderPass          = renderPass,
 		                                            .subpass             = 0};

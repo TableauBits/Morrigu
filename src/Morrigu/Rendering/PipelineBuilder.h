@@ -17,11 +17,9 @@ namespace MRG
 		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages{};
 		vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
-		vk::Viewport viewport{};
-		vk::Rect2D scissor{};
 		vk::PipelineRasterizationStateCreateInfo rasterizerInfo{};
-		vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 		vk::PipelineMultisampleStateCreateInfo multisamplingInfo{};
+		vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 		vk::PipelineLayout pipelineLayout{};
 		vk::PipelineCache pipelineCache{};
 

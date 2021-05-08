@@ -167,11 +167,14 @@ namespace MRG
 	bool Application::onResize(WindowResizeEvent& resize)
 	{
 		int width = resize.getWidth(), height = resize.getHeight();
-		if (width != 0 && height != 0) { m_renderer.onResize(); }
 		while (width == 0 || height == 0) {
 			glfwGetFramebufferSize(m_renderer.window, &width, &height);
 			glfwWaitEvents();
 		}
+
+		m_renderer.spec.windowWidth  = width;
+		m_renderer.spec.windowHeight = height;
+		m_renderer.onResize();
 
 		return false;
 	}

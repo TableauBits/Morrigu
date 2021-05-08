@@ -10,6 +10,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include <deque>
+#include <ranges>
 #include <string>
 
 namespace MRG
@@ -20,6 +22,20 @@ namespace MRG
 		int windowWidth;
 		int windowHeight;
 		VkPresentModeKHR presentMode;
+	};
+
+	struct DeletionQueue
+	{
+	public:
+		void push(std::function<void()>&& function) { m_deletors.push_back(function); }
+		void flush()
+		{
+			for (auto& deletion : std::views::reverse(m_deletors)) { deletion(); }
+			m_deletors.clear();
+		}
+
+	private:
+		std::deque<std::function<void()>> m_deletors;
 	};
 
 	class VkRenderer
@@ -69,6 +85,8 @@ namespace MRG
 		vk::PipelineCache m_pipelineCache{};
 		vk::PipelineLayout m_trianglePipelineLayout{};
 		vk::Pipeline m_trianglePipeline{};
+
+		DeletionQueue m_deletionQueue{};
 
 		void initVulkan();
 		void initSwapchain();

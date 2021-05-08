@@ -80,6 +80,19 @@ namespace MRG
 
 		//@TODO(Ithyx): This is super temporary, just to test the triangle pipeline:
 		m_mainCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_trianglePipeline);
+
+		m_mainCmdBuffer.setViewport(0,
+		                            vk::Viewport{
+		                              .x        = 0.f,
+		                              .y        = 0.f,
+		                              .width    = static_cast<float>(spec.windowWidth),
+		                              .height   = static_cast<float>(spec.windowHeight),
+		                              .minDepth = 0.f,
+		                              .maxDepth = 1.f,
+		                            });
+		m_mainCmdBuffer.setScissor(
+		  0, vk::Rect2D{.offset{0, 0}, .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)}});
+
 		m_mainCmdBuffer.draw(3, 1, 0, 0);
 	}
 
@@ -115,22 +128,11 @@ namespace MRG
 
 		m_device.waitIdle();
 
-		m_device.destroyPipeline(m_trianglePipeline);
-		m_device.destroyPipelineCache(m_pipelineCache);
-		m_device.destroyPipelineLayout(m_trianglePipelineLayout);
-
-		m_device.destroySemaphore(m_renderSemaphore);
-		m_device.destroySemaphore(m_presentSemaphore);
-		m_device.destroyFence(m_renderFence);
-
-		m_device.destroyCommandPool(m_cmdPool);
+		m_deletionQueue.flush();
 
 		destroySwapchain();
 
-		m_device.destroyRenderPass(m_renderPass);
-		for (auto& framebuffer : m_framebuffers) { m_device.destroyFramebuffer(framebuffer); }
 		m_device.destroy();
-
 		m_instance.destroySurfaceKHR(m_surface);
 		vkb::destroy_debug_utils_messenger(m_instance, m_debugMessenger);
 		m_instance.destroy();
@@ -140,10 +142,13 @@ namespace MRG
 
 	void VkRenderer::onResize()
 	{
-		MRG_ENGINE_TRACE("Recreating swapchain")
+		MRG_VK_CHECK(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "Failed to wait for render fence!")
 
 		destroySwapchain();
 		initSwapchain();
+		initCommands();
+		initDefaultRenderPass();
+		initFramebuffers();
 	}
 
 	vk::ShaderModule VkRenderer::loadShaderModule(const char* filePath)
@@ -272,8 +277,15 @@ namespace MRG
 		vk::FenceCreateInfo fenceInfo{.flags = vk::FenceCreateFlagBits::eSignaled};
 		m_renderFence = m_device.createFence(fenceInfo);
 
+		m_deletionQueue.push([=]() { m_device.destroyFence(m_renderFence); });
+
 		m_presentSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
 		m_renderSemaphore  = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
+
+		m_deletionQueue.push([=]() {
+			m_device.destroySemaphore(m_presentSemaphore);
+			m_device.destroySemaphore(m_renderSemaphore);
+		});
 	}
 
 	void VkRenderer::initPipelines()
@@ -282,42 +294,44 @@ namespace MRG
 		auto triangleFragShader = loadShaderModule("shaders/Triangle.frag.spv");
 		MRG_ENGINE_TRACE("Loaded vertex and fragment shaders")
 
+		m_deletionQueue.push([=]() {
+			m_device.destroyShaderModule(triangleVertShader);
+			m_device.destroyShaderModule(triangleFragShader);
+		});
+
 		const auto pipelineLayoutInfo = VkInit::pipelineLayoutCreateInfo();
 		m_trianglePipelineLayout      = m_device.createPipelineLayout(pipelineLayoutInfo);
 
+		m_deletionQueue.push([=]() { m_device.destroyPipelineLayout(m_trianglePipelineLayout); });
+
 		//@TODO(Ithyx): save/load pipeline cache to/from disk
 		m_pipelineCache = m_device.createPipelineCache(vk::PipelineCacheCreateInfo{});
+
+		m_deletionQueue.push([=]() { m_device.destroyPipelineCache(m_pipelineCache); });
 
 		PipelineBuilder builder{
 		  .shaderStages{VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, triangleVertShader),
 		                VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment, triangleFragShader)},
 		  .vertexInputInfo{VkInit::pipelineVertexInputStateCreateInfo()},
 		  .inputAssemblyInfo{VkInit::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList)},
-		  .viewport{
-		    .x        = 0.f,
-		    .y        = 0.f,
-		    .width    = static_cast<float>(spec.windowWidth),
-		    .height   = static_cast<float>(spec.windowHeight),
-		    .minDepth = 0.f,
-		    .maxDepth = 1.f,
-		  },
-		  .scissor{.offset{0, 0}, .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)}},
 		  .rasterizerInfo{VkInit::pipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)},
-		  .colorBlendAttachment{VkInit::pipelineColorBlendAttachmentState()},
 		  .multisamplingInfo{VkInit::pipelineMultisampleStateCreateInfo()},
+		  .colorBlendAttachment{VkInit::pipelineColorBlendAttachmentState()},
 		  .pipelineLayout{m_trianglePipelineLayout},
 		  .pipelineCache{m_pipelineCache}};
 
 		m_trianglePipeline = builder.build_pipeline(m_device, m_renderPass);
 
-		m_device.destroyShaderModule(triangleFragShader);
-		m_device.destroyShaderModule(triangleVertShader);
+		m_deletionQueue.push([=]() { m_device.destroyPipeline(m_trianglePipeline); });
 	}
 
 	void VkRenderer::destroySwapchain()
 	{
 		if (!isInitalized) { return; }
 
+		m_device.destroyRenderPass(m_renderPass);
+		for (const auto& framebuffer : m_framebuffers) { m_device.destroyFramebuffer(framebuffer); }
+		m_device.destroyCommandPool(m_cmdPool);
 		m_device.destroySwapchainKHR(m_swapchain);
 		for (const auto& imageView : m_swapchainImageViews) { m_device.destroyImageView(imageView); }
 	}
