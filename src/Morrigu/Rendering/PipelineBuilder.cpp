@@ -30,7 +30,7 @@ namespace MRG
 		                                            .renderPass          = renderPass,
 		                                            .subpass             = 0};
 		const auto result = device.createGraphicsPipeline(pipelineCache, pipelineInfo);
-		MRG_VK_CHECK(result.result, "Failed to create graphics pipeline!")
+		MRG_VK_CHECK_HPP(result.result, "Failed to create graphics pipeline!")
 
 		return result.value;
 	}

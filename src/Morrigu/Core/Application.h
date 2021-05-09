@@ -29,6 +29,7 @@ namespace MRG
 		Layer* popLayer();
 
 		void setWindowTitle(const char* title) const;
+		void uploadMesh(Mesh& mesh);
 
 	private:
 		void init();

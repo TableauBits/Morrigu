@@ -6,6 +6,7 @@
 #define MORRIGU_VKRENDERER_H
 
 #include "Events/ApplicationEvent.h"
+#include "Rendering/Mesh.h"
 #include "Rendering/VkTypes.h"
 
 #include <GLFW/glfw3.h>
@@ -51,6 +52,7 @@ namespace MRG
 		void onResize();
 
 		[[nodiscard]] vk::ShaderModule loadShaderModule(const char* filePath);
+		void uploadMesh(Mesh& mesh);
 
 		RendererSpecification spec;
 
@@ -86,6 +88,7 @@ namespace MRG
 		vk::PipelineLayout m_trianglePipelineLayout{};
 		vk::Pipeline m_trianglePipeline{};
 
+		VmaAllocator m_allocator{};
 		DeletionQueue m_deletionQueue{};
 
 		void initVulkan();

@@ -58,7 +58,7 @@ namespace MRG
 
 	void VkRenderer::beginFrame()
 	{
-		MRG_VK_CHECK(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
+		MRG_VK_CHECK_HPP(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
 		m_device.resetFences(m_renderFence);
 
 		m_imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, m_presentSemaphore).value;
@@ -118,7 +118,7 @@ namespace MRG
 		                               .pSwapchains        = &m_swapchain,
 		                               .pImageIndices      = &m_imageIndex};
 
-		MRG_VK_CHECK(m_graphicsQueue.presentKHR(presentInfo), "failed to present image to screen!")
+		MRG_VK_CHECK_HPP(m_graphicsQueue.presentKHR(presentInfo), "failed to present image to screen!")
 		++frameNumber;
 	}
 
@@ -132,6 +132,8 @@ namespace MRG
 
 		destroySwapchain();
 
+		vmaDestroyAllocator(m_allocator);
+
 		m_device.destroy();
 		m_instance.destroySurfaceKHR(m_surface);
 		vkb::destroy_debug_utils_messenger(m_instance, m_debugMessenger);
@@ -142,7 +144,7 @@ namespace MRG
 
 	void VkRenderer::onResize()
 	{
-		MRG_VK_CHECK(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "Failed to wait for render fence!")
+		MRG_VK_CHECK_HPP(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "Failed to wait for render fence!")
 
 		destroySwapchain();
 		initSwapchain();
@@ -164,6 +166,22 @@ namespace MRG
 
 		vk::ShaderModuleCreateInfo moduleInfo{.codeSize = fileSize, .pCode = buffer.data()};
 		return m_device.createShaderModule(moduleInfo);
+	}
+
+	void VkRenderer::uploadMesh(Mesh& mesh)
+	{
+		VkBufferCreateInfo bufferInfo{.size = mesh.vertices.size() * sizeof(Vertex), .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT};
+		VkBuffer newRawBuffer;
+
+		VmaAllocationCreateInfo allocationInfo{.usage = VMA_MEMORY_USAGE_CPU_TO_GPU};
+		MRG_VK_CHECK(vmaCreateBuffer(m_allocator, &bufferInfo, &allocationInfo, &newRawBuffer, &mesh.vertexBuffer.allocation, nullptr), "")
+		mesh.vertexBuffer.buffer = newRawBuffer;
+		m_deletionQueue.push([=]() { vmaDestroyBuffer(m_allocator, mesh.vertexBuffer.buffer, mesh.vertexBuffer.allocation); });
+
+		void* data;
+		vmaMapMemory(m_allocator, mesh.vertexBuffer.allocation, &data);
+		memcpy(data, mesh.vertices.data(), mesh.vertices.size() * sizeof(Vertex));
+		vmaUnmapMemory(m_allocator, mesh.vertexBuffer.allocation);
 	}
 
 	void VkRenderer::initVulkan()
@@ -202,6 +220,10 @@ namespace MRG
 		m_device             = vkbDevice.device;
 		m_graphicsQueue      = vkbDevice.get_queue(vkb::QueueType::graphics).value();
 		m_graphicsQueueIndex = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
+
+		// VMA allocator creation
+		VmaAllocatorCreateInfo allocatorInfo{.physicalDevice = m_GPU, .device = m_device, .instance = m_instance};
+		MRG_VK_CHECK(vmaCreateAllocator(&allocatorInfo, &m_allocator), "failed to create VMA allocator!")
 	}
 
 	void VkRenderer::initSwapchain()

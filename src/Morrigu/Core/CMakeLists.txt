@@ -3,6 +3,7 @@ set(
 
 		# Main definitions
 		${CMAKE_CURRENT_LIST_DIR}/PlatformDetection.h
+		${CMAKE_CURRENT_LIST_DIR}/Warnings.h
 		${CMAKE_CURRENT_LIST_DIR}/Core.h
 		${CMAKE_CURRENT_LIST_DIR}/MouseCodes.h
 		${CMAKE_CURRENT_LIST_DIR}/KeyCodes.h

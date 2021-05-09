@@ -7,7 +7,6 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
-#include <ranges>
 #include <utility>
 
 namespace
@@ -28,6 +27,7 @@ namespace MRG
 	Layer* Application::popLayer() { return m_layers.popLayer(); }
 
 	void Application::setWindowTitle(const char* title) const { glfwSetWindowTitle(m_renderer.window, title); }
+	void Application::uploadMesh(Mesh& mesh) { m_renderer.uploadMesh(mesh); }
 
 	void Application::init()
 	{

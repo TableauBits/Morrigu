@@ -41,6 +41,7 @@ option(ENABLE_TESTING "Enable Test Builds" OFF)
 option(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
 
 # define conan required libraries
+set(CONAN_SYSTEM_INCLUDES ON)
 set(
 		CONAN_REQUIRES
 		spdlog/1.8.5

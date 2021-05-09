@@ -19,8 +19,10 @@ target_link_libraries(
 		Vulkan::Vulkan
 		CONAN_PKG::spdlog
 		CONAN_PKG::glfw
+		CONAN_PKG::glm
 		CONAN_PKG::vulkan-headers
 		CONAN_PKG::vk-bootstrap
+		CONAN_PKG::vulkan-memory-allocator
 )
 
 include(SampleApp/CMakeLists.txt)

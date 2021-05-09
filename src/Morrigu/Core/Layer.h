@@ -29,7 +29,7 @@ namespace MRG
 		virtual void onUpdate(Timestep)    = 0;
 		virtual void onEvent(const Event&) = 0;
 
-		const Application* application{nullptr};
+		Application* application{nullptr};
 	};
 }  // namespace MRG
 
