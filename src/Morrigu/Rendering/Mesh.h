@@ -13,10 +13,19 @@
 
 namespace MRG
 {
-	struct Vertex {
-        glm::vec3 position;
+	struct VertexInputDescription
+	{
+		std::vector<vk::VertexInputBindingDescription> bindings;
+		std::vector<vk::VertexInputAttributeDescription> attributes;
+	};
+
+	struct Vertex
+	{
+		glm::vec3 position;
 		glm::vec3 normal;
 		glm::vec3 color;
+
+		static VertexInputDescription getVertexDescription();
 	};
 
 	struct Mesh

@@ -11,8 +11,8 @@
 
 #include <GLFW/glfw3.h>
 
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace MRG
 {
@@ -52,6 +52,7 @@ namespace MRG
 
 		[[nodiscard]] vk::ShaderModule loadShaderModule(const char* filePath);
 		void uploadMesh(Mesh& mesh);
+        void drawMesh(const Mesh& mesh);
 
 		RendererSpecification spec;
 
@@ -84,8 +85,8 @@ namespace MRG
 		vk::Fence m_renderFence{};
 
 		vk::PipelineCache m_pipelineCache{};
-		vk::PipelineLayout m_trianglePipelineLayout{};
-		vk::Pipeline m_trianglePipeline{};
+		vk::PipelineLayout m_coloredMeshPipelineLayout{};
+		vk::Pipeline m_coloredMeshPipeline{};
 
 		VmaAllocator m_allocator{};
 		DeletionQueue m_deletionQueue{};

@@ -21,7 +21,7 @@ public:
 		application->uploadMesh(m_triangleMesh);
 	}
 	void onDetach() override { MRG_INFO("my final message. goodb ye") }
-	void onUpdate(MRG::Timestep) override {}
+	void onUpdate(MRG::Timestep) override { application->drawMesh(m_triangleMesh); }
 	void onEvent(const MRG::Event&) override {}
 
 private:

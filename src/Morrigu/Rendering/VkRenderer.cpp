@@ -77,8 +77,7 @@ namespace MRG
 		  .pClearValues    = &clearValue};
 		m_mainCmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
-		//@TODO(Ithyx): This is super temporary, just to test the triangle pipeline:
-		m_mainCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_trianglePipeline);
+		m_mainCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_coloredMeshPipeline);
 
 		m_mainCmdBuffer.setViewport(0,
 		                            vk::Viewport{
@@ -91,8 +90,6 @@ namespace MRG
 		                            });
 		m_mainCmdBuffer.setScissor(
 		  0, vk::Rect2D{.offset{0, 0}, .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)}});
-
-		m_mainCmdBuffer.draw(3, 1, 0, 0);
 	}
 
 	void VkRenderer::endFrame()
@@ -181,6 +178,13 @@ namespace MRG
 		vmaMapMemory(m_allocator, mesh.vertexBuffer.allocation, &data);
 		memcpy(data, mesh.vertices.data(), mesh.vertices.size() * sizeof(Vertex));
 		vmaUnmapMemory(m_allocator, mesh.vertexBuffer.allocation);
+	}
+
+	void VkRenderer::drawMesh(const Mesh& mesh)
+	{
+		//@TODO(Ithyx): check if we are currently in a RP
+		m_mainCmdBuffer.bindVertexBuffers(0, mesh.vertexBuffer.buffer, {0});
+		m_mainCmdBuffer.draw(static_cast<uint32_t>(mesh.vertices.size()), 1, 0, 0);
 	}
 
 	void VkRenderer::initVulkan()
@@ -311,39 +315,44 @@ namespace MRG
 
 	void VkRenderer::initPipelines()
 	{
-		auto triangleVertShader = loadShaderModule("shaders/Triangle.vert.spv");
-		auto triangleFragShader = loadShaderModule("shaders/Triangle.frag.spv");
+		auto coloredMeshVertShader = loadShaderModule("shaders/ColoredMesh.vert.spv");
+		auto coloredMeshFragShader = loadShaderModule("shaders/ColoredMesh.frag.spv");
 		MRG_ENGINE_TRACE("Loaded vertex and fragment shaders")
 
-		m_deletionQueue.push([=]() {
-			m_device.destroyShaderModule(triangleVertShader);
-			m_device.destroyShaderModule(triangleFragShader);
-		});
-
 		const auto pipelineLayoutInfo = VkInit::pipelineLayoutCreateInfo();
-		m_trianglePipelineLayout      = m_device.createPipelineLayout(pipelineLayoutInfo);
+		m_coloredMeshPipelineLayout   = m_device.createPipelineLayout(pipelineLayoutInfo);
 
-		m_deletionQueue.push([=]() { m_device.destroyPipelineLayout(m_trianglePipelineLayout); });
+		m_deletionQueue.push([=]() { m_device.destroyPipelineLayout(m_coloredMeshPipelineLayout); });
 
 		//@TODO(Ithyx): save/load pipeline cache to/from disk
 		m_pipelineCache = m_device.createPipelineCache(vk::PipelineCacheCreateInfo{});
 
 		m_deletionQueue.push([=]() { m_device.destroyPipelineCache(m_pipelineCache); });
 
+		const auto vertexInfo = Vertex::getVertexDescription();
+		vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo{
+		  .vertexBindingDescriptionCount   = static_cast<uint32_t>(vertexInfo.bindings.size()),
+		  .pVertexBindingDescriptions      = vertexInfo.bindings.data(),
+		  .vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInfo.attributes.size()),
+		  .pVertexAttributeDescriptions    = vertexInfo.attributes.data()};
+
 		PipelineBuilder builder{
-		  .shaderStages{VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, triangleVertShader),
-		                VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment, triangleFragShader)},
-		  .vertexInputInfo{VkInit::pipelineVertexInputStateCreateInfo()},
+		  .shaderStages{VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, coloredMeshVertShader),
+		                VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment, coloredMeshFragShader)},
+		  .vertexInputInfo{vertexInputCreateInfo},
 		  .inputAssemblyInfo{VkInit::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList)},
 		  .rasterizerInfo{VkInit::pipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)},
 		  .multisamplingInfo{VkInit::pipelineMultisampleStateCreateInfo()},
 		  .colorBlendAttachment{VkInit::pipelineColorBlendAttachmentState()},
-		  .pipelineLayout{m_trianglePipelineLayout},
+		  .pipelineLayout{m_coloredMeshPipelineLayout},
 		  .pipelineCache{m_pipelineCache}};
 
-		m_trianglePipeline = builder.build_pipeline(m_device, m_renderPass);
+		m_coloredMeshPipeline = builder.build_pipeline(m_device, m_renderPass);
 
-		m_deletionQueue.push([=]() { m_device.destroyPipeline(m_trianglePipeline); });
+		m_deletionQueue.push([=]() { m_device.destroyPipeline(m_coloredMeshPipeline); });
+
+		m_device.destroyShaderModule(coloredMeshVertShader);
+		m_device.destroyShaderModule(coloredMeshFragShader);
 	}
 
 	void VkRenderer::destroySwapchain()

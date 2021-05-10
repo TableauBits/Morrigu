@@ -34,6 +34,8 @@ namespace MRG
 		void setWindowTitle(const char* title) const;
 		void uploadMesh(Mesh& mesh);
 
+		void drawMesh(const Mesh& mesh);
+
 	private:
 		void init();
 

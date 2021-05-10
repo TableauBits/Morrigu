@@ -48,6 +48,7 @@ namespace MRG
 
 	void Application::setWindowTitle(const char* title) const { glfwSetWindowTitle(m_renderer.window, title); }
 	void Application::uploadMesh(Mesh& mesh) { m_renderer.uploadMesh(mesh); }
+	void Application::drawMesh(const Mesh& mesh) { m_renderer.drawMesh(mesh); }
 
 	void Application::init()
 	{

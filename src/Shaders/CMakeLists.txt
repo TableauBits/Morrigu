@@ -1,6 +1,6 @@
 find_program(GLSLC glslc)
 
-include(${CMAKE_CURRENT_LIST_DIR}/Triangle/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/ColoredMesh/CMakeLists.txt)
 
 foreach (SHADER ${SHADER_SOURCES})
 	message(STATUS "Shader ${SHADER} added to dependencies")
