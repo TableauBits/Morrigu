@@ -167,7 +167,9 @@ namespace MRG
 
 	void VkRenderer::uploadMesh(Mesh& mesh)
 	{
-		VkBufferCreateInfo bufferInfo{.size = mesh.vertices.size() * sizeof(Vertex), .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT};
+		VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		                              .size  = mesh.vertices.size() * sizeof(Vertex),
+		                              .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT};
 		VkBuffer newRawBuffer;
 
 		VmaAllocationCreateInfo allocationInfo{.usage = VMA_MEMORY_USAGE_CPU_TO_GPU};
