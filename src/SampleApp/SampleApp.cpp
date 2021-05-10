@@ -46,7 +46,5 @@ int main()
 	MRG::Logger::init();
 	SampleApp application{};
 
-	application.init();
 	application.run();
-	application.cleanup();
 }

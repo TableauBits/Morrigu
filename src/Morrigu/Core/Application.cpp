@@ -16,7 +16,27 @@ namespace
 
 namespace MRG
 {
-	Application::Application(ApplicationSpecification spec) : m_specification(std::move(spec)) {}
+	Application::Application(ApplicationSpecification spec) : m_specification(std::move(spec)) { init(); }
+	Application::~Application()
+	{
+		m_renderer.cleanup();
+		glfwTerminate();
+	}
+
+	void Application::run()
+	{
+		while (m_isRunning) {
+			const auto time = static_cast<float>(glfwGetTime());
+			Timestep ts{time - m_lastTime};
+			m_lastTime = time;
+
+			m_renderer.beginFrame();
+			for (auto& layer : m_layers) { layer->onUpdate(ts); }
+			m_renderer.endFrame();
+
+			glfwPollEvents();
+		}
+	}
 
 	void Application::pushLayer(Layer* newLayer)
 	{
@@ -125,36 +145,15 @@ namespace MRG
 		m_renderer.init(m_specification.rendererSpecification, window);
 	}
 
-	void Application::run()
-	{
-		while (m_isRunning) {
-			const auto time = static_cast<float>(glfwGetTime());
-			Timestep ts{time - m_lastTime};
-			m_lastTime = time;
-
-			m_renderer.beginFrame();
-			for (auto& layer : m_layers) { layer->onUpdate(ts); }
-			m_renderer.endFrame();
-
-			glfwPollEvents();
-		}
-	}
-
-	void Application::cleanup()
-	{
-		m_renderer.cleanup();
-		glfwTerminate();
-	}
-
 	void Application::onEvent(Event& event)
 	{
 		EventDispatcher dispatcher{event};
 		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& event) { return onClose(event); });
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) { return onResize(event); });
 
-		for (auto& m_layer : std::ranges::reverse_view(m_layers)) {
+		for (auto it = m_layers.rbegin(); it != m_layers.rend(); ++it) {
 			if (event.handled) { break; }
-			m_layer->onEvent(event);
+			(*it)->onEvent(event);
 		}
 	}
 

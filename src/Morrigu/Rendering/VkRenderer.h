@@ -11,8 +11,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include <deque>
-#include <ranges>
+#include <vector>
 #include <string>
 
 namespace MRG
@@ -31,12 +30,12 @@ namespace MRG
 		void push(std::function<void()>&& function) { m_deletors.push_back(function); }
 		void flush()
 		{
-			for (auto& deletion : std::views::reverse(m_deletors)) { deletion(); }
+			for (auto it = m_deletors.rbegin(); it != m_deletors.rend(); ++it) { (*it)(); }
 			m_deletors.clear();
 		}
 
 	private:
-		std::deque<std::function<void()>> m_deletors;
+		std::vector<std::function<void()>> m_deletors;
 	};
 
 	class VkRenderer

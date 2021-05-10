@@ -24,6 +24,9 @@ namespace MRG
 	{
 	public:
 		explicit Application(ApplicationSpecification spec);
+		~Application();
+
+		void run();
 
 		void pushLayer(Layer* newLayer);
 		Layer* popLayer();
@@ -33,14 +36,11 @@ namespace MRG
 
 	private:
 		void init();
-		void run();
-		void cleanup();
 
 		void onEvent(Event& event);
 		bool onClose(WindowCloseEvent& resizeEvent);
 		bool onResize(WindowResizeEvent& resizeEvent);
 
-		friend int ::main();
 		friend class VkRenderer;
 
 		bool m_isRunning = true;

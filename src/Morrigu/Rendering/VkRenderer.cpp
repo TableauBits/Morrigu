@@ -9,7 +9,6 @@
 
 #include <VkBootstrap.h>
 
-#include <filesystem>
 #include <fstream>
 
 namespace
@@ -155,8 +154,6 @@ namespace MRG
 
 	vk::ShaderModule VkRenderer::loadShaderModule(const char* filePath)
 	{
-		MRG_CORE_ASSERT(std::filesystem::exists(filePath), "Provided shader path does not exist!")
-
 		std::ifstream file{filePath, std::ios::binary | std::ios::ate};
 		const auto fileSize = static_cast<std::size_t>(file.tellg());
 		std::vector<std::uint32_t> buffer(fileSize / sizeof(std::uint32_t));
