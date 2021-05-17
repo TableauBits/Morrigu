@@ -43,6 +43,9 @@ namespace MRG
 		void rotate(const glm::vec3& axis, float radRotation);
 		void scale(const glm::vec3& scaling);
 		void translate(const glm::vec3& translation);
+
+		/// Filepath is already pointing to the meshes folder, so you can omit the path to that folder yourself
+		static Mesh loadFromFile(const char* filePath);
 	};
 }  // namespace MRG
 

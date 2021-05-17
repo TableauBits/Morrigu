@@ -151,8 +151,9 @@ namespace MRG
 
 	vk::ShaderModule VkRenderer::loadShaderModule(const char* filePath)
 	{
-		MRG_ENGINE_ASSERT(std::filesystem::exists(filePath), "Shader file \"{}\" does not exists!", filePath)
-		std::ifstream file{filePath, std::ios::binary | std::ios::ate};
+		const auto completePath = Folders::Rendering::shadersFolder + filePath;
+		MRG_ENGINE_ASSERT(std::filesystem::exists(completePath), "Shader file \"{}\" does not exists!", completePath)
+		std::ifstream file{completePath, std::ios::binary | std::ios::ate};
 		const auto fileSize = static_cast<std::size_t>(file.tellg());
 		std::vector<std::uint32_t> buffer(fileSize / sizeof(std::uint32_t));
 		file.seekg(std::ios::beg);
@@ -362,8 +363,8 @@ namespace MRG
 
 	void VkRenderer::initPipelines()
 	{
-		auto coloredMeshVertShader = loadShaderModule("shaders/ColoredMesh.vert.spv");
-		auto coloredMeshFragShader = loadShaderModule("shaders/ColoredMesh.frag.spv");
+		auto coloredMeshVertShader = loadShaderModule("ColoredMesh.vert.spv");
+		auto coloredMeshFragShader = loadShaderModule("ColoredMesh.frag.spv");
 		MRG_ENGINE_TRACE("Loaded vertex and fragment shaders")
 
 		vk::PushConstantRange pushConstantRange{
@@ -380,9 +381,9 @@ namespace MRG
 		m_deletionQueue.push([=]() { m_device.destroyPipelineLayout(m_coloredMeshPipelineLayout); });
 
 		vk::PipelineCacheCreateInfo pipelineCacheCreateInfo{};
-		if (std::filesystem::exists(Files::Rendering::VkPipelineCacheFN)) {
+		if (std::filesystem::exists(Files::Rendering::vkPipelineCacheFile)) {
 			MRG_ENGINE_TRACE("Pipeline cache found.")
-			std::ifstream pipelineCacheFile{Files::Rendering::VkPipelineCacheFN, std::ios::binary | std::ios::ate};
+			std::ifstream pipelineCacheFile{Files::Rendering::vkPipelineCacheFile, std::ios::binary | std::ios::ate};
 			const auto fileSize = static_cast<std::size_t>(pipelineCacheFile.tellg());
 			std::vector<uint8_t> pipelineData(fileSize / sizeof(uint8_t));
 			pipelineCacheFile.seekg(std::ios::beg);
@@ -393,7 +394,7 @@ namespace MRG
 
 		m_deletionQueue.push([=]() {
 			const auto newPipelineCacheData = m_device.getPipelineCacheData(m_pipelineCache);
-			std::ofstream pipelineCacheFile{Files::Rendering::VkPipelineCacheFN, std::ios::binary | std::ios::trunc};
+			std::ofstream pipelineCacheFile{Files::Rendering::vkPipelineCacheFile, std::ios::binary | std::ios::trunc};
 			pipelineCacheFile.write((char*)newPipelineCacheData.data(), static_cast<std::streamsize>(newPipelineCacheData.size()));
 			m_device.destroyPipelineCache(m_pipelineCache);
 		});

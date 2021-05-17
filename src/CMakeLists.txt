@@ -21,6 +21,7 @@ target_link_libraries(
 		CONAN_PKG::glfw
 		CONAN_PKG::glm
 		CONAN_PKG::vulkan-headers
+		CONAN_PKG::tinyobjloader
 		CONAN_PKG::vk-bootstrap
 		CONAN_PKG::vulkan-memory-allocator
 )
@@ -44,6 +45,12 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT S
 set_property(TARGET SampleApp PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtime)
 
 include(Shaders/CMakeLists.txt)
+
+add_custom_command(
+		TARGET SampleApp
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets ${CMAKE_SOURCE_DIR}/runtime/assets
+)
 
 add_dependencies(
 		SampleApp

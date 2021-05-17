@@ -14,22 +14,13 @@ public:
 		m_camera.setPerspective(glm::radians(70.f), 0.1f, 200.f);
 		m_camera.recalculateViewProjection();
 
-		m_triangleMesh.vertices.resize(3);
-		m_triangleMesh.vertices[0].position = {1.f, -1.f, 0.f};
-		m_triangleMesh.vertices[1].position = {-1.f, -1.f, 0.f};
-		m_triangleMesh.vertices[2].position = {0.f, 1.f, 0.f};
-
-		m_triangleMesh.vertices[0].color = {0.f, 1.f, 0.f};
-		m_triangleMesh.vertices[1].color = {0.f, 1.f, 0.f};
-		m_triangleMesh.vertices[2].color = {0.f, 1.f, 0.f};
-
-		application->uploadMesh(m_triangleMesh);
+		application->uploadMesh(m_monkeyMesh);
 	}
 	void onDetach() override { MRG_INFO("my final message. goodb ye") }
 	void onUpdate(MRG::Timestep ts) override
 	{
-		m_triangleMesh.rotate({0.f, 1.f, 0.f}, ts.getSeconds() * glm::radians(180.f));
-		application->drawMesh(m_triangleMesh, m_camera);
+		m_monkeyMesh.rotate({0.f, 1.f, 0.f}, ts.getSeconds() * glm::radians(180.f));
+		application->drawMesh(m_monkeyMesh, m_camera);
 	}
 	void onEvent(MRG::Event& event) override
 	{
@@ -39,7 +30,7 @@ public:
 
 private:
 	MRG::Camera m_camera{};
-	MRG::Mesh m_triangleMesh{};
+	MRG::Mesh m_monkeyMesh = MRG::Mesh::loadFromFile("monkey_smooth.obj");
 };
 
 class SampleApp : public MRG::Application
