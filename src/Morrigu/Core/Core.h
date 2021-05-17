@@ -60,7 +60,7 @@
 	}
 #else
 #define MRG_ASSERT(x, ...)
-#define MRG_CORE_ASSERT(x, ...)
+#define MRG_ENGINE_ASSERT(x, ...)
 #endif
 // clang-format on
 
