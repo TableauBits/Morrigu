@@ -48,12 +48,12 @@ namespace MRG
 
 	void Application::setWindowTitle(const char* title) const { glfwSetWindowTitle(m_renderer.window, title); }
 	void Application::uploadMesh(Mesh& mesh) { m_renderer.uploadMesh(mesh); }
-	void Application::drawMesh(const Mesh& mesh) { m_renderer.drawMesh(mesh); }
+	void Application::drawMesh(const Mesh& mesh, const Camera& camera) { m_renderer.drawMesh(mesh, camera); }
 
 	void Application::init()
 	{
 		[[maybe_unused]] const auto result = glfwInit();
-		MRG_CORE_ASSERT(result == GLFW_TRUE, "failed to initialise GLFW!")
+		MRG_ENGINE_ASSERT(result == GLFW_TRUE, "failed to initialise GLFW!")
 
 		glfwSetErrorCallback(glfwErrorCallback);
 

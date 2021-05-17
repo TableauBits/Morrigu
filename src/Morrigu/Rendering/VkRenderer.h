@@ -6,6 +6,7 @@
 #define MORRIGU_VKRENDERER_H
 
 #include "Events/ApplicationEvent.h"
+#include "Rendering/Camera.h"
 #include "Rendering/Mesh.h"
 #include "Rendering/VkTypes.h"
 
@@ -21,7 +22,7 @@ namespace MRG
 		std::string applicationName;
 		int windowWidth;
 		int windowHeight;
-		VkPresentModeKHR presentMode;
+		vk::PresentModeKHR presentMode;
 	};
 
 	struct DeletionQueue
@@ -52,7 +53,7 @@ namespace MRG
 
 		[[nodiscard]] vk::ShaderModule loadShaderModule(const char* filePath);
 		void uploadMesh(Mesh& mesh);
-        void drawMesh(const Mesh& mesh);
+		void drawMesh(const Mesh& mesh, const Camera& camera);
 
 		RendererSpecification spec;
 

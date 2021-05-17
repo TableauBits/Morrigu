@@ -7,6 +7,7 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/Core.h
 		${CMAKE_CURRENT_LIST_DIR}/MouseCodes.h
 		${CMAKE_CURRENT_LIST_DIR}/KeyCodes.h
+		${CMAKE_CURRENT_LIST_DIR}/FileNames.h
 
 		# Logging
 		${CMAKE_CURRENT_LIST_DIR}/Logging.h

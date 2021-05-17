@@ -5,9 +5,8 @@
 #ifndef MORRIGU_MESH_H
 #define MORRIGU_MESH_H
 
+#include "Rendering/GLMIncludeHelper.h"
 #include "Rendering/VkTypes.h"
-
-#include <glm/vec3.hpp>
 
 #include <vector>
 
@@ -28,10 +27,22 @@ namespace MRG
 		static VertexInputDescription getVertexDescription();
 	};
 
-	struct Mesh
+	class Mesh
 	{
+	public:
+		struct PushConstants
+		{
+			glm::vec4 data;
+			glm::mat4 transform;
+		};
+
 		std::vector<Vertex> vertices;
 		AllocatedBuffer vertexBuffer;
+		glm::mat4 modelMatrix{1.f};
+
+		void rotate(const glm::vec3& axis, float radRotation);
+		void scale(const glm::vec3& scaling);
+		void translate(const glm::vec3& translation);
 	};
 }  // namespace MRG
 

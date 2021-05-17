@@ -24,10 +24,10 @@ namespace MRG
 		Layer& operator=(const Layer&) = delete;
 		Layer& operator=(Layer&&) = delete;
 
-		virtual void onAttach()            = 0;
-		virtual void onDetach()            = 0;
-		virtual void onUpdate(Timestep)    = 0;
-		virtual void onEvent(const Event&) = 0;
+		virtual void onAttach()         = 0;
+		virtual void onDetach()         = 0;
+		virtual void onUpdate(Timestep) = 0;
+		virtual void onEvent(Event&)    = 0;
 
 		Application* application{nullptr};
 	};

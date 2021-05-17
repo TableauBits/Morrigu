@@ -4,11 +4,16 @@
 
 #include "VkRenderer.h"
 
+#include "Core/FileNames.h"
 #include "Rendering/PipelineBuilder.h"
 #include "Rendering/VkInitialize.h"
 
 #include <VkBootstrap.h>
 
+DISABLE_WARNING_PUSH
+DISABLE_WARNING_ALIGNMENT_MODIFIED
+#include <filesystem>
+DISABLE_WARNING_POP
 #include <fstream>
 
 namespace
@@ -63,7 +68,9 @@ namespace MRG
 		m_imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, m_presentSemaphore).value;
 
 		m_mainCmdBuffer.reset();
-		vk::CommandBufferBeginInfo beginInfo{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+		vk::CommandBufferBeginInfo beginInfo{
+		  .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
+		};
 		m_mainCmdBuffer.begin(beginInfo);
 
 		vk::ClearValue clearValue{{std::array<float, 4>{0.f, 0.f, std::abs(std::sin(static_cast<float>(frameNumber) / 120.f)), 1.f}}};
@@ -72,24 +79,13 @@ namespace MRG
 		  .renderPass  = m_renderPass,
 		  .framebuffer = m_framebuffers[m_imageIndex],
 		  .renderArea =
-		    vk::Rect2D{.offset = {0, 0}, .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)}},
+		    vk::Rect2D{
+		      .offset = {0, 0},
+		      .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
+		    },
 		  .clearValueCount = 1,
 		  .pClearValues    = &clearValue};
 		m_mainCmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-
-		m_mainCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_coloredMeshPipeline);
-
-		m_mainCmdBuffer.setViewport(0,
-		                            vk::Viewport{
-		                              .x        = 0.f,
-		                              .y        = 0.f,
-		                              .width    = static_cast<float>(spec.windowWidth),
-		                              .height   = static_cast<float>(spec.windowHeight),
-		                              .minDepth = 0.f,
-		                              .maxDepth = 1.f,
-		                            });
-		m_mainCmdBuffer.setScissor(
-		  0, vk::Rect2D{.offset{0, 0}, .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)}});
 	}
 
 	void VkRenderer::endFrame()
@@ -99,20 +95,24 @@ namespace MRG
 
 		vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
-		vk::SubmitInfo submitInfo{.waitSemaphoreCount   = 1,
-		                          .pWaitSemaphores      = &m_presentSemaphore,
-		                          .pWaitDstStageMask    = &waitStage,
-		                          .commandBufferCount   = 1,
-		                          .pCommandBuffers      = &m_mainCmdBuffer,
-		                          .signalSemaphoreCount = 1,
-		                          .pSignalSemaphores    = &m_renderSemaphore};
+		vk::SubmitInfo submitInfo{
+		  .waitSemaphoreCount   = 1,
+		  .pWaitSemaphores      = &m_presentSemaphore,
+		  .pWaitDstStageMask    = &waitStage,
+		  .commandBufferCount   = 1,
+		  .pCommandBuffers      = &m_mainCmdBuffer,
+		  .signalSemaphoreCount = 1,
+		  .pSignalSemaphores    = &m_renderSemaphore,
+		};
 		m_graphicsQueue.submit(submitInfo, m_renderFence);
 
-		vk::PresentInfoKHR presentInfo{.waitSemaphoreCount = 1,
-		                               .pWaitSemaphores    = &m_renderSemaphore,
-		                               .swapchainCount     = 1,
-		                               .pSwapchains        = &m_swapchain,
-		                               .pImageIndices      = &m_imageIndex};
+		vk::PresentInfoKHR presentInfo{
+		  .waitSemaphoreCount = 1,
+		  .pWaitSemaphores    = &m_renderSemaphore,
+		  .swapchainCount     = 1,
+		  .pSwapchains        = &m_swapchain,
+		  .pImageIndices      = &m_imageIndex,
+		};
 
 		MRG_VK_CHECK_HPP(m_graphicsQueue.presentKHR(presentInfo), "failed to present image to screen!")
 		++frameNumber;
@@ -151,6 +151,7 @@ namespace MRG
 
 	vk::ShaderModule VkRenderer::loadShaderModule(const char* filePath)
 	{
+		MRG_ENGINE_ASSERT(std::filesystem::exists(filePath), "Shader file \"{}\" does not exists!", filePath)
 		std::ifstream file{filePath, std::ios::binary | std::ios::ate};
 		const auto fileSize = static_cast<std::size_t>(file.tellg());
 		std::vector<std::uint32_t> buffer(fileSize / sizeof(std::uint32_t));
@@ -158,7 +159,10 @@ namespace MRG
 		file.read((char*)buffer.data(), static_cast<std::streamsize>(fileSize));
 		file.close();
 
-		vk::ShaderModuleCreateInfo moduleInfo{.codeSize = fileSize, .pCode = buffer.data()};
+		vk::ShaderModuleCreateInfo moduleInfo{
+		  .codeSize = fileSize,
+		  .pCode    = buffer.data(),
+		};
 		return m_device.createShaderModule(moduleInfo);
 	}
 
@@ -180,9 +184,32 @@ namespace MRG
 		vmaUnmapMemory(m_allocator, mesh.vertexBuffer.allocation);
 	}
 
-	void VkRenderer::drawMesh(const Mesh& mesh)
+	void VkRenderer::drawMesh(const Mesh& mesh, const Camera& camera)
 	{
-		//@TODO(Ithyx): check if we are currently in a RP
+		// @TODO(Ithyx): check if we are currently in a RP
+		m_mainCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_coloredMeshPipeline);
+		m_mainCmdBuffer.setViewport(0,
+		                            vk::Viewport{
+		                              .x        = 0.f,
+		                              .y        = 0.f,
+		                              .width    = static_cast<float>(spec.windowWidth),
+		                              .height   = static_cast<float>(spec.windowHeight),
+		                              .minDepth = 0.f,
+		                              .maxDepth = 1.f,
+		                            });
+		m_mainCmdBuffer.setScissor(0,
+		                           vk::Rect2D{
+		                             .offset{0, 0},
+		                             .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
+		                           });
+
+		const auto pushConstants = Mesh::PushConstants{
+		  .data      = glm::vec4{},
+		  .transform = camera.getViewProjection() * mesh.modelMatrix,
+		};
+		m_mainCmdBuffer.pushConstants(
+		  m_coloredMeshPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(Mesh::PushConstants), (void*)(&pushConstants));
+
 		m_mainCmdBuffer.bindVertexBuffers(0, mesh.vertexBuffer.buffer, {0});
 		m_mainCmdBuffer.draw(static_cast<uint32_t>(mesh.vertices.size()), 1, 0, 0);
 	}
@@ -225,7 +252,11 @@ namespace MRG
 		m_graphicsQueueIndex = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
 
 		// VMA allocator creation
-		VmaAllocatorCreateInfo allocatorInfo{.physicalDevice = m_GPU, .device = m_device, .instance = m_instance};
+		VmaAllocatorCreateInfo allocatorInfo{
+		  .physicalDevice = m_GPU,
+		  .device         = m_device,
+		  .instance       = m_instance,
+		};
 		MRG_VK_CHECK(vmaCreateAllocator(&allocatorInfo, &m_allocator), "failed to create VMA allocator!")
 	}
 
@@ -233,7 +264,7 @@ namespace MRG
 	{
 		vkb::SwapchainBuilder swapchainBuilder{m_GPU, m_device, m_surface};
 		auto vkbSwapchain = swapchainBuilder.use_default_format_selection()
-		                      .set_desired_present_mode(spec.presentMode)
+		                      .set_desired_present_mode(static_cast<VkPresentModeKHR>(spec.presentMode))
 		                      .set_desired_extent(spec.windowWidth, spec.windowHeight)
 		                      .build()
 		                      .value();
@@ -260,33 +291,47 @@ namespace MRG
 
 	void VkRenderer::initDefaultRenderPass()
 	{
-		vk::AttachmentDescription colorAttachment{.format         = m_swapchainFormat,
-		                                          .samples        = vk::SampleCountFlagBits::e1,
-		                                          .loadOp         = vk::AttachmentLoadOp::eClear,
-		                                          .storeOp        = vk::AttachmentStoreOp::eStore,
-		                                          .stencilLoadOp  = vk::AttachmentLoadOp::eDontCare,
-		                                          .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-		                                          .initialLayout  = vk::ImageLayout::eUndefined,
-		                                          .finalLayout    = vk::ImageLayout::ePresentSrcKHR};
+		vk::AttachmentDescription colorAttachment{
+		  .format         = m_swapchainFormat,
+		  .samples        = vk::SampleCountFlagBits::e1,
+		  .loadOp         = vk::AttachmentLoadOp::eClear,
+		  .storeOp        = vk::AttachmentStoreOp::eStore,
+		  .stencilLoadOp  = vk::AttachmentLoadOp::eDontCare,
+		  .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+		  .initialLayout  = vk::ImageLayout::eUndefined,
+		  .finalLayout    = vk::ImageLayout::ePresentSrcKHR,
+		};
 
-		vk::AttachmentReference colorAttachmentRef{.attachment = 0, .layout = vk::ImageLayout::eColorAttachmentOptimal};
+		vk::AttachmentReference colorAttachmentRef{
+		  .attachment = 0,
+		  .layout     = vk::ImageLayout::eColorAttachmentOptimal,
+		};
 
 		vk::SubpassDescription subpass{
-		  .pipelineBindPoint = vk::PipelineBindPoint::eGraphics, .colorAttachmentCount = 1, .pColorAttachments = &colorAttachmentRef};
+		  .pipelineBindPoint    = vk::PipelineBindPoint::eGraphics,
+		  .colorAttachmentCount = 1,
+		  .pColorAttachments    = &colorAttachmentRef,
+		};
 
 		vk::RenderPassCreateInfo renderPassInfo{
-		  .attachmentCount = 1, .pAttachments = &colorAttachment, .subpassCount = 1, .pSubpasses = &subpass};
+		  .attachmentCount = 1,
+		  .pAttachments    = &colorAttachment,
+		  .subpassCount    = 1,
+		  .pSubpasses      = &subpass,
+		};
 
 		m_renderPass = m_device.createRenderPass(renderPassInfo);
 	}
 
 	void VkRenderer::initFramebuffers()
 	{
-		vk::FramebufferCreateInfo framebufferInfo{.renderPass      = m_renderPass,
-		                                          .attachmentCount = 1,
-		                                          .width           = static_cast<uint32_t>(spec.windowWidth),
-		                                          .height          = static_cast<uint32_t>(spec.windowHeight),
-		                                          .layers          = 1};
+		vk::FramebufferCreateInfo framebufferInfo{
+		  .renderPass      = m_renderPass,
+		  .attachmentCount = 1,
+		  .width           = static_cast<uint32_t>(spec.windowWidth),
+		  .height          = static_cast<uint32_t>(spec.windowHeight),
+		  .layers          = 1,
+		};
 
 		const std::size_t swapchainImageCount = m_swapchainImages.size();
 		m_framebuffers                        = std::vector<vk::Framebuffer>(swapchainImageCount);
@@ -299,7 +344,9 @@ namespace MRG
 
 	void VkRenderer::initSyncSructs()
 	{
-		vk::FenceCreateInfo fenceInfo{.flags = vk::FenceCreateFlagBits::eSignaled};
+		vk::FenceCreateInfo fenceInfo{
+		  .flags = vk::FenceCreateFlagBits::eSignaled,
+		};
 		m_renderFence = m_device.createFence(fenceInfo);
 
 		m_deletionQueue.push([=]() { m_device.destroyFence(m_renderFence); });
@@ -319,22 +366,45 @@ namespace MRG
 		auto coloredMeshFragShader = loadShaderModule("shaders/ColoredMesh.frag.spv");
 		MRG_ENGINE_TRACE("Loaded vertex and fragment shaders")
 
-		const auto pipelineLayoutInfo = VkInit::pipelineLayoutCreateInfo();
-		m_coloredMeshPipelineLayout   = m_device.createPipelineLayout(pipelineLayoutInfo);
+		vk::PushConstantRange pushConstantRange{
+		  .stageFlags = vk::ShaderStageFlagBits::eVertex,
+		  .offset     = 0,
+		  .size       = sizeof(Mesh::PushConstants),
+		};
+		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
+		  .pushConstantRangeCount = 1,
+		  .pPushConstantRanges    = &pushConstantRange,
+		};
+		m_coloredMeshPipelineLayout = m_device.createPipelineLayout(pipelineLayoutInfo);
 
 		m_deletionQueue.push([=]() { m_device.destroyPipelineLayout(m_coloredMeshPipelineLayout); });
 
-		//@TODO(Ithyx): save/load pipeline cache to/from disk
-		m_pipelineCache = m_device.createPipelineCache(vk::PipelineCacheCreateInfo{});
+		vk::PipelineCacheCreateInfo pipelineCacheCreateInfo{};
+		if (std::filesystem::exists(Files::Rendering::VkPipelineCacheFN)) {
+			MRG_ENGINE_TRACE("Pipeline cache found.")
+			std::ifstream pipelineCacheFile{Files::Rendering::VkPipelineCacheFN, std::ios::binary | std::ios::ate};
+			const auto fileSize = static_cast<std::size_t>(pipelineCacheFile.tellg());
+			std::vector<uint8_t> pipelineData(fileSize / sizeof(uint8_t));
+			pipelineCacheFile.seekg(std::ios::beg);
+			pipelineCacheFile.read((char*)pipelineData.data(), static_cast<std::streamsize>(fileSize));
+			pipelineCacheFile.close();
+		}
+		m_pipelineCache = m_device.createPipelineCache(pipelineCacheCreateInfo);
 
-		m_deletionQueue.push([=]() { m_device.destroyPipelineCache(m_pipelineCache); });
+		m_deletionQueue.push([=]() {
+			const auto newPipelineCacheData = m_device.getPipelineCacheData(m_pipelineCache);
+			std::ofstream pipelineCacheFile{Files::Rendering::VkPipelineCacheFN, std::ios::binary | std::ios::trunc};
+			pipelineCacheFile.write((char*)newPipelineCacheData.data(), static_cast<std::streamsize>(newPipelineCacheData.size()));
+			m_device.destroyPipelineCache(m_pipelineCache);
+		});
 
 		const auto vertexInfo = Vertex::getVertexDescription();
 		vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo{
 		  .vertexBindingDescriptionCount   = static_cast<uint32_t>(vertexInfo.bindings.size()),
 		  .pVertexBindingDescriptions      = vertexInfo.bindings.data(),
 		  .vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInfo.attributes.size()),
-		  .pVertexAttributeDescriptions    = vertexInfo.attributes.data()};
+		  .pVertexAttributeDescriptions    = vertexInfo.attributes.data(),
+		};
 
 		PipelineBuilder builder{
 		  .shaderStages{VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, coloredMeshVertShader),

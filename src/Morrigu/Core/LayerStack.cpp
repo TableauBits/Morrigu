@@ -22,7 +22,7 @@ namespace MRG
 
 	Layer* LayerStack::popLayer()
 	{
-		MRG_CORE_ASSERT(!m_layers.empty(), "Layer stack was empty!")
+		MRG_ENGINE_ASSERT(!m_layers.empty(), "Layer stack was empty!")
 		const auto layer = m_layers.back();
 		m_layers.pop_back();
 		return layer;

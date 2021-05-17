@@ -9,17 +9,15 @@
 
 namespace MRG::VkInit
 {
-	vk::CommandPoolCreateInfo cmdPoolCreateInfo(vk::CommandPoolCreateFlags flags, uint32_t queueFamiliyIndex);
-	vk::CommandBufferAllocateInfo cmdBufferAllocateInfo(VkCommandPool pool, vk::CommandBufferLevel level, uint32_t count);
+	[[nodiscard]] vk::CommandPoolCreateInfo cmdPoolCreateInfo(vk::CommandPoolCreateFlags flags, uint32_t queueFamiliyIndex);
+	[[nodiscard]] vk::CommandBufferAllocateInfo cmdBufferAllocateInfo(VkCommandPool pool, vk::CommandBufferLevel level, uint32_t count);
 
-	vk::PipelineShaderStageCreateInfo pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits stage, vk::ShaderModule shaderModule);
-	vk::PipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo();
-	vk::PipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology topology);
-	vk::PipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo(vk::PolygonMode polygonMode);
-	vk::PipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo();
-	vk::PipelineColorBlendAttachmentState pipelineColorBlendAttachmentState();
-
-	vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo();
+	[[nodiscard]] vk::PipelineShaderStageCreateInfo pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits stage,
+	                                                                              vk::ShaderModule shaderModule);
+	[[nodiscard]] vk::PipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology topology);
+	[[nodiscard]] vk::PipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo(vk::PolygonMode polygonMode);
+	[[nodiscard]] vk::PipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo();
+	[[nodiscard]] vk::PipelineColorBlendAttachmentState pipelineColorBlendAttachmentState();
 }  // namespace MRG::VkInit
 
 #endif  // MORRIGU_VKINITIALIZE_H

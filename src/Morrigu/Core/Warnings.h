@@ -19,6 +19,7 @@
     #define DISABLE_WARNING_UNUSED_PARAMETER        DISABLE_WARNING(4100)
     #define DISABLE_WARNING_EXPRESSION_ALWAYS_TRUE  DISABLE_WARNING(4296)
     #define DISABLE_WARNING_PADDING_GENERATED       DISABLE_WARNING(4324)
+    #define DISABLE_WARNING_ALIGNMENT_MODIFIED      DISABLE_WARNING(4103)
 
 #elif defined(__GNUC__) || defined(__clang__)
     #define DO_PRAGMA(X) _Pragma(#X)
@@ -34,6 +35,7 @@
     #define DISABLE_WARNING_UNUSED_PARAMETER        DISABLE_WARNING(-Wunused-parameter)
     #define DISABLE_WARNING_EXPRESSION_ALWAYS_TRUE  DISABLE_WARNING(-Wtype-limits)
     #define DISABLE_WARNING_PADDING_GENERATED       DISABLE_WARNING(-Wpadded)
+    #define DISABLE_WARNING_ALIGNMENT_MODIFIED      // no warning equivalent ?
 
 #else
     // please define the warning supression macros specific to you compiler here
@@ -49,6 +51,7 @@
     #define DISABLE_WARNING_UNUSED_PARAMETER
     #define DISABLE_WARNING_EXPRESSION_ALWAYS_TRUE
     #define DISABLE_WARNING_PADDING_GENERATED
+    #define DISABLE_WARNING_ALIGNMENT_MODIFIED
 
 #endif
 // clang-format on
