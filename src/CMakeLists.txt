@@ -49,7 +49,7 @@ include(Shaders/CMakeLists.txt)
 add_custom_command(
 		TARGET SampleApp
 		POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets ${CMAKE_SOURCE_DIR}/runtime/assets
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Meshes ${CMAKE_SOURCE_DIR}/runtime/assets/meshes
 )
 
 add_dependencies(

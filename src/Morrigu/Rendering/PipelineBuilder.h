@@ -19,6 +19,7 @@ namespace MRG
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
 		vk::PipelineRasterizationStateCreateInfo rasterizerInfo{};
 		vk::PipelineMultisampleStateCreateInfo multisamplingInfo{};
+		vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{};
 		vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 		vk::PipelineLayout pipelineLayout{};
 		vk::PipelineCache pipelineCache{};

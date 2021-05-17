@@ -73,7 +73,12 @@ namespace MRG
 		};
 		m_mainCmdBuffer.begin(beginInfo);
 
-		vk::ClearValue clearValue{{std::array<float, 4>{0.f, 0.f, std::abs(std::sin(static_cast<float>(frameNumber) / 120.f)), 1.f}}};
+		vk::ClearValue colorClearValue{};
+		colorClearValue.color = std::array<float, 4>{0.f, 0.f, std::abs(std::sin(static_cast<float>(frameNumber) / 120.f)), 1.f};
+		vk::ClearValue depthClearValue{};
+		depthClearValue.depthStencil.depth = 1.f;
+
+		std::array<vk::ClearValue, 2> clearValues{colorClearValue, depthClearValue};
 
 		vk::RenderPassBeginInfo renderPassInfo{
 		  .renderPass  = m_renderPass,
@@ -83,8 +88,9 @@ namespace MRG
 		      .offset = {0, 0},
 		      .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
 		    },
-		  .clearValueCount = 1,
-		  .pClearValues    = &clearValue};
+		  .clearValueCount = static_cast<uint32_t>(clearValues.size()),
+		  .pClearValues    = clearValues.data(),
+		};
 		m_mainCmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	}
 
@@ -273,10 +279,28 @@ namespace MRG
 		m_swapchain       = vkbSwapchain.swapchain;
 		m_swapchainFormat = vk::Format{vkbSwapchain.image_format};
 
-		auto rawImages        = vkbSwapchain.get_images().value();
-		auto rawImageViews    = vkbSwapchain.get_image_views().value();
-		m_swapchainImages     = std::vector<vk::Image>(rawImages.begin(), rawImages.end());
-		m_swapchainImageViews = std::vector<vk::ImageView>(rawImageViews.begin(), rawImageViews.end());
+		const auto rawImages     = vkbSwapchain.get_images().value();
+		const auto rawImageViews = vkbSwapchain.get_image_views().value();
+		m_swapchainImages        = std::vector<vk::Image>(rawImages.begin(), rawImages.end());
+		m_swapchainImageViews    = std::vector<vk::ImageView>(rawImageViews.begin(), rawImageViews.end());
+
+		vk::Extent3D depthImageExtent{
+		  .width  = static_cast<uint32_t>(spec.windowWidth),
+		  .height = static_cast<uint32_t>(spec.windowHeight),
+		  .depth  = 1,
+		};
+		const auto depthImageCreateInfo =
+		  VkInit::imageCreateInfo(m_depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment, depthImageExtent);
+		VmaAllocationCreateInfo depthImageAllocationCreateInfo{.usage         = VMA_MEMORY_USAGE_GPU_ONLY,
+		                                                       .requiredFlags = VkMemoryPropertyFlags{VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT}};
+
+		VkImage rawImage;
+		vmaCreateImage(m_allocator, &depthImageCreateInfo, &depthImageAllocationCreateInfo, &rawImage, &m_depthImage.allocation, nullptr);
+		m_depthImage.image = rawImage;
+
+		const auto depthImageViewCreateInfo =
+		  VkInit::imageViewCreateInfo(m_depthFormat, m_depthImage.image, vk::ImageAspectFlagBits::eDepth);
+		m_depthImageView = m_device.createImageView(depthImageViewCreateInfo);
 	}
 
 	void VkRenderer::initCommands()
@@ -308,15 +332,34 @@ namespace MRG
 		  .layout     = vk::ImageLayout::eColorAttachmentOptimal,
 		};
 
-		vk::SubpassDescription subpass{
-		  .pipelineBindPoint    = vk::PipelineBindPoint::eGraphics,
-		  .colorAttachmentCount = 1,
-		  .pColorAttachments    = &colorAttachmentRef,
+		vk::AttachmentDescription depthAttachment{
+		  .format         = m_depthFormat,
+		  .samples        = vk::SampleCountFlagBits::e1,
+		  .loadOp         = vk::AttachmentLoadOp::eClear,
+		  .storeOp        = vk::AttachmentStoreOp::eStore,
+		  .stencilLoadOp  = vk::AttachmentLoadOp::eDontCare,
+		  .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+		  .initialLayout  = vk::ImageLayout::eUndefined,
+		  .finalLayout    = vk::ImageLayout::eDepthStencilAttachmentOptimal,
 		};
 
+		vk::AttachmentReference depthAttachmentRef{
+		  .attachment = 1,
+		  .layout     = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+		};
+
+		vk::SubpassDescription subpass{
+		  .pipelineBindPoint       = vk::PipelineBindPoint::eGraphics,
+		  .colorAttachmentCount    = 1,
+		  .pColorAttachments       = &colorAttachmentRef,
+		  .pDepthStencilAttachment = &depthAttachmentRef,
+		};
+
+		std::array<vk::AttachmentDescription, 2> attachments{colorAttachment, depthAttachment};
+
 		vk::RenderPassCreateInfo renderPassInfo{
-		  .attachmentCount = 1,
-		  .pAttachments    = &colorAttachment,
+		  .attachmentCount = static_cast<uint32_t>(attachments.size()),
+		  .pAttachments    = attachments.data(),
 		  .subpassCount    = 1,
 		  .pSubpasses      = &subpass,
 		};
@@ -338,8 +381,11 @@ namespace MRG
 		m_framebuffers                        = std::vector<vk::Framebuffer>(swapchainImageCount);
 
 		for (auto i = 0; i < swapchainImageCount; ++i) {
-			framebufferInfo.pAttachments = &m_swapchainImageViews[i];
-			m_framebuffers[i]            = m_device.createFramebuffer(framebufferInfo);
+			std::array<vk::ImageView, 2> attachments{m_swapchainImageViews[i], m_depthImageView};
+			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebufferInfo.pAttachments    = attachments.data();
+
+			m_framebuffers[i] = m_device.createFramebuffer(framebufferInfo);
 		}
 	}
 
@@ -414,6 +460,7 @@ namespace MRG
 		  .inputAssemblyInfo{VkInit::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList)},
 		  .rasterizerInfo{VkInit::pipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)},
 		  .multisamplingInfo{VkInit::pipelineMultisampleStateCreateInfo()},
+		  .depthStencilStateCreateInfo{VkInit::pipelineDepthStencilStateCreateInfo(true, true, vk::CompareOp::eLessOrEqual)},
 		  .colorBlendAttachment{VkInit::pipelineColorBlendAttachmentState()},
 		  .pipelineLayout{m_coloredMeshPipelineLayout},
 		  .pipelineCache{m_pipelineCache}};
@@ -435,5 +482,7 @@ namespace MRG
 		m_device.destroyCommandPool(m_cmdPool);
 		m_device.destroySwapchainKHR(m_swapchain);
 		for (const auto& imageView : m_swapchainImageViews) { m_device.destroyImageView(imageView); }
+		vmaDestroyImage(m_allocator, m_depthImage.image, m_depthImage.allocation);
+		m_device.destroyImageView(m_depthImageView);
 	}
 }  // namespace MRG

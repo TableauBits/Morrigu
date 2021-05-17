@@ -33,6 +33,7 @@ namespace MRG
 		  .pViewportState      = &viewportStateInfo,
 		  .pRasterizationState = &rasterizerInfo,
 		  .pMultisampleState   = &multisamplingInfo,
+		  .pDepthStencilState  = &depthStencilStateCreateInfo,
 		  .pColorBlendState    = &colorBlendInfo,
 		  .pDynamicState       = &dynamicStatesInfo,
 		  .layout              = pipelineLayout,

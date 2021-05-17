@@ -75,4 +75,49 @@ namespace MRG::VkInit
 		                    vk::ColorComponentFlagBits::eA,
 		};
 	}
+
+	vk::PipelineDepthStencilStateCreateInfo
+	pipelineDepthStencilStateCreateInfo(bool shouldDepthTest, bool shouldDepthWrite, vk::CompareOp compareOp)
+	{
+		return vk::PipelineDepthStencilStateCreateInfo{
+		  .depthTestEnable       = static_cast<vk::Bool32>(shouldDepthTest),
+		  .depthWriteEnable      = static_cast<vk::Bool32>(shouldDepthWrite),
+		  .depthCompareOp        = shouldDepthTest ? compareOp : vk::CompareOp::eAlways,
+		  .depthBoundsTestEnable = VK_FALSE,
+		  .stencilTestEnable     = VK_FALSE,
+		  .minDepthBounds        = 0.f,
+		  .maxDepthBounds        = 1.f,
+		};
+	}
+
+	VkImageCreateInfo imageCreateInfo(vk::Format format, vk::ImageUsageFlagBits usage, vk::Extent3D extent)
+	{
+		return vk::ImageCreateInfo{
+		  .imageType   = vk::ImageType::e2D,
+		  .format      = format,
+		  .extent      = extent,
+		  .mipLevels   = 1,
+		  .arrayLayers = 1,
+		  .samples     = vk::SampleCountFlagBits::e1,
+		  .tiling      = vk::ImageTiling::eOptimal,
+		  .usage       = usage,
+		};
+	}
+
+	vk::ImageViewCreateInfo imageViewCreateInfo(vk::Format format, vk::Image image, vk::ImageAspectFlagBits aspect)
+	{
+		return vk::ImageViewCreateInfo{
+		  .image    = image,
+		  .viewType = vk::ImageViewType::e2D,
+		  .format   = format,
+		  .subresourceRange =
+		    {
+		      .aspectMask     = aspect,
+		      .baseMipLevel   = 0,
+		      .levelCount     = 1,
+		      .baseArrayLayer = 0,
+		      .layerCount     = 1,
+		    },
+		};
+	}
 }  // namespace MRG::VkInit

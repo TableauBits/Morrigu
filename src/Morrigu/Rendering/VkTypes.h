@@ -19,6 +19,12 @@ struct AllocatedBuffer
 	VmaAllocation allocation{};
 };
 
+struct AllocatedImage
+{
+	vk::Image image{};
+	VmaAllocation allocation{};
+};
+
 #define MRG_VK_CHECK_HPP(expression, error_message)                                                                                        \
 	{                                                                                                                                      \
 		if ((expression) != vk::Result::eSuccess) { throw std::runtime_error(error_message); }                                             \

@@ -18,6 +18,11 @@ namespace MRG::VkInit
 	[[nodiscard]] vk::PipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo(vk::PolygonMode polygonMode);
 	[[nodiscard]] vk::PipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo();
 	[[nodiscard]] vk::PipelineColorBlendAttachmentState pipelineColorBlendAttachmentState();
+	[[nodiscard]] vk::PipelineDepthStencilStateCreateInfo
+	pipelineDepthStencilStateCreateInfo(bool shouldDepthTest, bool shouldDepthWrite, vk::CompareOp compareOp);
+
+	[[nodiscard]] VkImageCreateInfo imageCreateInfo(vk::Format format, vk::ImageUsageFlagBits usage, vk::Extent3D extent);
+	[[nodiscard]] vk::ImageViewCreateInfo imageViewCreateInfo(vk::Format format, vk::Image image, vk::ImageAspectFlagBits aspect);
 }  // namespace MRG::VkInit
 
 #endif  // MORRIGU_VKINITIALIZE_H

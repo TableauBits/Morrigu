@@ -70,14 +70,14 @@ namespace MRG
 					const auto posZ = attrib.vertices[3 * idx.vertex_index + 2];
 
 					// normals
-					const auto normX = attrib.normals[3 * idx.vertex_index + 0];
-					const auto normY = attrib.normals[3 * idx.vertex_index + 1];
-					const auto normZ = attrib.normals[3 * idx.vertex_index + 2];
+					const auto normX = attrib.normals[3 * idx.normal_index + 0];
+					const auto normY = attrib.normals[3 * idx.normal_index + 1];
+					const auto normZ = attrib.normals[3 * idx.normal_index + 2];
 
 					newMesh.vertices.emplace_back(Vertex{
 					  .position = {posX, posY, posZ},
 					  .normal   = {normX, normY, normZ},
-					  .color    = {normX, normY, normZ}  // Set the color as the normal for now
+					  .color    = {normX, normY, normZ},  // Set the color as the normal for now
 					});
 				}
 				indexOffset += shapeVertexCount;
