@@ -7,7 +7,7 @@
 
 #include "Events/ApplicationEvent.h"
 #include "Rendering/Camera.h"
-#include "Rendering/Mesh.h"
+#include "Rendering/RenderObject.h"
 #include "Rendering/VkTypes.h"
 
 #include <GLFW/glfw3.h>
@@ -42,24 +42,15 @@ namespace MRG
 	class VkRenderer
 	{
 	public:
-		void init(const RendererSpecification&, GLFWwindow*);
-
-		void beginFrame();
-		void endFrame();
-
-		void cleanup();
-
-		void onResize();
-
-		[[nodiscard]] vk::ShaderModule loadShaderModule(const char* filePath);
-		void uploadMesh(Mesh& mesh);
-		void drawMesh(const Mesh& mesh, const Camera& camera);
+		void uploadMesh(Ref<Mesh>& mesh);
 
 		RendererSpecification spec;
 
 		bool isInitalized{false};
 		int frameNumber{0};
 		GLFWwindow* window{nullptr};
+
+		Ref<Material> defaultMaterial{};
 
 	private:
 		vk::Instance m_instance{};
@@ -90,8 +81,6 @@ namespace MRG
 		vk::Fence m_renderFence{};
 
 		vk::PipelineCache m_pipelineCache{};
-		vk::PipelineLayout m_coloredMeshPipelineLayout{};
-		vk::Pipeline m_coloredMeshPipeline{};
 
 		VmaAllocator m_allocator{};
 		DeletionQueue m_deletionQueue{};
@@ -102,9 +91,23 @@ namespace MRG
 		void initDefaultRenderPass();
 		void initFramebuffers();
 		void initSyncSructs();
-		void initPipelines();
+		void initMaterials();
 
 		void destroySwapchain();
+
+		/// Methods called by the application class
+		friend class Application;
+		void init(const RendererSpecification&, GLFWwindow*);
+
+		void beginFrame();
+		void endFrame();
+
+		void cleanup();
+
+		void onResize();
+
+		[[nodiscard]] vk::ShaderModule loadShaderModule(const char* filePath);
+		void draw(const std::vector<Ref<RenderObject>>& drawables, const Camera& camera);
 	};
 }  // namespace MRG
 

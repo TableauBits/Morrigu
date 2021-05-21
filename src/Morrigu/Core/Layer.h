@@ -7,6 +7,8 @@
 
 #include "Core/Timestep.h"
 #include "Events/Event.h"
+#include "Rendering/Camera.h"
+#include "Rendering/RenderObject.h"
 
 namespace MRG
 {
@@ -30,6 +32,8 @@ namespace MRG
 		virtual void onEvent(Event&)    = 0;
 
 		Application* application{nullptr};
+		std::vector<Ref<RenderObject>> renderables{};
+		Camera mainCamera{};
 	};
 }  // namespace MRG
 

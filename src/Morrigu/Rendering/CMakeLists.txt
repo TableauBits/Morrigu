@@ -27,6 +27,13 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/Camera.h
 		${CMAKE_CURRENT_LIST_DIR}/Camera.cpp
 
+		# RenderObject class
+		${CMAKE_CURRENT_LIST_DIR}/RenderObject.h
+		${CMAKE_CURRENT_LIST_DIR}/RenderObject.cpp
+
+		# Material struct
+		${CMAKE_CURRENT_LIST_DIR}/Material.h
+
 		# Vulkan renderer files
 		${CMAKE_CURRENT_LIST_DIR}/VkRenderer.h
 		${CMAKE_CURRENT_LIST_DIR}/VkRenderer.cpp

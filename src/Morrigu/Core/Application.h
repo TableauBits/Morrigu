@@ -26,15 +26,19 @@ namespace MRG
 		explicit Application(ApplicationSpecification spec);
 		~Application();
 
+		Application(const Application&) = delete;
+		Application(Application&&)      = delete;
+		Application& operator=(const Application&) = delete;
+		Application& operator=(Application&&) = delete;
+
 		void run();
 
 		void pushLayer(Layer* newLayer);
 		Layer* popLayer();
 
 		void setWindowTitle(const char* title) const;
-		void uploadMesh(Mesh& mesh);
 
-		void drawMesh(const Mesh& mesh, const Camera& camera);
+		VkRenderer renderer;
 
 	private:
 		void init();
@@ -43,14 +47,10 @@ namespace MRG
 		bool onClose(WindowCloseEvent& resizeEvent);
 		bool onResize(WindowResizeEvent& resizeEvent);
 
-		friend class VkRenderer;
-
 		bool m_isRunning = true;
 		float m_lastTime = 0.f;
 		ApplicationSpecification m_specification;
 		LayerStack m_layers;
-
-		VkRenderer m_renderer;
 	};
 }  // namespace MRG
 

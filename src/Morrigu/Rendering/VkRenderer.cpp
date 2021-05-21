@@ -44,6 +44,26 @@ namespace
 
 namespace MRG
 {
+	void VkRenderer::uploadMesh(Ref<Mesh>& mesh)
+	{
+		VkBufferCreateInfo bufferInfo{
+		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		  .size  = mesh->vertices.size() * sizeof(Vertex),
+		  .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		};
+		VkBuffer newRawBuffer;
+
+		VmaAllocationCreateInfo allocationInfo{.usage = VMA_MEMORY_USAGE_CPU_TO_GPU};
+		MRG_VK_CHECK(vmaCreateBuffer(m_allocator, &bufferInfo, &allocationInfo, &newRawBuffer, &mesh->vertexBuffer.allocation, nullptr), "")
+		mesh->vertexBuffer.buffer = newRawBuffer;
+		m_deletionQueue.push([=]() { vmaDestroyBuffer(m_allocator, mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation); });
+
+		void* data;
+		vmaMapMemory(m_allocator, mesh->vertexBuffer.allocation, &data);
+		memcpy(data, mesh->vertices.data(), mesh->vertices.size() * sizeof(Vertex));
+		vmaUnmapMemory(m_allocator, mesh->vertexBuffer.allocation);
+	}
+
 	void VkRenderer::init(const RendererSpecification& newSpec, GLFWwindow* newWindow)
 	{
 		spec   = newSpec;
@@ -55,7 +75,7 @@ namespace MRG
 		initDefaultRenderPass();
 		initFramebuffers();
 		initSyncSructs();
-		initPipelines();
+		initMaterials();
 
 		isInitalized = true;
 	}
@@ -173,52 +193,43 @@ namespace MRG
 		return m_device.createShaderModule(moduleInfo);
 	}
 
-	void VkRenderer::uploadMesh(Mesh& mesh)
+	void VkRenderer::draw(const std::vector<Ref<RenderObject>>& drawables, const Camera& camera)
 	{
-		VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		                              .size  = mesh.vertices.size() * sizeof(Vertex),
-		                              .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT};
-		VkBuffer newRawBuffer;
+		Ref<Material> currentMaterial{};
+		for (const auto& drawable : drawables) {
+			if (!drawable->isVisible) { continue; }
+			if (currentMaterial != drawable->material) {
+				m_mainCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable->material->pipeline);
+				m_mainCmdBuffer.setViewport(0,
+				                            vk::Viewport{
+				                              .x        = 0.f,
+				                              .y        = 0.f,
+				                              .width    = static_cast<float>(spec.windowWidth),
+				                              .height   = static_cast<float>(spec.windowHeight),
+				                              .minDepth = 0.f,
+				                              .maxDepth = 1.f,
+				                            });
+				m_mainCmdBuffer.setScissor(0,
+				                           vk::Rect2D{
+				                             .offset{0, 0},
+				                             .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
+				                           });
+				currentMaterial = drawable->material;
+			}
 
-		VmaAllocationCreateInfo allocationInfo{.usage = VMA_MEMORY_USAGE_CPU_TO_GPU};
-		MRG_VK_CHECK(vmaCreateBuffer(m_allocator, &bufferInfo, &allocationInfo, &newRawBuffer, &mesh.vertexBuffer.allocation, nullptr), "")
-		mesh.vertexBuffer.buffer = newRawBuffer;
-		m_deletionQueue.push([=]() { vmaDestroyBuffer(m_allocator, mesh.vertexBuffer.buffer, mesh.vertexBuffer.allocation); });
+			const auto pushConstants = Mesh::PushConstants{
+			  .data      = glm::vec4{},
+			  .transform = camera.getViewProjection() * drawable->modelMatrix,
+			};
+			m_mainCmdBuffer.pushConstants(drawable->material->pipelineLayout,
+			                              vk::ShaderStageFlagBits::eVertex,
+			                              0,
+			                              sizeof(Mesh::PushConstants),
+			                              (void*)(&pushConstants));
 
-		void* data;
-		vmaMapMemory(m_allocator, mesh.vertexBuffer.allocation, &data);
-		memcpy(data, mesh.vertices.data(), mesh.vertices.size() * sizeof(Vertex));
-		vmaUnmapMemory(m_allocator, mesh.vertexBuffer.allocation);
-	}
-
-	void VkRenderer::drawMesh(const Mesh& mesh, const Camera& camera)
-	{
-		// @TODO(Ithyx): check if we are currently in a RP
-		m_mainCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_coloredMeshPipeline);
-		m_mainCmdBuffer.setViewport(0,
-		                            vk::Viewport{
-		                              .x        = 0.f,
-		                              .y        = 0.f,
-		                              .width    = static_cast<float>(spec.windowWidth),
-		                              .height   = static_cast<float>(spec.windowHeight),
-		                              .minDepth = 0.f,
-		                              .maxDepth = 1.f,
-		                            });
-		m_mainCmdBuffer.setScissor(0,
-		                           vk::Rect2D{
-		                             .offset{0, 0},
-		                             .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
-		                           });
-
-		const auto pushConstants = Mesh::PushConstants{
-		  .data      = glm::vec4{},
-		  .transform = camera.getViewProjection() * mesh.modelMatrix,
-		};
-		m_mainCmdBuffer.pushConstants(
-		  m_coloredMeshPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(Mesh::PushConstants), (void*)(&pushConstants));
-
-		m_mainCmdBuffer.bindVertexBuffers(0, mesh.vertexBuffer.buffer, {0});
-		m_mainCmdBuffer.draw(static_cast<uint32_t>(mesh.vertices.size()), 1, 0, 0);
+			m_mainCmdBuffer.bindVertexBuffers(0, drawable->mesh->vertexBuffer.buffer, {0});
+			m_mainCmdBuffer.draw(static_cast<uint32_t>(drawable->mesh->vertices.size()), 1, 0, 0);
+		}
 	}
 
 	void VkRenderer::initVulkan()
@@ -407,8 +418,10 @@ namespace MRG
 		});
 	}
 
-	void VkRenderer::initPipelines()
+	void VkRenderer::initMaterials()
 	{
+		defaultMaterial = createRef<Material>();
+
 		auto coloredMeshVertShader = loadShaderModule("ColoredMesh.vert.spv");
 		auto coloredMeshFragShader = loadShaderModule("ColoredMesh.frag.spv");
 		MRG_ENGINE_TRACE("Loaded vertex and fragment shaders")
@@ -422,9 +435,9 @@ namespace MRG
 		  .pushConstantRangeCount = 1,
 		  .pPushConstantRanges    = &pushConstantRange,
 		};
-		m_coloredMeshPipelineLayout = m_device.createPipelineLayout(pipelineLayoutInfo);
+		defaultMaterial->pipelineLayout = m_device.createPipelineLayout(pipelineLayoutInfo);
 
-		m_deletionQueue.push([=]() { m_device.destroyPipelineLayout(m_coloredMeshPipelineLayout); });
+		m_deletionQueue.push([=]() { m_device.destroyPipelineLayout(defaultMaterial->pipelineLayout); });
 
 		vk::PipelineCacheCreateInfo pipelineCacheCreateInfo{};
 		if (std::filesystem::exists(Files::Rendering::vkPipelineCacheFile)) {
@@ -462,12 +475,12 @@ namespace MRG
 		  .multisamplingInfo{VkInit::pipelineMultisampleStateCreateInfo()},
 		  .depthStencilStateCreateInfo{VkInit::pipelineDepthStencilStateCreateInfo(true, true, vk::CompareOp::eLessOrEqual)},
 		  .colorBlendAttachment{VkInit::pipelineColorBlendAttachmentState()},
-		  .pipelineLayout{m_coloredMeshPipelineLayout},
+		  .pipelineLayout{defaultMaterial->pipelineLayout},
 		  .pipelineCache{m_pipelineCache}};
 
-		m_coloredMeshPipeline = builder.build_pipeline(m_device, m_renderPass);
+		defaultMaterial->pipeline = builder.build_pipeline(m_device, m_renderPass);
 
-		m_deletionQueue.push([=]() { m_device.destroyPipeline(m_coloredMeshPipeline); });
+		m_deletionQueue.push([=]() { m_device.destroyPipeline(defaultMaterial->pipeline); });
 
 		m_device.destroyShaderModule(coloredMeshVertShader);
 		m_device.destroyShaderModule(coloredMeshFragShader);

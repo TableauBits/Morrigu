@@ -9,30 +9,48 @@ class SampleLayer : public MRG::Layer
 public:
 	void onAttach() override
 	{
-		m_camera.position    = {0.f, 0.f, -3.f};
-		m_camera.aspectRatio = 1280.f / 720.f;
-		m_camera.setPerspective(glm::radians(70.f), 0.1f, 200.f);
-		m_camera.recalculateViewProjection();
+		mainCamera.position    = {0.f, 0.f, -3.f};
+		mainCamera.aspectRatio = 1280.f / 720.f;
+		mainCamera.setPerspective(glm::radians(70.f), 0.1f, 200.f);
+		mainCamera.recalculateViewProjection();
 
-		m_sampleMesh.translate({0.f, -1.5f, 0.f});
+		m_suzanne = MRG::RenderObject::create(MRG::Mesh::loadFromFile("monkey_smooth.obj"), application->renderer.defaultMaterial);
+		m_boxy    = MRG::RenderObject::create(MRG::Mesh::loadFromFile("boxy.obj"), application->renderer.defaultMaterial);
 
-		application->uploadMesh(m_sampleMesh);
+		m_suzanne->translate({1.5f, 0.f, 0.f});
+		m_suzanne->rotate({0.f, 1.f, 0.f}, glm::radians(180.f));
+		m_suzanne->isVisible = false;
+		m_boxy->translate({-1.5f, -1.5f, 0.f});
+
+		application->renderer.uploadMesh(m_suzanne->mesh);
+		application->renderer.uploadMesh(m_boxy->mesh);
+
+		renderables.emplace_back(m_suzanne);
+		renderables.emplace_back(m_boxy);
 	}
+
 	void onDetach() override { MRG_INFO("my final message. goodb ye") }
 	void onUpdate(MRG::Timestep ts) override
 	{
-		m_sampleMesh.rotate({0.f, 1.f, 0.f}, ts.getSeconds() * glm::radians(180.f));
-		application->drawMesh(m_sampleMesh, m_camera);
+		m_suzanne->rotate({0.f, 1.f, 0.f}, ts.getSeconds() * glm::radians(180.f));
+		m_boxy->rotate({0.f, 1.f, 0.f}, ts.getSeconds() * glm::radians(180.f));
 	}
 	void onEvent(MRG::Event& event) override
 	{
 		MRG::EventDispatcher dispatcher{event};
-		dispatcher.dispatch<MRG::WindowResizeEvent>([this](MRG::WindowResizeEvent& event) { return m_camera.onResize(event); });
+		dispatcher.dispatch<MRG::WindowResizeEvent>([this](MRG::WindowResizeEvent& event) { return mainCamera.onResize(event); });
+		dispatcher.dispatch<MRG::KeyReleasedEvent>([this](MRG::KeyReleasedEvent&) {
+			m_suzanne->isVisible = false;
+			return true;
+		});
+		dispatcher.dispatch<MRG::KeyPressedEvent>([this](MRG::KeyPressedEvent&) {
+			m_suzanne->isVisible = true;
+			return true;
+		});
 	}
 
 private:
-	MRG::Camera m_camera{};
-	MRG::Mesh m_sampleMesh = MRG::Mesh::loadFromFile("boxy.obj");
+	MRG::Ref<MRG::RenderObject> m_suzanne{}, m_boxy;
 };
 
 class SampleApp : public MRG::Application

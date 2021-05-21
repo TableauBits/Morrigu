@@ -40,13 +40,9 @@ namespace MRG
 		return VertexInputDescription{.bindings{mainBinding}, .attributes{position, normal, color}};
 	}
 
-	void Mesh::rotate(const glm::vec3& axis, float radRotation) { modelMatrix = glm::rotate(modelMatrix, radRotation, axis); }
-	void Mesh::scale(const glm::vec3& scaling) { modelMatrix = glm::scale(modelMatrix, scaling); }
-	void Mesh::translate(const glm::vec3& translation) { modelMatrix = glm::translate(modelMatrix, translation); }
-
-	Mesh Mesh::loadFromFile(const char* filePath)
+	Ref<Mesh> Mesh::loadFromFile(const char* filePath)
 	{
-		Mesh newMesh{};
+		auto newMesh = createRef<Mesh>();
 
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
@@ -74,7 +70,7 @@ namespace MRG
 					const auto normY = attrib.normals[3 * idx.normal_index + 1];
 					const auto normZ = attrib.normals[3 * idx.normal_index + 2];
 
-					newMesh.vertices.emplace_back(Vertex{
+					newMesh->vertices.emplace_back(Vertex{
 					  .position = {posX, posY, posZ},
 					  .normal   = {normX, normY, normZ},
 					  .color    = {normX, normY, normZ},  // Set the color as the normal for now

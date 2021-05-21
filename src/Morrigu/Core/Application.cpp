@@ -19,7 +19,7 @@ namespace MRG
 	Application::Application(ApplicationSpecification spec) : m_specification(std::move(spec)) { init(); }
 	Application::~Application()
 	{
-		m_renderer.cleanup();
+		renderer.cleanup();
 		glfwTerminate();
 	}
 
@@ -30,9 +30,10 @@ namespace MRG
 			Timestep ts{time - m_lastTime};
 			m_lastTime = time;
 
-			m_renderer.beginFrame();
 			for (auto& layer : m_layers) { layer->onUpdate(ts); }
-			m_renderer.endFrame();
+            renderer.beginFrame();
+            for (auto& layer : m_layers) { renderer.draw(layer->renderables, layer->mainCamera); }
+			renderer.endFrame();
 
 			glfwPollEvents();
 		}
@@ -46,9 +47,7 @@ namespace MRG
 
 	Layer* Application::popLayer() { return m_layers.popLayer(); }
 
-	void Application::setWindowTitle(const char* title) const { glfwSetWindowTitle(m_renderer.window, title); }
-	void Application::uploadMesh(Mesh& mesh) { m_renderer.uploadMesh(mesh); }
-	void Application::drawMesh(const Mesh& mesh, const Camera& camera) { m_renderer.drawMesh(mesh, camera); }
+	void Application::setWindowTitle(const char* title) const { glfwSetWindowTitle(renderer.window, title); }
 
 	void Application::init()
 	{
@@ -143,7 +142,7 @@ namespace MRG
 		});
 
 		// callbacks set, now give ownership of window to renderer
-		m_renderer.init(m_specification.rendererSpecification, window);
+		renderer.init(m_specification.rendererSpecification, window);
 	}
 
 	void Application::onEvent(Event& event)
@@ -168,13 +167,13 @@ namespace MRG
 	{
 		int width = resize.getWidth(), height = resize.getHeight();
 		while (width == 0 || height == 0) {
-			glfwGetFramebufferSize(m_renderer.window, &width, &height);
+			glfwGetFramebufferSize(renderer.window, &width, &height);
 			glfwWaitEvents();
 		}
 
-		m_renderer.spec.windowWidth  = width;
-		m_renderer.spec.windowHeight = height;
-		m_renderer.onResize();
+		renderer.spec.windowWidth  = width;
+		renderer.spec.windowHeight = height;
+		renderer.onResize();
 
 		return false;
 	}
