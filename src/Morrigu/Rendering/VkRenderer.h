@@ -40,6 +40,15 @@ namespace MRG
 		std::vector<std::function<void()>> m_deletors;
 	};
 
+	struct FrameData
+	{
+		vk::Semaphore presentSemaphore, renderSemaphore;
+		vk::Fence renderFence;
+
+		vk::CommandPool commandPool;
+		vk::CommandBuffer commandBuffer;
+	};
+
 	class VkRenderer
 	{
 	public:
@@ -54,6 +63,10 @@ namespace MRG
 		Ref<Material> defaultMaterial{};
 
 	private:
+		static const constexpr std::size_t FRAMES_IN_FLIGHT = 3;
+		std::array<FrameData, FRAMES_IN_FLIGHT> m_framesData{};
+		[[nodiscard]] FrameData& getCurrentFrameData() { return m_framesData[frameNumber % FRAMES_IN_FLIGHT]; }
+
 		vk::Instance m_instance{};
 		vk::DebugUtilsMessengerEXT m_debugMessenger{};
 		vk::PhysicalDevice m_GPU{};
@@ -72,14 +85,9 @@ namespace MRG
 
 		vk::Queue m_graphicsQueue{};
 		std::uint32_t m_graphicsQueueIndex{};
-		vk::CommandPool m_cmdPool{};
-		vk::CommandBuffer m_mainCmdBuffer{};
 
 		vk::RenderPass m_renderPass{};
 		std::vector<vk::Framebuffer> m_framebuffers{};
-
-		vk::Semaphore m_presentSemaphore{}, m_renderSemaphore{};
-		vk::Fence m_renderFence{};
 
 		vk::PipelineCache m_pipelineCache{};
 

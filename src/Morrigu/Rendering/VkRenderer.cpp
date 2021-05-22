@@ -82,16 +82,17 @@ namespace MRG
 
 	void VkRenderer::beginFrame()
 	{
-		MRG_VK_CHECK_HPP(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
-		m_device.resetFences(m_renderFence);
+		const auto& frameData = getCurrentFrameData();
+		MRG_VK_CHECK_HPP(m_device.waitForFences(frameData.renderFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
+		m_device.resetFences(frameData.renderFence);
 
-		m_imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, m_presentSemaphore).value;
+		m_imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, frameData.presentSemaphore).value;
 
-		m_mainCmdBuffer.reset();
+		frameData.commandBuffer.reset();
 		vk::CommandBufferBeginInfo beginInfo{
 		  .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
 		};
-		m_mainCmdBuffer.begin(beginInfo);
+		frameData.commandBuffer.begin(beginInfo);
 
 		vk::ClearValue colorClearValue{};
 		colorClearValue.color = std::array<float, 4>{0.f, 0.f, std::abs(std::sin(static_cast<float>(frameNumber) / 120.f)), 1.f};
@@ -111,30 +112,31 @@ namespace MRG
 		  .clearValueCount = static_cast<uint32_t>(clearValues.size()),
 		  .pClearValues    = clearValues.data(),
 		};
-		m_mainCmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		frameData.commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	}
 
 	void VkRenderer::endFrame()
 	{
-		m_mainCmdBuffer.endRenderPass();
-		m_mainCmdBuffer.end();
+		const auto& frameData = getCurrentFrameData();
+		frameData.commandBuffer.endRenderPass();
+		frameData.commandBuffer.end();
 
 		vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
 		vk::SubmitInfo submitInfo{
 		  .waitSemaphoreCount   = 1,
-		  .pWaitSemaphores      = &m_presentSemaphore,
+		  .pWaitSemaphores      = &frameData.presentSemaphore,
 		  .pWaitDstStageMask    = &waitStage,
 		  .commandBufferCount   = 1,
-		  .pCommandBuffers      = &m_mainCmdBuffer,
+		  .pCommandBuffers      = &frameData.commandBuffer,
 		  .signalSemaphoreCount = 1,
-		  .pSignalSemaphores    = &m_renderSemaphore,
+		  .pSignalSemaphores    = &frameData.renderSemaphore,
 		};
-		m_graphicsQueue.submit(submitInfo, m_renderFence);
+		m_graphicsQueue.submit(submitInfo, frameData.renderFence);
 
 		vk::PresentInfoKHR presentInfo{
 		  .waitSemaphoreCount = 1,
-		  .pWaitSemaphores    = &m_renderSemaphore,
+		  .pWaitSemaphores    = &frameData.renderSemaphore,
 		  .swapchainCount     = 1,
 		  .pSwapchains        = &m_swapchain,
 		  .pImageIndices      = &m_imageIndex,
@@ -166,7 +168,7 @@ namespace MRG
 
 	void VkRenderer::onResize()
 	{
-		MRG_VK_CHECK_HPP(m_device.waitForFences(m_renderFence, VK_TRUE, UINT64_MAX), "Failed to wait for render fence!")
+		m_device.waitIdle();
 
 		destroySwapchain();
 		initSwapchain();
@@ -195,25 +197,26 @@ namespace MRG
 
 	void VkRenderer::draw(const std::vector<Ref<RenderObject>>& drawables, const Camera& camera)
 	{
+		const auto& frameCmdBuffer = getCurrentFrameData().commandBuffer;
 		Ref<Material> currentMaterial{};
 		for (const auto& drawable : drawables) {
 			if (!drawable->isVisible) { continue; }
 			if (currentMaterial != drawable->material) {
-				m_mainCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable->material->pipeline);
-				m_mainCmdBuffer.setViewport(0,
-				                            vk::Viewport{
-				                              .x        = 0.f,
-				                              .y        = 0.f,
-				                              .width    = static_cast<float>(spec.windowWidth),
-				                              .height   = static_cast<float>(spec.windowHeight),
-				                              .minDepth = 0.f,
-				                              .maxDepth = 1.f,
-				                            });
-				m_mainCmdBuffer.setScissor(0,
-				                           vk::Rect2D{
-				                             .offset{0, 0},
-				                             .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
+				frameCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable->material->pipeline);
+				frameCmdBuffer.setViewport(0,
+				                           vk::Viewport{
+				                             .x        = 0.f,
+				                             .y        = 0.f,
+				                             .width    = static_cast<float>(spec.windowWidth),
+				                             .height   = static_cast<float>(spec.windowHeight),
+				                             .minDepth = 0.f,
+				                             .maxDepth = 1.f,
 				                           });
+				frameCmdBuffer.setScissor(0,
+				                          vk::Rect2D{
+				                            .offset{0, 0},
+				                            .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
+				                          });
 				currentMaterial = drawable->material;
 			}
 
@@ -221,14 +224,14 @@ namespace MRG
 			  .data      = glm::vec4{},
 			  .transform = camera.getViewProjection() * drawable->modelMatrix,
 			};
-			m_mainCmdBuffer.pushConstants(drawable->material->pipelineLayout,
-			                              vk::ShaderStageFlagBits::eVertex,
-			                              0,
-			                              sizeof(Mesh::PushConstants),
-			                              (void*)(&pushConstants));
+			frameCmdBuffer.pushConstants(drawable->material->pipelineLayout,
+			                             vk::ShaderStageFlagBits::eVertex,
+			                             0,
+			                             sizeof(Mesh::PushConstants),
+			                             (void*)(&pushConstants));
 
-			m_mainCmdBuffer.bindVertexBuffers(0, drawable->mesh->vertexBuffer.buffer, {0});
-			m_mainCmdBuffer.draw(static_cast<uint32_t>(drawable->mesh->vertices.size()), 1, 0, 0);
+			frameCmdBuffer.bindVertexBuffers(0, drawable->mesh->vertexBuffer.buffer, {0});
+			frameCmdBuffer.draw(static_cast<uint32_t>(drawable->mesh->vertices.size()), 1, 0, 0);
 		}
 	}
 
@@ -318,11 +321,14 @@ namespace MRG
 	{
 		// create command pool
 		const auto cmdPoolInfo = VkInit::cmdPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, m_graphicsQueueIndex);
-		m_cmdPool              = m_device.createCommandPool(cmdPoolInfo);
 
-		// allocate main command buffer from created command pool
-		const auto mainCmdBufferInfo = VkInit::cmdBufferAllocateInfo(m_cmdPool, vk::CommandBufferLevel::ePrimary, 1);
-		m_mainCmdBuffer              = m_device.allocateCommandBuffers(mainCmdBufferInfo)[0];
+		for (auto& frame : m_framesData) {
+			frame.commandPool = m_device.createCommandPool(cmdPoolInfo);
+
+			// allocate main command buffer from created command pool
+			const auto mainCmdBufferInfo = VkInit::cmdBufferAllocateInfo(frame.commandPool, vk::CommandBufferLevel::ePrimary, 1);
+			frame.commandBuffer          = m_device.allocateCommandBuffers(mainCmdBufferInfo)[0];
+		}
 	}
 
 	void VkRenderer::initDefaultRenderPass()
@@ -405,17 +411,20 @@ namespace MRG
 		vk::FenceCreateInfo fenceInfo{
 		  .flags = vk::FenceCreateFlagBits::eSignaled,
 		};
-		m_renderFence = m_device.createFence(fenceInfo);
 
-		m_deletionQueue.push([=]() { m_device.destroyFence(m_renderFence); });
+		for (auto& frame : m_framesData) {
+			frame.renderFence = m_device.createFence(fenceInfo);
 
-		m_presentSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
-		m_renderSemaphore  = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
+			m_deletionQueue.push([=]() { m_device.destroyFence(frame.renderFence); });
 
-		m_deletionQueue.push([=]() {
-			m_device.destroySemaphore(m_presentSemaphore);
-			m_device.destroySemaphore(m_renderSemaphore);
-		});
+			frame.presentSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
+			frame.renderSemaphore  = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
+
+			m_deletionQueue.push([=]() {
+				m_device.destroySemaphore(frame.presentSemaphore);
+				m_device.destroySemaphore(frame.renderSemaphore);
+			});
+		}
 	}
 
 	void VkRenderer::initMaterials()
@@ -492,7 +501,7 @@ namespace MRG
 
 		m_device.destroyRenderPass(m_renderPass);
 		for (const auto& framebuffer : m_framebuffers) { m_device.destroyFramebuffer(framebuffer); }
-		m_device.destroyCommandPool(m_cmdPool);
+		for (const auto& frame : m_framesData) { m_device.destroyCommandPool(frame.commandPool); }
 		m_device.destroySwapchainKHR(m_swapchain);
 		for (const auto& imageView : m_swapchainImageViews) { m_device.destroyImageView(imageView); }
 		vmaDestroyImage(m_allocator, m_depthImage.image, m_depthImage.allocation);
