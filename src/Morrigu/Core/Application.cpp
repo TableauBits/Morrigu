@@ -31,8 +31,8 @@ namespace MRG
 			m_lastTime = time;
 
 			for (auto& layer : m_layers) { layer->onUpdate(ts); }
-            renderer.beginFrame();
-            for (auto& layer : m_layers) { renderer.draw(layer->renderables, layer->mainCamera); }
+			renderer.beginFrame();
+			for (auto& layer : m_layers) { renderer.draw(layer->renderables, layer->mainCamera); }
 			renderer.endFrame();
 
 			glfwPollEvents();
@@ -151,9 +151,9 @@ namespace MRG
 		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& event) { return onClose(event); });
 		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) { return onResize(event); });
 
-		for (auto it = m_layers.rbegin(); it != m_layers.rend(); ++it) {
+		for (auto& m_layer : std::ranges::reverse_view(m_layers)) {
 			if (event.handled) { break; }
-			(*it)->onEvent(event);
+			m_layer->onEvent(event);
 		}
 	}
 
