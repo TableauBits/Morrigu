@@ -32,6 +32,8 @@ public:
 	void onDetach() override { MRG_INFO("my final message. goodb ye") }
 	void onUpdate(MRG::Timestep ts) override
 	{
+		m_elapsedTime += ts;
+		application->renderer.clearColor.b = std::abs(std::sin(m_elapsedTime * 3.14f));
 		m_suzanne->rotate({0.f, 1.f, 0.f}, ts.getSeconds() * glm::radians(180.f));
 		m_boxy->rotate({0.f, 1.f, 0.f}, ts.getSeconds() * glm::radians(180.f));
 	}
@@ -50,17 +52,19 @@ public:
 	}
 
 private:
-	MRG::Ref<MRG::RenderObject> m_suzanne{}, m_boxy;
+	MRG::Ref<MRG::RenderObject> m_suzanne{}, m_boxy{};
+	float m_elapsedTime{};
 };
 
 class SampleApp : public MRG::Application
 {
 public:
 	SampleApp()
-	    : MRG::Application(MRG::ApplicationSpecification{
-	        .windowName            = "Morrigu sample app",
-	        .rendererSpecification = {
-	          .applicationName = "SampleApp", .windowWidth = 1280, .windowHeight = 720, .presentMode = vk::PresentModeKHR::eFifo}})
+	    : MRG::Application(MRG::ApplicationSpecification{.windowName            = "Morrigu sample app",
+	                                                     .rendererSpecification = {.applicationName      = "SampleApp",
+	                                                                               .windowWidth          = 1280,
+	                                                                               .windowHeight         = 720,
+	                                                                               .preferredPresentMode = vk::PresentModeKHR::eMailbox}})
 	{
 		pushLayer(new SampleLayer());
 	};

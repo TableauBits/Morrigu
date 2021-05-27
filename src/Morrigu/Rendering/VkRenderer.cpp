@@ -46,17 +46,8 @@ namespace MRG
 {
 	void VkRenderer::uploadMesh(Ref<Mesh>& mesh)
 	{
-		VkBufferCreateInfo bufferInfo{
-		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		  .size  = mesh->vertices.size() * sizeof(Vertex),
-		  .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		};
-		VkBuffer newRawBuffer;
-
-		VmaAllocationCreateInfo allocationInfo{.usage = VMA_MEMORY_USAGE_CPU_TO_GPU};
-		MRG_VK_CHECK(vmaCreateBuffer(m_allocator, &bufferInfo, &allocationInfo, &newRawBuffer, &mesh->vertexBuffer.allocation, nullptr), "")
-		mesh->vertexBuffer.buffer = newRawBuffer;
-		m_deletionQueue.push([=]() { vmaDestroyBuffer(m_allocator, mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation); });
+		mesh->vertexBuffer =
+		  createBuffer(mesh->vertices.size() * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 		void* data;
 		vmaMapMemory(m_allocator, mesh->vertexBuffer.allocation, &data);
@@ -75,6 +66,7 @@ namespace MRG
 		initDefaultRenderPass();
 		initFramebuffers();
 		initSyncSructs();
+		initDescriptors();
 		initMaterials();
 
 		isInitalized = true;
@@ -95,7 +87,7 @@ namespace MRG
 		frameData.commandBuffer.begin(beginInfo);
 
 		vk::ClearValue colorClearValue{};
-		colorClearValue.color = std::array<float, 4>{0.f, 0.f, std::abs(std::sin(static_cast<float>(frameNumber) / 120.f)), 1.f};
+		colorClearValue.color = {std::array<float, 4>{clearColor.r, clearColor.g, clearColor.b}};
 		vk::ClearValue depthClearValue{};
 		depthClearValue.depthStencil.depth = 1.f;
 
@@ -197,41 +189,56 @@ namespace MRG
 
 	void VkRenderer::draw(const std::vector<Ref<RenderObject>>& drawables, const Camera& camera)
 	{
-		const auto& frameCmdBuffer = getCurrentFrameData().commandBuffer;
+		const auto& frameData = getCurrentFrameData();
+
+		GPUCameraData cameraData{
+		  .viewMatrix           = camera.getView(),
+		  .projectionMatrix     = camera.getProjection(),
+		  .viewProjectionMatrix = camera.getViewProjection(),
+		};
+		void* data;
+		vmaMapMemory(m_allocator, frameData.cameraBuffer.allocation, &data);
+		memcpy(data, &cameraData, sizeof(GPUCameraData));
+		vmaUnmapMemory(m_allocator, frameData.cameraBuffer.allocation);
+
 		Ref<Material> currentMaterial{};
 		for (const auto& drawable : drawables) {
 			if (!drawable->isVisible) { continue; }
 			if (currentMaterial != drawable->material) {
-				frameCmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable->material->pipeline);
-				frameCmdBuffer.setViewport(0,
-				                           vk::Viewport{
-				                             .x        = 0.f,
-				                             .y        = 0.f,
-				                             .width    = static_cast<float>(spec.windowWidth),
-				                             .height   = static_cast<float>(spec.windowHeight),
-				                             .minDepth = 0.f,
-				                             .maxDepth = 1.f,
-				                           });
-				frameCmdBuffer.setScissor(0,
-				                          vk::Rect2D{
-				                            .offset{0, 0},
-				                            .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
-				                          });
+				frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable->material->pipeline);
+				frameData.commandBuffer.setViewport(0,
+				                                    vk::Viewport{
+				                                      .x        = 0.f,
+				                                      .y        = 0.f,
+				                                      .width    = static_cast<float>(spec.windowWidth),
+				                                      .height   = static_cast<float>(spec.windowHeight),
+				                                      .minDepth = 0.f,
+				                                      .maxDepth = 1.f,
+				                                    });
+				frameData.commandBuffer.setScissor(
+				  0,
+				  vk::Rect2D{
+				    .offset{0, 0},
+				    .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
+				  });
+				frameData.commandBuffer.bindDescriptorSets(
+				  vk::PipelineBindPoint::eGraphics, drawable->material->pipelineLayout, 0, frameData.globalDescriptor, {});
+
 				currentMaterial = drawable->material;
 			}
 
 			const auto pushConstants = Mesh::PushConstants{
-			  .data      = glm::vec4{},
-			  .transform = camera.getViewProjection() * drawable->modelMatrix,
+			  .data        = glm::vec4{},
+			  .modelMatrix = drawable->modelMatrix,
 			};
-			frameCmdBuffer.pushConstants(drawable->material->pipelineLayout,
-			                             vk::ShaderStageFlagBits::eVertex,
-			                             0,
-			                             sizeof(Mesh::PushConstants),
-			                             (void*)(&pushConstants));
+			frameData.commandBuffer.pushConstants(drawable->material->pipelineLayout,
+			                                      vk::ShaderStageFlagBits::eVertex,
+			                                      0,
+			                                      sizeof(Mesh::PushConstants),
+			                                      (void*)(&pushConstants));
 
-			frameCmdBuffer.bindVertexBuffers(0, drawable->mesh->vertexBuffer.buffer, {0});
-			frameCmdBuffer.draw(static_cast<uint32_t>(drawable->mesh->vertices.size()), 1, 0, 0);
+			frameData.commandBuffer.bindVertexBuffers(0, drawable->mesh->vertexBuffer.buffer, {0});
+			frameData.commandBuffer.draw(static_cast<uint32_t>(drawable->mesh->vertices.size()), 1, 0, 0);
 		}
 	}
 
@@ -285,7 +292,7 @@ namespace MRG
 	{
 		vkb::SwapchainBuilder swapchainBuilder{m_GPU, m_device, m_surface};
 		auto vkbSwapchain = swapchainBuilder.use_default_format_selection()
-		                      .set_desired_present_mode(static_cast<VkPresentModeKHR>(spec.presentMode))
+		                      .set_desired_present_mode(static_cast<VkPresentModeKHR>(spec.preferredPresentMode))
 		                      .set_desired_extent(spec.windowWidth, spec.windowHeight)
 		                      .build()
 		                      .value();
@@ -427,6 +434,61 @@ namespace MRG
 		}
 	}
 
+	void VkRenderer::initDescriptors()
+	{
+		std::array<vk::DescriptorPoolSize, 1> sizes{{vk::DescriptorType::eUniformBuffer, FRAMES_IN_FLIGHT}};
+		vk::DescriptorPoolCreateInfo poolInfo{
+		  .maxSets       = FRAMES_IN_FLIGHT,
+		  .poolSizeCount = static_cast<uint32_t>(sizes.size()),
+		  .pPoolSizes    = sizes.data(),
+		};
+		m_descriptorPool = m_device.createDescriptorPool(poolInfo);
+		m_deletionQueue.push([this]() { m_device.destroyDescriptorPool(m_descriptorPool); });
+
+		vk::DescriptorSetLayoutBinding cameraBufferBinding{
+		  .binding         = 0,
+		  .descriptorType  = vk::DescriptorType::eUniformBuffer,
+		  .descriptorCount = 1,
+		  .stageFlags      = vk::ShaderStageFlagBits::eVertex,
+		};
+		vk::DescriptorSetLayoutCreateInfo setInfo{
+		  .bindingCount = 1,
+		  .pBindings    = &cameraBufferBinding,
+		};
+		m_globalSetLayout = m_device.createDescriptorSetLayout(setInfo);
+		m_deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(m_globalSetLayout); });
+
+		std::array<vk::DescriptorSetLayout, FRAMES_IN_FLIGHT> layouts{};
+		layouts.fill(m_globalSetLayout);
+		vk::DescriptorSetAllocateInfo allocInfo{
+		  .descriptorPool     = m_descriptorPool,
+		  .descriptorSetCount = static_cast<uint32_t>(layouts.size()),
+		  .pSetLayouts        = layouts.data(),
+		};
+		const auto globalDescriptors = m_device.allocateDescriptorSets(allocInfo);
+
+		vk::DescriptorBufferInfo bufferInfo{
+		  .offset = 0,
+		  .range  = sizeof(GPUCameraData),
+		};
+		vk::WriteDescriptorSet setWrite{
+		  .dstBinding      = 0,
+		  .descriptorCount = 1,
+		  .descriptorType  = vk::DescriptorType::eUniformBuffer,
+		  .pBufferInfo     = &bufferInfo,
+		};
+
+		for (std::size_t i = 0; i < FRAMES_IN_FLIGHT; ++i) {
+			m_framesData[i].cameraBuffer =
+			  createBuffer(sizeof(GPUCameraData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU);
+			m_framesData[i].globalDescriptor = globalDescriptors[i];
+
+			bufferInfo.buffer = m_framesData[i].cameraBuffer.buffer;
+			setWrite.dstSet   = m_framesData[i].globalDescriptor;
+			m_device.updateDescriptorSets(setWrite, {});
+		}
+	}
+
 	void VkRenderer::initMaterials()
 	{
 		defaultMaterial = createRef<Material>();
@@ -441,6 +503,8 @@ namespace MRG
 		  .size       = sizeof(Mesh::PushConstants),
 		};
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
+		  .setLayoutCount         = 1,
+		  .pSetLayouts            = &m_globalSetLayout,
 		  .pushConstantRangeCount = 1,
 		  .pPushConstantRanges    = &pushConstantRange,
 		};
@@ -506,5 +570,27 @@ namespace MRG
 		for (const auto& imageView : m_swapchainImageViews) { m_device.destroyImageView(imageView); }
 		vmaDestroyImage(m_allocator, m_depthImage.image, m_depthImage.allocation);
 		m_device.destroyImageView(m_depthImageView);
+	}
+
+	AllocatedBuffer VkRenderer::createBuffer(std::size_t allocSize, vk::BufferUsageFlagBits bufferUsage, VmaMemoryUsage memoryUsage)
+	{
+		VkBufferCreateInfo bufferInfo{
+		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		  .size  = allocSize,
+		  .usage = static_cast<VkBufferUsageFlags>(bufferUsage),
+		};
+
+		VmaAllocationCreateInfo allocationInfo{
+		  .usage = memoryUsage,
+		};
+
+		AllocatedBuffer newBuffer;
+		VkBuffer newRawBuffer;
+		MRG_VK_CHECK(vmaCreateBuffer(m_allocator, &bufferInfo, &allocationInfo, &newRawBuffer, &newBuffer.allocation, nullptr),
+		             "Failed to allocate new buffer!")
+		newBuffer.buffer = newRawBuffer;
+		m_deletionQueue.push([=]() { vmaDestroyBuffer(m_allocator, newBuffer.buffer, newBuffer.allocation); });
+
+		return newBuffer;
 	}
 }  // namespace MRG

@@ -33,7 +33,7 @@ namespace MRG
 		struct PushConstants
 		{
 			glm::vec4 data;
-			glm::mat4 transform;
+			glm::mat4 modelMatrix;
 		};
 
 		std::vector<Vertex> vertices;

@@ -23,7 +23,7 @@ namespace MRG
 		std::string applicationName;
 		int windowWidth;
 		int windowHeight;
-		vk::PresentModeKHR presentMode;
+		vk::PresentModeKHR preferredPresentMode;
 	};
 
 	struct DeletionQueue
@@ -40,6 +40,13 @@ namespace MRG
 		std::vector<std::function<void()>> m_deletors;
 	};
 
+	struct GPUCameraData
+	{
+		glm::mat4 viewMatrix;
+		glm::mat4 projectionMatrix;
+		glm::mat4 viewProjectionMatrix;
+	};
+
 	struct FrameData
 	{
 		vk::Semaphore presentSemaphore, renderSemaphore;
@@ -47,6 +54,9 @@ namespace MRG
 
 		vk::CommandPool commandPool;
 		vk::CommandBuffer commandBuffer;
+
+		AllocatedBuffer cameraBuffer;
+		vk::DescriptorSet globalDescriptor;
 	};
 
 	class VkRenderer
@@ -59,6 +69,8 @@ namespace MRG
 		bool isInitalized{false};
 		int frameNumber{0};
 		GLFWwindow* window{nullptr};
+
+		glm::vec3 clearColor{};
 
 		Ref<Material> defaultMaterial{};
 
@@ -91,6 +103,9 @@ namespace MRG
 
 		vk::PipelineCache m_pipelineCache{};
 
+		vk::DescriptorSetLayout m_globalSetLayout{};
+		vk::DescriptorPool m_descriptorPool{};
+
 		VmaAllocator m_allocator{};
 		DeletionQueue m_deletionQueue{};
 
@@ -100,9 +115,12 @@ namespace MRG
 		void initDefaultRenderPass();
 		void initFramebuffers();
 		void initSyncSructs();
+		void initDescriptors();
 		void initMaterials();
 
 		void destroySwapchain();
+
+		[[nodiscard]] AllocatedBuffer createBuffer(std::size_t allocSize, vk::BufferUsageFlagBits bufferUsage, VmaMemoryUsage memoryUsage);
 
 		/// Methods called by the application class
 		friend class Application;
