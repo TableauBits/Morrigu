@@ -40,6 +40,12 @@ namespace MRG
 		std::vector<std::function<void()>> m_deletors;
 	};
 
+	struct UploadContext
+	{
+		vk::Fence uploadFence;
+		vk::CommandPool commandPool;
+	};
+
 	struct GPUCameraData
 	{
 		glm::mat4 viewMatrix;
@@ -108,6 +114,7 @@ namespace MRG
 
 		VmaAllocator m_allocator{};
 		DeletionQueue m_deletionQueue{};
+		UploadContext m_uploadContext{};
 
 		void initVulkan();
 		void initSwapchain();
@@ -120,7 +127,9 @@ namespace MRG
 
 		void destroySwapchain();
 
+		/// Helper methods
 		[[nodiscard]] AllocatedBuffer createBuffer(std::size_t allocSize, vk::BufferUsageFlagBits bufferUsage, VmaMemoryUsage memoryUsage);
+		void immediateSubmit(std::function<void(vk::CommandBuffer cmd)>&& function);
 
 		/// Methods called by the application class
 		friend class Application;

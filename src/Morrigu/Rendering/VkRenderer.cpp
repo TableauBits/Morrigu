@@ -46,13 +46,52 @@ namespace MRG
 {
 	void VkRenderer::uploadMesh(Ref<Mesh>& mesh)
 	{
-		mesh->vertexBuffer =
-		  createBuffer(mesh->vertices.size() * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU);
+		const auto bufferSize = static_cast<uint32_t>(mesh->vertices.size() * sizeof(Vertex));
+
+		// staging buffer
+		VkBufferCreateInfo stagingBufferInfo{
+		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		  .size  = bufferSize,
+		  .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		};
+		VmaAllocationCreateInfo vmaStagingAllocationCreateInfo{
+		  .usage = VMA_MEMORY_USAGE_CPU_ONLY,
+		};
+		VkBuffer rawBuffer{};
+		AllocatedBuffer stagingBuffer{};
+		MRG_VK_CHECK(
+		  vmaCreateBuffer(m_allocator, &stagingBufferInfo, &vmaStagingAllocationCreateInfo, &rawBuffer, &stagingBuffer.allocation, nullptr),
+		  "Failed to allocate new buffer!")
+		stagingBuffer.buffer = rawBuffer;
 
 		void* data;
-		vmaMapMemory(m_allocator, mesh->vertexBuffer.allocation, &data);
+		vmaMapMemory(m_allocator, stagingBuffer.allocation, &data);
 		memcpy(data, mesh->vertices.data(), mesh->vertices.size() * sizeof(Vertex));
-		vmaUnmapMemory(m_allocator, mesh->vertexBuffer.allocation);
+		vmaUnmapMemory(m_allocator, stagingBuffer.allocation);
+
+		// mesh vertex buffer
+		VkBufferCreateInfo vertexBufferInfo{
+		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		  .size  = bufferSize,
+		  .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		};
+		VmaAllocationCreateInfo vmaVertexAllocationCreateInfo{
+		  .usage = VMA_MEMORY_USAGE_GPU_ONLY,
+		};
+		MRG_VK_CHECK(vmaCreateBuffer(
+		               m_allocator, &vertexBufferInfo, &vmaVertexAllocationCreateInfo, &rawBuffer, &mesh->vertexBuffer.allocation, nullptr),
+		             "Failed to allocate new buffer!")
+		mesh->vertexBuffer.buffer = rawBuffer;
+
+		immediateSubmit([=](vk::CommandBuffer cmdBuffer) {
+			vk::BufferCopy copy{
+			  .size = bufferSize,
+			};
+			cmdBuffer.copyBuffer(stagingBuffer.buffer, mesh->vertexBuffer.buffer, copy);
+		});
+
+		vmaDestroyBuffer(m_allocator, stagingBuffer.buffer, stagingBuffer.allocation);
+		m_deletionQueue.push([this, mesh]() { vmaDestroyBuffer(m_allocator, mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation); });
 	}
 
 	void VkRenderer::init(const RendererSpecification& newSpec, GLFWwindow* newWindow)
@@ -164,7 +203,6 @@ namespace MRG
 
 		destroySwapchain();
 		initSwapchain();
-		initCommands();
 		initDefaultRenderPass();
 		initFramebuffers();
 	}
@@ -336,6 +374,14 @@ namespace MRG
 			const auto mainCmdBufferInfo = VkInit::cmdBufferAllocateInfo(frame.commandPool, vk::CommandBufferLevel::ePrimary, 1);
 			frame.commandBuffer          = m_device.allocateCommandBuffers(mainCmdBufferInfo)[0];
 		}
+		m_deletionQueue.push([this]() {
+			for (const auto& frame : m_framesData) { m_device.destroyCommandPool(frame.commandPool); }
+		});
+
+		// create upload context command pool
+		const auto uploadCmdPoolInfo = VkInit::cmdPoolCreateInfo({}, m_graphicsQueueIndex);
+		m_uploadContext.commandPool  = m_device.createCommandPool(uploadCmdPoolInfo);
+		m_deletionQueue.push([this]() { m_device.destroyCommandPool(m_uploadContext.commandPool); });
 	}
 
 	void VkRenderer::initDefaultRenderPass()
@@ -421,17 +467,19 @@ namespace MRG
 
 		for (auto& frame : m_framesData) {
 			frame.renderFence = m_device.createFence(fenceInfo);
-
 			m_deletionQueue.push([=]() { m_device.destroyFence(frame.renderFence); });
 
 			frame.presentSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
 			frame.renderSemaphore  = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
-
 			m_deletionQueue.push([=]() {
 				m_device.destroySemaphore(frame.presentSemaphore);
 				m_device.destroySemaphore(frame.renderSemaphore);
 			});
 		}
+
+		fenceInfo.flags             = {};
+		m_uploadContext.uploadFence = m_device.createFence(fenceInfo);
+		m_deletionQueue.push([=]() { m_device.destroyFence(m_uploadContext.uploadFence); });
 	}
 
 	void VkRenderer::initDescriptors()
@@ -565,7 +613,6 @@ namespace MRG
 
 		m_device.destroyRenderPass(m_renderPass);
 		for (const auto& framebuffer : m_framebuffers) { m_device.destroyFramebuffer(framebuffer); }
-		for (const auto& frame : m_framesData) { m_device.destroyCommandPool(frame.commandPool); }
 		m_device.destroySwapchainKHR(m_swapchain);
 		for (const auto& imageView : m_swapchainImageViews) { m_device.destroyImageView(imageView); }
 		vmaDestroyImage(m_allocator, m_depthImage.image, m_depthImage.allocation);
@@ -592,5 +639,30 @@ namespace MRG
 		m_deletionQueue.push([=]() { vmaDestroyBuffer(m_allocator, newBuffer.buffer, newBuffer.allocation); });
 
 		return newBuffer;
+	}
+	void VkRenderer::immediateSubmit(std::function<void(vk::CommandBuffer)>&& function)
+	{
+		vk::CommandBufferAllocateInfo cmdBufferAllocInfo =
+		  VkInit::cmdBufferAllocateInfo(m_uploadContext.commandPool, vk::CommandBufferLevel::ePrimary, 1);
+
+		const auto cmdBuffer = m_device.allocateCommandBuffers(cmdBufferAllocInfo).back();
+		vk::CommandBufferBeginInfo beginInfo{
+		  .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
+		};
+
+		cmdBuffer.begin(beginInfo);
+		function(cmdBuffer);
+		cmdBuffer.end();
+
+		vk::SubmitInfo submitInfo{
+		  .commandBufferCount = 1,
+		  .pCommandBuffers    = &cmdBuffer,
+		};
+		m_graphicsQueue.submit(submitInfo, m_uploadContext.uploadFence);
+
+		MRG_VK_CHECK_HPP(m_device.waitForFences(m_uploadContext.uploadFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
+		m_device.resetFences(m_uploadContext.uploadFence);
+
+		m_device.resetCommandPool(m_uploadContext.commandPool);
 	}
 }  // namespace MRG
