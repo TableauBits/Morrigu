@@ -15,10 +15,10 @@ public:
 		mainCamera.setPerspective(glm::radians(70.f), 0.1f, 200.f);
 		mainCamera.recalculateViewProjection();
 
-		m_suzanne = MRG::RenderObject<MRG::BasicVertex>::create(Utils::loadMeshFromFileBasicVertex("monkey_smooth.obj"),
-		                                                        application->renderer.defaultBasicMaterial);
-		m_boxy    = MRG::RenderObject<MRG::BasicVertex>::create(Utils::loadMeshFromFileBasicVertex("boxy.obj"),
-                                                             application->renderer.defaultBasicMaterial);
+		m_suzanne = MRG::RenderObject<MRG::TexturedVertex>::create(Utils::loadMeshFromFileTexturedVertex("monkey_smooth.obj"),
+		                                                           application->renderer.defaultTexturedMaterial);
+		m_boxy    = MRG::RenderObject<MRG::TexturedVertex>::create(Utils::loadMeshFromFileTexturedVertex("boxy.obj"),
+                                                                application->renderer.defaultTexturedMaterial);
 
 		m_suzanne->translate({1.5f, 0.f, 0.f});
 		m_suzanne->rotate({0.f, 1.f, 0.f}, glm::radians(180.f));
@@ -55,7 +55,7 @@ public:
 	}
 
 private:
-	MRG::Ref<MRG::RenderObject<MRG::BasicVertex>> m_suzanne{}, m_boxy{};
+	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_suzanne{}, m_boxy{};
 	float m_elapsedTime{};
 };
 

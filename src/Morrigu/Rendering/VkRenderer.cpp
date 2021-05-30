@@ -497,6 +497,9 @@ namespace MRG
 
 		defaultColoredShader   = createShader("ColoredMesh.vert.spv", "ColoredMesh.frag.spv");
 		defaultColoredMaterial = createMaterial<ColoredVertex>(defaultColoredShader);
+
+		defaultTexturedShader   = createShader("TexturedMesh.vert.spv", "TexturedMesh.frag.spv");
+		defaultTexturedMaterial = createMaterial<TexturedVertex>(defaultTexturedShader);
 	}
 
 	void VkRenderer::destroySwapchain()

@@ -129,6 +129,8 @@ namespace MRG
 		Ref<Material<BasicVertex>> defaultBasicMaterial{};
 		Ref<Shader> defaultColoredShader{};
 		Ref<Material<ColoredVertex>> defaultColoredMaterial{};
+		Ref<Shader> defaultTexturedShader{};
+		Ref<Material<TexturedVertex>> defaultTexturedMaterial{};
 
 	private:
 		static const constexpr std::size_t FRAMES_IN_FLIGHT = 3;

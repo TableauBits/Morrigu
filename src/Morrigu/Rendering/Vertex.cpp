@@ -61,4 +61,34 @@ namespace MRG
 
 		return VertexInputDescription{.bindings{mainBinding}, .attributes{position, normal, color}};
 	}
+
+	VertexInputDescription TexturedVertex::getVertexDescription()
+	{
+		vk::VertexInputBindingDescription mainBinding{
+		  .binding   = 0,
+		  .stride    = sizeof(TexturedVertex),
+		  .inputRate = vk::VertexInputRate::eVertex,
+		};
+
+		vk::VertexInputAttributeDescription position{
+		  .location = 0,
+		  .binding  = 0,
+		  .format   = vk::Format::eR32G32B32Sfloat,
+		  .offset   = static_cast<uint32_t>(offsetof(TexturedVertex, position)),
+		};
+		vk::VertexInputAttributeDescription normal{
+		  .location = 1,
+		  .binding  = 0,
+		  .format   = vk::Format::eR32G32B32Sfloat,
+		  .offset   = static_cast<uint32_t>(offsetof(TexturedVertex, normal)),
+		};
+		vk::VertexInputAttributeDescription texCoords{
+		  .location = 2,
+		  .binding  = 0,
+		  .format   = vk::Format::eR32G32Sfloat,
+		  .offset   = static_cast<uint32_t>(offsetof(TexturedVertex, texCoords)),
+		};
+
+		return VertexInputDescription{.bindings{mainBinding}, .attributes{position, normal, texCoords}};
+	}
 }  // namespace MRG

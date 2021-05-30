@@ -42,6 +42,15 @@ namespace MRG
 
 		static VertexInputDescription getVertexDescription();
 	};
+
+	struct TexturedVertex
+	{
+		glm::vec3 position{};
+		glm::vec3 normal{};
+		glm::vec2 texCoords{};
+
+		static VertexInputDescription getVertexDescription();
+	};
 }  // namespace MRG
 
 #endif  // MORRIGU_VERTEX_H

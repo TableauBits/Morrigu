@@ -1,0 +1,6 @@
+set(
+		SHADER_SOURCES
+		${SHADER_SOURCES}
+		${CMAKE_CURRENT_LIST_DIR}/TexturedMesh.vert
+		${CMAKE_CURRENT_LIST_DIR}/TexturedMesh.frag
+)
