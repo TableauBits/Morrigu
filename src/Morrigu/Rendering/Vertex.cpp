@@ -12,7 +12,7 @@ namespace MRG
 	{
 		vk::VertexInputBindingDescription mainBinding{
 		  .binding   = 0,
-		  .stride    = sizeof(ColoredVertex),
+		  .stride    = sizeof(BasicVertex),
 		  .inputRate = vk::VertexInputRate::eVertex,
 		};
 
@@ -20,13 +20,13 @@ namespace MRG
 		  .location = 0,
 		  .binding  = 0,
 		  .format   = vk::Format::eR32G32B32Sfloat,
-		  .offset   = static_cast<uint32_t>(offsetof(ColoredVertex, position)),
+		  .offset   = static_cast<uint32_t>(offsetof(BasicVertex, position)),
 		};
 		vk::VertexInputAttributeDescription normal{
 		  .location = 1,
 		  .binding  = 0,
 		  .format   = vk::Format::eR32G32B32Sfloat,
-		  .offset   = static_cast<uint32_t>(offsetof(ColoredVertex, normal)),
+		  .offset   = static_cast<uint32_t>(offsetof(BasicVertex, normal)),
 		};
 
 		return VertexInputDescription{.bindings{mainBinding}, .attributes{position, normal}};

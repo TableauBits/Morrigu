@@ -125,6 +125,8 @@ namespace MRG
 
 		glm::vec3 clearColor{};
 
+		Ref<Shader> defaultBasicShader{};
+		Ref<Material<BasicVertex>> defaultBasicMaterial{};
 		Ref<Shader> defaultColoredShader{};
 		Ref<Material<ColoredVertex>> defaultColoredMaterial{};
 

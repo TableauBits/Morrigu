@@ -492,6 +492,9 @@ namespace MRG
 			m_device.destroyPipelineCache(m_pipelineCache);
 		});
 
+		defaultBasicShader   = createShader("BasicMesh.vert.spv", "BasicMesh.frag.spv");
+		defaultBasicMaterial = createMaterial<BasicVertex>(defaultBasicShader);
+
 		defaultColoredShader   = createShader("ColoredMesh.vert.spv", "ColoredMesh.frag.spv");
 		defaultColoredMaterial = createMaterial<ColoredVertex>(defaultColoredShader);
 	}
