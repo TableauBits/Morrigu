@@ -12,6 +12,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include <exception>
+#include <ranges>
 
 struct AllocatedBuffer
 {
@@ -34,5 +35,19 @@ struct AllocatedImage
 	{                                                                                                                                      \
 		if ((expression) != VK_SUCCESS) { throw std::runtime_error(error_message); }                                                       \
 	}
+
+struct DeletionQueue
+{
+public:
+	void push(std::function<void()>&& function) { m_deletors.push_back(function); }
+	void flush()
+	{
+		for (auto& m_deletor : std::ranges::reverse_view(m_deletors)) { m_deletor(); }
+		m_deletors.clear();
+	}
+
+private:
+	std::vector<std::function<void()>> m_deletors;
+};
 
 #endif  // MORRIGU_VKTYPES_H

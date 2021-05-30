@@ -5,7 +5,6 @@ layout(location = 1) in vec3 in_VertexNormal;
 layout(location = 2) in vec3 in_VertexColor;
 
 layout(push_constant) uniform PushConstants {
-    vec4 data;
     mat4 modelMatrix;
 } in_PushConstants;
 

@@ -4,10 +4,6 @@
 
 #include "VkRenderer.h"
 
-#include "Core/FileNames.h"
-#include "Rendering/PipelineBuilder.h"
-#include "Rendering/VkInitialize.h"
-
 #include <VkBootstrap.h>
 
 DISABLE_WARNING_PUSH
@@ -44,54 +40,9 @@ namespace
 
 namespace MRG
 {
-	void VkRenderer::uploadMesh(Ref<Mesh>& mesh)
+	Ref<Shader> VkRenderer::createShader(const char* vertexShaderName, const char* fragmentShaderName)
 	{
-		const auto bufferSize = static_cast<uint32_t>(mesh->vertices.size() * sizeof(Vertex));
-
-		// staging buffer
-		VkBufferCreateInfo stagingBufferInfo{
-		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		  .size  = bufferSize,
-		  .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		};
-		VmaAllocationCreateInfo vmaStagingAllocationCreateInfo{
-		  .usage = VMA_MEMORY_USAGE_CPU_ONLY,
-		};
-		VkBuffer rawBuffer{};
-		AllocatedBuffer stagingBuffer{};
-		MRG_VK_CHECK(
-		  vmaCreateBuffer(m_allocator, &stagingBufferInfo, &vmaStagingAllocationCreateInfo, &rawBuffer, &stagingBuffer.allocation, nullptr),
-		  "Failed to allocate new buffer!")
-		stagingBuffer.buffer = rawBuffer;
-
-		void* data;
-		vmaMapMemory(m_allocator, stagingBuffer.allocation, &data);
-		memcpy(data, mesh->vertices.data(), mesh->vertices.size() * sizeof(Vertex));
-		vmaUnmapMemory(m_allocator, stagingBuffer.allocation);
-
-		// mesh vertex buffer
-		VkBufferCreateInfo vertexBufferInfo{
-		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		  .size  = bufferSize,
-		  .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		};
-		VmaAllocationCreateInfo vmaVertexAllocationCreateInfo{
-		  .usage = VMA_MEMORY_USAGE_GPU_ONLY,
-		};
-		MRG_VK_CHECK(vmaCreateBuffer(
-		               m_allocator, &vertexBufferInfo, &vmaVertexAllocationCreateInfo, &rawBuffer, &mesh->vertexBuffer.allocation, nullptr),
-		             "Failed to allocate new buffer!")
-		mesh->vertexBuffer.buffer = rawBuffer;
-
-		immediateSubmit([=](vk::CommandBuffer cmdBuffer) {
-			vk::BufferCopy copy{
-			  .size = bufferSize,
-			};
-			cmdBuffer.copyBuffer(stagingBuffer.buffer, mesh->vertexBuffer.buffer, copy);
-		});
-
-		vmaDestroyBuffer(m_allocator, stagingBuffer.buffer, stagingBuffer.allocation);
-		m_deletionQueue.push([this, mesh]() { vmaDestroyBuffer(m_allocator, mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation); });
+		return MRG::createRef<Shader>(m_device, vertexShaderName, fragmentShaderName, m_deletionQueue);
 	}
 
 	void VkRenderer::init(const RendererSpecification& newSpec, GLFWwindow* newWindow)
@@ -207,25 +158,7 @@ namespace MRG
 		initFramebuffers();
 	}
 
-	vk::ShaderModule VkRenderer::loadShaderModule(const char* filePath)
-	{
-		const auto completePath = Folders::Rendering::shadersFolder + filePath;
-		MRG_ENGINE_ASSERT(std::filesystem::exists(completePath), "Shader file \"{}\" does not exists!", completePath)
-		std::ifstream file{completePath, std::ios::binary | std::ios::ate};
-		const auto fileSize = static_cast<std::size_t>(file.tellg());
-		std::vector<std::uint32_t> buffer(fileSize / sizeof(std::uint32_t));
-		file.seekg(std::ios::beg);
-		file.read((char*)buffer.data(), static_cast<std::streamsize>(fileSize));
-		file.close();
-
-		vk::ShaderModuleCreateInfo moduleInfo{
-		  .codeSize = fileSize,
-		  .pCode    = buffer.data(),
-		};
-		return m_device.createShaderModule(moduleInfo);
-	}
-
-	void VkRenderer::draw(const std::vector<Ref<RenderObject>>& drawables, const Camera& camera)
+	void VkRenderer::draw(const std::vector<RenderData>& drawables, const Camera& camera)
 	{
 		const auto& frameData = getCurrentFrameData();
 
@@ -239,11 +172,11 @@ namespace MRG
 		memcpy(data, &cameraData, sizeof(GPUCameraData));
 		vmaUnmapMemory(m_allocator, frameData.cameraBuffer.allocation);
 
-		Ref<Material> currentMaterial{};
+		vk::Pipeline currentMaterial{};
 		for (const auto& drawable : drawables) {
-			if (!drawable->isVisible) { continue; }
-			if (currentMaterial != drawable->material) {
-				frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable->material->pipeline);
+			if (!(*drawable.isVisible)) { continue; }
+			if (currentMaterial != drawable.materialPipeline) {
+				frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable.materialPipeline);
 				frameData.commandBuffer.setViewport(0,
 				                                    vk::Viewport{
 				                                      .x        = 0.f,
@@ -260,23 +193,19 @@ namespace MRG
 				    .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
 				  });
 				frameData.commandBuffer.bindDescriptorSets(
-				  vk::PipelineBindPoint::eGraphics, drawable->material->pipelineLayout, 0, frameData.globalDescriptor, {});
+				  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 0, frameData.level0Descriptor, {});
 
-				currentMaterial = drawable->material;
+				currentMaterial = drawable.materialPipeline;
 			}
 
-			const auto pushConstants = Mesh::PushConstants{
-			  .data        = glm::vec4{},
-			  .modelMatrix = drawable->modelMatrix,
+			const auto pushConstants = MeshPushConstants{
+			  .modelMatrix = *drawable.modelMatrix,
 			};
-			frameData.commandBuffer.pushConstants(drawable->material->pipelineLayout,
-			                                      vk::ShaderStageFlagBits::eVertex,
-			                                      0,
-			                                      sizeof(Mesh::PushConstants),
-			                                      (void*)(&pushConstants));
+			frameData.commandBuffer.pushConstants(
+			  drawable.materialPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(MeshPushConstants), (void*)(&pushConstants));
 
-			frameData.commandBuffer.bindVertexBuffers(0, drawable->mesh->vertexBuffer.buffer, {0});
-			frameData.commandBuffer.draw(static_cast<uint32_t>(drawable->mesh->vertices.size()), 1, 0, 0);
+			frameData.commandBuffer.bindVertexBuffers(0, drawable.vertexBuffer, {0});
+			frameData.commandBuffer.draw(static_cast<uint32_t>(drawable.vertexNumber), 1, 0, 0);
 		}
 	}
 
@@ -503,17 +432,17 @@ namespace MRG
 		  .bindingCount = 1,
 		  .pBindings    = &cameraBufferBinding,
 		};
-		m_globalSetLayout = m_device.createDescriptorSetLayout(setInfo);
-		m_deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(m_globalSetLayout); });
+		m_level0DSL = m_device.createDescriptorSetLayout(setInfo);
+		m_deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(m_level0DSL); });
 
 		std::array<vk::DescriptorSetLayout, FRAMES_IN_FLIGHT> layouts{};
-		layouts.fill(m_globalSetLayout);
+		layouts.fill(m_level0DSL);
 		vk::DescriptorSetAllocateInfo allocInfo{
 		  .descriptorPool     = m_descriptorPool,
 		  .descriptorSetCount = static_cast<uint32_t>(layouts.size()),
 		  .pSetLayouts        = layouts.data(),
 		};
-		const auto globalDescriptors = m_device.allocateDescriptorSets(allocInfo);
+		const auto level0Descriptors = m_device.allocateDescriptorSets(allocInfo);
 
 		vk::DescriptorBufferInfo bufferInfo{
 		  .offset = 0,
@@ -529,37 +458,21 @@ namespace MRG
 		for (std::size_t i = 0; i < FRAMES_IN_FLIGHT; ++i) {
 			m_framesData[i].cameraBuffer =
 			  createBuffer(sizeof(GPUCameraData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU);
-			m_framesData[i].globalDescriptor = globalDescriptors[i];
+			m_framesData[i].level0Descriptor = level0Descriptors[i];
 
 			bufferInfo.buffer = m_framesData[i].cameraBuffer.buffer;
-			setWrite.dstSet   = m_framesData[i].globalDescriptor;
+			setWrite.dstSet   = m_framesData[i].level0Descriptor;
 			m_device.updateDescriptorSets(setWrite, {});
 		}
+
+		// level 1 DSL (currently empty)
+		setInfo.bindingCount = 0;
+		m_level1DSL          = m_device.createDescriptorSetLayout(setInfo);
+		m_deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(m_level1DSL); });
 	}
 
 	void VkRenderer::initMaterials()
 	{
-		defaultMaterial = createRef<Material>();
-
-		auto coloredMeshVertShader = loadShaderModule("ColoredMesh.vert.spv");
-		auto coloredMeshFragShader = loadShaderModule("ColoredMesh.frag.spv");
-		MRG_ENGINE_TRACE("Loaded vertex and fragment shaders")
-
-		vk::PushConstantRange pushConstantRange{
-		  .stageFlags = vk::ShaderStageFlagBits::eVertex,
-		  .offset     = 0,
-		  .size       = sizeof(Mesh::PushConstants),
-		};
-		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
-		  .setLayoutCount         = 1,
-		  .pSetLayouts            = &m_globalSetLayout,
-		  .pushConstantRangeCount = 1,
-		  .pPushConstantRanges    = &pushConstantRange,
-		};
-		defaultMaterial->pipelineLayout = m_device.createPipelineLayout(pipelineLayoutInfo);
-
-		m_deletionQueue.push([=]() { m_device.destroyPipelineLayout(defaultMaterial->pipelineLayout); });
-
 		vk::PipelineCacheCreateInfo pipelineCacheCreateInfo{};
 		if (std::filesystem::exists(Files::Rendering::vkPipelineCacheFile)) {
 			MRG_ENGINE_TRACE("Pipeline cache found.")
@@ -579,32 +492,8 @@ namespace MRG
 			m_device.destroyPipelineCache(m_pipelineCache);
 		});
 
-		const auto vertexInfo = Vertex::getVertexDescription();
-		vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo{
-		  .vertexBindingDescriptionCount   = static_cast<uint32_t>(vertexInfo.bindings.size()),
-		  .pVertexBindingDescriptions      = vertexInfo.bindings.data(),
-		  .vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInfo.attributes.size()),
-		  .pVertexAttributeDescriptions    = vertexInfo.attributes.data(),
-		};
-
-		PipelineBuilder builder{
-		  .shaderStages{VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, coloredMeshVertShader),
-		                VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment, coloredMeshFragShader)},
-		  .vertexInputInfo{vertexInputCreateInfo},
-		  .inputAssemblyInfo{VkInit::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList)},
-		  .rasterizerInfo{VkInit::pipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)},
-		  .multisamplingInfo{VkInit::pipelineMultisampleStateCreateInfo()},
-		  .depthStencilStateCreateInfo{VkInit::pipelineDepthStencilStateCreateInfo(true, true, vk::CompareOp::eLessOrEqual)},
-		  .colorBlendAttachment{VkInit::pipelineColorBlendAttachmentState()},
-		  .pipelineLayout{defaultMaterial->pipelineLayout},
-		  .pipelineCache{m_pipelineCache}};
-
-		defaultMaterial->pipeline = builder.build_pipeline(m_device, m_renderPass);
-
-		m_deletionQueue.push([=]() { m_device.destroyPipeline(defaultMaterial->pipeline); });
-
-		m_device.destroyShaderModule(coloredMeshVertShader);
-		m_device.destroyShaderModule(coloredMeshFragShader);
+		defaultColoredShader   = createShader("ColoredMesh.vert.spv", "ColoredMesh.frag.spv");
+		defaultColoredMaterial = createMaterial<ColoredVertex>(defaultColoredShader);
 	}
 
 	void VkRenderer::destroySwapchain()

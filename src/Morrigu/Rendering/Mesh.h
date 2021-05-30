@@ -5,42 +5,25 @@
 #ifndef MORRIGU_MESH_H
 #define MORRIGU_MESH_H
 
+#include "Core/FileNames.h"
 #include "Rendering/GLMIncludeHelper.h"
+#include "Rendering/Vertex.h"
 #include "Rendering/VkTypes.h"
 
 #include <vector>
 
 namespace MRG
 {
-	struct VertexInputDescription
+	struct MeshPushConstants
 	{
-		std::vector<vk::VertexInputBindingDescription> bindings;
-		std::vector<vk::VertexInputAttributeDescription> attributes;
+		glm::mat4 modelMatrix;
 	};
-
-	struct Vertex
-	{
-		glm::vec3 position;
-		glm::vec3 normal;
-		glm::vec3 color;
-
-		static VertexInputDescription getVertexDescription();
-	};
-
+	template<Vertex VertexType>
 	class Mesh
 	{
 	public:
-		struct PushConstants
-		{
-			glm::vec4 data;
-			glm::mat4 modelMatrix;
-		};
-
-		std::vector<Vertex> vertices;
+		std::vector<VertexType> vertices;
 		AllocatedBuffer vertexBuffer;
-
-		/// Filepath is already pointing to the meshes folder, so you can omit the path to that folder yourself
-		static Ref<Mesh> loadFromFile(const char* filePath);
 	};
 }  // namespace MRG
 

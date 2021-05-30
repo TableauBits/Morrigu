@@ -32,7 +32,7 @@ namespace MRG
 		virtual void onEvent(Event&)    = 0;
 
 		Application* application{nullptr};
-		std::vector<Ref<RenderObject>> renderables{};
+		std::vector<RenderData> renderables{};
 		Camera mainCamera{};
 	};
 }  // namespace MRG

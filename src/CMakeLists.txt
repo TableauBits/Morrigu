@@ -24,6 +24,7 @@ target_link_libraries(
 		CONAN_PKG::tinyobjloader
 		CONAN_PKG::vk-bootstrap
 		CONAN_PKG::vulkan-memory-allocator
+		CONAN_PKG::spirv-cross
 )
 
 include(SampleApp/CMakeLists.txt)

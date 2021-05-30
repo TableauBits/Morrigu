@@ -26,20 +26,6 @@ namespace MRG
 		vk::PresentModeKHR preferredPresentMode;
 	};
 
-	struct DeletionQueue
-	{
-	public:
-		void push(std::function<void()>&& function) { m_deletors.push_back(function); }
-		void flush()
-		{
-			for (auto& m_deletor : std::ranges::reverse_view(m_deletors)) { m_deletor(); }
-			m_deletors.clear();
-		}
-
-	private:
-		std::vector<std::function<void()>> m_deletors;
-	};
-
 	struct UploadContext
 	{
 		vk::Fence uploadFence;
@@ -62,13 +48,74 @@ namespace MRG
 		vk::CommandBuffer commandBuffer;
 
 		AllocatedBuffer cameraBuffer;
-		vk::DescriptorSet globalDescriptor;
+		vk::DescriptorSet level0Descriptor;
 	};
 
 	class VkRenderer
 	{
 	public:
-		void uploadMesh(Ref<Mesh>& mesh);
+		template<Vertex VertexType>
+		void uploadMesh(Ref<Mesh<VertexType>>& mesh)
+		{
+			const auto bufferSize = static_cast<uint32_t>(mesh->vertices.size() * sizeof(ColoredVertex));
+
+			// staging buffer
+			VkBufferCreateInfo stagingBufferInfo{
+			  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+			  .size  = bufferSize,
+			  .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			};
+			VmaAllocationCreateInfo vmaStagingAllocationCreateInfo{
+			  .usage = VMA_MEMORY_USAGE_CPU_ONLY,
+			};
+			VkBuffer rawBuffer{};
+			AllocatedBuffer stagingBuffer{};
+			MRG_VK_CHECK(
+			  vmaCreateBuffer(
+			    m_allocator, &stagingBufferInfo, &vmaStagingAllocationCreateInfo, &rawBuffer, &stagingBuffer.allocation, nullptr),
+			  "Failed to allocate new buffer!")
+			stagingBuffer.buffer = rawBuffer;
+
+			void* data;
+			vmaMapMemory(m_allocator, stagingBuffer.allocation, &data);
+			memcpy(data, mesh->vertices.data(), mesh->vertices.size() * sizeof(ColoredVertex));
+			vmaUnmapMemory(m_allocator, stagingBuffer.allocation);
+
+			// mesh vertex buffer
+			VkBufferCreateInfo vertexBufferInfo{
+			  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+			  .size  = bufferSize,
+			  .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			};
+			VmaAllocationCreateInfo vmaVertexAllocationCreateInfo{
+			  .usage = VMA_MEMORY_USAGE_GPU_ONLY,
+			};
+			MRG_VK_CHECK(
+			  vmaCreateBuffer(
+			    m_allocator, &vertexBufferInfo, &vmaVertexAllocationCreateInfo, &rawBuffer, &mesh->vertexBuffer.allocation, nullptr),
+			  "Failed to allocate new buffer!")
+			mesh->vertexBuffer.buffer = rawBuffer;
+
+			immediateSubmit([=](vk::CommandBuffer cmdBuffer) {
+				vk::BufferCopy copy{
+				  .size = bufferSize,
+				};
+				cmdBuffer.copyBuffer(stagingBuffer.buffer, mesh->vertexBuffer.buffer, copy);
+			});
+
+			vmaDestroyBuffer(m_allocator, stagingBuffer.buffer, stagingBuffer.allocation);
+			m_deletionQueue.push(
+			  [this, mesh]() { vmaDestroyBuffer(m_allocator, mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation); });
+		}
+
+		[[nodiscard]] Ref<Shader> createShader(const char* vertexShaderName, const char* fragmentShaderName);
+
+		template<Vertex VertexType>
+		[[nodiscard]] Ref<Material<VertexType>> createMaterial(Ref<Shader>& shader)
+		{
+			return createRef<Material<VertexType>>(
+			  m_device, m_allocator, std::move(shader), m_pipelineCache, m_renderPass, m_level0DSL, m_level1DSL, m_deletionQueue);
+		}
 
 		RendererSpecification spec;
 
@@ -78,7 +125,8 @@ namespace MRG
 
 		glm::vec3 clearColor{};
 
-		Ref<Material> defaultMaterial{};
+		Ref<Shader> defaultColoredShader{};
+		Ref<Material<ColoredVertex>> defaultColoredMaterial{};
 
 	private:
 		static const constexpr std::size_t FRAMES_IN_FLIGHT = 3;
@@ -109,7 +157,8 @@ namespace MRG
 
 		vk::PipelineCache m_pipelineCache{};
 
-		vk::DescriptorSetLayout m_globalSetLayout{};
+		vk::DescriptorSetLayout m_level0DSL{};
+		vk::DescriptorSetLayout m_level1DSL{};
 		vk::DescriptorPool m_descriptorPool{};
 
 		VmaAllocator m_allocator{};
@@ -142,8 +191,7 @@ namespace MRG
 
 		void onResize();
 
-		[[nodiscard]] vk::ShaderModule loadShaderModule(const char* filePath);
-		void draw(const std::vector<Ref<RenderObject>>& drawables, const Camera& camera);
+		void draw(const std::vector<RenderData>& drawables, const Camera& camera);
 	};
 }  // namespace MRG
 

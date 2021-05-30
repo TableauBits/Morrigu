@@ -53,6 +53,7 @@ set(
 		vulkan-headers/1.2.170.0
 		vk-bootstrap/0.2
 		vulkan-memory-allocator/2.3.0
+		spirv-cross/20210115
 )
 
 # require vulkan

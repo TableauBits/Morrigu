@@ -21,7 +21,6 @@ set(
 
 		# Mesh class
 		${CMAKE_CURRENT_LIST_DIR}/Mesh.h
-		${CMAKE_CURRENT_LIST_DIR}/Mesh.cpp
 
 		# Camera class
 		${CMAKE_CURRENT_LIST_DIR}/Camera.h
@@ -29,12 +28,19 @@ set(
 
 		# RenderObject class
 		${CMAKE_CURRENT_LIST_DIR}/RenderObject.h
-		${CMAKE_CURRENT_LIST_DIR}/RenderObject.cpp
 
-		# Material struct
+		# Material class
 		${CMAKE_CURRENT_LIST_DIR}/Material.h
 
-		# Vulkan renderer files
+		# Shader class
+		${CMAKE_CURRENT_LIST_DIR}/Shader.h
+		${CMAKE_CURRENT_LIST_DIR}/Shader.cpp
+
+		# Vertex file
+		${CMAKE_CURRENT_LIST_DIR}/Vertex.h
+		${CMAKE_CURRENT_LIST_DIR}/Vertex.cpp
+
+		# Vulkan renderer class
 		${CMAKE_CURRENT_LIST_DIR}/VkRenderer.h
 		${CMAKE_CURRENT_LIST_DIR}/VkRenderer.cpp
 )
