@@ -163,6 +163,7 @@ namespace MRG
 
 		vk::DescriptorSetLayout m_level0DSL{};
 		vk::DescriptorSetLayout m_level1DSL{};
+		vk::DescriptorSet m_level1Descriptor{};
 		vk::DescriptorPool m_descriptorPool{};
 
 		VmaAllocator m_allocator{};

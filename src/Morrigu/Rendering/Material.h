@@ -52,7 +52,7 @@ namespace MRG
 				VkBufferCreateInfo bufferInfo{
 				  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 				  .size  = size,
-				  .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+				  .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				};
 
 				VmaAllocationCreateInfo allocationCreateInfo{.usage = VMA_MEMORY_USAGE_CPU_TO_GPU};
@@ -123,7 +123,6 @@ namespace MRG
 		void uploadUniform(uint32_t bindingSlot, const UniformType& uniformData)
 		{
 			MRG_ENGINE_ASSERT(m_uniformBuffers.contains(bindingSlot), "Invalid binding slot!")
-			MRG_ENGINE_ASSERT(sizeof(UniformType) == m_shader->uboSizes[bindingSlot], "Specified uniform's size does not match!")
 			void* data;
 			vmaMapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation, &data);
 			memcpy(data, &uniformData, sizeof(UniformType));

@@ -192,8 +192,11 @@ namespace MRG
 				    .offset{0, 0},
 				    .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
 				  });
-				frameData.commandBuffer.bindDescriptorSets(
-				  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 0, frameData.level0Descriptor, {});
+				frameData.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+				                                           drawable.materialPipelineLayout,
+				                                           0,
+				                                           {frameData.level0Descriptor, m_level1Descriptor, drawable.level2Descriptor},
+				                                           {});
 
 				currentMaterial = drawable.materialPipeline;
 			}
@@ -413,9 +416,9 @@ namespace MRG
 
 	void VkRenderer::initDescriptors()
 	{
-		std::array<vk::DescriptorPoolSize, 1> sizes{{vk::DescriptorType::eUniformBuffer, FRAMES_IN_FLIGHT}};
+		std::array<vk::DescriptorPoolSize, 1> sizes{{vk::DescriptorType::eUniformBuffer, FRAMES_IN_FLIGHT + 1}};
 		vk::DescriptorPoolCreateInfo poolInfo{
-		  .maxSets       = FRAMES_IN_FLIGHT,
+		  .maxSets       = FRAMES_IN_FLIGHT + 1,
 		  .poolSizeCount = static_cast<uint32_t>(sizes.size()),
 		  .pPoolSizes    = sizes.data(),
 		};
@@ -469,6 +472,13 @@ namespace MRG
 		setInfo.bindingCount = 0;
 		m_level1DSL          = m_device.createDescriptorSetLayout(setInfo);
 		m_deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(m_level1DSL); });
+
+		vk::DescriptorSetAllocateInfo allocLeve1Info{
+		  .descriptorPool     = m_descriptorPool,
+		  .descriptorSetCount = 1,
+		  .pSetLayouts        = &m_level1DSL,
+		};
+		m_level1Descriptor = m_device.allocateDescriptorSets(allocLeve1Info)[0];
 	}
 
 	void VkRenderer::initMaterials()

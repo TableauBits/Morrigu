@@ -21,6 +21,7 @@ namespace MRG
 		// material data
 		vk::PipelineLayout materialPipelineLayout;
 		vk::Pipeline materialPipeline;
+		vk::DescriptorSet level2Descriptor;
 
 		// RO data
 		Ref<glm::mat4> modelMatrix{};
@@ -53,6 +54,7 @@ namespace MRG
 			  .vertexNumber           = mesh->vertices.size(),
 			  .materialPipelineLayout = material->pipelineLayout,
 			  .materialPipeline       = material->pipeline,
+			  .level2Descriptor       = material->level2Descriptor,
 			  .modelMatrix            = modelMatrix,
 			  .isVisible              = isVisible,
 			};

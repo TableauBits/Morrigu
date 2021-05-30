@@ -2,6 +2,7 @@ find_program(GLSLC glslc)
 
 include(${CMAKE_CURRENT_LIST_DIR}/BasicMesh/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/ColoredMesh/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/GradientShader/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/TexturedMesh/CMakeLists.txt)
 
 foreach (SHADER ${SHADER_SOURCES})
