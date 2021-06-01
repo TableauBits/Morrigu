@@ -26,6 +26,7 @@ namespace MRG
 
 		// binding slot -> size mapping
 		std::map<uint32_t, std::size_t> uboSizes;
+		std::vector<uint32_t> imageBindings;
 
 	private:
 		[[nodiscard]] static std::vector<std::uint32_t> readSource(const char* filePath);

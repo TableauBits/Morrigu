@@ -6,11 +6,11 @@
 
 #include <tiny_obj_loader.h>
 
-namespace Utils
+namespace MRG::Utils
 {
-	MRG::Ref<MRG::Mesh<MRG::BasicVertex>> loadMeshFromFileBasicVertex(const char* filePath)
+	Ref<Mesh<BasicVertex>> loadMeshFromFileBasicVertex(const char* filePath)
 	{
-		auto newMesh = MRG::createRef<MRG::Mesh<MRG::BasicVertex>>();
+		auto newMesh = createRef<Mesh<BasicVertex>>();
 
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
@@ -18,8 +18,7 @@ namespace Utils
 
 		std::string errors;
 
-		const auto result =
-		  tinyobj::LoadObj(&attrib, &shapes, &materials, &errors, (MRG::Folders::Rendering::meshesFolder + filePath).c_str());
+		const auto result = tinyobj::LoadObj(&attrib, &shapes, &materials, &errors, (Folders::Rendering::meshesFolder + filePath).c_str());
 		if (!result) { MRG_ENGINE_WARN("Errors encountered when loading mesh:\n\"{}\"", errors) }
 
 		for (const auto& shape : shapes) {
@@ -39,7 +38,7 @@ namespace Utils
 					const auto normY = attrib.normals[3 * idx.normal_index + 1];
 					const auto normZ = attrib.normals[3 * idx.normal_index + 2];
 
-					newMesh->vertices.emplace_back(MRG::BasicVertex{
+					newMesh->vertices.emplace_back(BasicVertex{
 					  .position = {posX, posY, posZ},
 					  .normal   = {normX, normY, normZ},
 					});
@@ -51,9 +50,9 @@ namespace Utils
 		return newMesh;
 	}
 
-	MRG::Ref<MRG::Mesh<MRG::ColoredVertex>> loadMeshFromFileColoredVertex(const char* filePath)
+	Ref<Mesh<ColoredVertex>> loadMeshFromFileColoredVertex(const char* filePath)
 	{
-		auto newMesh = MRG::createRef<MRG::Mesh<MRG::ColoredVertex>>();
+		auto newMesh = createRef<Mesh<ColoredVertex>>();
 
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
@@ -61,8 +60,7 @@ namespace Utils
 
 		std::string errors;
 
-		const auto result =
-		  tinyobj::LoadObj(&attrib, &shapes, &materials, &errors, (MRG::Folders::Rendering::meshesFolder + filePath).c_str());
+		const auto result = tinyobj::LoadObj(&attrib, &shapes, &materials, &errors, (Folders::Rendering::meshesFolder + filePath).c_str());
 		if (!result) { MRG_ENGINE_WARN("Errors encountered when loading mesh:\n\"{}\"", errors) }
 
 		for (const auto& shape : shapes) {
@@ -82,7 +80,7 @@ namespace Utils
 					const auto normY = attrib.normals[3 * idx.normal_index + 1];
 					const auto normZ = attrib.normals[3 * idx.normal_index + 2];
 
-					newMesh->vertices.emplace_back(MRG::ColoredVertex{
+					newMesh->vertices.emplace_back(ColoredVertex{
 					  .position = {posX, posY, posZ},
 					  .normal   = {normX, normY, normZ},
 					  .color    = {normX, normY, normZ},  // Set the color as the normal for now
@@ -95,9 +93,9 @@ namespace Utils
 		return newMesh;
 	}
 
-	MRG::Ref<MRG::Mesh<MRG::TexturedVertex>> loadMeshFromFileTexturedVertex(const char* filePath)
+	Ref<Mesh<TexturedVertex>> loadMeshFromFileTexturedVertex(const char* filePath)
 	{
-		auto newMesh = MRG::createRef<MRG::Mesh<MRG::TexturedVertex>>();
+		auto newMesh = createRef<Mesh<TexturedVertex>>();
 
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
@@ -105,8 +103,7 @@ namespace Utils
 
 		std::string errors;
 
-		const auto result =
-		  tinyobj::LoadObj(&attrib, &shapes, &materials, &errors, (MRG::Folders::Rendering::meshesFolder + filePath).c_str());
+		const auto result = tinyobj::LoadObj(&attrib, &shapes, &materials, &errors, (Folders::Rendering::meshesFolder + filePath).c_str());
 		if (!result) { MRG_ENGINE_WARN("Errors encountered when loading mesh:\n\"{}\"", errors) }
 
 		for (const auto& shape : shapes) {
@@ -130,10 +127,10 @@ namespace Utils
 					const auto texCoodX = attrib.texcoords[2 * idx.texcoord_index + 0];
 					const auto texCoodY = attrib.texcoords[2 * idx.texcoord_index + 1];
 
-					newMesh->vertices.emplace_back(MRG::TexturedVertex{
+					newMesh->vertices.emplace_back(TexturedVertex{
 					  .position  = {posX, posY, posZ},
 					  .normal    = {normX, normY, normZ},
-					  .texCoords = {texCoodX, texCoodY},
+					  .texCoords = {texCoodX, 1 - texCoodY},
 					});
 				}
 				indexOffset += shapeVertexCount;
@@ -142,4 +139,4 @@ namespace Utils
 
 		return newMesh;
 	}
-}  // namespace Utils
+}  // namespace MRG::Utils

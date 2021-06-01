@@ -8,7 +8,7 @@
 #include "Rendering/Material.h"
 #include "Rendering/Mesh.h"
 
-#include "Rendering/GLMIncludeHelper.h"
+#include "Utils/GLMIncludeHelper.h"
 
 namespace MRG
 {

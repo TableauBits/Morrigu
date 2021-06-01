@@ -90,7 +90,7 @@ namespace MRG::VkInit
 		};
 	}
 
-	VkImageCreateInfo imageCreateInfo(vk::Format format, vk::ImageUsageFlagBits usage, vk::Extent3D extent)
+	VkImageCreateInfo imageCreateInfo(vk::Format format, vk::ImageUsageFlags usage, vk::Extent3D extent)
 	{
 		return vk::ImageCreateInfo{
 		  .imageType   = vk::ImageType::e2D,
@@ -104,7 +104,7 @@ namespace MRG::VkInit
 		};
 	}
 
-	vk::ImageViewCreateInfo imageViewCreateInfo(vk::Format format, vk::Image image, vk::ImageAspectFlagBits aspect)
+	vk::ImageViewCreateInfo imageViewCreateInfo(vk::Format format, vk::Image image, vk::ImageAspectFlags aspect)
 	{
 		return vk::ImageViewCreateInfo{
 		  .image    = image,

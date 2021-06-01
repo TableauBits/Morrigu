@@ -6,7 +6,7 @@
 #define MORRIGU_VKTYPES_H
 
 #include "Core/Core.h"
-#include "Rendering/VMAIncludeHelper.h"
+#include "Utils/VMAIncludeHelper.h"
 
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
@@ -48,6 +48,12 @@ public:
 
 private:
 	std::vector<std::function<void()>> m_deletors;
+};
+
+struct UploadContext
+{
+	vk::Fence uploadFence;
+	vk::CommandPool commandPool;
 };
 
 #endif  // MORRIGU_VKTYPES_H

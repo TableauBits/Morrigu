@@ -45,6 +45,11 @@ namespace MRG
 		return MRG::createRef<Shader>(m_device, vertexShaderName, fragmentShaderName, m_deletionQueue);
 	}
 
+	Ref<Texture> VkRenderer::createTexture(const char* fileName)
+	{
+		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, fileName, m_deletionQueue);
+	}
+
 	void VkRenderer::init(const RendererSpecification& newSpec, GLFWwindow* newWindow)
 	{
 		spec   = newSpec;
@@ -57,6 +62,7 @@ namespace MRG
 		initFramebuffers();
 		initSyncSructs();
 		initDescriptors();
+		initAssets();
 		initMaterials();
 
 		isInitalized = true;
@@ -459,8 +465,8 @@ namespace MRG
 		};
 
 		for (std::size_t i = 0; i < FRAMES_IN_FLIGHT; ++i) {
-			m_framesData[i].cameraBuffer =
-			  createBuffer(sizeof(GPUCameraData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU);
+			m_framesData[i].cameraBuffer = Utils::Allocators::createBuffer(
+			  m_allocator, sizeof(GPUCameraData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, m_deletionQueue);
 			m_framesData[i].level0Descriptor = level0Descriptors[i];
 
 			bufferInfo.buffer = m_framesData[i].cameraBuffer.buffer;
@@ -480,6 +486,8 @@ namespace MRG
 		};
 		m_level1Descriptor = m_device.allocateDescriptorSets(allocLeve1Info)[0];
 	}
+
+	void VkRenderer::initAssets() { defaultTexture = createTexture(Files::Rendering::defaultTexture.c_str()); }
 
 	void VkRenderer::initMaterials()
 	{
@@ -522,52 +530,5 @@ namespace MRG
 		for (const auto& imageView : m_swapchainImageViews) { m_device.destroyImageView(imageView); }
 		vmaDestroyImage(m_allocator, m_depthImage.image, m_depthImage.allocation);
 		m_device.destroyImageView(m_depthImageView);
-	}
-
-	AllocatedBuffer VkRenderer::createBuffer(std::size_t allocSize, vk::BufferUsageFlagBits bufferUsage, VmaMemoryUsage memoryUsage)
-	{
-		VkBufferCreateInfo bufferInfo{
-		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		  .size  = allocSize,
-		  .usage = static_cast<VkBufferUsageFlags>(bufferUsage),
-		};
-
-		VmaAllocationCreateInfo allocationInfo{
-		  .usage = memoryUsage,
-		};
-
-		AllocatedBuffer newBuffer;
-		VkBuffer newRawBuffer;
-		MRG_VK_CHECK(vmaCreateBuffer(m_allocator, &bufferInfo, &allocationInfo, &newRawBuffer, &newBuffer.allocation, nullptr),
-		             "Failed to allocate new buffer!")
-		newBuffer.buffer = newRawBuffer;
-		m_deletionQueue.push([=]() { vmaDestroyBuffer(m_allocator, newBuffer.buffer, newBuffer.allocation); });
-
-		return newBuffer;
-	}
-	void VkRenderer::immediateSubmit(std::function<void(vk::CommandBuffer)>&& function)
-	{
-		vk::CommandBufferAllocateInfo cmdBufferAllocInfo =
-		  VkInit::cmdBufferAllocateInfo(m_uploadContext.commandPool, vk::CommandBufferLevel::ePrimary, 1);
-
-		const auto cmdBuffer = m_device.allocateCommandBuffers(cmdBufferAllocInfo).back();
-		vk::CommandBufferBeginInfo beginInfo{
-		  .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
-		};
-
-		cmdBuffer.begin(beginInfo);
-		function(cmdBuffer);
-		cmdBuffer.end();
-
-		vk::SubmitInfo submitInfo{
-		  .commandBufferCount = 1,
-		  .pCommandBuffers    = &cmdBuffer,
-		};
-		m_graphicsQueue.submit(submitInfo, m_uploadContext.uploadFence);
-
-		MRG_VK_CHECK_HPP(m_device.waitForFences(m_uploadContext.uploadFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
-		m_device.resetFences(m_uploadContext.uploadFence);
-
-		m_device.resetCommandPool(m_uploadContext.commandPool);
 	}
 }  // namespace MRG

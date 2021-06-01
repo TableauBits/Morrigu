@@ -2,7 +2,7 @@
 // Created by Mathis Lamidey on 2021-04-03.
 //
 
-#include "Utils/ModelLoading.h"
+#include <Morrigu.h>
 
 struct GradientUniform
 {
@@ -20,13 +20,18 @@ public:
 		mainCamera.setPerspective(glm::radians(70.f), 0.1f, 200.f);
 		mainCamera.recalculateViewProjection();
 
-		auto gradientShader = application->renderer.createShader("GradientShader.vert.spv", "GradientShader.frag.spv");
-		m_gradientMaterial  = application->renderer.createMaterial<MRG::TexturedVertex>(gradientShader);
-		m_gradientMaterial->uploadUniform<GradientUniform>(0, GradientUniform{.colorA = {0.f, 0.f, 0.f}, .colorB = {1.f, 1.f, 1.f}});
+		const auto brickTexture = application->renderer.createTexture("brick.jpg");
+		const auto leafTexture  = application->renderer.createTexture("leaf.jpg");
+		const auto textureBlendingShader =
+		  application->renderer.createShader("TextureBlendingShader.vert.spv", "TextureBlendingShader.frag.spv");
+		const auto textureBlendingMaterial = application->renderer.createMaterial<MRG::TexturedVertex>(textureBlendingShader);
+		textureBlendingMaterial->bindTexture(0, leafTexture);
+		textureBlendingMaterial->bindTexture(1, brickTexture);
 
-		m_suzanne =
-		  MRG::RenderObject<MRG::TexturedVertex>::create(Utils::loadMeshFromFileTexturedVertex("monkey_smooth.obj"), m_gradientMaterial);
-		m_boxy = MRG::RenderObject<MRG::TexturedVertex>::create(Utils::loadMeshFromFileTexturedVertex("boxy.obj"), m_gradientMaterial);
+		m_suzanne = MRG::RenderObject<MRG::TexturedVertex>::create(MRG::Utils::loadMeshFromFileTexturedVertex("monkey_smooth.obj"),
+		                                                           textureBlendingMaterial);
+		m_boxy =
+		  MRG::RenderObject<MRG::TexturedVertex>::create(MRG::Utils::loadMeshFromFileTexturedVertex("boxy.obj"), textureBlendingMaterial);
 
 		m_suzanne->translate({1.5f, 0.f, 0.f});
 		m_suzanne->rotate({0.f, 1.f, 0.f}, glm::radians(180.f));
@@ -63,7 +68,6 @@ public:
 	}
 
 private:
-	MRG::Ref<MRG::Material<MRG::TexturedVertex>> m_gradientMaterial;
 	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_suzanne{}, m_boxy{};
 	float m_elapsedTime{};
 };

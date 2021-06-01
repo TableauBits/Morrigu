@@ -28,7 +28,8 @@ namespace MRG
 		const auto vertexCompiler   = spirv_cross::Compiler{vertSrc};
 		const auto fragmentCompiler = spirv_cross::Compiler{fragSrc};
 
-		std::map<uint32_t, vk::DescriptorSetLayoutBinding> bindings{};
+		std::map<uint32_t, vk::DescriptorSetLayoutBinding> uboBindings{};
+		std::map<uint32_t, vk::DescriptorSetLayoutBinding> sampledImagesBindings{};
 
 		//// Vertex shader
 		const auto& vertResources = vertexCompiler.get_shader_resources();
@@ -42,14 +43,32 @@ namespace MRG
 
 			// We are only interested in DS level 2: levels 0 and 1 do not vary by material
 			if (setLevel == 2) {
-				bindings.insert(std::make_pair(bindingSlot,
-				                               vk::DescriptorSetLayoutBinding{
-				                                 .binding         = bindingSlot,
-				                                 .descriptorType  = vk::DescriptorType::eUniformBuffer,
-				                                 .descriptorCount = 1,
-				                                 .stageFlags      = vk::ShaderStageFlagBits::eVertex,
-				                               }));
+				uboBindings.insert(std::make_pair(bindingSlot,
+				                                  vk::DescriptorSetLayoutBinding{
+				                                    .binding         = bindingSlot,
+				                                    .descriptorType  = vk::DescriptorType::eUniformBuffer,
+				                                    .descriptorCount = 1,
+				                                    .stageFlags      = vk::ShaderStageFlagBits::eVertex,
+				                                  }));
 				uboSizes.insert(std::make_pair(bindingSlot, uniformSize));
+			}
+		}
+
+		// sampled images (AKA textures)
+		for (const auto& image : vertResources.sampled_images) {
+			const auto setLevel    = vertexCompiler.get_decoration(image.id, spv::DecorationDescriptorSet);
+			const auto bindingSlot = vertexCompiler.get_decoration(image.id, spv::DecorationBinding);
+
+			// We are only interested in DS level 2: levels 0 and 1 do not vary by material
+			if (setLevel == 2) {
+				sampledImagesBindings.insert(std::make_pair(bindingSlot,
+				                                            vk::DescriptorSetLayoutBinding{
+				                                              .binding         = bindingSlot,
+				                                              .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
+				                                              .descriptorCount = 1,
+				                                              .stageFlags      = vk::ShaderStageFlagBits::eVertex,
+				                                            }));
+				imageBindings.emplace_back(bindingSlot);
 			}
 		}
 
@@ -65,27 +84,50 @@ namespace MRG
 
 			// We are only interested in DS level 2: levels 0 and 1 do not vary by material
 			if (setLevel == 2) {
-				if (bindings.contains(bindingSlot)) {
-					bindings.at(bindingSlot).stageFlags |= vk::ShaderStageFlagBits::eFragment;
+				if (uboBindings.contains(bindingSlot)) {
+					uboBindings.at(bindingSlot).stageFlags |= vk::ShaderStageFlagBits::eFragment;
 				} else {
-					bindings.insert(std::make_pair(bindingSlot,
-					                               vk::DescriptorSetLayoutBinding{
-					                                 .binding         = bindingSlot,
-					                                 .descriptorType  = vk::DescriptorType::eUniformBuffer,
-					                                 .descriptorCount = 1,
-					                                 .stageFlags      = vk::ShaderStageFlagBits::eFragment,
-					                               }));
+					uboBindings.insert(std::make_pair(bindingSlot,
+					                                  vk::DescriptorSetLayoutBinding{
+					                                    .binding         = bindingSlot,
+					                                    .descriptorType  = vk::DescriptorType::eUniformBuffer,
+					                                    .descriptorCount = 1,
+					                                    .stageFlags      = vk::ShaderStageFlagBits::eFragment,
+					                                  }));
 					uboSizes.insert(std::make_pair(bindingSlot, uniformSize));
 				}
 			}
 		}
 
-		std::vector<vk::DescriptorSetLayoutBinding> finalBindings(bindings.size());
+		// sampled images (AKA textures)
+		for (const auto& image : fragResources.sampled_images) {
+			const auto setLevel    = fragmentCompiler.get_decoration(image.id, spv::DecorationDescriptorSet);
+			const auto bindingSlot = fragmentCompiler.get_decoration(image.id, spv::DecorationBinding);
+
+			// We are only interested in DS level 2: levels 0 and 1 do not vary by material
+			if (setLevel == 2) {
+				if (sampledImagesBindings.contains(bindingSlot)) {
+					sampledImagesBindings.at(bindingSlot).stageFlags |= vk::ShaderStageFlagBits::eFragment;
+				} else {
+					sampledImagesBindings.insert(std::make_pair(bindingSlot,
+					                                            vk::DescriptorSetLayoutBinding{
+					                                              .binding         = bindingSlot,
+					                                              .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
+					                                              .descriptorCount = 1,
+					                                              .stageFlags      = vk::ShaderStageFlagBits::eFragment,
+					                                            }));
+					imageBindings.emplace_back(bindingSlot);
+				}
+			}
+		}
+
+		std::vector<vk::DescriptorSetLayoutBinding> finalBindings(uboBindings.size() + sampledImagesBindings.size());
 		auto index = 0;
-		for (const auto& ubo : bindings) { finalBindings[index++] = ubo.second; }
+		for (const auto& ubo : uboBindings) { finalBindings[index++] = ubo.second; }
+		for (const auto& sampledImage : sampledImagesBindings) { finalBindings[index++] = sampledImage.second; }
 
 		vk::DescriptorSetLayoutCreateInfo setInfo{
-		  .bindingCount = static_cast<uint32_t>(bindings.size()),
+		  .bindingCount = static_cast<uint32_t>(finalBindings.size()),
 		  .pBindings    = finalBindings.data(),
 		};
 

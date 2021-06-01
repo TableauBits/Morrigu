@@ -6,9 +6,9 @@
 #define MORRIGU_MESH_H
 
 #include "Core/FileNames.h"
-#include "Rendering/GLMIncludeHelper.h"
 #include "Rendering/Vertex.h"
 #include "Rendering/VkTypes.h"
+#include "Utils/GLMIncludeHelper.h"
 
 #include <vector>
 

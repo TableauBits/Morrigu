@@ -5,8 +5,8 @@
 #ifndef MORRIGU_VERTEX_H
 #define MORRIGU_VERTEX_H
 
-#include "Rendering/GLMIncludeHelper.h"
 #include "Rendering/VkTypes.h"
+#include "Utils/GLMIncludeHelper.h"
 
 #include <vector>
 

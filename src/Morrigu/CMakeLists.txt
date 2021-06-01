@@ -1,6 +1,7 @@
 include(${CMAKE_CURRENT_LIST_DIR}/Core/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/Events/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/Rendering/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/Utils/CMakeLists.txt)
 
 set(
 		MRG_SOURCES
@@ -16,4 +17,7 @@ set(
 
 		# Rendering files
 		${MRG_RENDERING_SOURCES}
+
+		# Utils files
+		${MRG_UTILS_SOURCES}
 )

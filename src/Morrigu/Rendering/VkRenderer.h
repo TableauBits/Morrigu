@@ -8,6 +8,7 @@
 #include "Events/ApplicationEvent.h"
 #include "Rendering/Camera.h"
 #include "Rendering/RenderObject.h"
+#include "Rendering/Texture.h"
 #include "Rendering/VkTypes.h"
 
 #include <GLFW/glfw3.h>
@@ -24,12 +25,6 @@ namespace MRG
 		int windowWidth;
 		int windowHeight;
 		vk::PresentModeKHR preferredPresentMode;
-	};
-
-	struct UploadContext
-	{
-		vk::Fence uploadFence;
-		vk::CommandPool commandPool;
 	};
 
 	struct GPUCameraData
@@ -57,46 +52,39 @@ namespace MRG
 		template<Vertex VertexType>
 		void uploadMesh(Ref<Mesh<VertexType>>& mesh)
 		{
-			const auto bufferSize = static_cast<uint32_t>(mesh->vertices.size() * sizeof(ColoredVertex));
+			const auto bufferSize = static_cast<uint32_t>(mesh->vertices.size() * sizeof(VertexType));
 
 			// staging buffer
-			VkBufferCreateInfo stagingBufferInfo{
+			VkBufferCreateInfo bufferInfo{
 			  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 			  .size  = bufferSize,
 			  .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			};
-			VmaAllocationCreateInfo vmaStagingAllocationCreateInfo{
+
+			VmaAllocationCreateInfo allocationInfo{
 			  .usage = VMA_MEMORY_USAGE_CPU_ONLY,
 			};
-			VkBuffer rawBuffer{};
-			AllocatedBuffer stagingBuffer{};
-			MRG_VK_CHECK(
-			  vmaCreateBuffer(
-			    m_allocator, &stagingBufferInfo, &vmaStagingAllocationCreateInfo, &rawBuffer, &stagingBuffer.allocation, nullptr),
-			  "Failed to allocate new buffer!")
-			stagingBuffer.buffer = rawBuffer;
+
+			AllocatedBuffer stagingBuffer;
+			VkBuffer newRawBuffer;
+			MRG_VK_CHECK(vmaCreateBuffer(m_allocator, &bufferInfo, &allocationInfo, &newRawBuffer, &stagingBuffer.allocation, nullptr),
+			             "Failed to allocate new buffer!")
+			stagingBuffer.buffer = newRawBuffer;
 
 			void* data;
 			vmaMapMemory(m_allocator, stagingBuffer.allocation, &data);
-			memcpy(data, mesh->vertices.data(), mesh->vertices.size() * sizeof(ColoredVertex));
+			memcpy(data, mesh->vertices.data(), mesh->vertices.size() * sizeof(VertexType));
 			vmaUnmapMemory(m_allocator, stagingBuffer.allocation);
 
 			// mesh vertex buffer
-			VkBufferCreateInfo vertexBufferInfo{
-			  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-			  .size  = bufferSize,
-			  .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-			};
-			VmaAllocationCreateInfo vmaVertexAllocationCreateInfo{
-			  .usage = VMA_MEMORY_USAGE_GPU_ONLY,
-			};
-			MRG_VK_CHECK(
-			  vmaCreateBuffer(
-			    m_allocator, &vertexBufferInfo, &vmaVertexAllocationCreateInfo, &rawBuffer, &mesh->vertexBuffer.allocation, nullptr),
-			  "Failed to allocate new buffer!")
-			mesh->vertexBuffer.buffer = rawBuffer;
+			mesh->vertexBuffer =
+			  Utils::Allocators::createBuffer(m_allocator,
+			                                  bufferSize,
+			                                  vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+			                                  VMA_MEMORY_USAGE_GPU_ONLY,
+			                                  m_deletionQueue);
 
-			immediateSubmit([=](vk::CommandBuffer cmdBuffer) {
+			Utils::Allocators::immediateSubmit(m_device, m_graphicsQueue, m_uploadContext, [=](vk::CommandBuffer cmdBuffer) {
 				vk::BufferCopy copy{
 				  .size = bufferSize,
 				};
@@ -104,18 +92,18 @@ namespace MRG
 			});
 
 			vmaDestroyBuffer(m_allocator, stagingBuffer.buffer, stagingBuffer.allocation);
-			m_deletionQueue.push(
-			  [this, mesh]() { vmaDestroyBuffer(m_allocator, mesh->vertexBuffer.buffer, mesh->vertexBuffer.allocation); });
 		}
 
 		[[nodiscard]] Ref<Shader> createShader(const char* vertexShaderName, const char* fragmentShaderName);
 
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<Material<VertexType>> createMaterial(Ref<Shader>& shader)
+		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader)
 		{
 			return createRef<Material<VertexType>>(
-			  m_device, m_allocator, std::move(shader), m_pipelineCache, m_renderPass, m_level0DSL, m_level1DSL, m_deletionQueue);
+			  m_device, m_allocator, shader, m_pipelineCache, m_renderPass, m_level0DSL, m_level1DSL, defaultTexture, m_deletionQueue);
 		}
+
+		[[nodiscard]] Ref<Texture> createTexture(const char* fileName);
 
 		RendererSpecification spec;
 
@@ -131,6 +119,8 @@ namespace MRG
 		Ref<Material<ColoredVertex>> defaultColoredMaterial{};
 		Ref<Shader> defaultTexturedShader{};
 		Ref<Material<TexturedVertex>> defaultTexturedMaterial{};
+
+		Ref<Texture> defaultTexture{};
 
 	private:
 		static const constexpr std::size_t FRAMES_IN_FLIGHT = 3;
@@ -177,13 +167,10 @@ namespace MRG
 		void initFramebuffers();
 		void initSyncSructs();
 		void initDescriptors();
+		void initAssets();
 		void initMaterials();
 
 		void destroySwapchain();
-
-		/// Helper methods
-		[[nodiscard]] AllocatedBuffer createBuffer(std::size_t allocSize, vk::BufferUsageFlagBits bufferUsage, VmaMemoryUsage memoryUsage);
-		void immediateSubmit(std::function<void(vk::CommandBuffer cmd)>&& function);
 
 		/// Methods called by the application class
 		friend class Application;

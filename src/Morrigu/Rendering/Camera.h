@@ -6,7 +6,7 @@
 #define MORRIGU_CAMERA_H
 
 #include "Events/ApplicationEvent.h"
-#include "Rendering/GLMIncludeHelper.h"
+#include "Utils/GLMIncludeHelper.h"
 
 namespace MRG
 {

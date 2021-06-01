@@ -18,10 +18,11 @@ target_link_libraries(
 		project_warnings
 		Vulkan::Vulkan
 		CONAN_PKG::spdlog
-		CONAN_PKG::glfw
 		CONAN_PKG::glm
-		CONAN_PKG::vulkan-headers
+		CONAN_PKG::glfw
+		CONAN_PKG::stb
 		CONAN_PKG::tinyobjloader
+		CONAN_PKG::vulkan-headers
 		CONAN_PKG::vk-bootstrap
 		CONAN_PKG::vulkan-memory-allocator
 		CONAN_PKG::spirv-cross
@@ -51,6 +52,12 @@ add_custom_command(
 		TARGET SampleApp
 		POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Meshes ${CMAKE_SOURCE_DIR}/runtime/assets/meshes
+)
+
+add_custom_command(
+		TARGET SampleApp
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Textures ${CMAKE_SOURCE_DIR}/runtime/assets/textures
 )
 
 add_dependencies(
