@@ -80,7 +80,7 @@ namespace MRG
 		for (const auto& uniform : fragResources.uniform_buffers) {
 			const auto setLevel    = fragmentCompiler.get_decoration(uniform.id, spv::DecorationDescriptorSet);
 			const auto bindingSlot = fragmentCompiler.get_decoration(uniform.id, spv::DecorationBinding);
-			const auto uniformSize = vertexCompiler.get_declared_struct_size(vertexCompiler.get_type(uniform.type_id));
+			const auto uniformSize = fragmentCompiler.get_declared_struct_size(fragmentCompiler.get_type(uniform.type_id));
 
 			// We are only interested in DS level 2: levels 0 and 1 do not vary by material
 			if (setLevel == 2) {

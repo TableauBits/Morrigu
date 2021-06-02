@@ -28,7 +28,9 @@ namespace MRG
 		while (m_isRunning) {
 			const auto time = static_cast<float>(glfwGetTime());
 			Timestep ts{time - m_lastTime};
-			m_lastTime = time;
+			elapsedTime += ts;
+			renderer.elapsedTime = elapsedTime;
+			m_lastTime           = time;
 
 			for (auto& layer : m_layers) { layer->onUpdate(ts); }
 			renderer.beginFrame();

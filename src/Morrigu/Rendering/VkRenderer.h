@@ -27,11 +27,16 @@ namespace MRG
 		vk::PresentModeKHR preferredPresentMode;
 	};
 
-	struct GPUCameraData
+	struct CameraData
 	{
 		glm::mat4 viewMatrix;
 		glm::mat4 projectionMatrix;
 		glm::mat4 viewProjectionMatrix;
+	};
+
+	struct TimeData
+	{
+		glm::vec4 time;
 	};
 
 	struct FrameData
@@ -43,6 +48,7 @@ namespace MRG
 		vk::CommandBuffer commandBuffer;
 
 		AllocatedBuffer cameraBuffer;
+		AllocatedBuffer timeDataBuffer;
 		vk::DescriptorSet level0Descriptor;
 	};
 
@@ -108,7 +114,7 @@ namespace MRG
 		RendererSpecification spec;
 
 		bool isInitalized{false};
-		int frameNumber{0};
+		float elapsedTime;
 		GLFWwindow* window{nullptr};
 
 		glm::vec3 clearColor{};
@@ -123,9 +129,11 @@ namespace MRG
 		Ref<Texture> defaultTexture{};
 
 	private:
+		int m_frameNumber{0};
+
 		static const constexpr std::size_t FRAMES_IN_FLIGHT = 3;
 		std::array<FrameData, FRAMES_IN_FLIGHT> m_framesData{};
-		[[nodiscard]] FrameData& getCurrentFrameData() { return m_framesData[frameNumber % FRAMES_IN_FLIGHT]; }
+		[[nodiscard]] FrameData& getCurrentFrameData() { return m_framesData[m_frameNumber % FRAMES_IN_FLIGHT]; }
 
 		vk::Instance m_instance{};
 		vk::DebugUtilsMessengerEXT m_debugMessenger{};

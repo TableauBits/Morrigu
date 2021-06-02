@@ -39,6 +39,7 @@ namespace MRG
 		void setWindowTitle(const char* title) const;
 
 		VkRenderer renderer;
+		float elapsedTime{};
 
 	private:
 		void init();

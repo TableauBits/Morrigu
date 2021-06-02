@@ -20,56 +20,61 @@ public:
 		mainCamera.setPerspective(glm::radians(70.f), 0.1f, 200.f);
 		mainCamera.recalculateViewProjection();
 
-		const auto brickTexture = application->renderer.createTexture("brick.jpg");
-		const auto leafTexture  = application->renderer.createTexture("leaf.jpg");
-		const auto textureBlendingShader =
-		  application->renderer.createShader("TextureBlendingShader.vert.spv", "TextureBlendingShader.frag.spv");
-		const auto textureBlendingMaterial = application->renderer.createMaterial<MRG::TexturedVertex>(textureBlendingShader);
-		textureBlendingMaterial->bindTexture(0, leafTexture);
-		textureBlendingMaterial->bindTexture(1, brickTexture);
+		auto testQuadMesh      = MRG::createRef<MRG::Mesh<MRG::TexturedVertex>>();
+		testQuadMesh->vertices = {
+		  MRG::TexturedVertex{.position{0.f, 0.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 0.f}},
+		  MRG::TexturedVertex{.position{0.f, 1.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 1.f}},
+		  MRG::TexturedVertex{.position{1.f, 1.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 1.f}},
+		  MRG::TexturedVertex{.position{1.f, 1.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 1.f}},
+		  MRG::TexturedVertex{.position{1.f, 0.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 0.f}},
+		  MRG::TexturedVertex{.position{0.f, 0.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 0.f}},
+		};
+		const auto testShader   = application->renderer.createShader("TestShader.vert.spv", "TestShader.frag.spv");
+		const auto testMaterial = application->renderer.createMaterial<MRG::TexturedVertex>(testShader);
 
-		m_suzanne = MRG::RenderObject<MRG::TexturedVertex>::create(MRG::Utils::loadMeshFromFileTexturedVertex("monkey_smooth.obj"),
-		                                                           textureBlendingMaterial);
-		m_boxy =
-		  MRG::RenderObject<MRG::TexturedVertex>::create(MRG::Utils::loadMeshFromFileTexturedVertex("boxy.obj"), textureBlendingMaterial);
+		m_suzanne =
+		  MRG::RenderObject<MRG::TexturedVertex>::create(MRG::Utils::loadMeshFromFileTexturedVertex("monkey_smooth.obj"), testMaterial);
+		m_boxy     = MRG::RenderObject<MRG::TexturedVertex>::create(MRG::Utils::loadMeshFromFileTexturedVertex("boxy.obj"), testMaterial);
+		m_testQuad = MRG::RenderObject<MRG::TexturedVertex>::create(testQuadMesh, testMaterial);
 
+		m_testQuad->translate({-0.5f, -0.5f, 2.f});
 		m_suzanne->translate({1.5f, 0.f, 0.f});
-		m_suzanne->rotate({0.f, 1.f, 0.f}, glm::radians(180.f));
 		m_suzanne->setVisible(false);
 		m_boxy->translate({-1.5f, -1.5f, 0.f});
+		m_boxy->setVisible(false);
+		m_boxy->rotate({0.f, 1.f, 0.f}, glm::radians(90.f));
 
+		application->renderer.uploadMesh(m_testQuad->mesh);
 		application->renderer.uploadMesh(m_suzanne->mesh);
 		application->renderer.uploadMesh(m_boxy->mesh);
 
+		renderables.emplace_back(m_testQuad->getRenderData());
 		renderables.emplace_back(m_suzanne->getRenderData());
 		renderables.emplace_back(m_boxy->getRenderData());
 	}
 
 	void onDetach() override { MRG_INFO("my final message. goodb ye") }
-	void onUpdate(MRG::Timestep ts) override
-	{
-		m_elapsedTime += ts;
-		application->renderer.clearColor.b = std::abs(std::sin(m_elapsedTime * 3.14f));
-		m_suzanne->rotate({0.f, 1.f, 0.f}, ts.getSeconds() * glm::radians(180.f));
-		m_boxy->rotate({0.f, 1.f, 0.f}, ts.getSeconds() * glm::radians(180.f));
-	}
+	void onUpdate(MRG::Timestep) override { application->renderer.clearColor.b = std::abs(std::sin(application->elapsedTime * 3.14f)); }
 	void onEvent(MRG::Event& event) override
 	{
 		MRG::EventDispatcher dispatcher{event};
 		dispatcher.dispatch<MRG::WindowResizeEvent>([this](MRG::WindowResizeEvent& event) { return mainCamera.onResize(event); });
 		dispatcher.dispatch<MRG::KeyReleasedEvent>([this](MRG::KeyReleasedEvent&) {
 			m_suzanne->setVisible(false);
+			m_boxy->setVisible(false);
+			m_testQuad->setVisible(true);
 			return true;
 		});
 		dispatcher.dispatch<MRG::KeyPressedEvent>([this](MRG::KeyPressedEvent&) {
 			m_suzanne->setVisible(true);
+			m_boxy->setVisible(true);
+			m_testQuad->setVisible(false);
 			return true;
 		});
 	}
 
 private:
-	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_suzanne{}, m_boxy{};
-	float m_elapsedTime{};
+	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_suzanne{}, m_boxy{}, m_testQuad{};
 };
 
 class SampleApp : public MRG::Application
