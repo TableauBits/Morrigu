@@ -4,8 +4,6 @@
 
 #include "Allocators.h"
 
-#include "Rendering/VkInitialize.h"
-
 namespace MRG::Utils::Allocators
 {
 	AllocatedBuffer createBuffer(VmaAllocator allocator,
@@ -39,9 +37,11 @@ namespace MRG::Utils::Allocators
 	                     UploadContext& uploadContext,
 	                     std::function<void(vk::CommandBuffer)>&& function)
 	{
-		vk::CommandBufferAllocateInfo cmdBufferAllocInfo =
-		  VkInit::cmdBufferAllocateInfo(uploadContext.commandPool, vk::CommandBufferLevel::ePrimary, 1);
-
+		vk::CommandBufferAllocateInfo cmdBufferAllocInfo{
+		  .commandPool        = uploadContext.commandPool,
+		  .level              = vk::CommandBufferLevel::ePrimary,
+		  .commandBufferCount = 1,
+		};
 		const auto cmdBuffer = device.allocateCommandBuffers(cmdBufferAllocInfo).back();
 		vk::CommandBufferBeginInfo beginInfo{
 		  .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,

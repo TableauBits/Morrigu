@@ -294,8 +294,17 @@ namespace MRG
 		  .height = static_cast<uint32_t>(spec.windowHeight),
 		  .depth  = 1,
 		};
-		const auto depthImageCreateInfo =
-		  VkInit::imageCreateInfo(m_depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment, depthImageExtent);
+		VkImageCreateInfo depthImageCreateInfo{
+		  .sType       = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+		  .imageType   = VK_IMAGE_TYPE_2D,
+		  .format      = static_cast<VkFormat>(m_depthFormat),
+		  .extent      = depthImageExtent,
+		  .mipLevels   = 1,
+		  .arrayLayers = 1,
+		  .samples     = VK_SAMPLE_COUNT_1_BIT,
+		  .tiling      = VK_IMAGE_TILING_OPTIMAL,
+		  .usage       = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		};
 		VmaAllocationCreateInfo depthImageAllocationCreateInfo{.usage         = VMA_MEMORY_USAGE_GPU_ONLY,
 		                                                       .requiredFlags = VkMemoryPropertyFlags{VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT}};
 
@@ -303,30 +312,47 @@ namespace MRG
 		vmaCreateImage(m_allocator, &depthImageCreateInfo, &depthImageAllocationCreateInfo, &rawImage, &m_depthImage.allocation, nullptr);
 		m_depthImage.image = rawImage;
 
-		const auto depthImageViewCreateInfo =
-		  VkInit::imageViewCreateInfo(m_depthFormat, m_depthImage.image, vk::ImageAspectFlagBits::eDepth);
+		vk::ImageViewCreateInfo depthImageViewCreateInfo{
+		  .image    = m_depthImage.image,
+		  .viewType = vk::ImageViewType::e2D,
+		  .format   = m_depthFormat,
+		  .subresourceRange{
+		    .aspectMask     = vk::ImageAspectFlagBits::eDepth,
+		    .baseMipLevel   = 0,
+		    .levelCount     = 1,
+		    .baseArrayLayer = 0,
+		    .layerCount     = 1,
+		  },
+		};
 		m_depthImageView = m_device.createImageView(depthImageViewCreateInfo);
 	}
 
 	void VkRenderer::initCommands()
 	{
 		// create command pool
-		const auto cmdPoolInfo = VkInit::cmdPoolCreateInfo(vk::CommandPoolCreateFlagBits::eResetCommandBuffer, m_graphicsQueueIndex);
+		vk::CommandPoolCreateInfo cmdPoolInfo{
+		  .flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+		  .queueFamilyIndex = m_graphicsQueueIndex,
+		};
 
 		for (auto& frame : m_framesData) {
 			frame.commandPool = m_device.createCommandPool(cmdPoolInfo);
 
 			// allocate main command buffer from created command pool
-			const auto mainCmdBufferInfo = VkInit::cmdBufferAllocateInfo(frame.commandPool, vk::CommandBufferLevel::ePrimary, 1);
-			frame.commandBuffer          = m_device.allocateCommandBuffers(mainCmdBufferInfo)[0];
+			vk::CommandBufferAllocateInfo mainCmdBufferInfo{
+			  .commandPool        = frame.commandPool,
+			  .level              = vk::CommandBufferLevel::ePrimary,
+			  .commandBufferCount = 1,
+			};
+			frame.commandBuffer = m_device.allocateCommandBuffers(mainCmdBufferInfo)[0];
 		}
 		m_deletionQueue.push([this]() {
 			for (const auto& frame : m_framesData) { m_device.destroyCommandPool(frame.commandPool); }
 		});
 
 		// create upload context command pool
-		const auto uploadCmdPoolInfo = VkInit::cmdPoolCreateInfo({}, m_graphicsQueueIndex);
-		m_uploadContext.commandPool  = m_device.createCommandPool(uploadCmdPoolInfo);
+		cmdPoolInfo.flags           = {};
+		m_uploadContext.commandPool = m_device.createCommandPool(cmdPoolInfo);
 		m_deletionQueue.push([this]() { m_device.destroyCommandPool(m_uploadContext.commandPool); });
 	}
 

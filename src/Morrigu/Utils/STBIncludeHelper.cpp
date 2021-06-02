@@ -6,7 +6,6 @@
 #include "STBIncludeHelper.h"
 
 #include "Core/FileNames.h"
-#include "Rendering/VkInitialize.h"
 #include "Utils/Allocators.h"
 
 namespace MRG::Utils
@@ -48,9 +47,17 @@ namespace MRG::Utils
 		  .height = static_cast<uint32_t>(texHeight),
 		  .depth  = 1,
 		};
-		vk::Format imageFormat = vk::Format::eR8G8B8A8Srgb;
-		const auto imageInfo =
-		  VkInit::imageCreateInfo(imageFormat, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, imageExtent);
+		vk::Format imageFormat      = vk::Format::eR8G8B8A8Srgb;
+		VkImageCreateInfo imageInfo = vk::ImageCreateInfo{
+		  .imageType   = vk::ImageType::e2D,
+		  .format      = imageFormat,
+		  .extent      = imageExtent,
+		  .mipLevels   = 1,
+		  .arrayLayers = 1,
+		  .samples     = vk::SampleCountFlagBits::e1,
+		  .tiling      = vk::ImageTiling::eOptimal,
+		  .usage       = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+		};
 		VmaAllocationCreateInfo imageAllocationInfo{.usage = VMA_MEMORY_USAGE_GPU_ONLY};
 
 		AllocatedImage newImage;

@@ -5,7 +5,6 @@
 #include "Texture.h"
 
 #include "Core/FileNames.h"
-#include "Rendering/VkInitialize.h"
 #include "Utils/STBIncludeHelper.h"
 
 namespace MRG
@@ -20,7 +19,19 @@ namespace MRG
 		image = Utils::loadImageFromFile(
 		  device, graphicsQueue, uploadContext, allocator, (Folders::Rendering::texturesFolder + file).c_str(), deletionQueue);
 
-		const auto imageViewInfo   = VkInit::imageViewCreateInfo(vk::Format::eR8G8B8A8Srgb, image.image, vk::ImageAspectFlagBits::eColor);
+		vk::ImageViewCreateInfo imageViewInfo{
+		  .image    = image.image,
+		  .viewType = vk::ImageViewType::e2D,
+		  .format   = vk::Format::eR8G8B8A8Srgb,
+		  .subresourceRange =
+		    {
+		      .aspectMask     = vk::ImageAspectFlagBits::eColor,
+		      .baseMipLevel   = 0,
+		      .levelCount     = 1,
+		      .baseArrayLayer = 0,
+		      .layerCount     = 1,
+		    },
+		};
 		imageView                  = device.createImageView(imageViewInfo);
 		const auto imageViewBackup = imageView;
 		deletionQueue.push([=]() { device.destroyImageView(imageViewBackup); });

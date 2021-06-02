@@ -32,10 +32,10 @@ public:
 		const auto testShader   = application->renderer.createShader("TestShader.vert.spv", "TestShader.frag.spv");
 		const auto testMaterial = application->renderer.createMaterial<MRG::TexturedVertex>(testShader);
 
+		m_testQuad = MRG::RenderObject<MRG::TexturedVertex>::create(testQuadMesh, testMaterial);
 		m_suzanne =
 		  MRG::RenderObject<MRG::TexturedVertex>::create(MRG::Utils::loadMeshFromFileTexturedVertex("monkey_smooth.obj"), testMaterial);
-		m_boxy     = MRG::RenderObject<MRG::TexturedVertex>::create(MRG::Utils::loadMeshFromFileTexturedVertex("boxy.obj"), testMaterial);
-		m_testQuad = MRG::RenderObject<MRG::TexturedVertex>::create(testQuadMesh, testMaterial);
+		m_boxy = MRG::RenderObject<MRG::TexturedVertex>::create(MRG::Utils::loadMeshFromFileTexturedVertex("boxy.obj"), testMaterial);
 
 		m_testQuad->translate({-0.5f, -0.5f, 2.f});
 		m_suzanne->translate({1.5f, 0.f, 0.f});

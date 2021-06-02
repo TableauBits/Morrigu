@@ -9,7 +9,6 @@
 #include "Rendering/Shader.h"
 #include "Rendering/Texture.h"
 #include "Rendering/Vertex.h"
-#include "Rendering/VkInitialize.h"
 #include "Rendering/VkTypes.h"
 #include "Utils/Allocators.h"
 
@@ -99,15 +98,61 @@ namespace MRG
 			  .pVertexAttributeDescriptions    = vertexInfo.attributes.data(),
 			};
 
+			vk::PipelineShaderStageCreateInfo vertStage{
+			  .stage  = vk::ShaderStageFlagBits::eVertex,
+			  .module = m_shader->vertexShaderModule,
+			  .pName  = "main",
+			};
+			vk::PipelineShaderStageCreateInfo fragStage{
+			  .stage  = vk::ShaderStageFlagBits::eFragment,
+			  .module = m_shader->fragmentShaderModule,
+			  .pName  = "main",
+			};
+
+			vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{
+			  .topology = vk::PrimitiveTopology::eTriangleList,
+			};
+
+			vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{
+			  .polygonMode = vk::PolygonMode::eFill,
+			  .cullMode    = vk::CullModeFlagBits::eNone,
+			  .frontFace   = vk::FrontFace::eClockwise,
+			  .lineWidth   = 1.f,
+			};
+
+			vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{
+			  .rasterizationSamples = vk::SampleCountFlagBits::e1,
+			  .minSampleShading     = 1.f,
+			};
+
+			vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{
+			  .depthTestEnable  = VK_TRUE,
+			  .depthWriteEnable = VK_TRUE,
+			  .depthCompareOp   = vk::CompareOp::eLessOrEqual,
+			  .minDepthBounds   = 0.f,
+			  .maxDepthBounds   = 1.f,
+			};
+
+			vk::PipelineColorBlendAttachmentState colorBlendAttachmentState{
+			  .blendEnable         = VK_TRUE,
+			  .srcColorBlendFactor = vk::BlendFactor::eSrcAlpha,
+			  .dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha,
+			  .colorBlendOp        = vk::BlendOp::eAdd,
+			  .srcAlphaBlendFactor = vk::BlendFactor::eOne,
+			  .dstAlphaBlendFactor = vk::BlendFactor::eZero,
+			  .alphaBlendOp        = vk::BlendOp::eAdd,
+			  .colorWriteMask      = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB |
+			                    vk::ColorComponentFlagBits::eA,
+			};
+
 			PipelineBuilder pipelineBuilder{
-			  .shaderStages{VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex, m_shader->vertexShaderModule),
-			                VkInit::pipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment, m_shader->fragmentShaderModule)},
+			  .shaderStages{vertStage, fragStage},
 			  .vertexInputInfo{vertexInputStateCreateInfo},
-			  .inputAssemblyInfo{VkInit::pipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology::eTriangleList)},
-			  .rasterizerInfo{VkInit::pipelineRasterizationStateCreateInfo(vk::PolygonMode::eFill)},
-			  .multisamplingInfo{VkInit::pipelineMultisampleStateCreateInfo()},
-			  .depthStencilStateCreateInfo{VkInit::pipelineDepthStencilStateCreateInfo(true, true, vk::CompareOp::eLessOrEqual)},
-			  .colorBlendAttachment{VkInit::pipelineColorBlendAttachmentState()},
+			  .inputAssemblyInfo{inputAssemblyStateCreateInfo},
+			  .rasterizerInfo{rasterizationStateCreateInfo},
+			  .multisamplingInfo{multisampleStateCreateInfo},
+			  .depthStencilStateCreateInfo{depthStencilStateCreateInfo},
+			  .colorBlendAttachment{colorBlendAttachmentState},
 			  .pipelineLayout{pipelineLayout},
 			  .pipelineCache{pipelineCache},
 			};
