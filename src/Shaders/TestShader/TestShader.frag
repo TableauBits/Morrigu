@@ -8,7 +8,7 @@ layout(set = 0, binding = 1) uniform TimeData {
     vec4 timeScales;
 } u_TimeData;
 
-layout(location = 0) out vec4 f_FragmentColor;
+layout(location = 0) out vec4 f_Color;
 
 void main() {
 
@@ -17,5 +17,5 @@ void main() {
 
     vec4 color = mix(vec4(0, 0, 0, 1), vec4(vs_UVPassthrough.x, 1 - vs_UVPassthrough.y, 0, 1), t);
 
-    f_FragmentColor = color;
+    f_Color = color;
 }

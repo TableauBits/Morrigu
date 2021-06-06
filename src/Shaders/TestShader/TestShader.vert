@@ -10,14 +10,14 @@ layout(set = 0, binding = 0) uniform CameraData {
     mat4 viewProjectionMatrix;
 } u_CameraData;
 
-layout(push_constant) uniform PushConstant {
+layout(set = 3, binding = 0) uniform ModelData {
     mat4 modelMatrix;
-} pc_Model;
+} u_ModelData;
 
 layout(location = 0) out vec2 fs_UVPassThrough;
 
 void main() {
-    mat4 transform = u_CameraData.viewProjectionMatrix * pc_Model.modelMatrix;
+    mat4 transform = u_CameraData.viewProjectionMatrix * u_ModelData.modelMatrix;
     gl_Position = transform * vec4(v_Position, 1);
     fs_UVPassThrough = v_UV;
 }

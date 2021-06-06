@@ -1,14 +1,14 @@
 #version 450
 
-layout(location = 0) in vec2 in_TexCoord;
+layout(location = 0) in vec2 vs_UV;
 
 layout(set = 2, binding = 0) uniform InterpolatedColors {
     vec3 colorA;
     vec3 colorB;
-} in_Colors;
+} u_Colors;
 
-layout(location = 0) out vec4 out_FragColor;
+layout(location = 0) out vec4 f_Color;
 
 void main() {
-    out_FragColor = vec4(mix(in_Colors.colorA, in_Colors.colorB, in_TexCoord.y), 1);
+    f_Color = vec4(mix(u_Colors.colorA, u_Colors.colorB, vs_UV.y), 1);
 }

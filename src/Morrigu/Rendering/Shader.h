@@ -22,11 +22,15 @@ namespace MRG
 		vk::ShaderModule fragmentShaderModule;
 
 		vk::DescriptorSetLayout level2DSL;
+		vk::DescriptorSetLayout level3DSL;
 		std::vector<vk::PushConstantRange> pcRanges;
 
-		// binding slot -> size mapping
-		std::map<uint32_t, std::size_t> uboSizes;
-		std::vector<uint32_t> imageBindings;
+		// level 2 bindings
+		std::map<uint32_t, std::size_t> l2UBOSizes;
+		std::vector<uint32_t> l2ImageBindings;
+		// level 3 bindings
+		std::map<uint32_t, std::size_t> l3UBOSizes;
+		std::vector<uint32_t> l3ImageBindings;
 
 	private:
 		[[nodiscard]] static std::vector<std::uint32_t> readSource(const char* filePath);

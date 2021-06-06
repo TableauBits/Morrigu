@@ -27,19 +27,16 @@ namespace MRG
 		                  vk::DescriptorSetLayout level1DSL,
 		                  const Ref<Texture>& defaultTexture,
 		                  DeletionQueue& deletionQueue)
-		    : m_device{device}, m_allocator{allocator}, m_shader{shader}
+		    : m_device{device}, m_allocator{allocator}, shader{shader}
 		{
-			// @TODO(Ithyx): replace with device limit
-			constexpr static const auto ARBITRARY_UNIFORM_LIMIT        = 72;
-			constexpr static const auto ARBITRARY_SAMPLED_IMAGES_LIMIT = 1200;
-
 			// Pool creation
 			std::array<vk::DescriptorPoolSize, 2> sizes{
-			  vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, ARBITRARY_UNIFORM_LIMIT},
-			  vk::DescriptorPoolSize{vk::DescriptorType::eSampledImage, ARBITRARY_SAMPLED_IMAGES_LIMIT},
+			  vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, std::max(static_cast<uint32_t>(shader->l2UBOSizes.size()), 1u)},
+			  vk::DescriptorPoolSize{vk::DescriptorType::eSampledImage,
+			                         std::max(static_cast<uint32_t>(shader->l2ImageBindings.size()), 1u)},
 			};
 			vk::DescriptorPoolCreateInfo poolInfo{
-			  .maxSets       = ARBITRARY_UNIFORM_LIMIT + ARBITRARY_SAMPLED_IMAGES_LIMIT,
+			  .maxSets       = 1,
 			  .poolSizeCount = static_cast<uint32_t>(sizes.size()),
 			  .pPoolSizes    = sizes.data(),
 			};
@@ -50,11 +47,11 @@ namespace MRG
 			vk::DescriptorSetAllocateInfo setAllocInfo{
 			  .descriptorPool     = m_descriptorPool,
 			  .descriptorSetCount = 1,
-			  .pSetLayouts        = &m_shader->level2DSL,
+			  .pSetLayouts        = &shader->level2DSL,
 			};
 			level2Descriptor = m_device.allocateDescriptorSets(setAllocInfo).back();
 
-			for (const auto& [bindingSlot, size] : m_shader->uboSizes) {
+			for (const auto& [bindingSlot, size] : shader->l2UBOSizes) {
 				const auto newBuffer = Utils::Allocators::createBuffer(
 				  m_allocator, size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, deletionQueue);
 				m_uniformBuffers.insert(std::make_pair(bindingSlot, newBuffer));
@@ -75,17 +72,17 @@ namespace MRG
 				m_device.updateDescriptorSets(setWrite, {});
 			}
 
-			for (const auto& imageBinding : m_shader->imageBindings) {
+			for (const auto& imageBinding : shader->l2ImageBindings) {
 				m_sampledImages.insert(std::make_pair(imageBinding, defaultTexture));
 				bindTexture(imageBinding, defaultTexture);
 			}
 
-			std::array<vk::DescriptorSetLayout, 3> setLayouts{level0DSL, level1DSL, m_shader->level2DSL};
+			std::array<vk::DescriptorSetLayout, 4> setLayouts{level0DSL, level1DSL, shader->level2DSL, shader->level3DSL};
 			vk::PipelineLayoutCreateInfo layoutInfo{
 			  .setLayoutCount         = static_cast<uint32_t>(setLayouts.size()),
 			  .pSetLayouts            = setLayouts.data(),
-			  .pushConstantRangeCount = static_cast<uint32_t>(m_shader->pcRanges.size()),
-			  .pPushConstantRanges    = m_shader->pcRanges.data(),
+			  .pushConstantRangeCount = static_cast<uint32_t>(shader->pcRanges.size()),
+			  .pPushConstantRanges    = shader->pcRanges.data(),
 			};
 			pipelineLayout = m_device.createPipelineLayout(layoutInfo);
 			deletionQueue.push([this]() { m_device.destroyPipelineLayout(pipelineLayout); });
@@ -100,12 +97,12 @@ namespace MRG
 
 			vk::PipelineShaderStageCreateInfo vertStage{
 			  .stage  = vk::ShaderStageFlagBits::eVertex,
-			  .module = m_shader->vertexShaderModule,
+			  .module = shader->vertexShaderModule,
 			  .pName  = "main",
 			};
 			vk::PipelineShaderStageCreateInfo fragStage{
 			  .stage  = vk::ShaderStageFlagBits::eFragment,
-			  .module = m_shader->fragmentShaderModule,
+			  .module = shader->fragmentShaderModule,
 			  .pName  = "main",
 			};
 
@@ -193,11 +190,12 @@ namespace MRG
 		vk::PipelineLayout pipelineLayout;
 		vk::DescriptorSet level2Descriptor;
 
+		Ref<Shader> shader;
+
 	private:
 		vk::Device m_device;
 		VmaAllocator m_allocator;
 
-		Ref<Shader> m_shader;
 		vk::DescriptorPool m_descriptorPool;
 
 		std::map<uint32_t, AllocatedBuffer> m_uniformBuffers;

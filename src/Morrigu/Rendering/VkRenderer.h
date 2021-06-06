@@ -101,15 +101,19 @@ namespace MRG
 		}
 
 		[[nodiscard]] Ref<Shader> createShader(const char* vertexShaderName, const char* fragmentShaderName);
-
 		template<Vertex VertexType>
 		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader)
 		{
 			return createRef<Material<VertexType>>(
 			  m_device, m_allocator, shader, m_pipelineCache, m_renderPass, m_level0DSL, m_level1DSL, defaultTexture, m_deletionQueue);
 		}
-
 		[[nodiscard]] Ref<Texture> createTexture(const char* fileName);
+		template<Vertex VertexType>
+		[[nodiscard]] Ref<RenderObject<VertexType>> createRenderObject(const Ref<Mesh<VertexType>>& mesh,
+		                                                               const Ref<Material<VertexType>>& material)
+		{
+			return createRef<RenderObject<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture, m_deletionQueue);
+		}
 
 		RendererSpecification spec;
 
