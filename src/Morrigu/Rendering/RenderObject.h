@@ -137,9 +137,24 @@ namespace MRG
 		Ref<bool> isVisible{createRef<bool>(true)};
 		vk::DescriptorSet level3Descriptor;
 
-		void rotate(const glm::vec3& axis, float radRotation) { *modelMatrix = glm::rotate(*modelMatrix, radRotation, axis); }
-		void scale(const glm::vec3& scaling) { *modelMatrix = glm::scale(*modelMatrix, scaling); }
-		void translate(const glm::vec3& translation) { *modelMatrix = glm::translate(*modelMatrix, translation); }
+		void rotate(const glm::vec3& axis, float radRotation)
+		{
+			*modelMatrix = glm::rotate(*modelMatrix, radRotation, axis);
+			uploadPosition();
+		}
+		void scale(const glm::vec3& scaling)
+		{
+			*modelMatrix = glm::scale(*modelMatrix, scaling);
+			uploadPosition();
+		}
+		void translate(const glm::vec3& translation)
+		{
+			*modelMatrix = glm::translate(*modelMatrix, translation);
+			uploadPosition();
+		}
+
+		void uploadPosition() { uploadUniform(0, *modelMatrix); }
+
 		void setVisible(bool visible) { *isVisible = visible; }
 
 	private:

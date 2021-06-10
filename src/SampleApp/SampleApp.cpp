@@ -37,14 +37,11 @@ public:
 		m_boxy    = application->renderer.createRenderObject(MRG::Utils::loadMeshFromFileTexturedVertex("boxy.obj"), testMaterial);
 
 		m_testQuad->translate({-0.5f, -0.5f, 2.f});
-		m_testQuad->uploadUniform(0, *m_testQuad->modelMatrix);
 		m_suzanne->translate({1.5f, 0.f, 0.f});
 		m_suzanne->setVisible(false);
-		m_suzanne->uploadUniform(0, *m_suzanne->modelMatrix);
 		m_boxy->translate({-1.5f, -1.5f, 0.f});
 		m_boxy->setVisible(false);
 		m_boxy->rotate({0.f, 1.f, 0.f}, glm::radians(90.f));
-		m_boxy->uploadUniform(0, *m_boxy->modelMatrix);
 
 		application->renderer.uploadMesh(m_testQuad->mesh);
 		application->renderer.uploadMesh(m_suzanne->mesh);

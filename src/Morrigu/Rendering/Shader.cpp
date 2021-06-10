@@ -144,6 +144,8 @@ namespace MRG
 			}
 		}
 
+		MRG_ENGINE_ASSERT(level3UBOBindings.contains(0), "Descriptor set level 3 MUST have a model data uniform at slot 0!")
+
 		std::vector<vk::DescriptorSetLayoutBinding> finalBindings(level2UBOBindings.size() + level2SampledImagesBindings.size());
 		auto index = 0;
 		for (const auto& ubo : level2UBOBindings) { finalBindings[index++] = ubo.second; }
