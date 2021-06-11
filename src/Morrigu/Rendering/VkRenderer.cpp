@@ -187,8 +187,17 @@ namespace MRG
 		vmaUnmapMemory(m_allocator, frameData.timeDataBuffer.allocation);
 
 		vk::Pipeline currentMaterial{};
+		bool isFirst = true;
 		for (const auto& drawable : drawables) {
 			if (!(*drawable.isVisible)) { continue; }
+			if (isFirst) {
+				frameData.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+				                                           drawable.materialPipelineLayout,
+				                                           0,
+				                                           {frameData.level0Descriptor, m_level1Descriptor},
+				                                           {});
+				isFirst = false;
+			}
 			if (currentMaterial != drawable.materialPipeline) {
 				frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable.materialPipeline);
 				frameData.commandBuffer.setViewport(0,
@@ -206,15 +215,13 @@ namespace MRG
 				    .offset{0, 0},
 				    .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
 				  });
+				frameData.commandBuffer.bindDescriptorSets(
+				  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 2, drawable.level2Descriptor, {});
 				currentMaterial = drawable.materialPipeline;
 			}
 
 			frameData.commandBuffer.bindDescriptorSets(
-			  vk::PipelineBindPoint::eGraphics,
-			  drawable.materialPipelineLayout,
-			  0,
-			  {frameData.level0Descriptor, m_level1Descriptor, drawable.level2Descriptor, drawable.level3Descriptor},
-			  {});
+			  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 3, drawable.level3Descriptor, {});
 
 			frameData.commandBuffer.bindVertexBuffers(0, drawable.vertexBuffer, {0});
 			frameData.commandBuffer.draw(static_cast<uint32_t>(drawable.vertexNumber), 1, 0, 0);

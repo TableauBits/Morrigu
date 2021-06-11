@@ -33,8 +33,9 @@ public:
 		const auto testMaterial = application->renderer.createMaterial<MRG::TexturedVertex>(testShader);
 
 		m_testQuad = application->renderer.createRenderObject(testQuadMesh, testMaterial);
-		m_suzanne = application->renderer.createRenderObject(MRG::Utils::loadMeshFromFileTexturedVertex("monkey_smooth.obj"), testMaterial);
-		m_boxy    = application->renderer.createRenderObject(MRG::Utils::loadMeshFromFileTexturedVertex("boxy.obj"), testMaterial);
+		m_suzanne  = application->renderer.createRenderObject(MRG::Utils::loadMeshFromFileTexturedVertex("monkey_smooth.obj"),
+                                                             application->renderer.defaultTexturedMaterial);
+		m_boxy     = application->renderer.createRenderObject(MRG::Utils::loadMeshFromFileTexturedVertex("boxy.obj"), testMaterial);
 
 		m_testQuad->translate({-0.5f, -0.5f, 2.f});
 		m_suzanne->translate({1.5f, 0.f, 0.f});
