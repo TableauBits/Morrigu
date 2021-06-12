@@ -15,6 +15,6 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
-#include "Utils/ModelLoading.h"
+#include "Utils/Meshes.h"
 
 #endif  // MORRIGU_MORRIGU_H

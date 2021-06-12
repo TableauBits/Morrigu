@@ -8,9 +8,9 @@ set(
 		# GLM include helper
 		${CMAKE_CURRENT_LIST_DIR}/GLMIncludeHelper.h
 
-		# Model loading utilities
-		${CMAKE_CURRENT_LIST_DIR}/ModelLoading.h
-		${CMAKE_CURRENT_LIST_DIR}/ModelLoading.cpp
+		# Default meshes utilities
+		${CMAKE_CURRENT_LIST_DIR}/Meshes.h
+		${CMAKE_CURRENT_LIST_DIR}/Meshes.cpp
 
 		# STB files to define implementation
 		${CMAKE_CURRENT_LIST_DIR}/STBIncludeHelper.h

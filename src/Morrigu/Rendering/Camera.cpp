@@ -57,7 +57,7 @@ namespace MRG
 
 	void Camera::recalculateView()
 	{
-		m_view = glm::translate(glm::identity<glm::mat4>(), -position) * glm::toMat4(calculateOrientation());
+		m_view = glm::translate(glm::identity<glm::mat4>(), position) * glm::toMat4(calculateOrientation());
 		m_view = glm::inverse(m_view);
 	}
 

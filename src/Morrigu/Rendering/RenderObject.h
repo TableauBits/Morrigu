@@ -88,6 +88,8 @@ namespace MRG
 				m_sampledImages.insert(std::make_pair(imageBinding, defaultTexture));
 				bindTexture(imageBinding, defaultTexture);
 			}
+
+			uploadPosition();
 		}
 
 		template<typename UniformType>

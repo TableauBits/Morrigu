@@ -1,14 +1,15 @@
 //
-// Created by Mathis Lamidey on 2021-05-30.
+// Created by Mathis Lamidey on 2021-06-11.
 //
 
-#include "ModelLoading.h"
+#include "Meshes.h"
 
 #include <tiny_obj_loader.h>
 
-namespace MRG::Utils
+namespace MRG::Utils::Meshes
 {
-	Ref<Mesh<BasicVertex>> loadMeshFromFileBasicVertex(const char* filePath)
+	template<>
+	Ref<Mesh<BasicVertex>> loadMeshFromFile(const char* filePath)
 	{
 		auto newMesh = createRef<Mesh<BasicVertex>>();
 
@@ -50,7 +51,8 @@ namespace MRG::Utils
 		return newMesh;
 	}
 
-	Ref<Mesh<ColoredVertex>> loadMeshFromFileColoredVertex(const char* filePath)
+	template<>
+	Ref<Mesh<ColoredVertex>> loadMeshFromFile(const char* filePath)
 	{
 		auto newMesh = createRef<Mesh<ColoredVertex>>();
 
@@ -93,7 +95,8 @@ namespace MRG::Utils
 		return newMesh;
 	}
 
-	Ref<Mesh<TexturedVertex>> loadMeshFromFileTexturedVertex(const char* filePath)
+	template<>
+	Ref<Mesh<TexturedVertex>> loadMeshFromFile(const char* filePath)
 	{
 		auto newMesh = createRef<Mesh<TexturedVertex>>();
 
@@ -139,4 +142,51 @@ namespace MRG::Utils
 
 		return newMesh;
 	}
-}  // namespace MRG::Utils
+	template<>
+	Ref<Mesh<BasicVertex>> quad()
+	{
+		auto quad      = createRef<Mesh<BasicVertex>>();
+		quad->vertices = {
+		  BasicVertex{.position{-0.5f, -0.5f, 0.f}, .normal{0.f, 0.f, -1.f}},
+		  BasicVertex{.position{-0.5f, 0.5f, 0.f}, .normal{0.f, 0.f, -1.f}},
+		  BasicVertex{.position{0.5f, 0.5f, 0.f}, .normal{0.f, 0.f, -1.f}},
+		  BasicVertex{.position{0.5f, 0.5f, 0.f}, .normal{0.f, 0.f, -1.f}},
+		  BasicVertex{.position{0.5f, -0.5f, 0.f}, .normal{0.f, 0.f, -1.f}},
+		  BasicVertex{.position{-0.5f, -0.5f, 0.f}, .normal{0.f, 0.f, -1.f}},
+		};
+
+		return quad;
+	}
+
+	template<>
+	Ref<Mesh<ColoredVertex>> quad()
+	{
+		auto quad      = createRef<Mesh<ColoredVertex>>();
+		quad->vertices = {
+		  ColoredVertex{.position{-0.5f, -0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .color{0.2, 0.2, 0.2}},
+		  ColoredVertex{.position{-0.5f, 0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .color{0.2, 0.2, 0.2}},
+		  ColoredVertex{.position{0.5f, 0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .color{0.2, 0.2, 0.2}},
+		  ColoredVertex{.position{0.5f, 0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .color{0.2, 0.2, 0.2}},
+		  ColoredVertex{.position{0.5f, -0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .color{0.2, 0.2, 0.2}},
+		  ColoredVertex{.position{-0.5f, -0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .color{0.2, 0.2, 0.2}},
+		};
+
+		return quad;
+	}
+
+	template<>
+	Ref<Mesh<TexturedVertex>> quad()
+	{
+		auto quad      = MRG::createRef<MRG::Mesh<MRG::TexturedVertex>>();
+		quad->vertices = {
+		  MRG::TexturedVertex{.position{-0.5f, -0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 0.f}},
+		  MRG::TexturedVertex{.position{-0.5f, 0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 1.f}},
+		  MRG::TexturedVertex{.position{0.5f, 0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 1.f}},
+		  MRG::TexturedVertex{.position{0.5f, 0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 1.f}},
+		  MRG::TexturedVertex{.position{0.5f, -0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 0.f}},
+		  MRG::TexturedVertex{.position{-0.5f, -0.5f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 0.f}},
+		};
+
+		return quad;
+	}
+}  // namespace MRG::Utils::Meshes

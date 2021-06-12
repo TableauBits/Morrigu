@@ -15,29 +15,20 @@ class SampleLayer : public MRG::Layer
 public:
 	void onAttach() override
 	{
-		mainCamera.position    = {0.f, 0.f, -3.f};
+		mainCamera.position    = {0.f, 0.f, 3.f};
 		mainCamera.aspectRatio = 1280.f / 720.f;
 		mainCamera.setPerspective(glm::radians(70.f), 0.1f, 200.f);
 		mainCamera.recalculateViewProjection();
 
-		auto testQuadMesh      = MRG::createRef<MRG::Mesh<MRG::TexturedVertex>>();
-		testQuadMesh->vertices = {
-		  MRG::TexturedVertex{.position{0.f, 0.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 0.f}},
-		  MRG::TexturedVertex{.position{0.f, 1.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 1.f}},
-		  MRG::TexturedVertex{.position{1.f, 1.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 1.f}},
-		  MRG::TexturedVertex{.position{1.f, 1.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 1.f}},
-		  MRG::TexturedVertex{.position{1.f, 0.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 0.f}},
-		  MRG::TexturedVertex{.position{0.f, 0.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 0.f}},
-		};
 		const auto testShader   = application->renderer.createShader("TestShader.vert.spv", "TestShader.frag.spv");
 		const auto testMaterial = application->renderer.createMaterial<MRG::TexturedVertex>(testShader);
 
-		m_testQuad = application->renderer.createRenderObject(testQuadMesh, testMaterial);
-		m_suzanne  = application->renderer.createRenderObject(MRG::Utils::loadMeshFromFileTexturedVertex("monkey_smooth.obj"),
-                                                             application->renderer.defaultTexturedMaterial);
-		m_boxy     = application->renderer.createRenderObject(MRG::Utils::loadMeshFromFileTexturedVertex("boxy.obj"), testMaterial);
+		m_testQuad = application->renderer.createRenderObject(MRG::Utils::Meshes::quad<MRG::TexturedVertex>(), testMaterial);
+		m_suzanne = application->renderer.createRenderObject(MRG::Utils::Meshes::loadMeshFromFile<MRG::TexturedVertex>("monkey_smooth.obj"),
+		                                                     application->renderer.defaultTexturedMaterial);
+		m_boxy =
+		  application->renderer.createRenderObject(MRG::Utils::Meshes::loadMeshFromFile<MRG::TexturedVertex>("boxy.obj"), testMaterial);
 
-		m_testQuad->translate({-0.5f, -0.5f, 2.f});
 		m_suzanne->translate({1.5f, 0.f, 0.f});
 		m_suzanne->setVisible(false);
 		m_boxy->translate({-1.5f, -1.5f, 0.f});
