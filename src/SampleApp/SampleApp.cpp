@@ -2,6 +2,7 @@
 // Created by Mathis Lamidey on 2021-04-03.
 //
 
+#include <imgui.h>
 #include <Morrigu.h>
 
 struct GradientUniform
@@ -23,7 +24,7 @@ public:
 		const auto testShader   = application->renderer.createShader("TestShader.vert.spv", "TestShader.frag.spv");
 		const auto testMaterial = application->renderer.createMaterial<MRG::TexturedVertex>(testShader);
 
-		m_testQuad = application->renderer.createRenderObject(MRG::Utils::Meshes::quad<MRG::TexturedVertex>(), testMaterial);
+		m_testQuad = application->renderer.createRenderObject(MRG::Utils::Meshes::sphere<MRG::TexturedVertex>(), testMaterial);
 		m_suzanne = application->renderer.createRenderObject(MRG::Utils::Meshes::loadMeshFromFile<MRG::TexturedVertex>("monkey_smooth.obj"),
 		                                                     application->renderer.defaultTexturedMaterial);
 		m_boxy =
@@ -46,6 +47,7 @@ public:
 
 	void onDetach() override { MRG_INFO("my final message. goodb ye") }
 	void onUpdate(MRG::Timestep) override { application->renderer.clearColor.b = std::abs(std::sin(application->elapsedTime * 3.14f)); }
+	void onImGuiUpdate(MRG::Timestep) override { ImGui::ShowDemoWindow(); }
 	void onEvent(MRG::Event& event) override
 	{
 		MRG::EventDispatcher dispatcher{event};

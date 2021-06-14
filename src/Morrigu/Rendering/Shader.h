@@ -5,7 +5,7 @@
 #ifndef MORRIGU_SHADER_H
 #define MORRIGU_SHADER_H
 
-#include "Rendering/VkTypes.h"
+#include "Rendering/RendererTypes.h"
 
 #include <spirv_cross/spirv_reflect.hpp>
 

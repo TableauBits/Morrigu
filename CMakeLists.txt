@@ -47,13 +47,21 @@ set(
 		spdlog/1.8.5
 		glm/0.9.9.8
 		glfw/3.3.2
-		imgui/1.82
+		imgui-docking/2021-06-13@tableaubits/stable
 		stb/20200203
 		tinyobjloader/1.0.6
 		vulkan-headers/1.2.170.0
 		vk-bootstrap/0.2
 		vulkan-memory-allocator/2.3.0
 		spirv-cross/20210115
+)
+
+set(
+		CONAN_IMPORTS
+		"./res/bindings, imgui_impl_glfw.cpp -> ../src/Morrigu/Vendor/ImGui/bindings"
+		"./res/bindings, imgui_impl_vulkan.cpp -> ../src/Morrigu/Vendor/ImGui/bindings"
+		"./res/bindings, imgui_impl_glfw.h -> ../src/Morrigu/Vendor/ImGui/bindings"
+		"./res/bindings, imgui_impl_vulkan.h -> ../src/Morrigu/Vendor/ImGui/bindings"
 )
 
 # require vulkan

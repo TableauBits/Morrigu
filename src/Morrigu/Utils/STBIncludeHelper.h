@@ -5,7 +5,7 @@
 #ifndef MORRIGU_STBINCLUDEHELPER_H
 #define MORRIGU_STBINCLUDEHELPER_H
 
-#include "Rendering/VkTypes.h"
+#include "Rendering/RendererTypes.h"
 
 #include <stb_image.h>
 

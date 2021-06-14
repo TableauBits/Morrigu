@@ -30,10 +30,10 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/Vertex.h
 		${CMAKE_CURRENT_LIST_DIR}/Vertex.cpp
 
-		# Vulkan renderer class
-		${CMAKE_CURRENT_LIST_DIR}/VkRenderer.h
-		${CMAKE_CURRENT_LIST_DIR}/VkRenderer.cpp
+		# Renderer class
+		${CMAKE_CURRENT_LIST_DIR}/Renderer.h
+		${CMAKE_CURRENT_LIST_DIR}/Renderer.cpp
 
-		# Vulkan types header
-		${CMAKE_CURRENT_LIST_DIR}/VkTypes.h
+		# Rendering types declaration
+		${CMAKE_CURRENT_LIST_DIR}/RendererTypes.h
 )

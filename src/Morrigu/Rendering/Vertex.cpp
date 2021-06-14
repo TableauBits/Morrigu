@@ -4,7 +4,7 @@
 
 #include "Vertex.h"
 
-#include "Rendering/VkTypes.h"
+#include "Rendering/RendererTypes.h"
 
 namespace MRG
 {

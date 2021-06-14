@@ -5,7 +5,7 @@
 #ifndef MORRIGU_TEXTURE_H
 #define MORRIGU_TEXTURE_H
 
-#include "Rendering/VkTypes.h"
+#include "Rendering/RendererTypes.h"
 
 namespace MRG
 {

@@ -5,7 +5,7 @@
 #ifndef MORRIGU_PIPELINEBUILDER_H
 #define MORRIGU_PIPELINEBUILDER_H
 
-#include "Rendering/VkTypes.h"
+#include "Rendering/RendererTypes.h"
 
 #include <vector>
 

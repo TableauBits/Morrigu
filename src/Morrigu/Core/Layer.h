@@ -21,15 +21,16 @@ namespace MRG
 		Layer(const Layer&) = delete;
 		Layer(Layer&&)      = delete;
 
-		virtual ~Layer() = default;
+		virtual ~Layer() = 0;
 
 		Layer& operator=(const Layer&) = delete;
 		Layer& operator=(Layer&&) = delete;
 
-		virtual void onAttach()         = 0;
-		virtual void onDetach()         = 0;
-		virtual void onUpdate(Timestep) = 0;
-		virtual void onEvent(Event&)    = 0;
+		virtual void onAttach() {}
+		virtual void onDetach() {}
+		virtual void onUpdate(Timestep) {}
+		virtual void onImGuiUpdate(Timestep) {}
+		virtual void onEvent(Event&) {}
 
 		Application* application{nullptr};
 		std::vector<RenderData> renderables{};

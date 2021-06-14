@@ -4,6 +4,16 @@ include(${CMAKE_CURRENT_LIST_DIR}/Rendering/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/Utils/CMakeLists.txt)
 
 set(
+		IMGUI_BINDINGS
+
+		# ImGui bindings
+		${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_glfw.h
+		${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_glfw.cpp
+		${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_vulkan.h
+		${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_vulkan.cpp
+)
+
+set(
 		MRG_SOURCES
 
 		# Global include file
@@ -20,4 +30,7 @@ set(
 
 		# Utils files
 		${MRG_UTILS_SOURCES}
+
+		# ImGui bindings
+		${IMGUI_BINDINGS}
 )

@@ -20,6 +20,7 @@ target_link_libraries(
 		CONAN_PKG::spdlog
 		CONAN_PKG::glm
 		CONAN_PKG::glfw
+		CONAN_PKG::imgui-docking
 		CONAN_PKG::stb
 		CONAN_PKG::tinyobjloader
 		CONAN_PKG::vulkan-headers
@@ -33,6 +34,7 @@ include(SampleApp/CMakeLists.txt)
 add_executable(
 		SampleApp
 		${SA_SOURCES}
+		${IMGUI_BINDINGS}
 )
 
 target_link_libraries(

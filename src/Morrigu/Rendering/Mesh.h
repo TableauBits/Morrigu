@@ -6,18 +6,14 @@
 #define MORRIGU_MESH_H
 
 #include "Core/FileNames.h"
+#include "Rendering/RendererTypes.h"
 #include "Rendering/Vertex.h"
-#include "Rendering/VkTypes.h"
 #include "Utils/GLMIncludeHelper.h"
 
 #include <vector>
 
 namespace MRG
 {
-	struct MeshPushConstants
-	{
-		glm::mat4 modelMatrix;
-	};
 	template<Vertex VertexType>
 	class Mesh
 	{

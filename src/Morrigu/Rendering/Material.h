@@ -6,10 +6,10 @@
 #define MORRIGU_MATERIAL_H
 
 #include "Rendering/PipelineBuilder.h"
+#include "Rendering/RendererTypes.h"
 #include "Rendering/Shader.h"
 #include "Rendering/Texture.h"
 #include "Rendering/Vertex.h"
-#include "Rendering/VkTypes.h"
 #include "Utils/Allocators.h"
 
 namespace MRG

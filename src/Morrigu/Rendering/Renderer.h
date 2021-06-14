@@ -2,14 +2,14 @@
 // Created by Mathis Lamidey on 2021-04-11.
 //
 
-#ifndef MORRIGU_VKRENDERER_H
-#define MORRIGU_VKRENDERER_H
+#ifndef MORRIGU_RENDERER_H
+#define MORRIGU_RENDERER_H
 
 #include "Events/ApplicationEvent.h"
 #include "Rendering/Camera.h"
+#include "Rendering/RendererTypes.h"
 #include "Rendering/RenderObject.h"
 #include "Rendering/Texture.h"
-#include "Rendering/VkTypes.h"
 
 #include <GLFW/glfw3.h>
 
@@ -52,7 +52,7 @@ namespace MRG
 		vk::DescriptorSet level0Descriptor;
 	};
 
-	class VkRenderer
+	class Renderer
 	{
 	public:
 		template<Vertex VertexType>
@@ -172,6 +172,10 @@ namespace MRG
 		DeletionQueue m_deletionQueue{};
 		UploadContext m_uploadContext{};
 
+		// ImGui data
+		uint32_t m_imageCount{};
+		vk::DescriptorPool m_imGuiPool{};
+
 		void initVulkan();
 		void initSwapchain();
 		void initCommands();
@@ -181,6 +185,7 @@ namespace MRG
 		void initDescriptors();
 		void initAssets();
 		void initMaterials();
+		void initImGui();
 
 		void destroySwapchain();
 
@@ -190,6 +195,8 @@ namespace MRG
 
 		void beginFrame();
 		void endFrame();
+		void beginImGui();
+		void endImGui();
 
 		void cleanup();
 
@@ -199,4 +206,4 @@ namespace MRG
 	};
 }  // namespace MRG
 
-#endif  // MORRIGU_VKRENDERER_H
+#endif  // MORRIGU_RENDERER_H

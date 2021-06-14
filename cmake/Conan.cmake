@@ -12,6 +12,8 @@ macro(run_conan)
 			${CONAN_REQUIRES}
 			OPTIONS
 			${CONAN_EXTRA_OPTIONS}
+			IMPORTS
+			${CONAN_IMPORTS}
 			BASIC_SETUP
 			CMAKE_TARGETS # individual targets to link to
 			BUILD

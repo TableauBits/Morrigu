@@ -2,8 +2,11 @@
 // Created by Mathis Lamidey on 2021-04-11.
 //
 
-#include "VkRenderer.h"
+#include "Renderer.h"
 
+#include "Vendor/ImGui/bindings/imgui_impl_glfw.h"
+#include "Vendor/ImGui/bindings/imgui_impl_vulkan.h"
+#include <imgui.h>
 #include <VkBootstrap.h>
 
 DISABLE_WARNING_PUSH
@@ -40,17 +43,17 @@ namespace
 
 namespace MRG
 {
-	Ref<Shader> VkRenderer::createShader(const char* vertexShaderName, const char* fragmentShaderName)
+	Ref<Shader> Renderer::createShader(const char* vertexShaderName, const char* fragmentShaderName)
 	{
 		return MRG::createRef<Shader>(m_device, vertexShaderName, fragmentShaderName, m_deletionQueue);
 	}
 
-	Ref<Texture> VkRenderer::createTexture(const char* fileName)
+	Ref<Texture> Renderer::createTexture(const char* fileName)
 	{
 		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, fileName, m_deletionQueue);
 	}
 
-	void VkRenderer::init(const RendererSpecification& newSpec, GLFWwindow* newWindow)
+	void Renderer::init(const RendererSpecification& newSpec, GLFWwindow* newWindow)
 	{
 		spec   = newSpec;
 		window = newWindow;
@@ -64,11 +67,12 @@ namespace MRG
 		initDescriptors();
 		initAssets();
 		initMaterials();
+		initImGui();
 
 		isInitalized = true;
 	}
 
-	void VkRenderer::beginFrame()
+	void Renderer::beginFrame()
 	{
 		const auto& frameData = getCurrentFrameData();
 		MRG_VK_CHECK_HPP(m_device.waitForFences(frameData.renderFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
@@ -103,7 +107,7 @@ namespace MRG
 		frameData.commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	}
 
-	void VkRenderer::endFrame()
+	void Renderer::endFrame()
 	{
 		const auto& frameData = getCurrentFrameData();
 		frameData.commandBuffer.endRenderPass();
@@ -134,7 +138,27 @@ namespace MRG
 		++m_frameNumber;
 	}
 
-	void VkRenderer::cleanup()
+	void Renderer::beginImGui()
+	{
+		ImGui_ImplGlfw_NewFrame();
+		ImGui_ImplVulkan_NewFrame();
+		ImGui::NewFrame();
+	}
+
+	void Renderer::endImGui()
+	{
+		const auto& frameData = getCurrentFrameData();
+
+		ImGui::Render();
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), frameData.commandBuffer);
+
+		if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) != 0) {
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+		}
+	}
+
+	void Renderer::cleanup()
 	{
 		if (!isInitalized) { return; }
 
@@ -154,7 +178,7 @@ namespace MRG
 		glfwDestroyWindow(window);
 	}
 
-	void VkRenderer::onResize()
+	void Renderer::onResize()
 	{
 		m_device.waitIdle();
 
@@ -164,7 +188,7 @@ namespace MRG
 		initFramebuffers();
 	}
 
-	void VkRenderer::draw(const std::vector<RenderData>& drawables, const Camera& camera)
+	void Renderer::draw(const std::vector<RenderData>& drawables, const Camera& camera)
 	{
 		const auto& frameData = getCurrentFrameData();
 
@@ -228,7 +252,7 @@ namespace MRG
 		}
 	}
 
-	void VkRenderer::initVulkan()
+	void Renderer::initVulkan()
 	{
 		// basic instance creation
 		vkb::InstanceBuilder instanceBuilder{};
@@ -274,7 +298,7 @@ namespace MRG
 		MRG_VK_CHECK(vmaCreateAllocator(&allocatorInfo, &m_allocator), "failed to create VMA allocator!")
 	}
 
-	void VkRenderer::initSwapchain()
+	void Renderer::initSwapchain()
 	{
 		vkb::SwapchainBuilder swapchainBuilder{m_GPU, m_device, m_surface};
 		auto vkbSwapchain = swapchainBuilder.use_default_format_selection()
@@ -284,6 +308,7 @@ namespace MRG
 		                      .value();
 
 		m_swapchain       = vkbSwapchain.swapchain;
+		m_imageCount      = vkbSwapchain.image_count;
 		m_swapchainFormat = vk::Format{vkbSwapchain.image_format};
 
 		const auto rawImages     = vkbSwapchain.get_images().value();
@@ -329,7 +354,7 @@ namespace MRG
 		m_depthImageView = m_device.createImageView(depthImageViewCreateInfo);
 	}
 
-	void VkRenderer::initCommands()
+	void Renderer::initCommands()
 	{
 		// create command pool
 		vk::CommandPoolCreateInfo cmdPoolInfo{
@@ -358,7 +383,7 @@ namespace MRG
 		m_deletionQueue.push([this]() { m_device.destroyCommandPool(m_uploadContext.commandPool); });
 	}
 
-	void VkRenderer::initDefaultRenderPass()
+	void Renderer::initDefaultRenderPass()
 	{
 		vk::AttachmentDescription colorAttachment{
 		  .format         = m_swapchainFormat,
@@ -411,7 +436,7 @@ namespace MRG
 		m_renderPass = m_device.createRenderPass(renderPassInfo);
 	}
 
-	void VkRenderer::initFramebuffers()
+	void Renderer::initFramebuffers()
 	{
 		vk::FramebufferCreateInfo framebufferInfo{
 		  .renderPass      = m_renderPass,
@@ -433,7 +458,7 @@ namespace MRG
 		}
 	}
 
-	void VkRenderer::initSyncSructs()
+	void Renderer::initSyncSructs()
 	{
 		vk::FenceCreateInfo fenceInfo{
 		  .flags = vk::FenceCreateFlagBits::eSignaled,
@@ -456,7 +481,7 @@ namespace MRG
 		m_deletionQueue.push([=]() { m_device.destroyFence(m_uploadContext.uploadFence); });
 	}
 
-	void VkRenderer::initDescriptors()
+	void Renderer::initDescriptors()
 	{
 		std::array<vk::DescriptorPoolSize, 1> sizes{{vk::DescriptorType::eUniformBuffer, FRAMES_IN_FLIGHT + 1}};
 		vk::DescriptorPoolCreateInfo poolInfo{
@@ -545,9 +570,9 @@ namespace MRG
 		m_level1Descriptor = m_device.allocateDescriptorSets(allocLeve1Info)[0];
 	}
 
-	void VkRenderer::initAssets() { defaultTexture = createTexture(Files::Rendering::defaultTexture.c_str()); }
+	void Renderer::initAssets() { defaultTexture = createTexture(Files::Rendering::defaultTexture.c_str()); }
 
-	void VkRenderer::initMaterials()
+	void Renderer::initMaterials()
 	{
 		vk::PipelineCacheCreateInfo pipelineCacheCreateInfo{};
 		if (std::filesystem::exists(Files::Rendering::vkPipelineCacheFile)) {
@@ -578,7 +603,64 @@ namespace MRG
 		defaultTexturedMaterial = createMaterial<TexturedVertex>(defaultTexturedShader);
 	}
 
-	void VkRenderer::destroySwapchain()
+	void Renderer::initImGui()
+	{
+		std::array<vk::DescriptorPoolSize, 11> poolSizes{
+		  vk::DescriptorPoolSize{vk::DescriptorType::eSampler, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eCombinedImageSampler, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eSampledImage, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eStorageImage, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eUniformTexelBuffer, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eStorageTexelBuffer, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eStorageBuffer, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eUniformBufferDynamic, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eStorageBufferDynamic, 1000},
+		  vk::DescriptorPoolSize{vk::DescriptorType::eInputAttachment, 1000},
+		};
+
+		vk::DescriptorPoolCreateInfo imGuiPoolInfo{
+		  .flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+		  .maxSets       = 1000,
+		  .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
+		  .pPoolSizes    = poolSizes.data(),
+		};
+
+		m_imGuiPool = m_device.createDescriptorPool(imGuiPoolInfo);
+
+		ImGui::CreateContext();
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		ImGui_ImplVulkan_InitInfo initInfo{
+		  .Instance       = m_instance,
+		  .PhysicalDevice = m_GPU,
+		  .Device         = m_device,
+		  .Queue          = m_graphicsQueue,
+		  .PipelineCache  = m_pipelineCache,
+		  .DescriptorPool = m_imGuiPool,
+		  .MinImageCount  = m_imageCount,
+		  .ImageCount     = m_imageCount,
+		  .MSAASamples    = VK_SAMPLE_COUNT_1_BIT,
+		};
+
+		ImGui_ImplGlfw_InitForVulkan(window, true);
+		ImGui_ImplVulkan_Init(&initInfo, m_renderPass);
+
+		Utils::Allocators::immediateSubmit(
+		  m_device, m_graphicsQueue, m_uploadContext, [&](vk::CommandBuffer cmdBuffer) { ImGui_ImplVulkan_CreateFontsTexture(cmdBuffer); });
+		ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+		ImGui::StyleColorsDark();
+
+		m_deletionQueue.push([=]() {
+			ImGui_ImplVulkan_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+			ImGui::DestroyContext();
+			m_device.destroyDescriptorPool(m_imGuiPool);
+		});
+	}
+
+	void Renderer::destroySwapchain()
 	{
 		if (!isInitalized) { return; }
 

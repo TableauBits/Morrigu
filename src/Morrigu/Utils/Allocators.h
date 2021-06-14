@@ -5,7 +5,7 @@
 #ifndef MORRIGU_ALLOCATORS_H
 #define MORRIGU_ALLOCATORS_H
 
-#include "Rendering/VkTypes.h"
+#include "Rendering/RendererTypes.h"
 
 namespace MRG::Utils::Allocators
 {

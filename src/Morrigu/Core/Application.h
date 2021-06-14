@@ -6,7 +6,7 @@
 #define MORRIGU_APPLICATION_H
 
 #include "Core/LayerStack.h"
-#include "Rendering/VkRenderer.h"
+#include "Rendering/Renderer.h"
 
 #include "Events/ApplicationEvent.h"
 
@@ -38,7 +38,7 @@ namespace MRG
 
 		void setWindowTitle(const char* title) const;
 
-		VkRenderer renderer;
+		Renderer renderer;
 		float elapsedTime{};
 
 	private:

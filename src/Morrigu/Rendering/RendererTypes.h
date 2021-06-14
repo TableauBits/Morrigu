@@ -2,8 +2,8 @@
 // Created by Mathis Lamidey on 2021-04-11.
 //
 
-#ifndef MORRIGU_VKTYPES_H
-#define MORRIGU_VKTYPES_H
+#ifndef MORRIGU_RENDERERTYPES_H
+#define MORRIGU_RENDERERTYPES_H
 
 #include "Core/Core.h"
 #include "Utils/VMAIncludeHelper.h"
@@ -56,4 +56,4 @@ struct UploadContext
 	vk::CommandPool commandPool;
 };
 
-#endif  // MORRIGU_VKTYPES_H
+#endif  // MORRIGU_RENDERERTYPES_H
