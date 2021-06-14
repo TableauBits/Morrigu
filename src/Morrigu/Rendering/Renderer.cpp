@@ -301,7 +301,11 @@ namespace MRG
 	void Renderer::initSwapchain()
 	{
 		vkb::SwapchainBuilder swapchainBuilder{m_GPU, m_device, m_surface};
-		auto vkbSwapchain = swapchainBuilder.use_default_format_selection()
+		auto vkbSwapchain = swapchainBuilder
+		                      .set_desired_format({
+		                        .format     = static_cast<VkFormat>(vk::Format::eB8G8R8A8Srgb),
+		                        .colorSpace = static_cast<VkColorSpaceKHR>(vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear),
+		                      })
 		                      .set_desired_present_mode(static_cast<VkPresentModeKHR>(spec.preferredPresentMode))
 		                      .set_desired_extent(spec.windowWidth, spec.windowHeight)
 		                      .build()
