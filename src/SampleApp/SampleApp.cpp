@@ -45,8 +45,6 @@ public:
 		renderables.emplace_back(m_boxy->getRenderData());
 	}
 
-	void onDetach() override { MRG_INFO("my final message. goodb ye") }
-	void onUpdate(MRG::Timestep) override { application->renderer.clearColor.b = std::abs(std::sin(application->elapsedTime * 3.14f)); }
 	void onImGuiUpdate(MRG::Timestep) override { ImGui::ShowDemoWindow(); }
 	void onEvent(MRG::Event& event) override
 	{
@@ -68,17 +66,21 @@ public:
 
 private:
 	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_suzanne{}, m_boxy{}, m_testQuad{};
+
+	glm::vec3 textColor{1.f}, headColor{}, areaColor{}, bodyColor{}, popupColor{};
 };
 
 class SampleApp : public MRG::Application
 {
 public:
 	SampleApp()
-	    : MRG::Application(MRG::ApplicationSpecification{.windowName            = "Morrigu sample app",
-	                                                     .rendererSpecification = {.applicationName      = "SampleApp",
-	                                                                               .windowWidth          = 1280,
-	                                                                               .windowHeight         = 720,
-	                                                                               .preferredPresentMode = vk::PresentModeKHR::eMailbox}})
+	    : MRG::Application(MRG::ApplicationSpecification{
+	        .windowName            = "Morrigu sample app",
+	        .rendererSpecification = {.applicationName      = "SampleApp",
+	                                  .windowWidth          = 1280,
+	                                  .windowHeight         = 720,
+	                                  .preferredPresentMode = vk::PresentModeKHR::eMailbox},
+	      })
 	{
 		pushLayer(new SampleLayer());
 	};
