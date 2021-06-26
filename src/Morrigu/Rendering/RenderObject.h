@@ -43,7 +43,7 @@ namespace MRG
 			// Pool creation
 			std::array<vk::DescriptorPoolSize, 2> sizes{
 			  vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer,
-			                         std::max(static_cast<uint32_t>(material->shader->l3UBOSizes.size()), 1u)},
+			                         std::max(static_cast<uint32_t>(material->shader->l3UBOData.size()), 1u)},
 			  vk::DescriptorPoolSize{vk::DescriptorType::eSampledImage,
 			                         std::max(static_cast<uint32_t>(material->shader->l3ImageBindings.size()), 1u)},
 			};
@@ -63,15 +63,15 @@ namespace MRG
 			};
 			level3Descriptor = m_device.allocateDescriptorSets(setAllocInfo).back();
 
-			for (const auto& [bindingSlot, size] : material->shader->l3UBOSizes) {
+			for (const auto& [bindingSlot, bindingInfo] : material->shader->l3UBOData) {
 				const auto newBuffer = Utils::Allocators::createBuffer(
-				  allocator, size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, deletionQueue);
+				  allocator, bindingInfo.size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, deletionQueue);
 				m_uniformBuffers.insert(std::make_pair(bindingSlot, newBuffer));
 
 				vk::DescriptorBufferInfo descriptorBufferInfo{
 				  .buffer = newBuffer.buffer,
 				  .offset = 0,
-				  .range  = size,
+				  .range  = bindingInfo.size,
 				};
 				vk::WriteDescriptorSet setWrite{
 				  .dstSet          = level3Descriptor,

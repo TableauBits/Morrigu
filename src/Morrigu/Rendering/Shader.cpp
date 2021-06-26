@@ -42,14 +42,13 @@ namespace MRG
 		for (const auto& uniform : vertResources.uniform_buffers) {
 			const auto setLevel    = vertexCompiler.get_decoration(uniform.id, spv::DecorationDescriptorSet);
 			const auto bindingSlot = vertexCompiler.get_decoration(uniform.id, spv::DecorationBinding);
-			const auto uniformSize = vertexCompiler.get_declared_struct_size(vertexCompiler.get_type(uniform.type_id));
 
 			MRG_ENGINE_ASSERT(setLevel <= 3, "Invalid shader detected: only 4 sets are allowed!")
 
 			// We are only interested in DS level 2 and 3: levels 0 and 1 do not vary by material
 			if (setLevel >= 2) {
 				auto& bindingsMap = (setLevel == 2) ? level2UBOBindings : level3UBOBindings;
-				auto& sizeMap     = (setLevel == 2) ? l2UBOSizes : l3UBOSizes;
+				auto& sizeMap     = (setLevel == 2) ? l2UBOData : l3UBOData;
 
 				bindingsMap.insert(std::make_pair(bindingSlot,
 				                                  vk::DescriptorSetLayoutBinding{
@@ -58,7 +57,9 @@ namespace MRG
 				                                    .descriptorCount = 1,
 				                                    .stageFlags      = vk::ShaderStageFlagBits::eVertex,
 				                                  }));
-				sizeMap.insert(std::make_pair(bindingSlot, uniformSize));
+
+				const auto uniformData = populateUniformData(vertexCompiler, uniform);
+				sizeMap.insert(std::make_pair(bindingSlot, uniformData));
 			}
 		}
 
@@ -93,14 +94,13 @@ namespace MRG
 		for (const auto& uniform : fragResources.uniform_buffers) {
 			const auto setLevel    = fragmentCompiler.get_decoration(uniform.id, spv::DecorationDescriptorSet);
 			const auto bindingSlot = fragmentCompiler.get_decoration(uniform.id, spv::DecorationBinding);
-			const auto uniformSize = fragmentCompiler.get_declared_struct_size(fragmentCompiler.get_type(uniform.type_id));
 
 			MRG_ENGINE_ASSERT(setLevel <= 3, "Invalid shader detected: only 4 sets are allowed!")
 
 			// We are only interested in DS level 2 and 3: levels 0 and 1 do not vary by material
 			if (setLevel >= 2) {
 				auto& bindingsMap = (setLevel == 2) ? level2UBOBindings : level3UBOBindings;
-				auto& sizeMap     = (setLevel == 2) ? l2UBOSizes : l3UBOSizes;
+				auto& sizeMap     = (setLevel == 2) ? l2UBOData : l3UBOData;
 
 				if (bindingsMap.contains(bindingSlot)) {
 					bindingsMap.at(bindingSlot).stageFlags |= vk::ShaderStageFlagBits::eFragment;
@@ -112,7 +112,8 @@ namespace MRG
 					                                    .descriptorCount = 1,
 					                                    .stageFlags      = vk::ShaderStageFlagBits::eFragment,
 					                                  }));
-					sizeMap.insert(std::make_pair(bindingSlot, uniformSize));
+					const auto uniformData = populateUniformData(fragmentCompiler, uniform);
+					sizeMap.insert(std::make_pair(bindingSlot, uniformData));
 				}
 			}
 		}
@@ -214,5 +215,37 @@ namespace MRG
 		  .pCode    = src.data(),
 		};
 		return m_device.createShaderModule(moduleInfo);
+	}
+
+	Shader::Root Shader::populateUniformData(const spirv_cross::Compiler& compiler, const spirv_cross::Resource& uniform)
+	{
+		Root rootNode{
+		  .size = compiler.get_declared_struct_size(compiler.get_type(uniform.type_id)),
+		};
+		rootNode.name = compiler.get_name(uniform.id);
+		rootNode.type = compiler.get_type(uniform.type_id);
+
+		const auto uniformRanges = compiler.get_active_buffer_ranges(uniform.id);
+		for (const auto& range : uniformRanges) {
+			rootNode.members.emplace_back(getShaderStructData(compiler, uniform.base_type_id, range.index));
+		}
+
+		return rootNode;
+	}
+
+	Shader::Node
+	Shader::getShaderStructData(const spirv_cross::Compiler& compiler, const spirv_cross::TypeID baseType, const uint32_t memberIndex)
+	{
+		const auto newBaseType = compiler.get_type(baseType).member_types[memberIndex];
+		Node currentNode{
+		  .name = compiler.get_member_name(baseType, memberIndex),
+		  .type = compiler.get_type(newBaseType),
+		};
+
+		for (auto i = 0; i < currentNode.type.member_types.size(); ++i) {
+			currentNode.members.emplace_back(getShaderStructData(compiler, newBaseType, i));
+		}
+
+		return currentNode;
 	}
 }  // namespace MRG

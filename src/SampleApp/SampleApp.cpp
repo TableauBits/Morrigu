@@ -2,7 +2,8 @@
 // Created by Mathis Lamidey on 2021-04-03.
 //
 
-#include <imgui.h>
+#include "MaterialEditorLayer.h"
+
 #include <Morrigu.h>
 
 struct GradientUniform
@@ -21,7 +22,7 @@ public:
 		mainCamera.setPerspective(glm::radians(70.f), 0.1f, 200.f);
 		mainCamera.recalculateViewProjection();
 
-		const auto testShader   = application->renderer.createShader("TestShader.vert.spv", "TestShader.frag.spv");
+		const auto testShader   = application->renderer.createShader("GradientShader.vert.spv", "GradientShader.frag.spv");
 		const auto testMaterial = application->renderer.createMaterial<MRG::TexturedVertex>(testShader);
 
 		m_testQuad = application->renderer.createRenderObject(MRG::Utils::Meshes::sphere<MRG::TexturedVertex>(), testMaterial);
@@ -43,9 +44,14 @@ public:
 		renderables.emplace_back(m_testQuad->getRenderData());
 		renderables.emplace_back(m_suzanne->getRenderData());
 		renderables.emplace_back(m_boxy->getRenderData());
+
+		testMaterial->uploadUniform(0, GradientUniform{.colorA = {1.f, 0.f, 0.f}, .colorB = {0.f, 1.f, 0.f}});
+
+		auto materialEditor = new MaterialEditorLayer;
+		application->pushLayer(materialEditor);
+		materialEditor->setMaterial(testMaterial);
 	}
 
-	void onImGuiUpdate(MRG::Timestep) override { ImGui::ShowDemoWindow(); }
 	void onEvent(MRG::Event& event) override
 	{
 		MRG::EventDispatcher dispatcher{event};
@@ -66,8 +72,6 @@ public:
 
 private:
 	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_suzanne{}, m_boxy{}, m_testQuad{};
-
-	glm::vec3 textColor{1.f}, headColor{}, areaColor{}, bodyColor{}, popupColor{};
 };
 
 class SampleApp : public MRG::Application

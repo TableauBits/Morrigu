@@ -31,7 +31,7 @@ namespace MRG
 		{
 			// Pool creation
 			std::array<vk::DescriptorPoolSize, 2> sizes{
-			  vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, std::max(static_cast<uint32_t>(shader->l2UBOSizes.size()), 1u)},
+			  vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, std::max(static_cast<uint32_t>(shader->l2UBOData.size()), 1u)},
 			  vk::DescriptorPoolSize{vk::DescriptorType::eSampledImage,
 			                         std::max(static_cast<uint32_t>(shader->l2ImageBindings.size()), 1u)},
 			};
@@ -51,15 +51,15 @@ namespace MRG
 			};
 			level2Descriptor = m_device.allocateDescriptorSets(setAllocInfo).back();
 
-			for (const auto& [bindingSlot, size] : shader->l2UBOSizes) {
+			for (const auto& [bindingSlot, bindingInfo] : shader->l2UBOData) {
 				const auto newBuffer = Utils::Allocators::createBuffer(
-				  m_allocator, size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, deletionQueue);
+				  m_allocator, bindingInfo.size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, deletionQueue);
 				m_uniformBuffers.insert(std::make_pair(bindingSlot, newBuffer));
 
 				vk::DescriptorBufferInfo descriptorBufferInfo{
 				  .buffer = newBuffer.buffer,
 				  .offset = 0,
-				  .range  = size,
+				  .range  = bindingInfo.size,
 				};
 				vk::WriteDescriptorSet setWrite{
 				  .dstSet          = level2Descriptor,
@@ -156,6 +156,12 @@ namespace MRG
 
 			pipeline = pipelineBuilder.build_pipeline(m_device, renderPass);
 			deletionQueue.push([this]() { m_device.destroyPipeline(pipeline); });
+		}
+
+		[[nodiscard]] const Shader::Root& getUniformInfo(uint32_t bindingSlot) const
+		{
+			MRG_ENGINE_ASSERT(shader->l2UBOData.contains(bindingSlot), "Invalid binding slot!")
+			return shader->l2UBOData.at(bindingSlot);
 		}
 
 		template<typename UniformType>
