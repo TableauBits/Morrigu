@@ -4,11 +4,11 @@ layout(location = 0) in vec3 v_Position;
 layout(location = 1) in vec3 v_Normal;
 layout(location = 2) in vec2 v_UV;
 
-layout(set = 0, binding = 0) uniform CameraData {
+layout(push_constant) uniform CameraData {
     mat4 viewMatrix;
     mat4 projectionMatrix;
     mat4 viewProjectionMatrix;
-} u_CameraData;
+} pc_CameraData;
 
 layout(set = 3, binding = 0) uniform ModelData {
     mat4 modelMatrix;
@@ -17,7 +17,7 @@ layout(set = 3, binding = 0) uniform ModelData {
 layout(location = 0) out vec2 fs_UVPassThrough;
 
 void main() {
-    mat4 transform = u_CameraData.viewProjectionMatrix * u_ModelData.modelMatrix;
+    mat4 transform = pc_CameraData.viewProjectionMatrix * u_ModelData.modelMatrix;
     gl_Position = transform * vec4(v_Position, 1);
     fs_UVPassThrough = v_UV;
 }

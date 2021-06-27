@@ -35,7 +35,6 @@ namespace MRG
 
 		vk::DescriptorSetLayout level2DSL;
 		vk::DescriptorSetLayout level3DSL;
-		std::vector<vk::PushConstantRange> pcRanges;
 
 		// level 2 bindings
 		std::map<uint32_t, Root> l2UBOData;
@@ -49,7 +48,7 @@ namespace MRG
 		[[nodiscard]] vk::ShaderModule loadShaderModule(const std::vector<uint32_t>& src);
 		[[nodiscard]] static Root populateUniformData(const spirv_cross::Compiler& compiler, const spirv_cross::Resource& uniform);
 		[[nodiscard]] static Node
-		getShaderStructData(const spirv_cross::Compiler& compiler, const spirv_cross::TypeID baseType, const uint32_t memberIndex);
+		getShaderStructData(const spirv_cross::Compiler& compiler, spirv_cross::TypeID baseType, uint32_t memberIndex);
 
 		vk::Device m_device;
 	};

@@ -192,20 +192,11 @@ namespace MRG
 	{
 		const auto& frameData = getCurrentFrameData();
 
-		CameraData cameraData{
-		  .viewMatrix           = camera.getView(),
-		  .projectionMatrix     = camera.getProjection(),
-		  .viewProjectionMatrix = camera.getViewProjection(),
-		};
-		void* data;
-		vmaMapMemory(m_allocator, frameData.cameraBuffer.allocation, &data);
-		memcpy(data, &cameraData, sizeof(CameraData));
-		vmaUnmapMemory(m_allocator, frameData.cameraBuffer.allocation);
-
 		TimeData timeData{
 		  // Shamelessly stolen from https://docs.unity3d.com/Manual/SL-UnityShaderVariables.html
 		  .time = {elapsedTime / 20.f, elapsedTime, elapsedTime * 2.f, elapsedTime * 3.f},
 		};
+		void* data;
 		vmaMapMemory(m_allocator, frameData.timeDataBuffer.allocation, &data);
 		memcpy(data, &timeData, sizeof(TimeData));
 		vmaUnmapMemory(m_allocator, frameData.timeDataBuffer.allocation);
@@ -243,6 +234,14 @@ namespace MRG
 				  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 2, drawable.level2Descriptor, {});
 				currentMaterial = drawable.materialPipeline;
 			}
+
+			CameraData cameraData{
+			  .viewMatrix           = camera.getView(),
+			  .projectionMatrix     = camera.getProjection(),
+			  .viewProjectionMatrix = camera.getViewProjection(),
+			};
+			frameData.commandBuffer.pushConstants(
+			  drawable.materialPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
 
 			frameData.commandBuffer.bindDescriptorSets(
 			  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 3, drawable.level3Descriptor, {});
@@ -487,7 +486,7 @@ namespace MRG
 
 	void Renderer::initDescriptors()
 	{
-		std::array<vk::DescriptorPoolSize, 1> sizes{{vk::DescriptorType::eUniformBuffer, FRAMES_IN_FLIGHT + 1}};
+		std::array<vk::DescriptorPoolSize, 1> sizes{{vk::DescriptorType::eUniformBuffer, 1}};
 		vk::DescriptorPoolCreateInfo poolInfo{
 		  .maxSets       = FRAMES_IN_FLIGHT + 1,
 		  .poolSizeCount = static_cast<uint32_t>(sizes.size()),
@@ -496,15 +495,9 @@ namespace MRG
 		m_descriptorPool = m_device.createDescriptorPool(poolInfo);
 		m_deletionQueue.push([this]() { m_device.destroyDescriptorPool(m_descriptorPool); });
 
-		std::array<vk::DescriptorSetLayoutBinding, 2> level0Bindings{
+		std::array<vk::DescriptorSetLayoutBinding, 1> level0Bindings{
 		  vk::DescriptorSetLayoutBinding{
 		    .binding         = 0,
-		    .descriptorType  = vk::DescriptorType::eUniformBuffer,
-		    .descriptorCount = 1,
-		    .stageFlags      = vk::ShaderStageFlagBits::eVertex,
-		  },
-		  vk::DescriptorSetLayoutBinding{
-		    .binding         = 1,
 		    .descriptorType  = vk::DescriptorType::eUniformBuffer,
 		    .descriptorCount = 1,
 		    .stageFlags      = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
@@ -526,39 +519,25 @@ namespace MRG
 		};
 		const auto level0Descriptors = m_device.allocateDescriptorSets(allocInfo);
 
-		vk::DescriptorBufferInfo cameraBufferInfo{
-		  .offset = 0,
-		  .range  = sizeof(CameraData),
-		};
-		vk::WriteDescriptorSet cameraSetWrite{
-		  .dstBinding      = 0,
-		  .descriptorCount = 1,
-		  .descriptorType  = vk::DescriptorType::eUniformBuffer,
-		  .pBufferInfo     = &cameraBufferInfo,
-		};
 		vk::DescriptorBufferInfo timeBufferInfo{
 		  .offset = 0,
 		  .range  = sizeof(TimeData),
 		};
 		vk::WriteDescriptorSet timeSetWrite{
-		  .dstBinding      = 1,
+		  .dstBinding      = 0,
 		  .descriptorCount = 1,
 		  .descriptorType  = vk::DescriptorType::eUniformBuffer,
 		  .pBufferInfo     = &timeBufferInfo,
 		};
 
 		for (std::size_t i = 0; i < FRAMES_IN_FLIGHT; ++i) {
-			m_framesData[i].cameraBuffer = Utils::Allocators::createBuffer(
-			  m_allocator, sizeof(CameraData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, m_deletionQueue);
 			m_framesData[i].timeDataBuffer = Utils::Allocators::createBuffer(
 			  m_allocator, sizeof(TimeData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, m_deletionQueue);
 			m_framesData[i].level0Descriptor = level0Descriptors[i];
 
-			cameraBufferInfo.buffer = m_framesData[i].cameraBuffer.buffer;
-			cameraSetWrite.dstSet   = m_framesData[i].level0Descriptor;
-			timeBufferInfo.buffer   = m_framesData[i].timeDataBuffer.buffer;
-			timeSetWrite.dstSet     = m_framesData[i].level0Descriptor;
-			m_device.updateDescriptorSets({cameraSetWrite, timeSetWrite}, {});
+			timeBufferInfo.buffer = m_framesData[i].timeDataBuffer.buffer;
+			timeSetWrite.dstSet   = m_framesData[i].level0Descriptor;
+			m_device.updateDescriptorSets(timeSetWrite, {});
 		}
 
 		// level 1 DSL (currently empty)

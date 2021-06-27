@@ -27,13 +27,6 @@ namespace MRG
 		vk::PresentModeKHR preferredPresentMode;
 	};
 
-	struct CameraData
-	{
-		glm::mat4 viewMatrix;
-		glm::mat4 projectionMatrix;
-		glm::mat4 viewProjectionMatrix;
-	};
-
 	struct TimeData
 	{
 		glm::vec4 time;
@@ -47,7 +40,6 @@ namespace MRG
 		vk::CommandPool commandPool;
 		vk::CommandBuffer commandBuffer;
 
-		AllocatedBuffer cameraBuffer;
 		AllocatedBuffer timeDataBuffer;
 		vk::DescriptorSet level0Descriptor;
 	};

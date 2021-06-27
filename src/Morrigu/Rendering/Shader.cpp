@@ -172,26 +172,6 @@ namespace MRG
 
 		level3DSL = m_device.createDescriptorSetLayout(setInfo);
 		deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(level3DSL); });
-
-		// push constants ranges
-		const auto reflectPCRangesVert = vertexCompiler.get_active_buffer_ranges(vertResources.push_constant_buffers[0].id);
-		const auto reflectPCRangesFrag = fragmentCompiler.get_active_buffer_ranges(fragResources.push_constant_buffers[0].id);
-		pcRanges.resize(reflectPCRangesVert.size() + reflectPCRangesFrag.size());
-		index = 0;
-		for (const auto& range : reflectPCRangesVert) {
-			pcRanges[index++] = vk::PushConstantRange{
-			  .stageFlags = vk::ShaderStageFlagBits::eVertex,
-			  .offset     = static_cast<uint32_t>(range.offset),
-			  .size       = static_cast<uint32_t>(range.range),
-			};
-		}
-		for (const auto& range : reflectPCRangesFrag) {
-			pcRanges[index++] = vk::PushConstantRange{
-			  .stageFlags = vk::ShaderStageFlagBits::eFragment,
-			  .offset     = static_cast<uint32_t>(range.offset),
-			  .size       = static_cast<uint32_t>(range.range),
-			};
-		}
 	}
 
 	std::vector<std::uint32_t> Shader::readSource(const char* filePath)

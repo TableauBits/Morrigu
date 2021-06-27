@@ -14,6 +14,13 @@
 
 namespace MRG
 {
+	struct CameraData
+	{
+		glm::mat4 viewMatrix;
+		glm::mat4 projectionMatrix;
+		glm::mat4 viewProjectionMatrix;
+	};
+
 	template<Vertex VertexType>
 	class Material
 	{
@@ -77,12 +84,18 @@ namespace MRG
 				bindTexture(imageBinding, defaultTexture);
 			}
 
+			vk::PushConstantRange pushConstantRange{
+			  .stageFlags = vk::ShaderStageFlagBits::eVertex,
+			  .offset     = 0,
+			  .size       = sizeof(CameraData),
+			};
+
 			std::array<vk::DescriptorSetLayout, 4> setLayouts{level0DSL, level1DSL, shader->level2DSL, shader->level3DSL};
 			vk::PipelineLayoutCreateInfo layoutInfo{
 			  .setLayoutCount         = static_cast<uint32_t>(setLayouts.size()),
 			  .pSetLayouts            = setLayouts.data(),
-			  .pushConstantRangeCount = static_cast<uint32_t>(shader->pcRanges.size()),
-			  .pPushConstantRanges    = shader->pcRanges.data(),
+			  .pushConstantRangeCount = 1,
+			  .pPushConstantRanges    = &pushConstantRange,
 			};
 			pipelineLayout = m_device.createPipelineLayout(layoutInfo);
 			deletionQueue.push([this]() { m_device.destroyPipelineLayout(pipelineLayout); });
