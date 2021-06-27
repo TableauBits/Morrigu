@@ -25,7 +25,7 @@ public:
 		const auto testShader   = application->renderer.createShader("GradientShader.vert.spv", "GradientShader.frag.spv");
 		const auto testMaterial = application->renderer.createMaterial<MRG::TexturedVertex>(testShader);
 
-		m_testQuad = application->renderer.createRenderObject(MRG::Utils::Meshes::sphere<MRG::TexturedVertex>(), testMaterial);
+		m_testQuad = application->renderer.createRenderObject(MRG::Utils::Meshes::quad<MRG::TexturedVertex>(), testMaterial);
 		m_suzanne = application->renderer.createRenderObject(MRG::Utils::Meshes::loadMeshFromFile<MRG::TexturedVertex>("monkey_smooth.obj"),
 		                                                     application->renderer.defaultTexturedMaterial);
 		m_boxy =

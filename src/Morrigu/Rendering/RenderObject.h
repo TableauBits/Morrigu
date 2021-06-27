@@ -102,6 +102,15 @@ namespace MRG
 			vmaUnmapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation);
 		}
 
+		void uploadUniform(uint32_t bindingSlot, void* srcData, std::size_t size)
+		{
+			MRG_ENGINE_ASSERT(m_uniformBuffers.contains(bindingSlot), "Invalid binding slot!")
+			void* dstData;
+			vmaMapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation, &dstData);
+			memcpy(dstData, srcData, size);
+			vmaUnmapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation);
+		}
+
 		void bindTexture(uint32_t bindingSlot, const Ref<Texture>& texture)
 		{
 			MRG_ENGINE_ASSERT(m_sampledImages.contains(bindingSlot), "Invalid binding slot!")
