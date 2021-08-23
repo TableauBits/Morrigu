@@ -10,18 +10,16 @@
 
 namespace MRG::Utils
 {
-	AllocatedImage loadImageFromFile(vk::Device device,
-	                                 vk::Queue graphicsQueue,
-	                                 UploadContext uploadContext,
-	                                 VmaAllocator allocator,
-	                                 const char* file,
-	                                 DeletionQueue& deletionQueue)
+	AllocatedImage createImageFromData(vk::Device device,
+	                                   vk::Queue graphicsQueue,
+	                                   UploadContext uploadContext,
+	                                   VmaAllocator allocator,
+	                                   void* imageData,
+	                                   uint32_t imageWidth,
+	                                   uint32_t imageHeight,
+	                                   DeletionQueue& deletionQueue)
 	{
-		int texWidth, texHeight, texChannels;
-		auto pixels = stbi_load(file, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-		MRG_ENGINE_ASSERT(pixels != nullptr, "Failed to load image from file: {}", file)
-
-		vk::DeviceSize imageSize = texWidth * texHeight * 4;
+		const auto imageSize = imageWidth * imageHeight * 4;
 		VkBufferCreateInfo bufferInfo{
 		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 		  .size  = imageSize,
@@ -38,13 +36,12 @@ namespace MRG::Utils
 
 		void* data;
 		vmaMapMemory(allocator, stagingBuffer.allocation, &data);
-		memcpy(data, pixels, static_cast<std::size_t>(imageSize));
+		memcpy(data, imageData, static_cast<std::size_t>(imageSize));
 		vmaUnmapMemory(allocator, stagingBuffer.allocation);
-		stbi_image_free(pixels);
 
 		vk::Extent3D imageExtent{
-		  .width  = static_cast<uint32_t>(texWidth),
-		  .height = static_cast<uint32_t>(texHeight),
+		  .width  = static_cast<uint32_t>(imageWidth),
+		  .height = static_cast<uint32_t>(imageHeight),
 		  .depth  = 1,
 		};
 		vk::Format imageFormat      = vk::Format::eR8G8B8A8Srgb;
@@ -114,5 +111,22 @@ namespace MRG::Utils
 		vmaDestroyBuffer(allocator, stagingBuffer.buffer, stagingBuffer.allocation);
 
 		return newImage;
+	}
+
+	AllocatedImage loadImageFromFile(vk::Device device,
+	                                 vk::Queue graphicsQueue,
+	                                 UploadContext uploadContext,
+	                                 VmaAllocator allocator,
+	                                 const char* file,
+	                                 DeletionQueue& deletionQueue)
+	{
+		int texWidth, texHeight, texChannels;
+		auto* pixels = stbi_load(file, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+		MRG_ENGINE_ASSERT(pixels != nullptr, "Failed to load image from file: {}", file)
+
+		const auto image = createImageFromData(device, graphicsQueue, uploadContext, allocator, pixels, texWidth, texHeight, deletionQueue);
+
+		stbi_image_free(pixels);
+		return image;
 	}
 }  // namespace MRG::Utils

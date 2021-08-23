@@ -6,8 +6,8 @@
 
 #include "Vendor/ImGui/bindings/imgui_impl_glfw.h"
 #include "Vendor/ImGui/bindings/imgui_impl_vulkan.h"
-#include <imgui.h>
 #include <VkBootstrap.h>
+#include <imgui.h>
 
 DISABLE_WARNING_PUSH
 DISABLE_WARNING_ALIGNMENT_MODIFIED
@@ -43,6 +43,8 @@ namespace
 
 namespace MRG
 {
+	Ref<UI::Font> Renderer::createFont(const std::string& fontPath) { return createRef<UI::Font>(fontPath, m_ftHandle); }
+
 	Ref<Shader> Renderer::createShader(const char* vertexShaderName, const char* fragmentShaderName)
 	{
 		return MRG::createRef<Shader>(m_device, vertexShaderName, fragmentShaderName, m_deletionQueue);
@@ -51,6 +53,11 @@ namespace MRG
 	Ref<Texture> Renderer::createTexture(const char* fileName)
 	{
 		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, fileName, m_deletionQueue);
+	}
+
+	Ref<Texture> Renderer::createTexture(void* data, uint32_t width, uint32_t height)
+	{
+		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, data, width, height, m_deletionQueue);
 	}
 
 	void Renderer::init(const RendererSpecification& newSpec, GLFWwindow* newWindow)
@@ -68,6 +75,7 @@ namespace MRG
 		initAssets();
 		initMaterials();
 		initImGui();
+		initUI();
 
 		isInitalized = true;
 	}
@@ -577,13 +585,18 @@ namespace MRG
 		});
 
 		defaultBasicShader   = createShader("BasicMesh.vert.spv", "BasicMesh.frag.spv");
-		defaultBasicMaterial = createMaterial<BasicVertex>(defaultBasicShader);
+		defaultBasicMaterial = createMaterial<BasicVertex>(defaultBasicShader, {});
 
 		defaultColoredShader   = createShader("ColoredMesh.vert.spv", "ColoredMesh.frag.spv");
-		defaultColoredMaterial = createMaterial<ColoredVertex>(defaultColoredShader);
+		defaultColoredMaterial = createMaterial<ColoredVertex>(defaultColoredShader, {});
 
 		defaultTexturedShader   = createShader("TexturedMesh.vert.spv", "TexturedMesh.frag.spv");
-		defaultTexturedMaterial = createMaterial<TexturedVertex>(defaultTexturedShader);
+		defaultTexturedMaterial = createMaterial<TexturedVertex>(defaultTexturedShader, {});
+		defaultUITexturedMaterial =
+		  createMaterial<TexturedVertex>(defaultTexturedShader, MaterialConfiguration{.zTest = false, .zWrite = false});
+
+		textShader     = createShader("TextShader.vert.spv", "TextShader.frag.spv");
+		textUIMaterial = createMaterial<TexturedVertex>(textShader, MaterialConfiguration{.zTest = false, .zWrite = false});
 	}
 
 	void Renderer::initImGui()
@@ -706,6 +719,14 @@ namespace MRG
 		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 		colors[ImGuiCol_NavWindowingDimBg]     = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 		colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.03f, 0.02f, 0.02f, 0.73f);
+	}
+
+	void Renderer::initUI()
+	{
+		const auto error = FT_Init_FreeType(&m_ftHandle);
+		MRG_ENGINE_ASSERT(!error, "Failed to initialize Freetype!")
+
+		m_deletionQueue.push([this]() { FT_Done_FreeType(m_ftHandle); });
 	}
 
 	void Renderer::destroySwapchain()

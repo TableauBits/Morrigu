@@ -4,7 +4,7 @@
 
 layout(location = 0) in vec2 vs_UVPassthrough;
 
-layout(set = 0, binding = 1) uniform TimeData {
+layout(set = 0, binding = 0) uniform TimeData {
     vec4 timeScales;
 } u_TimeData;
 

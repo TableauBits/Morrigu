@@ -12,6 +12,9 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/Meshes.h
 		${CMAKE_CURRENT_LIST_DIR}/Meshes.cpp
 
+		# Utility layer implementations
+		${CMAKE_CURRENT_LIST_DIR}/UtilityLayers.h
+
 		# STB files to define implementation
 		${CMAKE_CURRENT_LIST_DIR}/STBIncludeHelper.h
 		${CMAKE_CURRENT_LIST_DIR}/STBIncludeHelper.cpp

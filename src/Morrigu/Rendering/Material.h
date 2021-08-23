@@ -21,6 +21,12 @@ namespace MRG
 		glm::mat4 viewProjectionMatrix;
 	};
 
+	struct MaterialConfiguration
+	{
+		bool zTest  = true;
+		bool zWrite = true;
+	};
+
 	template<Vertex VertexType>
 	class Material
 	{
@@ -33,7 +39,8 @@ namespace MRG
 		                  vk::DescriptorSetLayout level0DSL,
 		                  vk::DescriptorSetLayout level1DSL,
 		                  const Ref<Texture>& defaultTexture,
-		                  DeletionQueue& deletionQueue)
+		                  DeletionQueue& deletionQueue,
+		                  const MaterialConfiguration& config)
 		    : m_device{device}, m_allocator{allocator}, shader{shader}
 		{
 			// Pool creation
@@ -136,8 +143,8 @@ namespace MRG
 			};
 
 			vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{
-			  .depthTestEnable  = VK_TRUE,
-			  .depthWriteEnable = VK_TRUE,
+			  .depthTestEnable  = static_cast<vk::Bool32>(config.zTest),
+			  .depthWriteEnable = static_cast<vk::Bool32>(config.zWrite),
 			  .depthCompareOp   = vk::CompareOp::eLessOrEqual,
 			  .minDepthBounds   = 0.f,
 			  .maxDepthBounds   = 1.f,

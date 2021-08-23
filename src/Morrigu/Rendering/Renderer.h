@@ -7,9 +7,11 @@
 
 #include "Events/ApplicationEvent.h"
 #include "Rendering/Camera.h"
-#include "Rendering/RendererTypes.h"
 #include "Rendering/RenderObject.h"
+#include "Rendering/RendererTypes.h"
 #include "Rendering/Texture.h"
+#include "Rendering/UI/Font.h"
+
 
 #include <GLFW/glfw3.h>
 
@@ -92,14 +94,28 @@ namespace MRG
 			vmaDestroyBuffer(m_allocator, stagingBuffer.buffer, stagingBuffer.allocation);
 		}
 
+		Ref<UI::Font> createFont(const std::string& fontPath);
+
 		[[nodiscard]] Ref<Shader> createShader(const char* vertexShaderName, const char* fragmentShaderName);
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader)
+		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader, const MaterialConfiguration& config)
 		{
-			return createRef<Material<VertexType>>(
-			  m_device, m_allocator, shader, m_pipelineCache, m_renderPass, m_level0DSL, m_level1DSL, defaultTexture, m_deletionQueue);
+			return createRef<Material<VertexType>>(m_device,
+			                                       m_allocator,
+			                                       shader,
+			                                       m_pipelineCache,
+			                                       m_renderPass,
+			                                       m_level0DSL,
+			                                       m_level1DSL,
+			                                       defaultTexture,
+			                                       m_deletionQueue,
+			                                       config);
 		}
+
+		[[nodiscard]] Ref<Texture> createTexture(void* data, uint32_t width, uint32_t height);
+
 		[[nodiscard]] Ref<Texture> createTexture(const char* fileName);
+
 		template<Vertex VertexType>
 		[[nodiscard]] Ref<RenderObject<VertexType>> createRenderObject(const Ref<Mesh<VertexType>>& mesh,
 		                                                               const Ref<Material<VertexType>>& material)
@@ -121,6 +137,9 @@ namespace MRG
 		Ref<Material<ColoredVertex>> defaultColoredMaterial{};
 		Ref<Shader> defaultTexturedShader{};
 		Ref<Material<TexturedVertex>> defaultTexturedMaterial{};
+		Ref<Material<TexturedVertex>> defaultUITexturedMaterial{};
+		Ref<Shader> textShader{};
+		Ref<Material<TexturedVertex>> textUIMaterial{};
 
 		Ref<Texture> defaultTexture{};
 
@@ -164,6 +183,8 @@ namespace MRG
 		DeletionQueue m_deletionQueue{};
 		UploadContext m_uploadContext{};
 
+		FT_Library m_ftHandle{};
+
 		// ImGui data
 		uint32_t m_imageCount{};
 		vk::DescriptorPool m_imGuiPool{};
@@ -178,6 +199,7 @@ namespace MRG
 		void initAssets();
 		void initMaterials();
 		void initImGui();
+		void initUI();
 
 		void destroySwapchain();
 

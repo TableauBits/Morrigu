@@ -3,7 +3,7 @@
 # https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md
 
 function(set_project_warnings project_name)
-	option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" TRUE)
+	option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 	set(MSVC_WARNINGS
 			/W4 # Baseline reasonable warnings
@@ -75,6 +75,6 @@ function(set_project_warnings project_name)
 		message(AUTHOR_WARNING "No compiler warnings set for '${CMAKE_CXX_COMPILER_ID}' compiler.")
 	endif ()
 
-	target_compile_options(${project_name} INTERFACE ${PROJECT_WARNINGS})
+	target_compile_options(${project_name} PRIVATE ${PROJECT_WARNINGS})
 
 endfunction()

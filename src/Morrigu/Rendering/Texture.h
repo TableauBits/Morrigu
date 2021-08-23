@@ -19,6 +19,15 @@ namespace MRG
 		        const std::string& file,
 		        DeletionQueue& deletionQueue);
 
+		Texture(vk::Device device,
+		        vk::Queue graphicsQueue,
+		        UploadContext uploadContext,
+		        VmaAllocator allocator,
+		        void* data,
+		        uint32_t width,
+		        uint32_t height,
+		        DeletionQueue& deletionQueue);
+
 		AllocatedImage image;
 		vk::ImageView imageView;
 		vk::Sampler sampler;

@@ -23,6 +23,7 @@ namespace MRG::Folders
 		static const std::string assetsFolder   = "assets/";
 		static const std::string meshesFolder   = assetsFolder + "meshes/";
 		static const std::string texturesFolder = assetsFolder + "textures/";
+		static const std::string fontsFolder    = assetsFolder + "fonts/";
 
 		static const std::string shadersFolder = "shaders/";
 	}  // namespace Rendering

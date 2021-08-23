@@ -14,20 +14,23 @@ target_include_directories(
 target_link_libraries(
 		Morrigu
 		PUBLIC
-		project_options
-		project_warnings
 		Vulkan::Vulkan
-		CONAN_PKG::spdlog
-		CONAN_PKG::glm
+		CONAN_PKG::freetype
 		CONAN_PKG::glfw
+		CONAN_PKG::glm
 		CONAN_PKG::imgui-docking
+		CONAN_PKG::spdlog
+		CONAN_PKG::spirv-cross
 		CONAN_PKG::stb
 		CONAN_PKG::tinyobjloader
-		CONAN_PKG::vulkan-headers
 		CONAN_PKG::vk-bootstrap
+		CONAN_PKG::vulkan-headers
 		CONAN_PKG::vulkan-memory-allocator
-		CONAN_PKG::spirv-cross
 )
+
+set_property(TARGET Morrigu PROPERTY CXX_STANDARD 20)
+set_property(TARGET Morrigu PROPERTY CXX_STANDARD_REQUIRED ON)
+set_project_warnings(Morrigu)
 
 include(SampleApp/CMakeLists.txt)
 
@@ -40,8 +43,6 @@ add_executable(
 target_link_libraries(
 		SampleApp
 		PRIVATE
-		project_options
-		project_warnings
 		Morrigu
 )
 
@@ -62,7 +63,17 @@ add_custom_command(
 		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Textures ${CMAKE_SOURCE_DIR}/runtime/assets/textures
 )
 
+add_custom_command(
+		TARGET SampleApp
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Fonts ${CMAKE_SOURCE_DIR}/runtime/assets/fonts
+)
+
 add_dependencies(
 		SampleApp
 		Shaders
 )
+
+set_property(TARGET SampleApp PROPERTY CXX_STANDARD 20)
+set_property(TARGET SampleApp PROPERTY CXX_STANDARD_REQUIRED ON)
+set_project_warnings(SampleApp)

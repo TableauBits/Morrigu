@@ -15,6 +15,10 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
+#include "Rendering/UI/Font.h"
+#include "Rendering/UI/Text.h"
+
 #include "Utils/Meshes.h"
+#include "Utils/UtilityLayers.h"
 
 #endif  // MORRIGU_MORRIGU_H
