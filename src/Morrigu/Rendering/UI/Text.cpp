@@ -42,13 +42,14 @@ namespace MRG::UI
               MRG::TexturedVertex{.position{xAbs, -yAbs, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 1.f}},
               MRG::TexturedVertex{.position{0.f, -yAbs, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 1.f}},
             };
-			const auto bitmap       = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
-			const auto renderLetter = renderer->createRenderObject(quad, renderer->textUIMaterial);
-			renderLetter->bindTexture(1, bitmap);
-			renderLetter->translate({posX, posY - (glyph->metrics.horiBearingY >> 6), 0.f});
-			renderer->uploadMesh(renderLetter->mesh);
-			m_letters.emplace_back(Letter{bitmap, renderLetter});
-
+			if (glyph->bitmap.width != 0 && glyph->bitmap.rows != 0) {
+				const auto bitmap       = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
+				const auto renderLetter = renderer->createRenderObject(quad, renderer->textUIMaterial);
+				renderLetter->bindTexture(1, bitmap);
+				renderLetter->translate({posX, posY - (glyph->metrics.horiBearingY >> 6), 0.f});
+				renderer->uploadMesh(renderLetter->mesh);
+				m_letters.emplace_back(Letter{bitmap, renderLetter});
+			}
 			posX += glyph->advance.x >> 6;
 			posY += glyph->advance.y >> 6;
 		}

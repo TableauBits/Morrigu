@@ -73,6 +73,7 @@ namespace MRG
 		if (resizeEvent.getWidth() != 0 && resizeEvent.getHeight() != 0) {
 			width  = static_cast<float>(resizeEvent.getWidth());
 			height = static_cast<float>(resizeEvent.getHeight());
+			recalculateViewProjection();
 		}
 
 		return false;

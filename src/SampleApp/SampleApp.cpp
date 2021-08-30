@@ -79,7 +79,7 @@ public:
 		MRG::UILayer::onAttach();
 
 		auto font = createFont("test.ttf");
-		font->setSize(200);
+		font->setSize(150);
 		m_text = createText("TEXT OUAIS", font, {0.f, 0.f});
 
 		m_testUI = createRenderObject(MRG::Utils::Meshes::quad<MRG::TexturedVertex>(), application->renderer.defaultUITexturedMaterial);
