@@ -11,10 +11,10 @@ class SampleLayer : public MRG::StandardLayer
 public:
 	void onAttach() override
 	{
-		mainCamera.position    = {0.f, 0.f, 3.f};
-		mainCamera.aspectRatio = 1280.f / 720.f;
-		mainCamera.setPerspective(glm::radians(90.f), 0.1f, 200.f);
-		mainCamera.recalculateViewProjection();
+		mainCamera->position    = {0.f, 0.f, 3.f};
+		mainCamera->aspectRatio = 1280.f / 720.f;
+		mainCamera->setPerspective(glm::radians(90.f), 0.1f, 200.f);
+		mainCamera->recalculateViewProjection();
 
 		const auto testShader   = createShader("GradientShader.vert.spv", "GradientShader.frag.spv");
 		const auto testMaterial = createMaterial<MRG::TexturedVertex>(testShader);
@@ -45,14 +45,14 @@ public:
 
 	void onUpdate(MRG::Timestep ts) override
 	{
-		mainCamera.yaw += glm::radians(ts.getSeconds() * 100);
-		mainCamera.recalculateViewProjection();
+		mainCamera->yaw += glm::radians(ts.getSeconds() * 100);
+		mainCamera->recalculateViewProjection();
 	}
 
 	void onEvent(MRG::Event& event) override
 	{
 		MRG::EventDispatcher dispatcher{event};
-		dispatcher.dispatch<MRG::WindowResizeEvent>([this](MRG::WindowResizeEvent& event) { return mainCamera.onResize(event); });
+		dispatcher.dispatch<MRG::WindowResizeEvent>([this](MRG::WindowResizeEvent& event) { return mainCamera->onResize(event); });
 		dispatcher.dispatch<MRG::KeyReleasedEvent>([this](MRG::KeyReleasedEvent&) {
 			m_suzanne->setVisible(false);
 			m_boxy->setVisible(false);
@@ -79,12 +79,10 @@ public:
 		MRG::UILayer::onAttach();
 
 		auto font = createFont("test.ttf");
-		m_text    = createText("TEXT", font);
+		font->setSize(200);
+		m_text = createText("TEXT OUAIS", font, {0.f, 0.f});
 
 		m_testUI = createRenderObject(MRG::Utils::Meshes::quad<MRG::TexturedVertex>(), application->renderer.defaultUITexturedMaterial);
-
-		m_testUI->translate({-1.f, -1.f, 0.f});
-		m_testUI->scale({0.2f, 0.2f, 0.2f});
 
 		uploadMesh(m_testUI->mesh);
 

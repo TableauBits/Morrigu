@@ -13,24 +13,41 @@ namespace MRG
 	class Camera
 	{
 	public:
+		[[nodiscard]] const glm::mat4& getProjection() const { return m_projection; }
+		[[nodiscard]] const glm::mat4& getView() const { return m_view; }
+		[[nodiscard]] const glm::mat4& getViewProjection() const { return m_viewProjection; };
+
+		virtual bool onResize(const WindowResizeEvent& resizeEvent) = 0;
+
+		virtual void recalculateProjection()     = 0;
+		virtual void recalculateView()           = 0;
+		virtual void recalculateViewProjection() = 0;
+
+	protected:
+		glm::mat4 m_projection{1.f};
+		glm::mat4 m_view{1.f};
+		glm::mat4 m_viewProjection{1.f};
+	};
+
+	// A standard camera class that can be either perspective or orthographic camera
+	class StandardCamera : public Camera
+	{
+	public:
 		enum class ProjectionType
 		{
 			Perspective,
 			Orthographic
 		};
 
-		[[nodiscard]] const glm::mat4& getProjection() const { return m_projection; }
-		[[nodiscard]] const glm::mat4& getView() const { return m_view; }
-		[[nodiscard]] const glm::mat4& getViewProjection() const { return m_viewProjection; };
-
 		void setPerspective(float fov, float nearClip, float farClip);
 		void setOrthgraphic(float size, float nearClip, float farClip);
-		bool onResize(const WindowResizeEvent& resizeEvent);
 
+		bool onResize(const WindowResizeEvent& resizeEvent) override;
+
+		void recalculateProjection() override;
+		void recalculateView() override;
+		void recalculateViewProjection() override;
 		[[nodiscard]] glm::quat calculateOrientation() const;
-		void recalculateProjection();
-		void recalculateView();
-		void recalculateViewProjection();
 
 		ProjectionType projectionType = ProjectionType::Perspective;
 
@@ -49,11 +66,23 @@ namespace MRG
 		float pitch       = 0.f;
 		float yaw         = 0.f;
 		glm::vec3 position{};
+	};
 
-	private:
-		glm::mat4 m_projection{1.f};
-		glm::mat4 m_view{1.f};
-		glm::mat4 m_viewProjection{1.f};
+	// /!\ This camera class doesn't preserve aspect ratio, but provides a 1:1 mapping from pixels to coordinates.
+	// This camera is orthographic ONLY. Mainly useful for UI elements.
+	class PixelPerfectCamera : public Camera
+	{
+	public:
+		bool onResize(const WindowResizeEvent& resizeEvent) override;
+
+		void recalculateProjection() override;
+		void recalculateView() override;
+		void recalculateViewProjection() override;
+
+		float near = -1.f;
+		float far  = 1.f;
+		float width{};
+		float height{};
 	};
 }  // namespace MRG
 

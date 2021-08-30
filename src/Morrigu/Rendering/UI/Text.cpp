@@ -9,11 +9,12 @@
 
 namespace MRG::UI
 {
-	Text::Text(const std::string& content, const Ref<Font>& font, Renderer* renderer)
+	Text::Text(const std::string& content, const Ref<Font>& font, const glm::vec2& position, Renderer* renderer)
 	{
 		m_letters.reserve(content.size());
 
-		float pos_x      = -1.f;
+		float posX       = position.x;
+		float posY       = position.y;
 		const auto glyph = font->face->glyph;
 		for (auto letter : content) {
 			const auto error = FT_Load_Char(font->face, letter, FT_LOAD_RENDER);
@@ -30,16 +31,26 @@ namespace MRG::UI
 				*writeHead++ = std::byte{*readHead++};
 			}
 
-			const auto quad         = Utils::Meshes::quad<TexturedVertex>();
+			const auto xAbs = glyph->metrics.width >> 6;
+			const auto yAbs = glyph->metrics.height >> 6;
+			auto quad       = createRef<Mesh<TexturedVertex>>();
+			quad->vertices  = {
+              MRG::TexturedVertex{.position{0.f, -yAbs, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 1.f}},
+              MRG::TexturedVertex{.position{0.f, 0.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 0.f}},
+              MRG::TexturedVertex{.position{xAbs, 0.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 0.f}},
+              MRG::TexturedVertex{.position{xAbs, 0.f, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 0.f}},
+              MRG::TexturedVertex{.position{xAbs, -yAbs, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{1.f, 1.f}},
+              MRG::TexturedVertex{.position{0.f, -yAbs, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 1.f}},
+            };
 			const auto bitmap       = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
 			const auto renderLetter = renderer->createRenderObject(quad, renderer->textUIMaterial);
 			renderLetter->bindTexture(1, bitmap);
-			renderLetter->scale({0.2f, -0.2f, 0.2f});
-			renderLetter->translate({pos_x, 0.f, 0.f});
+			renderLetter->translate({posX, posY - (glyph->metrics.horiBearingY >> 6), 0.f});
 			renderer->uploadMesh(renderLetter->mesh);
 			m_letters.emplace_back(Letter{bitmap, renderLetter});
 
-			pos_x += 1.3f;
+			posX += glyph->advance.x >> 6;
+			posY += glyph->advance.y >> 6;
 		}
 	}
 

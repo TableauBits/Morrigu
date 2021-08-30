@@ -14,6 +14,7 @@ set(
 
 		# Utility layer implementations
 		${CMAKE_CURRENT_LIST_DIR}/UtilityLayers.h
+		${CMAKE_CURRENT_LIST_DIR}/UtilityLayers.cpp
 
 		# STB files to define implementation
 		${CMAKE_CURRENT_LIST_DIR}/STBIncludeHelper.h

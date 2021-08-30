@@ -19,7 +19,7 @@ namespace MRG::UI
 	class Text
 	{
 	public:
-		Text(const std::string& content, const Ref<Font>& font, Renderer* renderer);
+		Text(const std::string& content, const Ref<Font>& font, const glm::vec2& position, Renderer* renderer);
 
 		[[nodiscard]] std::vector<RenderData> getCollectionRenderData();
 

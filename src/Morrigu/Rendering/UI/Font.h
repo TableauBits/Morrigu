@@ -24,6 +24,8 @@ namespace MRG::UI
 
 		~Font();
 
+		void setSize(uint32_t pointSize);
+
 		FT_Face face;
 	};
 }  // namespace MRG::UI

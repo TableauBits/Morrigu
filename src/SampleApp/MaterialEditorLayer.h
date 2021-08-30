@@ -5,12 +5,12 @@
 #ifndef MATERIALEDITORLAYER_H
 #define MATERIALEDITORLAYER_H
 
-#include <glm/glm.hpp>
 #include <Morrigu.h>
+#include <glm/glm.hpp>
 
 #include <vector>
 
-class MaterialEditorLayer : public MRG::Layer
+class MaterialEditorLayer : public MRG::StandardLayer
 {
 public:
 	void setMaterial(MRG::Ref<MRG::Material<MRG::TexturedVertex>> newMaterial);

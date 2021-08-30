@@ -7,12 +7,17 @@
 
 #include "Core/Application.h"
 #include "Core/Layer.h"
+#include "Rendering/UI/Text.h"
 
 namespace MRG
 {
 	class StandardLayer : public Layer
 	{
 	public:
+		StandardLayer();
+
+		Ref<Camera> getMainCamera() override;
+
 		template<Vertex VertexType>
 		void uploadMesh(Ref<Mesh<VertexType>>& mesh)
 		{
@@ -21,9 +26,9 @@ namespace MRG
 
 		[[nodiscard]] Ref<UI::Font> createFont(const std::string& filePath) { return application->renderer.createFont(filePath); }
 
-		[[nodiscard]] Ref<UI::Text> createText(const std::string& content, const Ref<UI::Font>& font)
+		[[nodiscard]] Ref<UI::Text> createText(const std::string& content, const Ref<UI::Font>& font, const glm::vec2& position)
 		{
-			return createRef<UI::Text>(content, font, &application->renderer);
+			return createRef<UI::Text>(content, font, position, &application->renderer);
 		}
 
 		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile)
@@ -43,24 +48,22 @@ namespace MRG
 		{
 			return application->renderer.createRenderObject(mesh, material);
 		}
+
+		Ref<StandardCamera> mainCamera{};
 	};
 
+	// This layer is an orthographic pixel perfect layer
 	class UILayer : public StandardLayer
 	{
 	public:
-		void onAttach() override
-		{
-			mainCamera.aspectRatio =
-			  static_cast<float>(application->renderer.spec.windowWidth) / static_cast<float>(application->renderer.spec.windowHeight);
-			mainCamera.setOrthgraphic(2.f, -1.f, 1.f);
-			mainCamera.recalculateViewProjection();
-		}
+		UILayer();
 
-		void onEvent(MRG::Event& event) override
-		{
-			MRG::EventDispatcher dispatcher{event};
-			dispatcher.dispatch<MRG::WindowResizeEvent>([this](MRG::WindowResizeEvent& event) { return mainCamera.onResize(event); });
-		}
+		Ref<Camera> getMainCamera() override;
+
+		void onAttach() override;
+		void onEvent(MRG::Event& event) override;
+
+		Ref<PixelPerfectCamera> mainCamera{};
 	};
 }  // namespace MRG
 

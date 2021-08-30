@@ -18,12 +18,10 @@ namespace MRG
 		std::vector<vk::VertexInputAttributeDescription> attributes{};
 	};
 
-	// clang-format off
-    template<typename VertexType>
+	template<typename VertexType>
     concept Vertex = requires(VertexType vertex) {
         {VertexType::getVertexDescription()} -> std::same_as<VertexInputDescription>;
     };
-	// clang-format on
 
 	// These are sample implementations of some basic vertex types
 	struct BasicVertex

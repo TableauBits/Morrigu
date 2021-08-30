@@ -7,6 +7,8 @@
 #include "Core/Core.h"
 #include "Core/FileNames.h"
 
+#include <GLFW/glfw3.h>
+
 namespace MRG::UI
 {
 	Font::Font(const std::string& file, FT_Library& ftHandle)
@@ -15,14 +17,15 @@ namespace MRG::UI
 		const auto error    = FT_New_Face(ftHandle, fontPath.c_str(), 0, &face);
 		MRG_ENGINE_ASSERT(!error, "Unable to load font \"{}\"!", fontPath)
 
-		FT_Set_Char_Size(face, 0, 50 * 64, 92, 92);
+		setSize(16);
 
 		// @TODO(Ithyx): pre-generate/cache atlas ?
 	}
 
 	Font& Font::operator=(Font&& font) noexcept
 	{
-		std::swap(face, font.face);
+		face      = font.face;
+		font.face = nullptr;
 		return *this;
 	}
 
@@ -30,4 +33,6 @@ namespace MRG::UI
 	{
 		if (face != nullptr) { FT_Done_Face(face); }
 	}
+
+	void Font::setSize(uint32_t pointSize) { FT_Set_Char_Size(face, 0, pointSize * 64, 96, 96); }
 }  // namespace MRG::UI

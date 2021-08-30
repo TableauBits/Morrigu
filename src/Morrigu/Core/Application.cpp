@@ -34,7 +34,7 @@ namespace MRG
 
 			for (auto& layer : m_layers) { layer->onUpdate(ts); }
 			renderer.beginFrame();
-			for (auto& layer : m_layers) { renderer.draw(layer->renderables, layer->mainCamera); }
+			for (auto& layer : m_layers) { renderer.draw(layer->renderables, *layer->getMainCamera()); }
 			renderer.beginImGui();
 			for (auto& layer : m_layers) { layer->onImGuiUpdate(ts); }
 			renderer.endImGui();
