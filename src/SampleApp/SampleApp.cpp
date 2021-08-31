@@ -79,21 +79,14 @@ public:
 		MRG::UILayer::onAttach();
 
 		auto font = createFont("test.ttf");
-		font->setSize(150);
-		m_text = createText("TEXT OUAIS", font, {0.f, 0.f});
-
-		m_testUI = createRenderObject(MRG::Utils::Meshes::quad<MRG::TexturedVertex>(), application->renderer.defaultUITexturedMaterial);
-
-		uploadMesh(m_testUI->mesh);
-
-		renderables.emplace_back(m_testUI->getRenderData());
+		font->setSize(60);
+		m_text = createText("Text", font, {0.f, 0.f});
 
 		const auto textRD = m_text->getCollectionRenderData();
 		for (const auto& renderData : textRD) { renderables.emplace_back(renderData); }
 	}
 
 private:
-	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_testUI{};
 	MRG::Ref<MRG::UI::Text> m_text;
 };
 

@@ -46,7 +46,7 @@ namespace MRG::UI
 				const auto bitmap       = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
 				const auto renderLetter = renderer->createRenderObject(quad, renderer->textUIMaterial);
 				renderLetter->bindTexture(1, bitmap);
-				renderLetter->translate({posX, posY - (glyph->metrics.horiBearingY >> 6), 0.f});
+				renderLetter->translate({posX, posY, 0.f});
 				renderer->uploadMesh(renderLetter->mesh);
 				m_letters.emplace_back(Letter{bitmap, renderLetter});
 			}
