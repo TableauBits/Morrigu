@@ -37,7 +37,7 @@ namespace MRG
 		}
 
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader> shader, const MaterialConfiguration& config = {})
+		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader, const MaterialConfiguration& config = {})
 		{
 			return application->renderer.createMaterial<VertexType>(shader, config);
 		}

@@ -34,7 +34,7 @@ void MaterialEditorLayer::onImGuiUpdate(MRG::Timestep)
 				ImGui::TreePop();
 			}
 
-			m_editedMaterial->uploadUniform(index, m_data[index].data(), m_data[index].size());
+			m_editedMaterial->uploadUniform(ubo.first, m_data[index].data(), m_data[index].size());
 			++index;
 		}
 	} else {
@@ -53,7 +53,7 @@ void MaterialEditorLayer::renderData(const MRG::Shader::Node& node)
 			switch (node.type.vecsize) {
 			case 1: {
 				// Single float
-				ImGui::DragFloat(node.name.c_str(), pointerCast);
+				ImGui::DragFloat(node.name.c_str(), pointerCast, 0.01f, 0.f, 1.f);
 				m_rwHead += 1 * sizeof(float);
 			} break;
 			case 2: {
