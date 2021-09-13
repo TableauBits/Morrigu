@@ -33,7 +33,7 @@ namespace MRG
 	public:
 		explicit Material(vk::Device device,
 		                  VmaAllocator allocator,
-		                  const Ref<Shader>& shader,
+		                  const Ref<Shader>& shaderRef,
 		                  vk::PipelineCache pipelineCache,
 		                  vk::RenderPass renderPass,
 		                  vk::DescriptorSetLayout level0DSL,
@@ -41,7 +41,7 @@ namespace MRG
 		                  const Ref<Texture>& defaultTexture,
 		                  DeletionQueue& deletionQueue,
 		                  const MaterialConfiguration& config)
-		    : m_device{device}, m_allocator{allocator}, shader{shader}
+		    : shader{shaderRef}, m_device{device}, m_allocator{allocator}
 		{
 			// Pool creation
 			std::array<vk::DescriptorPoolSize, 2> sizes{

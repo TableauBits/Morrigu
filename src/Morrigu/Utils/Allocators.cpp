@@ -13,13 +13,24 @@ namespace MRG::Utils::Allocators
 	                             DeletionQueue& deletionQueue)
 	{
 		VkBufferCreateInfo bufferInfo{
-		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		  .size  = allocSize,
-		  .usage = VkBufferUsageFlags(bufferUsage),
+		  .sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		  .pNext                 = nullptr,
+		  .flags                 = 0,
+		  .size                  = allocSize,
+		  .usage                 = VkBufferUsageFlags(bufferUsage),
+		  .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
+		  .queueFamilyIndexCount = 0,
+		  .pQueueFamilyIndices   = nullptr,
 		};
 
 		VmaAllocationCreateInfo allocationInfo{
-		  .usage = memoryUsage,
+		  .flags          = 0,
+		  .usage          = memoryUsage,
+		  .requiredFlags  = 0,
+		  .preferredFlags = 0,
+		  .memoryTypeBits = 0,
+		  .pool           = VK_NULL_HANDLE,
+		  .pUserData      = nullptr,
 		};
 
 		AllocatedBuffer newBuffer;

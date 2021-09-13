@@ -34,11 +34,11 @@ namespace MRG
 	public:
 		RenderObject(vk::Device device,
 		             VmaAllocator allocator,
-		             const Ref<Mesh<VertexType>>& mesh,
-		             const Ref<Material<VertexType>>& material,
+		             const Ref<Mesh<VertexType>>& meshRef,
+		             const Ref<Material<VertexType>>& materialRef,
 		             Ref<Texture> defaultTexture,
 		             DeletionQueue& deletionQueue)
-		    : mesh{mesh}, material{material}, m_device{device}, m_allocator{allocator}
+		    : mesh{meshRef}, material{materialRef}, m_device{device}, m_allocator{allocator}
 		{
 			// Pool creation
 			std::array<vk::DescriptorPoolSize, 2> sizes{

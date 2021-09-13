@@ -17,7 +17,7 @@ namespace MRG::UI
 		float posY       = position.y;
 		const auto glyph = font->face->glyph;
 		for (auto letter : content) {
-			const auto error = FT_Load_Char(font->face, letter, FT_LOAD_RENDER);
+			const auto error = FT_Load_Char(font->face, static_cast<FT_ULong>(letter), FT_LOAD_RENDER);
 			if (error) { continue; }
 
 			std::vector<std::byte> fullBitmapData{glyph->bitmap.width * glyph->bitmap.rows * 4};
@@ -50,8 +50,8 @@ namespace MRG::UI
 				renderer->uploadMesh(renderLetter->mesh);
 				m_letters.emplace_back(Letter{bitmap, renderLetter});
 			}
-			posX += glyph->advance.x >> 6;
-			posY += glyph->advance.y >> 6;
+			posX += static_cast<float>(glyph->advance.x >> 6);
+			posY += static_cast<float>(glyph->advance.y >> 6);
 		}
 	}
 

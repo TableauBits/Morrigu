@@ -14,7 +14,7 @@ void MaterialEditorLayer::setMaterial(MRG::Ref<MRG::Material<MRG::TexturedVertex
 	m_editedMaterial = std::move(newMaterial);
 
 	m_data.resize(m_editedMaterial->shader->l2UBOData.size());
-	auto index = 0;
+	std::size_t index = 0;
 	for (const auto& ubo : m_editedMaterial->shader->l2UBOData) {
 		m_data[index].resize(ubo.second.size);
 		++index;
@@ -26,7 +26,7 @@ void MaterialEditorLayer::onImGuiUpdate(MRG::Timestep)
 	ImGui::Begin("Material editor");
 
 	if (m_editedMaterial) {
-		auto index = 0;
+		std::size_t index = 0;
 		for (const auto& ubo : m_editedMaterial->shader->l2UBOData) {
 			m_rwHead = m_data[index].data();
 			if (ImGui::TreeNode(ubo.second.name.c_str())) {

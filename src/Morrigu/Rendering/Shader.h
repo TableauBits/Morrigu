@@ -25,6 +25,7 @@ namespace MRG
 
 		struct Root : public Node
 		{
+			Root(std::size_t treeSize) : Node{"root", {}, {}}, size{treeSize} {};
 			std::size_t size{};
 		};
 

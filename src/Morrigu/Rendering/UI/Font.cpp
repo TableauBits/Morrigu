@@ -13,8 +13,8 @@ namespace MRG::UI
 {
 	Font::Font(const std::string& file, FT_Library& ftHandle)
 	{
-		const auto fontPath = Folders::Rendering::fontsFolder + file;
-		const auto error    = FT_New_Face(ftHandle, fontPath.c_str(), 0, &face);
+		const auto fontPath               = Folders::Rendering::fontsFolder + file;
+		[[maybe_unused]] const auto error = FT_New_Face(ftHandle, fontPath.c_str(), 0, &face);
 		MRG_ENGINE_ASSERT(!error, "Unable to load font \"{}\"!", fontPath)
 
 		setSize(16);

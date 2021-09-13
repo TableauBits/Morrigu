@@ -9,6 +9,7 @@
 #include FT_FREETYPE_H
 
 #include <string>
+#include <utility>
 
 namespace MRG::UI
 {

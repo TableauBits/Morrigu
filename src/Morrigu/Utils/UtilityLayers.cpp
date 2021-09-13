@@ -21,6 +21,7 @@ namespace MRG
 	void UILayer::onEvent(MRG::Event& event)
 	{
 		MRG::EventDispatcher dispatcher{event};
-		dispatcher.dispatch<MRG::WindowResizeEvent>([this](MRG::WindowResizeEvent& event) { return mainCamera->onResize(event); });
+		dispatcher.dispatch<MRG::WindowResizeEvent>(
+		  [this](MRG::WindowResizeEvent& resizeEvent) { return mainCamera->onResize(resizeEvent); });
 	}
 }  // namespace MRG

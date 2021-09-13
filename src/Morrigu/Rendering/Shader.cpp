@@ -148,7 +148,7 @@ namespace MRG
 		MRG_ENGINE_ASSERT(level3UBOBindings.contains(0), "Descriptor set level 3 MUST have a model data uniform at slot 0!")
 
 		std::vector<vk::DescriptorSetLayoutBinding> finalBindings(level2UBOBindings.size() + level2SampledImagesBindings.size());
-		auto index = 0;
+		std::size_t index = 0;
 		for (const auto& ubo : level2UBOBindings) { finalBindings[index++] = ubo.second; }
 		for (const auto& sampledImage : level2SampledImagesBindings) { finalBindings[index++] = sampledImage.second; }
 
@@ -182,7 +182,7 @@ namespace MRG
 		const auto fileSize = static_cast<std::size_t>(file.tellg());
 		std::vector<std::uint32_t> buffer(fileSize / sizeof(std::uint32_t));
 		file.seekg(std::ios::beg);
-		file.read((char*)buffer.data(), static_cast<std::streamsize>(fileSize));
+		file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(fileSize));
 		file.close();
 
 		return buffer;
@@ -199,9 +199,7 @@ namespace MRG
 
 	Shader::Root Shader::populateUniformData(const spirv_cross::Compiler& compiler, const spirv_cross::Resource& uniform)
 	{
-		Root rootNode{
-		  .size = compiler.get_declared_struct_size(compiler.get_type(uniform.type_id)),
-		};
+		Root rootNode{compiler.get_declared_struct_size(compiler.get_type(uniform.type_id))};
 		rootNode.name = compiler.get_name(uniform.id);
 		rootNode.type = compiler.get_type(uniform.type_id);
 
@@ -218,12 +216,13 @@ namespace MRG
 	{
 		const auto newBaseType = compiler.get_type(baseType).member_types[memberIndex];
 		Node currentNode{
-		  .name = compiler.get_member_name(baseType, memberIndex),
-		  .type = compiler.get_type(newBaseType),
+		  .name    = compiler.get_member_name(baseType, memberIndex),
+		  .type    = compiler.get_type(newBaseType),
+		  .members = {},
 		};
 
-		for (auto i = 0; i < currentNode.type.member_types.size(); ++i) {
-			currentNode.members.emplace_back(getShaderStructData(compiler, newBaseType, i));
+		for (std::size_t i = 0; i < currentNode.type.member_types.size(); ++i) {
+			currentNode.members.emplace_back(getShaderStructData(compiler, newBaseType, static_cast<uint32_t>(i)));
 		}
 
 		return currentNode;

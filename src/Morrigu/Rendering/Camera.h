@@ -13,6 +13,8 @@ namespace MRG
 	class Camera
 	{
 	public:
+		virtual ~Camera() = default;
+
 		[[nodiscard]] const glm::mat4& getProjection() const { return m_projection; }
 		[[nodiscard]] const glm::mat4& getView() const { return m_view; }
 		[[nodiscard]] const glm::mat4& getViewProjection() const { return m_viewProjection; };
@@ -33,6 +35,8 @@ namespace MRG
 	class StandardCamera : public Camera
 	{
 	public:
+		virtual ~StandardCamera() = default;
+
 		enum class ProjectionType
 		{
 			Perspective,
@@ -73,6 +77,8 @@ namespace MRG
 	class PixelPerfectCamera : public Camera
 	{
 	public:
+		virtual ~PixelPerfectCamera() = default;
+
 		bool onResize(const WindowResizeEvent& resizeEvent) override;
 
 		void recalculateProjection() override;

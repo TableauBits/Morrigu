@@ -71,8 +71,8 @@ namespace MRG
 		glfwSetWindowUserPointer(window, this);
 
 		// set up callbacks
-		glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height) {
-			auto application = static_cast<Application*>(glfwGetWindowUserPointer(window));
+		glfwSetWindowSizeCallback(window, [](GLFWwindow* eventWindow, int width, int height) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
 			application->m_specification.rendererSpecification.windowWidth  = width;
 			application->m_specification.rendererSpecification.windowHeight = height;
@@ -81,15 +81,15 @@ namespace MRG
 			application->onEvent(resize);
 		});
 
-		glfwSetWindowCloseCallback(window, [](GLFWwindow* window) {
-			auto application = static_cast<Application*>(glfwGetWindowUserPointer(window));
+		glfwSetWindowCloseCallback(window, [](GLFWwindow* eventWindow) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
 			auto close = WindowCloseEvent();
 			application->onEvent(close);
 		});
 
-		glfwSetKeyCallback(window, [](GLFWwindow* window, int keycode, int, int action, int) {
-			auto application = static_cast<Application*>(glfwGetWindowUserPointer(window));
+		glfwSetKeyCallback(window, [](GLFWwindow* eventWindow, int keycode, int, int action, int) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
 			switch (action) {
 			case GLFW_PRESS:
@@ -107,8 +107,8 @@ namespace MRG
 			}
 		});
 
-		glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int) {
-			auto application = static_cast<Application*>(glfwGetWindowUserPointer(window));
+		glfwSetMouseButtonCallback(window, [](GLFWwindow* eventWindow, int button, int action, int) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
 			switch (action) {
 			case GLFW_PRESS: {
@@ -125,22 +125,22 @@ namespace MRG
 			}
 		});
 
-		glfwSetScrollCallback(window, [](GLFWwindow* window, double xOffset, double yOffset) {
-			auto application = static_cast<Application*>(glfwGetWindowUserPointer(window));
+		glfwSetScrollCallback(window, [](GLFWwindow* eventWindow, double xOffset, double yOffset) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
 			auto mouseScroll = MouseScrolledEvent(static_cast<float>(xOffset), static_cast<float>(yOffset));
 			application->onEvent(mouseScroll);
 		});
 
-		glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xPos, double yPos) {
-			auto application = static_cast<Application*>(glfwGetWindowUserPointer(window));
+		glfwSetCursorPosCallback(window, [](GLFWwindow* eventWindow, double xPos, double yPos) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
 			auto mouseMove = MouseMovedEvent(static_cast<float>(xPos), static_cast<float>(yPos));
 			application->onEvent(mouseMove);
 		});
 
-		glfwSetCharCallback(window, [](GLFWwindow* window, std::uint32_t codePoint) {
-			auto application = static_cast<Application*>(glfwGetWindowUserPointer(window));
+		glfwSetCharCallback(window, [](GLFWwindow* eventWindow, std::uint32_t codePoint) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
 			auto keyType = KeyTypedEvent(codePoint);
 			application->onEvent(keyType);
@@ -153,8 +153,8 @@ namespace MRG
 	void Application::onEvent(Event& event)
 	{
 		EventDispatcher dispatcher{event};
-		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& event) { return onClose(event); });
-		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) { return onResize(event); });
+		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& closeEvent) { return onClose(closeEvent); });
+		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) { return onResize(resizeEvent); });
 
 		for (auto& m_layer : std::ranges::reverse_view(m_layers)) {
 			if (event.handled) { break; }

@@ -25,19 +25,19 @@ namespace MRG::Utils::Meshes
 		for (const auto& shape : shapes) {
 			std::size_t indexOffset = 0;
 			for ([[maybe_unused]] const auto& face : shape.mesh.num_face_vertices) {
-				static const int shapeVertexCount = 3;  // Only triangles for now
-				for (int vertexIndex = 0; vertexIndex < shapeVertexCount; ++vertexIndex) {
+				static const std::size_t shapeVertexCount = 3;  // Only triangles for now
+				for (std::size_t vertexIndex = 0; vertexIndex < shapeVertexCount; ++vertexIndex) {
 					const auto idx = shape.mesh.indices[indexOffset + vertexIndex];
 
 					// position
-					const auto posX = attrib.vertices[3 * idx.vertex_index + 0];
-					const auto posY = attrib.vertices[3 * idx.vertex_index + 1];
-					const auto posZ = attrib.vertices[3 * idx.vertex_index + 2];
+					const auto posX = attrib.vertices[3 * static_cast<std::size_t>(idx.vertex_index) + 0];
+					const auto posY = attrib.vertices[3 * static_cast<std::size_t>(idx.vertex_index) + 1];
+					const auto posZ = attrib.vertices[3 * static_cast<std::size_t>(idx.vertex_index) + 2];
 
 					// normals
-					const auto normX = attrib.normals[3 * idx.normal_index + 0];
-					const auto normY = attrib.normals[3 * idx.normal_index + 1];
-					const auto normZ = attrib.normals[3 * idx.normal_index + 2];
+					const auto normX = attrib.normals[3 * static_cast<std::size_t>(idx.normal_index) + 0];
+					const auto normY = attrib.normals[3 * static_cast<std::size_t>(idx.normal_index) + 1];
+					const auto normZ = attrib.normals[3 * static_cast<std::size_t>(idx.normal_index) + 2];
 
 					newMesh->vertices.emplace_back(BasicVertex{
 					  .position = {posX, posY, posZ},
@@ -69,18 +69,18 @@ namespace MRG::Utils::Meshes
 			std::size_t indexOffset = 0;
 			for ([[maybe_unused]] const auto& face : shape.mesh.num_face_vertices) {
 				static const int shapeVertexCount = 3;  // Only triangles for now
-				for (int vertexIndex = 0; vertexIndex < shapeVertexCount; ++vertexIndex) {
+				for (std::size_t vertexIndex = 0; vertexIndex < shapeVertexCount; ++vertexIndex) {
 					const auto idx = shape.mesh.indices[indexOffset + vertexIndex];
 
 					// position
-					const auto posX = attrib.vertices[3 * idx.vertex_index + 0];
-					const auto posY = attrib.vertices[3 * idx.vertex_index + 1];
-					const auto posZ = attrib.vertices[3 * idx.vertex_index + 2];
+					const auto posX = attrib.vertices[3 * static_cast<std::size_t>(idx.vertex_index) + 0];
+					const auto posY = attrib.vertices[3 * static_cast<std::size_t>(idx.vertex_index) + 1];
+					const auto posZ = attrib.vertices[3 * static_cast<std::size_t>(idx.vertex_index) + 2];
 
 					// normals
-					const auto normX = attrib.normals[3 * idx.normal_index + 0];
-					const auto normY = attrib.normals[3 * idx.normal_index + 1];
-					const auto normZ = attrib.normals[3 * idx.normal_index + 2];
+					const auto normX = attrib.normals[3 * static_cast<std::size_t>(idx.normal_index) + 0];
+					const auto normY = attrib.normals[3 * static_cast<std::size_t>(idx.normal_index) + 1];
+					const auto normZ = attrib.normals[3 * static_cast<std::size_t>(idx.normal_index) + 2];
 
 					newMesh->vertices.emplace_back(ColoredVertex{
 					  .position = {posX, posY, posZ},
@@ -113,22 +113,22 @@ namespace MRG::Utils::Meshes
 			std::size_t indexOffset = 0;
 			for ([[maybe_unused]] const auto& face : shape.mesh.num_face_vertices) {
 				static const int shapeVertexCount = 3;  // Only triangles for now
-				for (int vertexIndex = 0; vertexIndex < shapeVertexCount; ++vertexIndex) {
+				for (std::size_t vertexIndex = 0; vertexIndex < shapeVertexCount; ++vertexIndex) {
 					const auto idx = shape.mesh.indices[indexOffset + vertexIndex];
 
 					// position
-					const auto posX = attrib.vertices[3 * idx.vertex_index + 0];
-					const auto posY = attrib.vertices[3 * idx.vertex_index + 1];
-					const auto posZ = attrib.vertices[3 * idx.vertex_index + 2];
+					const auto posX = attrib.vertices[3 * static_cast<std::size_t>(idx.vertex_index) + 0];
+					const auto posY = attrib.vertices[3 * static_cast<std::size_t>(idx.vertex_index) + 1];
+					const auto posZ = attrib.vertices[3 * static_cast<std::size_t>(idx.vertex_index) + 2];
 
 					// normals
-					const auto normX = attrib.normals[3 * idx.normal_index + 0];
-					const auto normY = attrib.normals[3 * idx.normal_index + 1];
-					const auto normZ = attrib.normals[3 * idx.normal_index + 2];
+					const auto normX = attrib.normals[3 * static_cast<std::size_t>(idx.normal_index) + 0];
+					const auto normY = attrib.normals[3 * static_cast<std::size_t>(idx.normal_index) + 1];
+					const auto normZ = attrib.normals[3 * static_cast<std::size_t>(idx.normal_index) + 2];
 
 					// texture coordinates
-					const auto texCoodX = attrib.texcoords[2 * idx.texcoord_index + 0];
-					const auto texCoodY = attrib.texcoords[2 * idx.texcoord_index + 1];
+					const auto texCoodX = attrib.texcoords[2 * static_cast<std::size_t>(idx.texcoord_index) + 0];
+					const auto texCoodY = attrib.texcoords[2 * static_cast<std::size_t>(idx.texcoord_index) + 1];
 
 					newMesh->vertices.emplace_back(TexturedVertex{
 					  .position  = {posX, posY, posZ},

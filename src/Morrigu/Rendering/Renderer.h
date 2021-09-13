@@ -12,7 +12,6 @@
 #include "Rendering/Texture.h"
 #include "Rendering/UI/Font.h"
 
-
 #include <GLFW/glfw3.h>
 
 #include <ranges>
@@ -56,13 +55,24 @@ namespace MRG
 
 			// staging buffer
 			VkBufferCreateInfo bufferInfo{
-			  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-			  .size  = bufferSize,
-			  .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			  .sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+			  .pNext                 = nullptr,
+			  .flags                 = 0,
+			  .size                  = bufferSize,
+			  .usage                 = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			  .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
+			  .queueFamilyIndexCount = 0,
+			  .pQueueFamilyIndices   = nullptr,
 			};
 
 			VmaAllocationCreateInfo allocationInfo{
-			  .usage = VMA_MEMORY_USAGE_CPU_ONLY,
+			  .flags          = 0,
+			  .usage          = VMA_MEMORY_USAGE_CPU_ONLY,
+			  .requiredFlags  = 0,
+			  .preferredFlags = 0,
+			  .memoryTypeBits = 0,
+			  .pool           = VK_NULL_HANDLE,
+			  .pUserData      = nullptr,
 			};
 
 			AllocatedBuffer stagingBuffer;
@@ -146,9 +156,9 @@ namespace MRG
 	private:
 		int m_frameNumber{0};
 
-		static const constexpr std::size_t FRAMES_IN_FLIGHT = 3;
+		static const constexpr int FRAMES_IN_FLIGHT = 3;
 		std::array<FrameData, FRAMES_IN_FLIGHT> m_framesData{};
-		[[nodiscard]] FrameData& getCurrentFrameData() { return m_framesData[m_frameNumber % FRAMES_IN_FLIGHT]; }
+		[[nodiscard]] FrameData& getCurrentFrameData() { return m_framesData[static_cast<std::size_t>(m_frameNumber % FRAMES_IN_FLIGHT)]; }
 
 		vk::Instance m_instance{};
 		vk::DebugUtilsMessengerEXT m_debugMessenger{};

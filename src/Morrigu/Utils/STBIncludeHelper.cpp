@@ -21,12 +21,23 @@ namespace MRG::Utils
 	{
 		const auto imageSize = imageWidth * imageHeight * 4;
 		VkBufferCreateInfo bufferInfo{
-		  .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		  .size  = imageSize,
-		  .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		  .sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		  .pNext                 = nullptr,
+		  .flags                 = 0,
+		  .size                  = imageSize,
+		  .usage                 = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		  .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
+		  .queueFamilyIndexCount = 0,
+		  .pQueueFamilyIndices   = nullptr,
 		};
 		VmaAllocationCreateInfo allocationInfo{
-		  .usage = VMA_MEMORY_USAGE_CPU_ONLY,
+		  .flags          = 0,
+		  .usage          = VMA_MEMORY_USAGE_CPU_ONLY,
+		  .requiredFlags  = 0,
+		  .preferredFlags = 0,
+		  .memoryTypeBits = 0,
+		  .pool           = VK_NULL_HANDLE,
+		  .pUserData      = nullptr,
 		};
 		AllocatedBuffer stagingBuffer;
 		VkBuffer newRawBuffer;
@@ -40,8 +51,8 @@ namespace MRG::Utils
 		vmaUnmapMemory(allocator, stagingBuffer.allocation);
 
 		vk::Extent3D imageExtent{
-		  .width  = static_cast<uint32_t>(imageWidth),
-		  .height = static_cast<uint32_t>(imageHeight),
+		  .width  = imageWidth,
+		  .height = imageHeight,
 		  .depth  = 1,
 		};
 		vk::Format imageFormat      = vk::Format::eR8G8B8A8Srgb;
@@ -55,7 +66,15 @@ namespace MRG::Utils
 		  .tiling      = vk::ImageTiling::eOptimal,
 		  .usage       = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 		};
-		VmaAllocationCreateInfo imageAllocationInfo{.usage = VMA_MEMORY_USAGE_GPU_ONLY};
+		VmaAllocationCreateInfo imageAllocationInfo{
+		  .flags          = 0,
+		  .usage          = VMA_MEMORY_USAGE_GPU_ONLY,
+		  .requiredFlags  = 0,
+		  .preferredFlags = 0,
+		  .memoryTypeBits = 0,
+		  .pool           = VK_NULL_HANDLE,
+		  .pUserData      = nullptr,
+		};
 
 		AllocatedImage newImage;
 		VkImage newRawImage;
@@ -124,7 +143,14 @@ namespace MRG::Utils
 		auto* pixels = stbi_load(file, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 		MRG_ENGINE_ASSERT(pixels != nullptr, "Failed to load image from file: {}", file)
 
-		const auto image = createImageFromData(device, graphicsQueue, uploadContext, allocator, pixels, texWidth, texHeight, deletionQueue);
+		const auto image = createImageFromData(device,
+		                                       graphicsQueue,
+		                                       uploadContext,
+		                                       allocator,
+		                                       pixels,
+		                                       static_cast<uint32_t>(texWidth),
+		                                       static_cast<uint32_t>(texHeight),
+		                                       deletionQueue);
 
 		stbi_image_free(pixels);
 		return image;

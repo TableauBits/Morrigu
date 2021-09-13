@@ -17,7 +17,7 @@ DISABLE_WARNING_POP
 
 namespace
 {
-	VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	[[maybe_unused]] VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	                                               VkDebugUtilsMessageTypeFlagsEXT,
 	                                               const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 	                                               void*)
@@ -280,7 +280,7 @@ namespace MRG
 		m_debugMessenger = vkbInstance.debug_messenger;
 
 		// surface creation
-		glfwCreateWindowSurface(m_instance, window, nullptr, (VkSurfaceKHR*)(&m_surface));
+		glfwCreateWindowSurface(m_instance, window, nullptr, reinterpret_cast<VkSurfaceKHR*>(&m_surface));
 
 		// GPU selection
 		vkb::PhysicalDeviceSelector selector{vkbInstance};
@@ -298,9 +298,18 @@ namespace MRG
 
 		// VMA allocator creation
 		VmaAllocatorCreateInfo allocatorInfo{
-		  .physicalDevice = m_GPU,
-		  .device         = m_device,
-		  .instance       = m_instance,
+		  .flags                       = 0,
+		  .physicalDevice              = m_GPU,
+		  .device                      = m_device,
+		  .preferredLargeHeapBlockSize = 0,
+		  .pAllocationCallbacks        = nullptr,
+		  .pDeviceMemoryCallbacks      = nullptr,
+		  .frameInUseCount             = 0,
+		  .pHeapSizeLimit              = nullptr,
+		  .pVulkanFunctions            = nullptr,
+		  .pRecordSettings             = nullptr,
+		  .instance                    = m_instance,
+		  .vulkanApiVersion            = 0,
 		};
 		MRG_VK_CHECK(vmaCreateAllocator(&allocatorInfo, &m_allocator), "failed to create VMA allocator!")
 	}
@@ -314,7 +323,7 @@ namespace MRG
 		                        .colorSpace = static_cast<VkColorSpaceKHR>(vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear),
 		                      })
 		                      .set_desired_present_mode(static_cast<VkPresentModeKHR>(spec.preferredPresentMode))
-		                      .set_desired_extent(spec.windowWidth, spec.windowHeight)
+		                      .set_desired_extent(static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight))
 		                      .build()
 		                      .value();
 
@@ -333,18 +342,31 @@ namespace MRG
 		  .depth  = 1,
 		};
 		VkImageCreateInfo depthImageCreateInfo{
-		  .sType       = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-		  .imageType   = VK_IMAGE_TYPE_2D,
-		  .format      = static_cast<VkFormat>(m_depthFormat),
-		  .extent      = depthImageExtent,
-		  .mipLevels   = 1,
-		  .arrayLayers = 1,
-		  .samples     = VK_SAMPLE_COUNT_1_BIT,
-		  .tiling      = VK_IMAGE_TILING_OPTIMAL,
-		  .usage       = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		  .sType                 = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+		  .pNext                 = nullptr,
+		  .flags                 = 0,
+		  .imageType             = VK_IMAGE_TYPE_2D,
+		  .format                = static_cast<VkFormat>(m_depthFormat),
+		  .extent                = depthImageExtent,
+		  .mipLevels             = 1,
+		  .arrayLayers           = 1,
+		  .samples               = VK_SAMPLE_COUNT_1_BIT,
+		  .tiling                = VK_IMAGE_TILING_OPTIMAL,
+		  .usage                 = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		  .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
+		  .queueFamilyIndexCount = 0,
+		  .pQueueFamilyIndices   = nullptr,
+		  .initialLayout         = VK_IMAGE_LAYOUT_UNDEFINED,
 		};
-		VmaAllocationCreateInfo depthImageAllocationCreateInfo{.usage         = VMA_MEMORY_USAGE_GPU_ONLY,
-		                                                       .requiredFlags = VkMemoryPropertyFlags{VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT}};
+		VmaAllocationCreateInfo depthImageAllocationCreateInfo{
+		  .flags          = 0,
+		  .usage          = VMA_MEMORY_USAGE_GPU_ONLY,
+		  .requiredFlags  = VkMemoryPropertyFlags{VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT},
+		  .preferredFlags = 0,
+		  .memoryTypeBits = 0,
+		  .pool           = VK_NULL_HANDLE,
+		  .pUserData      = nullptr,
+		};
 
 		VkImage rawImage;
 		vmaCreateImage(m_allocator, &depthImageCreateInfo, &depthImageAllocationCreateInfo, &rawImage, &m_depthImage.allocation, nullptr);
@@ -460,7 +482,7 @@ namespace MRG
 		const std::size_t swapchainImageCount = m_swapchainImages.size();
 		m_framebuffers                        = std::vector<vk::Framebuffer>(swapchainImageCount);
 
-		for (auto i = 0; i < swapchainImageCount; ++i) {
+		for (std::size_t i = 0; i < swapchainImageCount; ++i) {
 			std::array<vk::ImageView, 2> attachments{m_swapchainImageViews[i], m_depthImageView};
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferInfo.pAttachments    = attachments.data();
@@ -477,11 +499,11 @@ namespace MRG
 
 		for (auto& frame : m_framesData) {
 			frame.renderFence = m_device.createFence(fenceInfo);
-			m_deletionQueue.push([=]() { m_device.destroyFence(frame.renderFence); });
+			m_deletionQueue.push([=, this]() { m_device.destroyFence(frame.renderFence); });
 
 			frame.presentSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
 			frame.renderSemaphore  = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
-			m_deletionQueue.push([=]() {
+			m_deletionQueue.push([=, this]() {
 				m_device.destroySemaphore(frame.presentSemaphore);
 				m_device.destroySemaphore(frame.renderSemaphore);
 			});
@@ -489,7 +511,7 @@ namespace MRG
 
 		fenceInfo.flags             = {};
 		m_uploadContext.uploadFence = m_device.createFence(fenceInfo);
-		m_deletionQueue.push([=]() { m_device.destroyFence(m_uploadContext.uploadFence); });
+		m_deletionQueue.push([=, this]() { m_device.destroyFence(m_uploadContext.uploadFence); });
 	}
 
 	void Renderer::initDescriptors()
@@ -572,15 +594,16 @@ namespace MRG
 			const auto fileSize = static_cast<std::size_t>(pipelineCacheFile.tellg());
 			std::vector<uint8_t> pipelineData(fileSize / sizeof(uint8_t));
 			pipelineCacheFile.seekg(std::ios::beg);
-			pipelineCacheFile.read((char*)pipelineData.data(), static_cast<std::streamsize>(fileSize));
+			pipelineCacheFile.read(reinterpret_cast<char*>(pipelineData.data()), static_cast<std::streamsize>(fileSize));
 			pipelineCacheFile.close();
 		}
 		m_pipelineCache = m_device.createPipelineCache(pipelineCacheCreateInfo);
 
-		m_deletionQueue.push([=]() {
+		m_deletionQueue.push([=, this]() {
 			const auto newPipelineCacheData = m_device.getPipelineCacheData(m_pipelineCache);
 			std::ofstream pipelineCacheFile{Files::Rendering::vkPipelineCacheFile, std::ios::binary | std::ios::trunc};
-			pipelineCacheFile.write((char*)newPipelineCacheData.data(), static_cast<std::streamsize>(newPipelineCacheData.size()));
+			pipelineCacheFile.write(reinterpret_cast<const char*>(newPipelineCacheData.data()),
+			                        static_cast<std::streamsize>(newPipelineCacheData.size()));
 			m_device.destroyPipelineCache(m_pipelineCache);
 		});
 
@@ -628,15 +651,19 @@ namespace MRG
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 		ImGui_ImplVulkan_InitInfo initInfo{
-		  .Instance       = m_instance,
-		  .PhysicalDevice = m_GPU,
-		  .Device         = m_device,
-		  .Queue          = m_graphicsQueue,
-		  .PipelineCache  = m_pipelineCache,
-		  .DescriptorPool = m_imGuiPool,
-		  .MinImageCount  = m_imageCount,
-		  .ImageCount     = m_imageCount,
-		  .MSAASamples    = VK_SAMPLE_COUNT_1_BIT,
+		  .Instance        = m_instance,
+		  .PhysicalDevice  = m_GPU,
+		  .Device          = m_device,
+		  .QueueFamily     = 0,
+		  .Queue           = m_graphicsQueue,
+		  .PipelineCache   = m_pipelineCache,
+		  .DescriptorPool  = m_imGuiPool,
+		  .Subpass         = 0,
+		  .MinImageCount   = m_imageCount,
+		  .ImageCount      = m_imageCount,
+		  .MSAASamples     = VK_SAMPLE_COUNT_1_BIT,
+		  .Allocator       = nullptr,
+		  .CheckVkResultFn = nullptr,
 		};
 
 		ImGui_ImplGlfw_InitForVulkan(window, true);
@@ -648,7 +675,7 @@ namespace MRG
 
 		ImGui::StyleColorsDark();
 
-		m_deletionQueue.push([=]() {
+		m_deletionQueue.push([=, this]() {
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
 			ImGui::DestroyContext();
@@ -723,7 +750,7 @@ namespace MRG
 
 	void Renderer::initUI()
 	{
-		const auto error = FT_Init_FreeType(&m_ftHandle);
+		[[maybe_unused]] const auto error = FT_Init_FreeType(&m_ftHandle);
 		MRG_ENGINE_ASSERT(!error, "Failed to initialize Freetype!")
 
 		m_deletionQueue.push([this]() { FT_Done_FreeType(m_ftHandle); });
