@@ -31,6 +31,7 @@ function(set_project_warnings project_name)
 			/permissive- # standards conformance mode for MSVC compiler.
 			/wd4201
 			/wd4324
+			/wd4099
 			)
 
 	set(CLANG_WARNINGS
