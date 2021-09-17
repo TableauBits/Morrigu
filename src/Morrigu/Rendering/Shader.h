@@ -29,7 +29,8 @@ namespace MRG
 			std::size_t size{};
 		};
 
-		explicit Shader(vk::Device device, const char* vertexShaderName, const char* fragmentShaderName, DeletionQueue& deletionQueue);
+		explicit Shader(vk::Device device, const char* vertexShaderName, const char* fragmentShaderName);
+		~Shader();
 
 		vk::ShaderModule vertexShaderModule;
 		vk::ShaderModule fragmentShaderModule;

@@ -11,6 +11,7 @@
 #include "Rendering/RendererTypes.h"
 #include "Rendering/Texture.h"
 #include "Rendering/UI/Font.h"
+#include "Utils/Commands.h"
 
 #include <GLFW/glfw3.h>
 
@@ -41,45 +42,22 @@ namespace MRG
 		vk::CommandPool commandPool;
 		vk::CommandBuffer commandBuffer;
 
-		AllocatedBuffer timeDataBuffer;
+		AllocatedBuffer timeDataBuffer{};
 		vk::DescriptorSet level0Descriptor;
 	};
 
 	class Renderer
 	{
 	public:
+		Renderer(const RendererSpecification&, GLFWwindow*);
+		~Renderer();
+
 		template<Vertex VertexType>
 		void uploadMesh(Ref<Mesh<VertexType>>& mesh)
 		{
 			const auto bufferSize = static_cast<uint32_t>(mesh->vertices.size() * sizeof(VertexType));
 
-			// staging buffer
-			VkBufferCreateInfo bufferInfo{
-			  .sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-			  .pNext                 = nullptr,
-			  .flags                 = 0,
-			  .size                  = bufferSize,
-			  .usage                 = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			  .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
-			  .queueFamilyIndexCount = 0,
-			  .pQueueFamilyIndices   = nullptr,
-			};
-
-			VmaAllocationCreateInfo allocationInfo{
-			  .flags          = 0,
-			  .usage          = VMA_MEMORY_USAGE_CPU_ONLY,
-			  .requiredFlags  = 0,
-			  .preferredFlags = 0,
-			  .memoryTypeBits = 0,
-			  .pool           = VK_NULL_HANDLE,
-			  .pUserData      = nullptr,
-			};
-
-			AllocatedBuffer stagingBuffer;
-			VkBuffer newRawBuffer;
-			MRG_VK_CHECK(vmaCreateBuffer(m_allocator, &bufferInfo, &allocationInfo, &newRawBuffer, &stagingBuffer.allocation, nullptr),
-			             "Failed to allocate new buffer!")
-			stagingBuffer.buffer = newRawBuffer;
+			AllocatedBuffer stagingBuffer{m_allocator, bufferSize, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_ONLY};
 
 			void* data;
 			vmaMapMemory(m_allocator, stagingBuffer.allocation, &data);
@@ -87,21 +65,17 @@ namespace MRG
 			vmaUnmapMemory(m_allocator, stagingBuffer.allocation);
 
 			// mesh vertex buffer
-			mesh->vertexBuffer =
-			  Utils::Allocators::createBuffer(m_allocator,
-			                                  bufferSize,
-			                                  vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-			                                  VMA_MEMORY_USAGE_GPU_ONLY,
-			                                  m_deletionQueue);
+			mesh->vertexBuffer = AllocatedBuffer{m_allocator,
+			                                     bufferSize,
+			                                     vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+			                                     VMA_MEMORY_USAGE_GPU_ONLY};
 
-			Utils::Allocators::immediateSubmit(m_device, m_graphicsQueue, m_uploadContext, [=](vk::CommandBuffer cmdBuffer) {
+			Utils::Commands::immediateSubmit(m_device, m_graphicsQueue, m_uploadContext, [&](vk::CommandBuffer cmdBuffer) {
 				vk::BufferCopy copy{
 				  .size = bufferSize,
 				};
 				cmdBuffer.copyBuffer(stagingBuffer.buffer, mesh->vertexBuffer.buffer, copy);
 			});
-
-			vmaDestroyBuffer(m_allocator, stagingBuffer.buffer, stagingBuffer.allocation);
 		}
 
 		Ref<UI::Font> createFont(const std::string& fontPath);
@@ -110,16 +84,8 @@ namespace MRG
 		template<Vertex VertexType>
 		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader, const MaterialConfiguration& config)
 		{
-			return createRef<Material<VertexType>>(m_device,
-			                                       m_allocator,
-			                                       shader,
-			                                       m_pipelineCache,
-			                                       m_renderPass,
-			                                       m_level0DSL,
-			                                       m_level1DSL,
-			                                       defaultTexture,
-			                                       m_deletionQueue,
-			                                       config);
+			return createRef<Material<VertexType>>(
+			  m_device, m_allocator, shader, m_pipelineCache, m_renderPass, m_level0DSL, m_level1DSL, defaultTexture, config);
 		}
 
 		[[nodiscard]] Ref<Texture> createTexture(void* data, uint32_t width, uint32_t height);
@@ -130,7 +96,7 @@ namespace MRG
 		[[nodiscard]] Ref<RenderObject<VertexType>> createRenderObject(const Ref<Mesh<VertexType>>& mesh,
 		                                                               const Ref<Material<VertexType>>& material)
 		{
-			return createRef<RenderObject<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture, m_deletionQueue);
+			return createRef<RenderObject<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture);
 		}
 
 		RendererSpecification spec;
@@ -190,7 +156,6 @@ namespace MRG
 		vk::DescriptorPool m_descriptorPool{};
 
 		VmaAllocator m_allocator{};
-		DeletionQueue m_deletionQueue{};
 		UploadContext m_uploadContext{};
 
 		FT_Library m_ftHandle{};
@@ -215,7 +180,6 @@ namespace MRG
 
 		/// Methods called by the application class
 		friend class Application;
-		void init(const RendererSpecification&, GLFWwindow*);
 
 		void beginFrame();
 		void endFrame();

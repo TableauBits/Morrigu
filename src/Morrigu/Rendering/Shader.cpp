@@ -11,19 +11,13 @@
 
 namespace MRG
 {
-	Shader::Shader(vk::Device device, const char* vertexShaderName, const char* fragmentShaderName, DeletionQueue& deletionQueue)
-	    : m_device(device)
+	Shader::Shader(vk::Device device, const char* vertexShaderName, const char* fragmentShaderName) : m_device(device)
 	{
 		auto vertSrc = readSource(vertexShaderName);
 		auto fragSrc = readSource(fragmentShaderName);
 
 		vertexShaderModule   = loadShaderModule(vertSrc);
 		fragmentShaderModule = loadShaderModule(fragSrc);
-
-		deletionQueue.push([this]() {
-			m_device.destroyShaderModule(vertexShaderModule);
-			m_device.destroyShaderModule(fragmentShaderModule);
-		});
 
 		const auto vertexCompiler   = spirv_cross::Compiler{vertSrc};
 		const auto fragmentCompiler = spirv_cross::Compiler{fragSrc};
@@ -158,7 +152,6 @@ namespace MRG
 		};
 
 		level2DSL = m_device.createDescriptorSetLayout(setInfo);
-		deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(level2DSL); });
 
 		finalBindings.resize(level3UBOBindings.size() + level3SampledImagesBindings.size());
 		index = 0;
@@ -171,7 +164,14 @@ namespace MRG
 		};
 
 		level3DSL = m_device.createDescriptorSetLayout(setInfo);
-		deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(level3DSL); });
+	}
+
+	Shader::~Shader()
+	{
+		m_device.destroyDescriptorSetLayout(level3DSL);
+		m_device.destroyDescriptorSetLayout(level2DSL);
+		m_device.destroyShaderModule(vertexShaderModule);
+		m_device.destroyShaderModule(fragmentShaderModule);
 	}
 
 	std::vector<std::uint32_t> Shader::readSource(const char* filePath)

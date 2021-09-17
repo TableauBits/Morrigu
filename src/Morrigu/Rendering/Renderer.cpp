@@ -18,9 +18,9 @@ DISABLE_WARNING_POP
 namespace
 {
 	[[maybe_unused]] VKAPI_ATTR VkBool32 VKAPI_CALL vkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-	                                               VkDebugUtilsMessageTypeFlagsEXT,
-	                                               const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	                                               void*)
+	                                                                VkDebugUtilsMessageTypeFlagsEXT,
+	                                                                const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	                                                                void*)
 	{
 		switch (messageSeverity) {
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: {
@@ -43,24 +43,7 @@ namespace
 
 namespace MRG
 {
-	Ref<UI::Font> Renderer::createFont(const std::string& fontPath) { return createRef<UI::Font>(fontPath, m_ftHandle); }
-
-	Ref<Shader> Renderer::createShader(const char* vertexShaderName, const char* fragmentShaderName)
-	{
-		return MRG::createRef<Shader>(m_device, vertexShaderName, fragmentShaderName, m_deletionQueue);
-	}
-
-	Ref<Texture> Renderer::createTexture(const char* fileName)
-	{
-		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, fileName, m_deletionQueue);
-	}
-
-	Ref<Texture> Renderer::createTexture(void* data, uint32_t width, uint32_t height)
-	{
-		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, data, width, height, m_deletionQueue);
-	}
-
-	void Renderer::init(const RendererSpecification& newSpec, GLFWwindow* newWindow)
+	Renderer::Renderer(const RendererSpecification& newSpec, GLFWwindow* newWindow)
 	{
 		spec   = newSpec;
 		window = newWindow;
@@ -78,6 +61,56 @@ namespace MRG
 		initUI();
 
 		isInitalized = true;
+	}
+
+	Renderer::~Renderer()
+	{
+		m_device.waitIdle();
+
+		FT_Done_FreeType(m_ftHandle);
+
+		ImGui_ImplVulkan_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+		m_device.destroyDescriptorPool(m_imGuiPool);
+
+		const auto newPipelineCacheData = m_device.getPipelineCacheData(m_pipelineCache);
+		std::ofstream pipelineCacheFile{Files::Rendering::vkPipelineCacheFile, std::ios::binary | std::ios::trunc};
+		pipelineCacheFile.write(reinterpret_cast<const char*>(newPipelineCacheData.data()),
+		                        static_cast<std::streamsize>(newPipelineCacheData.size()));
+		m_device.destroyPipelineCache(m_pipelineCache);
+
+		m_device.destroyDescriptorSetLayout(m_level1DSL);
+		m_device.destroyDescriptorSetLayout(m_level0DSL);
+		m_device.destroyDescriptorPool(m_descriptorPool);
+
+		m_device.destroyFence(m_uploadContext.uploadFence);
+		for (auto& frameData : m_framesData) {
+			m_device.destroySemaphore(frameData.presentSemaphore);
+			m_device.destroySemaphore(frameData.renderSemaphore);
+			m_device.destroyFence(frameData.renderFence);
+
+			m_device.destroyCommandPool(frameData.commandPool);
+		}
+
+		m_device.destroyCommandPool(m_uploadContext.commandPool);
+	}
+
+	Ref<UI::Font> Renderer::createFont(const std::string& fontPath) { return createRef<UI::Font>(fontPath, m_ftHandle); }
+
+	Ref<Shader> Renderer::createShader(const char* vertexShaderName, const char* fragmentShaderName)
+	{
+		return MRG::createRef<Shader>(m_device, vertexShaderName, fragmentShaderName);
+	}
+
+	Ref<Texture> Renderer::createTexture(const char* fileName)
+	{
+		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, fileName);
+	}
+
+	Ref<Texture> Renderer::createTexture(void* data, uint32_t width, uint32_t height)
+	{
+		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, data, width, height);
 	}
 
 	void Renderer::beginFrame()
@@ -171,8 +204,6 @@ namespace MRG
 		if (!isInitalized) { return; }
 
 		m_device.waitIdle();
-
-		m_deletionQueue.flush();
 
 		destroySwapchain();
 
@@ -406,14 +437,10 @@ namespace MRG
 			};
 			frame.commandBuffer = m_device.allocateCommandBuffers(mainCmdBufferInfo)[0];
 		}
-		m_deletionQueue.push([this]() {
-			for (const auto& frame : m_framesData) { m_device.destroyCommandPool(frame.commandPool); }
-		});
 
 		// create upload context command pool
 		cmdPoolInfo.flags           = {};
 		m_uploadContext.commandPool = m_device.createCommandPool(cmdPoolInfo);
-		m_deletionQueue.push([this]() { m_device.destroyCommandPool(m_uploadContext.commandPool); });
 	}
 
 	void Renderer::initDefaultRenderPass()
@@ -499,19 +526,13 @@ namespace MRG
 
 		for (auto& frame : m_framesData) {
 			frame.renderFence = m_device.createFence(fenceInfo);
-			m_deletionQueue.push([=, this]() { m_device.destroyFence(frame.renderFence); });
 
 			frame.presentSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
 			frame.renderSemaphore  = m_device.createSemaphore(vk::SemaphoreCreateInfo{});
-			m_deletionQueue.push([=, this]() {
-				m_device.destroySemaphore(frame.presentSemaphore);
-				m_device.destroySemaphore(frame.renderSemaphore);
-			});
 		}
 
 		fenceInfo.flags             = {};
 		m_uploadContext.uploadFence = m_device.createFence(fenceInfo);
-		m_deletionQueue.push([=, this]() { m_device.destroyFence(m_uploadContext.uploadFence); });
 	}
 
 	void Renderer::initDescriptors()
@@ -523,7 +544,6 @@ namespace MRG
 		  .pPoolSizes    = sizes.data(),
 		};
 		m_descriptorPool = m_device.createDescriptorPool(poolInfo);
-		m_deletionQueue.push([this]() { m_device.destroyDescriptorPool(m_descriptorPool); });
 
 		std::array<vk::DescriptorSetLayoutBinding, 1> level0Bindings{
 		  vk::DescriptorSetLayoutBinding{
@@ -538,7 +558,6 @@ namespace MRG
 		  .pBindings    = level0Bindings.data(),
 		};
 		m_level0DSL = m_device.createDescriptorSetLayout(setInfo);
-		m_deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(m_level0DSL); });
 
 		std::array<vk::DescriptorSetLayout, FRAMES_IN_FLIGHT> layouts{};
 		layouts.fill(m_level0DSL);
@@ -561,8 +580,8 @@ namespace MRG
 		};
 
 		for (std::size_t i = 0; i < FRAMES_IN_FLIGHT; ++i) {
-			m_framesData[i].timeDataBuffer = Utils::Allocators::createBuffer(
-			  m_allocator, sizeof(TimeData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, m_deletionQueue);
+			m_framesData[i].timeDataBuffer =
+			  AllocatedBuffer{m_allocator, sizeof(TimeData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU};
 			m_framesData[i].level0Descriptor = level0Descriptors[i];
 
 			timeBufferInfo.buffer = m_framesData[i].timeDataBuffer.buffer;
@@ -573,7 +592,6 @@ namespace MRG
 		// level 1 DSL (currently empty)
 		setInfo.bindingCount = 0;
 		m_level1DSL          = m_device.createDescriptorSetLayout(setInfo);
-		m_deletionQueue.push([this]() { m_device.destroyDescriptorSetLayout(m_level1DSL); });
 
 		vk::DescriptorSetAllocateInfo allocLeve1Info{
 		  .descriptorPool     = m_descriptorPool,
@@ -598,14 +616,6 @@ namespace MRG
 			pipelineCacheFile.close();
 		}
 		m_pipelineCache = m_device.createPipelineCache(pipelineCacheCreateInfo);
-
-		m_deletionQueue.push([=, this]() {
-			const auto newPipelineCacheData = m_device.getPipelineCacheData(m_pipelineCache);
-			std::ofstream pipelineCacheFile{Files::Rendering::vkPipelineCacheFile, std::ios::binary | std::ios::trunc};
-			pipelineCacheFile.write(reinterpret_cast<const char*>(newPipelineCacheData.data()),
-			                        static_cast<std::streamsize>(newPipelineCacheData.size()));
-			m_device.destroyPipelineCache(m_pipelineCache);
-		});
 
 		defaultBasicShader   = createShader("BasicMesh.vert.spv", "BasicMesh.frag.spv");
 		defaultBasicMaterial = createMaterial<BasicVertex>(defaultBasicShader, {});
@@ -669,18 +679,11 @@ namespace MRG
 		ImGui_ImplGlfw_InitForVulkan(window, true);
 		ImGui_ImplVulkan_Init(&initInfo, m_renderPass);
 
-		Utils::Allocators::immediateSubmit(
+		Utils::Commands::immediateSubmit(
 		  m_device, m_graphicsQueue, m_uploadContext, [&](vk::CommandBuffer cmdBuffer) { ImGui_ImplVulkan_CreateFontsTexture(cmdBuffer); });
 		ImGui_ImplVulkan_DestroyFontUploadObjects();
 
 		ImGui::StyleColorsDark();
-
-		m_deletionQueue.push([=, this]() {
-			ImGui_ImplVulkan_Shutdown();
-			ImGui_ImplGlfw_Shutdown();
-			ImGui::DestroyContext();
-			m_device.destroyDescriptorPool(m_imGuiPool);
-		});
 
 		// Set up style
 		// (generated from https://github.com/ocornut/imgui/issues/2265#issuecomment-465432091)
@@ -752,8 +755,6 @@ namespace MRG
 	{
 		[[maybe_unused]] const auto error = FT_Init_FreeType(&m_ftHandle);
 		MRG_ENGINE_ASSERT(!error, "Failed to initialize Freetype!")
-
-		m_deletionQueue.push([this]() { FT_Done_FreeType(m_ftHandle); });
 	}
 
 	void Renderer::destroySwapchain()

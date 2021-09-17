@@ -10,7 +10,6 @@
 #include "Rendering/Shader.h"
 #include "Rendering/Texture.h"
 #include "Rendering/Vertex.h"
-#include "Utils/Allocators.h"
 
 namespace MRG
 {
@@ -39,7 +38,6 @@ namespace MRG
 		                  vk::DescriptorSetLayout level0DSL,
 		                  vk::DescriptorSetLayout level1DSL,
 		                  const Ref<Texture>& defaultTexture,
-		                  DeletionQueue& deletionQueue,
 		                  const MaterialConfiguration& config)
 		    : shader{shaderRef}, m_device{device}, m_allocator{allocator}
 		{
@@ -56,7 +54,6 @@ namespace MRG
 			};
 
 			m_descriptorPool = m_device.createDescriptorPool(poolInfo);
-			deletionQueue.push([this]() { m_device.destroyDescriptorPool(m_descriptorPool); });
 
 			vk::DescriptorSetAllocateInfo setAllocInfo{
 			  .descriptorPool     = m_descriptorPool,
@@ -66,9 +63,8 @@ namespace MRG
 			level2Descriptor = m_device.allocateDescriptorSets(setAllocInfo).back();
 
 			for (const auto& [bindingSlot, bindingInfo] : shader->l2UBOData) {
-				const auto newBuffer = Utils::Allocators::createBuffer(
-				  m_allocator, bindingInfo.size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, deletionQueue);
-				m_uniformBuffers.insert(std::make_pair(bindingSlot, newBuffer));
+				AllocatedBuffer newBuffer{
+				  m_allocator, bindingInfo.size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU};
 
 				vk::DescriptorBufferInfo descriptorBufferInfo{
 				  .buffer = newBuffer.buffer,
@@ -84,6 +80,7 @@ namespace MRG
 				};
 
 				m_device.updateDescriptorSets(setWrite, {});
+				m_uniformBuffers.insert(std::make_pair(bindingSlot, std::move(newBuffer)));
 			}
 
 			for (const auto& imageBinding : shader->l2ImageBindings) {
@@ -105,7 +102,6 @@ namespace MRG
 			  .pPushConstantRanges    = &pushConstantRange,
 			};
 			pipelineLayout = m_device.createPipelineLayout(layoutInfo);
-			deletionQueue.push([this]() { m_device.destroyPipelineLayout(pipelineLayout); });
 
 			const VertexInputDescription vertexInfo = VertexType::getVertexDescription();
 			vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{
@@ -175,7 +171,13 @@ namespace MRG
 			};
 
 			pipeline = pipelineBuilder.build_pipeline(m_device, renderPass);
-			deletionQueue.push([this]() { m_device.destroyPipeline(pipeline); });
+		}
+
+		~Material()
+		{
+			m_device.destroyPipeline(pipeline);
+			m_device.destroyPipelineLayout(pipelineLayout);
+			m_device.destroyDescriptorPool(m_descriptorPool);
 		}
 
 		[[nodiscard]] const Shader::Root& getUniformInfo(uint32_t bindingSlot) const

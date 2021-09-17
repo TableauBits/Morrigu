@@ -16,49 +16,8 @@ namespace
 
 namespace MRG
 {
-	Application::Application(ApplicationSpecification spec) : m_specification(std::move(spec)) { init(); }
-	Application::~Application()
+	Application::Application(ApplicationSpecification spec) : m_specification(std::move(spec))
 	{
-		renderer.cleanup();
-		glfwTerminate();
-	}
-
-	void Application::run()
-	{
-		while (m_isRunning) {
-			const auto time = static_cast<float>(glfwGetTime());
-			Timestep ts{time - m_lastTime};
-			elapsedTime += ts;
-			renderer.elapsedTime = elapsedTime;
-			m_lastTime           = time;
-
-			for (auto& layer : m_layers) { layer->onUpdate(ts); }
-			renderer.beginFrame();
-			for (auto& layer : m_layers) { renderer.draw(layer->renderables, *layer->getMainCamera()); }
-			renderer.beginImGui();
-			for (auto& layer : m_layers) { layer->onImGuiUpdate(ts); }
-			renderer.endImGui();
-			renderer.endFrame();
-
-			glfwPollEvents();
-		}
-	}
-
-	void Application::pushLayer(Layer* newLayer)
-	{
-		newLayer->application = this;
-		m_layers.pushLayer(newLayer);
-	}
-
-	Layer* Application::popLayer() { return m_layers.popLayer(); }
-
-	void Application::setWindowTitle(const char* title) const { glfwSetWindowTitle(renderer.window, title); }
-
-	void Application::init()
-	{
-		[[maybe_unused]] const auto result = glfwInit();
-		MRG_ENGINE_ASSERT(result == GLFW_TRUE, "failed to initialise GLFW!")
-
 		glfwSetErrorCallback(glfwErrorCallback);
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -147,8 +106,39 @@ namespace MRG
 		});
 
 		// callbacks set, now give ownership of window to renderer
-		renderer.init(m_specification.rendererSpecification, window);
+		renderer = createScope<Renderer>(m_specification.rendererSpecification, window);
 	}
+
+	void Application::run()
+	{
+		while (m_isRunning) {
+			const auto time = static_cast<float>(glfwGetTime());
+			Timestep ts{time - m_lastTime};
+			elapsedTime += ts;
+			renderer->elapsedTime = elapsedTime;
+			m_lastTime            = time;
+
+			for (auto& layer : m_layers) { layer->onUpdate(ts); }
+			renderer->beginFrame();
+			for (auto& layer : m_layers) { renderer->draw(layer->renderables, *layer->getMainCamera()); }
+			renderer->beginImGui();
+			for (auto& layer : m_layers) { layer->onImGuiUpdate(ts); }
+			renderer->endImGui();
+			renderer->endFrame();
+
+			glfwPollEvents();
+		}
+	}
+
+	void Application::pushLayer(Layer* newLayer)
+	{
+		newLayer->application = this;
+		m_layers.pushLayer(newLayer);
+	}
+
+	Layer* Application::popLayer() { return m_layers.popLayer(); }
+
+	void Application::setWindowTitle(const char* title) const { glfwSetWindowTitle(renderer->window, title); }
 
 	void Application::onEvent(Event& event)
 	{
@@ -172,13 +162,13 @@ namespace MRG
 	{
 		int width = resize.getWidth(), height = resize.getHeight();
 		while (width == 0 || height == 0) {
-			glfwGetFramebufferSize(renderer.window, &width, &height);
+			glfwGetFramebufferSize(renderer->window, &width, &height);
 			glfwWaitEvents();
 		}
 
-		renderer.spec.windowWidth  = width;
-		renderer.spec.windowHeight = height;
-		renderer.onResize();
+		renderer->spec.windowWidth  = width;
+		renderer->spec.windowHeight = height;
+		renderer->onResize();
 
 		return false;
 	}

@@ -12,19 +12,66 @@
 #include <vulkan/vulkan.hpp>
 
 #include <exception>
-#include <ranges>
 
-struct AllocatedBuffer
+namespace MRG
 {
-	vk::Buffer buffer{};
-	VmaAllocation allocation{};
-};
+	struct UploadContext
+	{
+		vk::Fence uploadFence;
+		vk::CommandPool commandPool;
+	};
 
-struct AllocatedImage
-{
-	vk::Image image{};
-	VmaAllocation allocation{};
-};
+	class AllocatedBuffer
+	{
+	public:
+		AllocatedBuffer() = default;
+		AllocatedBuffer(VmaAllocator allocator, std::size_t allocSize, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage);
+		AllocatedBuffer(const AllocatedBuffer&) = delete;
+		AllocatedBuffer(AllocatedBuffer&& other);
+		~AllocatedBuffer();
+
+		AllocatedBuffer& operator=(const AllocatedBuffer&) = delete;
+
+		AllocatedBuffer& operator=(AllocatedBuffer&& other);
+
+		VmaAllocator allocator{};
+		vk::Buffer buffer{};
+		VmaAllocation allocation{};
+	};
+
+	class AllocatedImage
+	{
+	public:
+		AllocatedImage() = default;
+		AllocatedImage(vk::Device device,
+		               vk::Queue graphicsQueue,
+		               UploadContext uploadContext,
+		               VmaAllocator allocator,
+		               void* imageData,
+		               uint32_t imageWidth,
+		               uint32_t imageHeight);
+		AllocatedImage(vk::Device device, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const char* file);
+		AllocatedImage(const AllocatedImage&) = delete;
+		AllocatedImage(AllocatedImage&& other);
+		~AllocatedImage();
+
+		AllocatedImage& operator=(const AllocatedImage&) = delete;
+
+		AllocatedImage& operator=(AllocatedImage&& other);
+
+		VmaAllocator allocator{};
+		vk::Image image{};
+		VmaAllocation allocation{};
+
+	private:
+		void initFromData(vk::Device device,
+		                  vk::Queue graphicsQueue,
+		                  UploadContext uploadContext,
+		                  void* imageData,
+		                  uint32_t imageWidth,
+		                  uint32_t imageHeight);
+	};
+}  // namespace MRG
 
 #define MRG_VK_CHECK_HPP(expression, error_message)                                                                                        \
 	{                                                                                                                                      \
@@ -35,25 +82,5 @@ struct AllocatedImage
 	{                                                                                                                                      \
 		if ((expression) != VK_SUCCESS) { throw std::runtime_error(error_message); }                                                       \
 	}
-
-struct DeletionQueue
-{
-public:
-	void push(std::function<void()>&& function) { m_deletors.push_back(function); }
-	void flush()
-	{
-		for (auto& m_deletor : std::ranges::reverse_view(m_deletors)) { m_deletor(); }
-		m_deletors.clear();
-	}
-
-private:
-	std::vector<std::function<void()>> m_deletors;
-};
-
-struct UploadContext
-{
-	vk::Fence uploadFence;
-	vk::CommandPool commandPool;
-};
 
 #endif  // MORRIGU_RENDERERTYPES_H

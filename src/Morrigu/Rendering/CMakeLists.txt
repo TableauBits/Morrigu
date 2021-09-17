@@ -39,6 +39,7 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/Renderer.h
 		${CMAKE_CURRENT_LIST_DIR}/Renderer.cpp
 
-		# Rendering types declaration
+		# Rendering types
 		${CMAKE_CURRENT_LIST_DIR}/RendererTypes.h
+		${CMAKE_CURRENT_LIST_DIR}/RendererTypes.cpp
 )

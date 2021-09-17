@@ -36,8 +36,7 @@ namespace MRG
 		             VmaAllocator allocator,
 		             const Ref<Mesh<VertexType>>& meshRef,
 		             const Ref<Material<VertexType>>& materialRef,
-		             Ref<Texture> defaultTexture,
-		             DeletionQueue& deletionQueue)
+		             Ref<Texture> defaultTexture)
 		    : mesh{meshRef}, material{materialRef}, m_device{device}, m_allocator{allocator}
 		{
 			// Pool creation
@@ -54,7 +53,6 @@ namespace MRG
 			};
 
 			m_descriptorPool = m_device.createDescriptorPool(poolInfo);
-			deletionQueue.push([this, device]() { device.destroyDescriptorPool(m_descriptorPool); });
 
 			vk::DescriptorSetAllocateInfo setAllocInfo{
 			  .descriptorPool     = m_descriptorPool,
@@ -64,9 +62,8 @@ namespace MRG
 			level3Descriptor = m_device.allocateDescriptorSets(setAllocInfo).back();
 
 			for (const auto& [bindingSlot, bindingInfo] : material->shader->l3UBOData) {
-				const auto newBuffer = Utils::Allocators::createBuffer(
-				  allocator, bindingInfo.size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, deletionQueue);
-				m_uniformBuffers.insert(std::make_pair(bindingSlot, newBuffer));
+				AllocatedBuffer newBuffer{
+				  allocator, bindingInfo.size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU};
 
 				vk::DescriptorBufferInfo descriptorBufferInfo{
 				  .buffer = newBuffer.buffer,
@@ -82,6 +79,7 @@ namespace MRG
 				};
 
 				m_device.updateDescriptorSets(setWrite, {});
+				m_uniformBuffers.insert(std::make_pair(bindingSlot, std::move(newBuffer)));
 			}
 
 			for (const auto& imageBinding : material->shader->l3ImageBindings) {
@@ -92,13 +90,14 @@ namespace MRG
 			uploadPosition();
 		}
 
-		template<typename UniformType>
-		void uploadUniform(uint32_t bindingSlot, const UniformType& uniformData)
+		~RenderObject() { m_device.destroyDescriptorPool(m_descriptorPool); }
+
+		void uploadUniform(uint32_t bindingSlot, const auto& uniformData)
 		{
 			MRG_ENGINE_ASSERT(m_uniformBuffers.contains(bindingSlot), "Invalid binding slot!")
 			void* data;
 			vmaMapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation, &data);
-			memcpy(data, &uniformData, sizeof(UniformType));
+			memcpy(data, &uniformData, sizeof(uniformData));
 			vmaUnmapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation);
 		}
 

@@ -5,19 +5,15 @@
 #include "Texture.h"
 
 #include "Core/FileNames.h"
-#include "Utils/STBIncludeHelper.h"
+#include "Rendering/RendererTypes.h"
 
 namespace MRG
 {
-	Texture::Texture(vk::Device device,
-	                 vk::Queue graphicsQueue,
-	                 UploadContext uploadContext,
-	                 VmaAllocator allocator,
-	                 const std::string& file,
-	                 DeletionQueue& deletionQueue)
+	Texture::Texture(
+	  vk::Device device, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const std::string& file)
+	    : m_device{device}
 	{
-		image = Utils::loadImageFromFile(
-		  device, graphicsQueue, uploadContext, allocator, (Folders::Rendering::texturesFolder + file).c_str(), deletionQueue);
+		image = AllocatedImage{device, graphicsQueue, uploadContext, allocator, (Folders::Rendering::texturesFolder + file).c_str()};
 
 		vk::ImageViewCreateInfo imageViewInfo{
 		  .image    = image.image,
@@ -32,9 +28,7 @@ namespace MRG
 		      .layerCount     = 1,
 		    },
 		};
-		imageView                  = device.createImageView(imageViewInfo);
-		const auto imageViewBackup = imageView;
-		deletionQueue.push([=]() { device.destroyImageView(imageViewBackup); });
+		imageView = device.createImageView(imageViewInfo);
 
 		vk::SamplerCreateInfo samplerInfo{
 		  .magFilter    = vk::Filter::eNearest,
@@ -43,9 +37,7 @@ namespace MRG
 		  .addressModeV = vk::SamplerAddressMode::eRepeat,
 		  .addressModeW = vk::SamplerAddressMode::eRepeat,
 		};
-		sampler                  = device.createSampler(samplerInfo);
-		const auto samplerBackup = sampler;
-		deletionQueue.push([=]() { device.destroySampler(samplerBackup); });
+		sampler = device.createSampler(samplerInfo);
 	}
 
 	Texture::Texture(vk::Device device,
@@ -54,10 +46,10 @@ namespace MRG
 	                 VmaAllocator allocator,
 	                 void* data,
 	                 uint32_t width,
-	                 uint32_t height,
-	                 DeletionQueue& deletionQueue)
+	                 uint32_t height)
+	    : m_device{device}
 	{
-		image = Utils::createImageFromData(device, graphicsQueue, uploadContext, allocator, data, width, height, deletionQueue);
+		image = AllocatedImage{device, graphicsQueue, uploadContext, allocator, data, width, height};
 
 		vk::ImageViewCreateInfo imageViewInfo{
 		  .image    = image.image,
@@ -72,9 +64,7 @@ namespace MRG
 		      .layerCount     = 1,
 		    },
 		};
-		imageView                  = device.createImageView(imageViewInfo);
-		const auto imageViewBackup = imageView;
-		deletionQueue.push([=]() { device.destroyImageView(imageViewBackup); });
+		imageView = device.createImageView(imageViewInfo);
 
 		vk::SamplerCreateInfo samplerInfo{
 		  .magFilter    = vk::Filter::eNearest,
@@ -83,8 +73,12 @@ namespace MRG
 		  .addressModeV = vk::SamplerAddressMode::eClampToEdge,
 		  .addressModeW = vk::SamplerAddressMode::eClampToEdge,
 		};
-		sampler                  = device.createSampler(samplerInfo);
-		const auto samplerBackup = sampler;
-		deletionQueue.push([=]() { device.destroySampler(samplerBackup); });
+		sampler = device.createSampler(samplerInfo);
+	}
+
+	Texture::~Texture()
+	{
+		m_device.destroySampler(sampler);
+		m_device.destroyImageView(imageView);
 	}
 }  // namespace MRG

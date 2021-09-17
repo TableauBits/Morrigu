@@ -5,6 +5,7 @@
 #ifndef MORRIGU_APPLICATION_H
 #define MORRIGU_APPLICATION_H
 
+#include "Core/GLFWWrapper.h"
 #include "Core/LayerStack.h"
 #include "Rendering/Renderer.h"
 
@@ -24,7 +25,6 @@ namespace MRG
 	{
 	public:
 		explicit Application(ApplicationSpecification spec);
-		~Application();
 
 		Application(const Application&) = delete;
 		Application(Application&&)      = delete;
@@ -38,11 +38,9 @@ namespace MRG
 
 		void setWindowTitle(const char* title) const;
 
-		Renderer renderer;
-		float elapsedTime{};
-
 	private:
-		void init();
+		LayerStack m_layers;
+		ApplicationSpecification m_specification;
 
 		void onEvent(Event& event);
 		bool onClose(WindowCloseEvent& resizeEvent);
@@ -50,8 +48,12 @@ namespace MRG
 
 		bool m_isRunning = true;
 		float m_lastTime = 0.f;
-		ApplicationSpecification m_specification;
-		LayerStack m_layers;
+
+	public:
+		GLFWWrapper glfwWrapper;
+
+		Scope<Renderer> renderer{nullptr};
+		float elapsedTime{};
 	};
 }  // namespace MRG
 

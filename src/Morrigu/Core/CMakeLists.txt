@@ -17,6 +17,10 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/Application.h
 		${CMAKE_CURRENT_LIST_DIR}/Application.cpp
 
+		# GLFW wrapper class
+		${CMAKE_CURRENT_LIST_DIR}/GLFWWrapper.h
+		${CMAKE_CURRENT_LIST_DIR}/GLFWWrapper.cpp
+
 		# Layer classes
 		${CMAKE_CURRENT_LIST_DIR}/Layer.h
 		${CMAKE_CURRENT_LIST_DIR}/Layer.cpp
