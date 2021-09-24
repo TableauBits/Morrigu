@@ -99,6 +99,72 @@ namespace MRG
 			return createRef<RenderObject<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture);
 		}
 
+		void draw(RDIterator auto begin, RDIterator auto end, const Camera& camera)
+		{
+			const auto& frameData = getCurrentFrameData();
+
+			TimeData timeData{
+			  // Shamelessly stolen from https://docs.unity3d.com/Manual/SL-UnityShaderVariables.html
+			  .time = {elapsedTime / 20.f, elapsedTime, elapsedTime * 2.f, elapsedTime * 3.f},
+			};
+			void* data;
+			vmaMapMemory(m_allocator, frameData.timeDataBuffer.allocation, &data);
+			memcpy(data, &timeData, sizeof(TimeData));
+			vmaUnmapMemory(m_allocator, frameData.timeDataBuffer.allocation);
+
+			vk::Pipeline currentMaterial{};
+			bool isFirst = true;
+			while (begin != end) {
+				const auto drawable = *begin;
+				if (!(*drawable.isVisible)) { continue; }
+				if (isFirst) {
+					frameData.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+					                                           drawable.materialPipelineLayout,
+					                                           0,
+					                                           {frameData.level0Descriptor, m_level1Descriptor},
+					                                           {});
+					isFirst = false;
+				}
+				if (currentMaterial != drawable.materialPipeline) {
+					frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable.materialPipeline);
+					frameData.commandBuffer.setViewport(0,
+					                                    vk::Viewport{
+					                                      .x        = 0.f,
+					                                      .y        = 0.f,
+					                                      .width    = static_cast<float>(spec.windowWidth),
+					                                      .height   = static_cast<float>(spec.windowHeight),
+					                                      .minDepth = 0.f,
+					                                      .maxDepth = 1.f,
+					                                    });
+					frameData.commandBuffer.setScissor(
+					  0,
+					  vk::Rect2D{
+					    .offset{0, 0},
+					    .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
+					  });
+					frameData.commandBuffer.bindDescriptorSets(
+					  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 2, drawable.level2Descriptor, {});
+					currentMaterial = drawable.materialPipeline;
+				}
+
+				CameraData cameraData{
+				  .viewMatrix           = camera.getView(),
+				  .projectionMatrix     = camera.getProjection(),
+				  .viewProjectionMatrix = camera.getViewProjection(),
+				};
+				frameData.commandBuffer.pushConstants(
+				  drawable.materialPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
+
+				frameData.commandBuffer.bindDescriptorSets(
+				  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 3, drawable.level3Descriptor, {});
+
+				frameData.commandBuffer.bindVertexBuffers(0, drawable.vertexBuffer, {0});
+				frameData.commandBuffer.draw(static_cast<uint32_t>(drawable.vertexCount), 1, 0, 0);
+
+				++begin;
+			}
+		}
+
 		RendererSpecification spec;
 
 		bool isInitalized{false};
@@ -189,8 +255,6 @@ namespace MRG
 		void cleanup();
 
 		void onResize();
-
-		void draw(const std::vector<RenderData>& drawables, const Camera& camera);
 	};
 }  // namespace MRG
 

@@ -24,15 +24,28 @@ public:
 		uploadMesh(circleMesh);
 		m_circle = createRenderObject(circleMesh, material);
 
-		renderables.emplace_back(m_circle->getRenderData());
+		m_renderables.emplace_back(m_circle->getRenderData());
 
 		auto* materialEditor = new MaterialEditorLayer;
 		materialEditor->setMaterial(material);
 		application->pushLayer(materialEditor);
+
+		std::vector<int> test{};
+	}
+
+	void onUpdate(MRG::Timestep) { application->renderer->draw(m_renderables.begin(), m_renderables.end(), *mainCamera); }
+
+	void onEvent(MRG::Event& event) override
+	{
+		MRG::EventDispatcher dispatcher{event};
+
+		dispatcher.dispatch<MRG::WindowResizeEvent>(
+		  [this](MRG::WindowResizeEvent& resizeEvent) { return mainCamera->onResize(resizeEvent); });
 	}
 
 private:
 	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_circle{};
+	std::vector<MRG::RenderData> m_renderables;
 	float m_lerpTValue = 0.f;
 };
 

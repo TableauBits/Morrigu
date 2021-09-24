@@ -118,9 +118,8 @@ namespace MRG
 			renderer->elapsedTime = elapsedTime;
 			m_lastTime            = time;
 
-			for (auto& layer : m_layers) { layer->onUpdate(ts); }
 			renderer->beginFrame();
-			for (auto& layer : m_layers) { renderer->draw(layer->renderables, *layer->getMainCamera()); }
+			for (auto& layer : m_layers) { layer->onUpdate(ts); }
 			renderer->beginImGui();
 			for (auto& layer : m_layers) { layer->onImGuiUpdate(ts); }
 			renderer->endImGui();

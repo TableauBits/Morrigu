@@ -8,7 +8,6 @@
 #include "Core/Timestep.h"
 #include "Events/Event.h"
 #include "Rendering/Camera.h"
-#include "Rendering/RenderObject.h"
 
 namespace MRG
 {
@@ -35,7 +34,6 @@ namespace MRG
 		[[nodiscard]] virtual Ref<Camera> getMainCamera() = 0;
 
 		Application* application{nullptr};
-		std::vector<RenderData> renderables{};
 	};
 }  // namespace MRG
 

@@ -10,13 +10,15 @@
 
 #include "Utils/GLMIncludeHelper.h"
 
+#include <iterator>
+
 namespace MRG
 {
 	struct RenderData
 	{
 		// mesh data
 		vk::Buffer vertexBuffer;
-		std::size_t vertexNumber{};
+		std::size_t vertexCount{};
 
 		// material data
 		vk::PipelineLayout materialPipelineLayout;
@@ -27,6 +29,16 @@ namespace MRG
 		vk::DescriptorSet level3Descriptor;
 		Ref<bool> isVisible{};
 	};
+
+	// clang-format off
+	template<typename Iterator>
+	concept RDIterator =
+		std::input_iterator<Iterator> &&
+		requires(Iterator it) {
+			{(*it)} -> std::convertible_to<RenderData>;
+		}
+	;
+	// clang-format on
 
 	template<Vertex VertexType>
 	class RenderObject
@@ -132,7 +144,7 @@ namespace MRG
 		{
 			return RenderData{
 			  .vertexBuffer           = mesh->vertexBuffer.buffer,
-			  .vertexNumber           = mesh->vertices.size(),
+			  .vertexCount            = mesh->vertices.size(),
 			  .materialPipelineLayout = material->pipelineLayout,
 			  .materialPipeline       = material->pipeline,
 			  .level2Descriptor       = material->level2Descriptor,
