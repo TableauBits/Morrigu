@@ -205,8 +205,6 @@ namespace MRG
 		uint32_t m_imageIndex{};
 
 		AllocatedImage m_depthImage{};
-		vk::ImageView m_depthImageView{};
-		vk::Format m_depthFormat = vk::Format::eD32Sfloat;
 
 		vk::Queue m_graphicsQueue{};
 		std::uint32_t m_graphicsQueueIndex{};
@@ -251,8 +249,6 @@ namespace MRG
 		void endFrame();
 		void beginImGui();
 		void endImGui();
-
-		void cleanup();
 
 		void onResize();
 	};

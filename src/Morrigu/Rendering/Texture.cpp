@@ -15,21 +15,6 @@ namespace MRG
 	{
 		image = AllocatedImage{device, graphicsQueue, uploadContext, allocator, (Folders::Rendering::texturesFolder + file).c_str()};
 
-		vk::ImageViewCreateInfo imageViewInfo{
-		  .image    = image.image,
-		  .viewType = vk::ImageViewType::e2D,
-		  .format   = vk::Format::eR8G8B8A8Srgb,
-		  .subresourceRange =
-		    {
-		      .aspectMask     = vk::ImageAspectFlagBits::eColor,
-		      .baseMipLevel   = 0,
-		      .levelCount     = 1,
-		      .baseArrayLayer = 0,
-		      .layerCount     = 1,
-		    },
-		};
-		imageView = device.createImageView(imageViewInfo);
-
 		vk::SamplerCreateInfo samplerInfo{
 		  .magFilter    = vk::Filter::eNearest,
 		  .minFilter    = vk::Filter::eNearest,
@@ -51,21 +36,6 @@ namespace MRG
 	{
 		image = AllocatedImage{device, graphicsQueue, uploadContext, allocator, data, width, height};
 
-		vk::ImageViewCreateInfo imageViewInfo{
-		  .image    = image.image,
-		  .viewType = vk::ImageViewType::e2D,
-		  .format   = vk::Format::eR8G8B8A8Srgb,
-		  .subresourceRange =
-		    {
-		      .aspectMask     = vk::ImageAspectFlagBits::eColor,
-		      .baseMipLevel   = 0,
-		      .levelCount     = 1,
-		      .baseArrayLayer = 0,
-		      .layerCount     = 1,
-		    },
-		};
-		imageView = device.createImageView(imageViewInfo);
-
 		vk::SamplerCreateInfo samplerInfo{
 		  .magFilter    = vk::Filter::eNearest,
 		  .minFilter    = vk::Filter::eNearest,
@@ -76,9 +46,5 @@ namespace MRG
 		sampler = device.createSampler(samplerInfo);
 	}
 
-	Texture::~Texture()
-	{
-		m_device.destroySampler(sampler);
-		m_device.destroyImageView(imageView);
-	}
+	Texture::~Texture() { m_device.destroySampler(sampler); }
 }  // namespace MRG

@@ -199,24 +199,6 @@ namespace MRG
 		}
 	}
 
-	void Renderer::cleanup()
-	{
-		if (!isInitalized) { return; }
-
-		m_device.waitIdle();
-
-		destroySwapchain();
-
-		vmaDestroyAllocator(m_allocator);
-
-		m_device.destroy();
-		m_instance.destroySurfaceKHR(m_surface);
-		vkb::destroy_debug_utils_messenger(m_instance, m_debugMessenger);
-		m_instance.destroy();
-
-		glfwDestroyWindow(window);
-	}
-
 	void Renderer::onResize()
 	{
 		m_device.waitIdle();
@@ -304,6 +286,8 @@ namespace MRG
 		m_swapchainImages        = std::vector<vk::Image>(rawImages.begin(), rawImages.end());
 		m_swapchainImageViews    = std::vector<vk::ImageView>(rawImageViews.begin(), rawImageViews.end());
 
+		m_depthImage.device = m_device;
+		m_depthImage.format = vk::Format::eD32Sfloat;
 		vk::Extent3D depthImageExtent{
 		  .width  = static_cast<uint32_t>(spec.windowWidth),
 		  .height = static_cast<uint32_t>(spec.windowHeight),
@@ -314,7 +298,7 @@ namespace MRG
 		  .pNext                 = nullptr,
 		  .flags                 = 0,
 		  .imageType             = VK_IMAGE_TYPE_2D,
-		  .format                = static_cast<VkFormat>(m_depthFormat),
+		  .format                = static_cast<VkFormat>(m_depthImage.format),
 		  .extent                = depthImageExtent,
 		  .mipLevels             = 1,
 		  .arrayLayers           = 1,
@@ -343,7 +327,7 @@ namespace MRG
 		vk::ImageViewCreateInfo depthImageViewCreateInfo{
 		  .image    = m_depthImage.image,
 		  .viewType = vk::ImageViewType::e2D,
-		  .format   = m_depthFormat,
+		  .format   = m_depthImage.format,
 		  .subresourceRange{
 		    .aspectMask     = vk::ImageAspectFlagBits::eDepth,
 		    .baseMipLevel   = 0,
@@ -352,7 +336,7 @@ namespace MRG
 		    .layerCount     = 1,
 		  },
 		};
-		m_depthImageView = m_device.createImageView(depthImageViewCreateInfo);
+		m_depthImage.view = m_device.createImageView(depthImageViewCreateInfo);
 	}
 
 	void Renderer::initCommands()
@@ -399,7 +383,7 @@ namespace MRG
 		};
 
 		vk::AttachmentDescription depthAttachment{
-		  .format         = m_depthFormat,
+		  .format         = m_depthImage.format,
 		  .samples        = vk::SampleCountFlagBits::e1,
 		  .loadOp         = vk::AttachmentLoadOp::eClear,
 		  .storeOp        = vk::AttachmentStoreOp::eStore,
@@ -447,7 +431,7 @@ namespace MRG
 		m_framebuffers                        = std::vector<vk::Framebuffer>(swapchainImageCount);
 
 		for (std::size_t i = 0; i < swapchainImageCount; ++i) {
-			std::array<vk::ImageView, 2> attachments{m_swapchainImageViews[i], m_depthImageView};
+			std::array<vk::ImageView, 2> attachments{m_swapchainImageViews[i], m_depthImage.view};
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferInfo.pAttachments    = attachments.data();
 
@@ -703,6 +687,6 @@ namespace MRG
 		m_device.destroySwapchainKHR(m_swapchain);
 		for (const auto& imageView : m_swapchainImageViews) { m_device.destroyImageView(imageView); }
 		vmaDestroyImage(m_allocator, m_depthImage.image, m_depthImage.allocation);
-		m_device.destroyImageView(m_depthImageView);
+		m_device.destroyImageView(m_depthImage.view);
 	}
 }  // namespace MRG

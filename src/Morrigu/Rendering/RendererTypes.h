@@ -43,14 +43,15 @@ namespace MRG
 	{
 	public:
 		AllocatedImage() = default;
-		AllocatedImage(vk::Device device,
+		AllocatedImage(vk::Device deviceCopy,
 		               vk::Queue graphicsQueue,
 		               UploadContext uploadContext,
 		               VmaAllocator allocator,
 		               void* imageData,
 		               uint32_t imageWidth,
 		               uint32_t imageHeight);
-		AllocatedImage(vk::Device device, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const char* file);
+		AllocatedImage(
+		  vk::Device deviceCopy, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const char* file);
 		AllocatedImage(const AllocatedImage&) = delete;
 		AllocatedImage(AllocatedImage&& other);
 		~AllocatedImage();
@@ -59,17 +60,15 @@ namespace MRG
 
 		AllocatedImage& operator=(AllocatedImage&& other);
 
+		vk::Device device{};
 		VmaAllocator allocator{};
-		vk::Image image{};
 		VmaAllocation allocation{};
+		vk::Image image{};
+		vk::ImageView view{};
+		vk::Format format = vk::Format::eR8G8B8A8Srgb;
 
 	private:
-		void initFromData(vk::Device device,
-		                  vk::Queue graphicsQueue,
-		                  UploadContext uploadContext,
-		                  void* imageData,
-		                  uint32_t imageWidth,
-		                  uint32_t imageHeight);
+		void initFromData(vk::Queue graphicsQueue, UploadContext uploadContext, void* imageData, uint32_t imageWidth, uint32_t imageHeight);
 	};
 }  // namespace MRG
 

@@ -210,7 +210,7 @@ namespace MRG
 			MRG_ENGINE_ASSERT(m_sampledImages.contains(bindingSlot), "Invalid binding slot!")
 			vk::DescriptorImageInfo imageBufferInfo{
 			  .sampler     = texture->sampler,
-			  .imageView   = texture->imageView,
+			  .imageView   = texture->image.view,
 			  .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
 			};
 			vk::WriteDescriptorSet textureUpdate = {

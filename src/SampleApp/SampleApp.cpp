@@ -29,8 +29,6 @@ public:
 		auto* materialEditor = new MaterialEditorLayer;
 		materialEditor->setMaterial(material);
 		application->pushLayer(materialEditor);
-
-		std::vector<int> test{};
 	}
 
 	void onUpdate(MRG::Timestep) { application->renderer->draw(m_renderables.begin(), m_renderables.end(), *mainCamera); }

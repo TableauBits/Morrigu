@@ -24,7 +24,6 @@ namespace MRG
 		~Texture();
 
 		AllocatedImage image;
-		vk::ImageView imageView;
 		vk::Sampler sampler;
 
 	private:

@@ -71,33 +71,33 @@ namespace MRG
 		return *this;
 	}
 
-	AllocatedImage::AllocatedImage(vk::Device device,
+	AllocatedImage::AllocatedImage(vk::Device deviceCopy,
 	                               vk::Queue graphicsQueue,
 	                               UploadContext uploadContext,
 	                               VmaAllocator allocator,
 	                               void* imageData,
 	                               uint32_t imageWidth,
 	                               uint32_t imageHeight)
-	    : allocator{allocator}
+	    : device{deviceCopy}, allocator{allocator}
 	{
-		initFromData(device, graphicsQueue, uploadContext, imageData, imageWidth, imageHeight);
+		initFromData(graphicsQueue, uploadContext, imageData, imageWidth, imageHeight);
 	}
 
 	AllocatedImage::AllocatedImage(
-	  vk::Device device, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const char* file)
-	    : allocator{allocator}
+	  vk::Device deviceCopy, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const char* file)
+	    : device{deviceCopy}, allocator{allocator}
 	{
 		int texWidth, texHeight, texChannels;
 		auto* pixels = stbi_load(file, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 		MRG_ENGINE_ASSERT(pixels != nullptr, "Failed to load image from file: {}", file)
 
-		initFromData(device, graphicsQueue, uploadContext, pixels, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+		initFromData(graphicsQueue, uploadContext, pixels, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 
 		stbi_image_free(pixels);
 	}
 
 	void AllocatedImage::initFromData(
-	  vk::Device device, vk::Queue graphicsQueue, UploadContext uploadContext, void* imageData, uint32_t imageWidth, uint32_t imageHeight)
+	  vk::Queue graphicsQueue, UploadContext uploadContext, void* imageData, uint32_t imageWidth, uint32_t imageHeight)
 	{
 		const auto imageSize = imageWidth * imageHeight * 4;
 		AllocatedBuffer stagingBuffer{allocator, imageSize, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_ONLY};
@@ -112,10 +112,9 @@ namespace MRG
 		  .height = imageHeight,
 		  .depth  = 1,
 		};
-		vk::Format imageFormat      = vk::Format::eR8G8B8A8Srgb;
 		VkImageCreateInfo imageInfo = vk::ImageCreateInfo{
 		  .imageType   = vk::ImageType::e2D,
-		  .format      = imageFormat,
+		  .format      = format,
 		  .extent      = imageExtent,
 		  .mipLevels   = 1,
 		  .arrayLayers = 1,
@@ -181,13 +180,30 @@ namespace MRG
 			cmdBuffer.pipelineBarrier(
 			  vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {}, barrierToShaders);
 		});
+
+		vk::ImageViewCreateInfo imageViewInfo{
+		  .image    = image,
+		  .viewType = vk::ImageViewType::e2D,
+		  .format   = format,
+		  .subresourceRange =
+		    {
+		      .aspectMask     = vk::ImageAspectFlagBits::eColor,
+		      .baseMipLevel   = 0,
+		      .levelCount     = 1,
+		      .baseArrayLayer = 0,
+		      .layerCount     = 1,
+		    },
+		};
+		view = device.createImageView(imageViewInfo);
 	}
 
 	AllocatedImage::AllocatedImage(AllocatedImage&& other)
 	{
+		device     = std::move(other.device);
 		allocator  = std::move(other.allocator);
 		image      = std::move(other.image);
 		allocation = std::move(other.allocation);
+		view       = std::move(other.view);
 
 		// Just to be extra sure
 		other.allocator = nullptr;
@@ -195,14 +211,19 @@ namespace MRG
 
 	AllocatedImage::~AllocatedImage()
 	{
-		if (allocator != nullptr) { vmaDestroyImage(allocator, image, allocation); }
+		if (allocator != nullptr) {
+			device.destroyImageView(view);
+			vmaDestroyImage(allocator, image, allocation);
+		}
 	}
 
 	AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other)
 	{
+		device     = std::move(other.device);
 		allocator  = std::move(other.allocator);
 		image      = std::move(other.image);
 		allocation = std::move(other.allocation);
+		view       = std::move(other.view);
 
 		// Just to be extra sure
 		other.allocator = nullptr;
