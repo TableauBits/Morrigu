@@ -29,6 +29,11 @@ public:
 		auto* materialEditor = new MaterialEditorLayer;
 		materialEditor->setMaterial(material);
 		application->pushLayer(materialEditor);
+
+		m_framebuffer = createFramebuffer({
+		  .width  = 600,
+		  .height = 300,
+		});
 	}
 
 	void onUpdate(MRG::Timestep) { application->renderer->draw(m_renderables.begin(), m_renderables.end(), *mainCamera); }
@@ -44,6 +49,7 @@ public:
 private:
 	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_circle{};
 	std::vector<MRG::RenderData> m_renderables;
+	MRG::Ref<MRG::Framebuffer> m_framebuffer;
 	float m_lerpTValue = 0.f;
 };
 

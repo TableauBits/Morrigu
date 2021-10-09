@@ -49,6 +49,11 @@ namespace MRG
 			return application->renderer->createRenderObject(mesh, material);
 		}
 
+		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec)
+		{
+			return application->renderer->createFrameBuffer(spec);
+		}
+
 		Ref<StandardCamera> mainCamera{};
 	};
 

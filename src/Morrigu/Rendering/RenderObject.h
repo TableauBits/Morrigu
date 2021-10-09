@@ -78,7 +78,7 @@ namespace MRG
 				  allocator, bindingInfo.size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU};
 
 				vk::DescriptorBufferInfo descriptorBufferInfo{
-				  .buffer = newBuffer.buffer,
+				  .buffer = newBuffer.vkHandle,
 				  .offset = 0,
 				  .range  = bindingInfo.size,
 				};
@@ -143,7 +143,7 @@ namespace MRG
 		RenderData getRenderData()
 		{
 			return RenderData{
-			  .vertexBuffer           = mesh->vertexBuffer.buffer,
+			  .vertexBuffer           = mesh->vertexBuffer.vkHandle,
 			  .vertexCount            = mesh->vertices.size(),
 			  .materialPipelineLayout = material->pipelineLayout,
 			  .materialPipeline       = material->pipeline,

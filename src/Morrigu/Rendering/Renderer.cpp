@@ -103,14 +103,100 @@ namespace MRG
 		return MRG::createRef<Shader>(m_device, vertexShaderName, fragmentShaderName);
 	}
 
+	Ref<Texture> Renderer::createTexture(void* data, uint32_t width, uint32_t height)
+	{
+		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, data, width, height);
+	}
+
 	Ref<Texture> Renderer::createTexture(const char* fileName)
 	{
 		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, fileName);
 	}
 
-	Ref<Texture> Renderer::createTexture(void* data, uint32_t width, uint32_t height)
+	Ref<Framebuffer> Renderer::createFrameBuffer(const FramebufferSpecification& fbSpec)
 	{
-		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, data, width, height);
+		FramebufferData fbData{};
+
+		fbData.colorImage = AllocatedImage{AllocatedImageSpecification{
+		  .device        = m_device,
+		  .graphicsQueue = m_graphicsQueue,
+		  .uploadContext = m_uploadContext,
+		  .allocator     = m_allocator,
+		  .usage  = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+		  .format = m_swapchainFormat,
+		  .width  = fbSpec.width,
+		  .height = fbSpec.height,
+		}};  // namespace MRG
+
+		fbData.depthImage.spec.device = m_device;
+		fbData.depthImage.spec.format = m_depthImage.spec.format;
+		vk::Extent3D depthImageExtent{
+		  .width  = static_cast<uint32_t>(fbSpec.width),
+		  .height = static_cast<uint32_t>(fbSpec.height),
+		  .depth  = 1,
+		};
+		VkImageCreateInfo depthImageCreateInfo{
+		  .sType                 = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+		  .pNext                 = nullptr,
+		  .flags                 = 0,
+		  .imageType             = VK_IMAGE_TYPE_2D,
+		  .format                = static_cast<VkFormat>(fbData.depthImage.spec.format),
+		  .extent                = depthImageExtent,
+		  .mipLevels             = 1,
+		  .arrayLayers           = 1,
+		  .samples               = VK_SAMPLE_COUNT_1_BIT,
+		  .tiling                = VK_IMAGE_TILING_OPTIMAL,
+		  .usage                 = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		  .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
+		  .queueFamilyIndexCount = 0,
+		  .pQueueFamilyIndices   = nullptr,
+		  .initialLayout         = VK_IMAGE_LAYOUT_UNDEFINED,
+		};
+		VmaAllocationCreateInfo depthImageAllocationCreateInfo{
+		  .flags          = 0,
+		  .usage          = VMA_MEMORY_USAGE_GPU_ONLY,
+		  .requiredFlags  = VkMemoryPropertyFlags{VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT},
+		  .preferredFlags = 0,
+		  .memoryTypeBits = 0,
+		  .pool           = VK_NULL_HANDLE,
+		  .pUserData      = nullptr,
+		};
+
+		VkImage rawImage;
+		vmaCreateImage(
+		  m_allocator, &depthImageCreateInfo, &depthImageAllocationCreateInfo, &rawImage, &fbData.depthImage.allocation, nullptr);
+		fbData.depthImage.vkHandle = rawImage;
+
+		vk::ImageViewCreateInfo depthImageViewCreateInfo{
+		  .image    = fbData.depthImage.vkHandle,
+		  .viewType = vk::ImageViewType::e2D,
+		  .format   = fbData.depthImage.spec.format,
+		  .subresourceRange{
+		    .aspectMask     = vk::ImageAspectFlagBits::eDepth,
+		    .baseMipLevel   = 0,
+		    .levelCount     = 1,
+		    .baseArrayLayer = 0,
+		    .layerCount     = 1,
+		  },
+		};
+		fbData.depthImage.view = m_device.createImageView(depthImageViewCreateInfo);
+
+		std::array<vk::ImageView, 2> attachments{fbData.colorImage.view, fbData.depthImage.view};
+
+		vk::FramebufferCreateInfo fbInfo{
+		  // By locking the attachments of the framebuffer, we should guarantee compatibility
+		  // (https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/chap8.html#renderpass-compatibility)
+		  .renderPass      = m_renderPass,
+		  .attachmentCount = static_cast<uint32_t>(attachments.size()),
+		  .pAttachments    = attachments.data(),
+		  .width           = fbSpec.width,
+		  .height          = fbSpec.height,
+		  .layers          = 1,
+		};
+
+		fbData.vkHandle = m_device.createFramebuffer(fbInfo);
+
+		return createRef<Framebuffer>(m_device, std::move(fbData));
 	}
 
 	void Renderer::beginFrame()
@@ -286,8 +372,8 @@ namespace MRG
 		m_swapchainImages        = std::vector<vk::Image>(rawImages.begin(), rawImages.end());
 		m_swapchainImageViews    = std::vector<vk::ImageView>(rawImageViews.begin(), rawImageViews.end());
 
-		m_depthImage.device = m_device;
-		m_depthImage.format = vk::Format::eD32Sfloat;
+		m_depthImage.spec.device = m_device;
+		m_depthImage.spec.format = vk::Format::eD32Sfloat;
 		vk::Extent3D depthImageExtent{
 		  .width  = static_cast<uint32_t>(spec.windowWidth),
 		  .height = static_cast<uint32_t>(spec.windowHeight),
@@ -298,7 +384,7 @@ namespace MRG
 		  .pNext                 = nullptr,
 		  .flags                 = 0,
 		  .imageType             = VK_IMAGE_TYPE_2D,
-		  .format                = static_cast<VkFormat>(m_depthImage.format),
+		  .format                = static_cast<VkFormat>(m_depthImage.spec.format),
 		  .extent                = depthImageExtent,
 		  .mipLevels             = 1,
 		  .arrayLayers           = 1,
@@ -322,12 +408,12 @@ namespace MRG
 
 		VkImage rawImage;
 		vmaCreateImage(m_allocator, &depthImageCreateInfo, &depthImageAllocationCreateInfo, &rawImage, &m_depthImage.allocation, nullptr);
-		m_depthImage.image = rawImage;
+		m_depthImage.vkHandle = rawImage;
 
 		vk::ImageViewCreateInfo depthImageViewCreateInfo{
-		  .image    = m_depthImage.image,
+		  .image    = m_depthImage.vkHandle,
 		  .viewType = vk::ImageViewType::e2D,
-		  .format   = m_depthImage.format,
+		  .format   = m_depthImage.spec.format,
 		  .subresourceRange{
 		    .aspectMask     = vk::ImageAspectFlagBits::eDepth,
 		    .baseMipLevel   = 0,
@@ -383,7 +469,7 @@ namespace MRG
 		};
 
 		vk::AttachmentDescription depthAttachment{
-		  .format         = m_depthImage.format,
+		  .format         = m_depthImage.spec.format,
 		  .samples        = vk::SampleCountFlagBits::e1,
 		  .loadOp         = vk::AttachmentLoadOp::eClear,
 		  .storeOp        = vk::AttachmentStoreOp::eStore,
@@ -505,7 +591,7 @@ namespace MRG
 			  AllocatedBuffer{m_allocator, sizeof(TimeData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU};
 			m_framesData[i].level0Descriptor = level0Descriptors[i];
 
-			timeBufferInfo.buffer = m_framesData[i].timeDataBuffer.buffer;
+			timeBufferInfo.buffer = m_framesData[i].timeDataBuffer.vkHandle;
 			timeSetWrite.dstSet   = m_framesData[i].level0Descriptor;
 			m_device.updateDescriptorSets(timeSetWrite, {});
 		}
@@ -686,7 +772,7 @@ namespace MRG
 		for (const auto& framebuffer : m_framebuffers) { m_device.destroyFramebuffer(framebuffer); }
 		m_device.destroySwapchainKHR(m_swapchain);
 		for (const auto& imageView : m_swapchainImageViews) { m_device.destroyImageView(imageView); }
-		vmaDestroyImage(m_allocator, m_depthImage.image, m_depthImage.allocation);
+		vmaDestroyImage(m_allocator, m_depthImage.vkHandle, m_depthImage.allocation);
 		m_device.destroyImageView(m_depthImage.view);
 	}
 }  // namespace MRG

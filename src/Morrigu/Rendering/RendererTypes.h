@@ -35,23 +35,33 @@ namespace MRG
 		AllocatedBuffer& operator=(AllocatedBuffer&& other);
 
 		VmaAllocator allocator{};
-		vk::Buffer buffer{};
+		vk::Buffer vkHandle{};
 		VmaAllocation allocation{};
+	};
+
+	struct AllocatedImageSpecification
+	{
+		vk::Device device;
+		vk::Queue graphicsQueue;
+		UploadContext uploadContext;
+		VmaAllocator allocator = nullptr;
+		vk::ImageUsageFlags usage;
+		vk::Format format = vk::Format::eR8G8B8A8Srgb;
+
+		// From file
+		const char* file = nullptr;
+
+		// Fropm data
+		void* data = nullptr;
+		uint32_t width;
+		uint32_t height;
 	};
 
 	class AllocatedImage
 	{
 	public:
 		AllocatedImage() = default;
-		AllocatedImage(vk::Device deviceCopy,
-		               vk::Queue graphicsQueue,
-		               UploadContext uploadContext,
-		               VmaAllocator allocator,
-		               void* imageData,
-		               uint32_t imageWidth,
-		               uint32_t imageHeight);
-		AllocatedImage(
-		  vk::Device deviceCopy, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const char* file);
+		explicit AllocatedImage(const AllocatedImageSpecification& specification);
 		AllocatedImage(const AllocatedImage&) = delete;
 		AllocatedImage(AllocatedImage&& other);
 		~AllocatedImage();
@@ -60,15 +70,14 @@ namespace MRG
 
 		AllocatedImage& operator=(AllocatedImage&& other);
 
-		vk::Device device{};
-		VmaAllocator allocator{};
+		AllocatedImageSpecification spec;
+
 		VmaAllocation allocation{};
-		vk::Image image{};
+		vk::Image vkHandle{};
 		vk::ImageView view{};
-		vk::Format format = vk::Format::eR8G8B8A8Srgb;
 
 	private:
-		void initFromData(vk::Queue graphicsQueue, UploadContext uploadContext, void* imageData, uint32_t imageWidth, uint32_t imageHeight);
+		void initFromData(void* imageData, uint32_t imageWidth, uint32_t imageHeight);
 	};
 }  // namespace MRG
 

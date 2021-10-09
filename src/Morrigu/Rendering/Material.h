@@ -67,7 +67,7 @@ namespace MRG
 				  m_allocator, bindingInfo.size, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU};
 
 				vk::DescriptorBufferInfo descriptorBufferInfo{
-				  .buffer = newBuffer.buffer,
+				  .buffer = newBuffer.vkHandle,
 				  .offset = 0,
 				  .range  = bindingInfo.size,
 				};

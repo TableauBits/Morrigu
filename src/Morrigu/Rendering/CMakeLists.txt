@@ -10,6 +10,10 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/Camera.h
 		${CMAKE_CURRENT_LIST_DIR}/Camera.cpp
 
+		# Framebuffer class
+		${CMAKE_CURRENT_LIST_DIR}/Framebuffer.h
+		${CMAKE_CURRENT_LIST_DIR}/Framebuffer.cpp
+
 		# Material class
 		${CMAKE_CURRENT_LIST_DIR}/Material.h
 

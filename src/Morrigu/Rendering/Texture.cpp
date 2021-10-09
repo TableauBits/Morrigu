@@ -13,7 +13,14 @@ namespace MRG
 	  vk::Device device, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const std::string& file)
 	    : m_device{device}
 	{
-		image = AllocatedImage{device, graphicsQueue, uploadContext, allocator, (Folders::Rendering::texturesFolder + file).c_str()};
+		image = AllocatedImage{AllocatedImageSpecification{
+		  .device        = device,
+		  .graphicsQueue = graphicsQueue,
+		  .uploadContext = uploadContext,
+		  .allocator     = allocator,
+		  .usage         = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+		  .file          = (Folders::Rendering::texturesFolder + file).c_str(),
+		}};
 
 		vk::SamplerCreateInfo samplerInfo{
 		  .magFilter    = vk::Filter::eNearest,
@@ -34,7 +41,16 @@ namespace MRG
 	                 uint32_t height)
 	    : m_device{device}
 	{
-		image = AllocatedImage{device, graphicsQueue, uploadContext, allocator, data, width, height};
+		image = AllocatedImage{AllocatedImageSpecification{
+		  .device        = device,
+		  .graphicsQueue = graphicsQueue,
+		  .uploadContext = uploadContext,
+		  .allocator     = allocator,
+		  .usage         = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+		  .data          = data,
+		  .width         = width,
+		  .height        = height,
+		}};
 
 		vk::SamplerCreateInfo samplerInfo{
 		  .magFilter    = vk::Filter::eNearest,

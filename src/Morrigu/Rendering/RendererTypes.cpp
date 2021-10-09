@@ -41,72 +41,53 @@ namespace MRG
 		VkBuffer newRawBuffer;
 		MRG_VK_CHECK(vmaCreateBuffer(allocator, &bufferInfo, &allocationInfo, &newRawBuffer, &allocation, nullptr),
 		             "Failed to allocate new buffer!")
-		buffer = newRawBuffer;
+		vkHandle = newRawBuffer;
 	}
 
 	AllocatedBuffer::AllocatedBuffer(AllocatedBuffer&& other)
 	{
 		allocator  = std::move(other.allocator);
-		buffer     = std::move(other.buffer);
+		vkHandle   = std::move(other.vkHandle);
 		allocation = std::move(other.allocation);
 
-		// Just to be extra sure
+		// necessary to indicate we've taken ownership
 		other.allocator = nullptr;
 	}
 
 	AllocatedBuffer::~AllocatedBuffer()
 	{
-		if (allocator != nullptr) { vmaDestroyBuffer(allocator, buffer, allocation); }
+		if (allocator != nullptr) { vmaDestroyBuffer(allocator, vkHandle, allocation); }
 	}
 
 	AllocatedBuffer& AllocatedBuffer::operator=(AllocatedBuffer&& other)
 	{
 		allocator  = std::move(other.allocator);
-		buffer     = std::move(other.buffer);
+		vkHandle   = std::move(other.vkHandle);
 		allocation = std::move(other.allocation);
 
-		// Just to be extra sure
+		// necessary to indicate we've taken ownership
 		other.allocator = nullptr;
 
 		return *this;
 	}
 
-	AllocatedImage::AllocatedImage(vk::Device deviceCopy,
-	                               vk::Queue graphicsQueue,
-	                               UploadContext uploadContext,
-	                               VmaAllocator allocator,
-	                               void* imageData,
-	                               uint32_t imageWidth,
-	                               uint32_t imageHeight)
-	    : device{deviceCopy}, allocator{allocator}
+	AllocatedImage::AllocatedImage(const AllocatedImageSpecification& specification) : spec{specification}
 	{
-		initFromData(graphicsQueue, uploadContext, imageData, imageWidth, imageHeight);
+		if (spec.file != nullptr) {
+			int texWidth, texHeight, texChannels;
+			auto* pixels = stbi_load(spec.file, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+			MRG_ENGINE_ASSERT(pixels != nullptr, "Failed to load image from file: {}", spec.file)
+
+			initFromData(pixels, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+
+			stbi_image_free(pixels);
+		} else {
+			initFromData(nullptr, spec.width, spec.height);
+		}
 	}
 
-	AllocatedImage::AllocatedImage(
-	  vk::Device deviceCopy, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const char* file)
-	    : device{deviceCopy}, allocator{allocator}
+	void AllocatedImage::initFromData(void* imageData, uint32_t imageWidth, uint32_t imageHeight)
 	{
-		int texWidth, texHeight, texChannels;
-		auto* pixels = stbi_load(file, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-		MRG_ENGINE_ASSERT(pixels != nullptr, "Failed to load image from file: {}", file)
-
-		initFromData(graphicsQueue, uploadContext, pixels, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-
-		stbi_image_free(pixels);
-	}
-
-	void AllocatedImage::initFromData(
-	  vk::Queue graphicsQueue, UploadContext uploadContext, void* imageData, uint32_t imageWidth, uint32_t imageHeight)
-	{
-		const auto imageSize = imageWidth * imageHeight * 4;
-		AllocatedBuffer stagingBuffer{allocator, imageSize, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_ONLY};
-
-		void* data;
-		vmaMapMemory(allocator, stagingBuffer.allocation, &data);
-		memcpy(data, imageData, static_cast<std::size_t>(imageSize));
-		vmaUnmapMemory(allocator, stagingBuffer.allocation);
-
 		vk::Extent3D imageExtent{
 		  .width  = imageWidth,
 		  .height = imageHeight,
@@ -114,13 +95,13 @@ namespace MRG
 		};
 		VkImageCreateInfo imageInfo = vk::ImageCreateInfo{
 		  .imageType   = vk::ImageType::e2D,
-		  .format      = format,
+		  .format      = spec.format,
 		  .extent      = imageExtent,
 		  .mipLevels   = 1,
 		  .arrayLayers = 1,
 		  .samples     = vk::SampleCountFlagBits::e1,
 		  .tiling      = vk::ImageTiling::eOptimal,
-		  .usage       = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+		  .usage       = spec.usage,  // vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled
 		};
 		VmaAllocationCreateInfo imageAllocationInfo{
 		  .flags          = 0,
@@ -133,58 +114,90 @@ namespace MRG
 		};
 
 		VkImage newRawImage;
-		vmaCreateImage(allocator, &imageInfo, &imageAllocationInfo, &newRawImage, &allocation, nullptr);
-		image = newRawImage;
+		vmaCreateImage(spec.allocator, &imageInfo, &imageAllocationInfo, &newRawImage, &allocation, nullptr);
+		vkHandle = newRawImage;
 
-		Utils::Commands::immediateSubmit(device, graphicsQueue, uploadContext, [&](vk::CommandBuffer cmdBuffer) {
-			vk::ImageSubresourceRange range{
-			  .aspectMask     = vk::ImageAspectFlagBits::eColor,
-			  .baseMipLevel   = 0,
-			  .levelCount     = 1,
-			  .baseArrayLayer = 0,
-			  .layerCount     = 1,
-			};
-			vk::ImageMemoryBarrier barrierToTransfer{
-			  .srcAccessMask    = {},
-			  .dstAccessMask    = vk::AccessFlagBits::eTransferWrite,
-			  .oldLayout        = vk::ImageLayout::eUndefined,
-			  .newLayout        = vk::ImageLayout::eTransferDstOptimal,
-			  .image            = image,
-			  .subresourceRange = range,
-			};
+		if (imageData != nullptr) {
+			const auto imageSize = imageWidth * imageHeight * 4;
+			AllocatedBuffer stagingBuffer{spec.allocator, imageSize, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_ONLY};
 
-			cmdBuffer.pipelineBarrier(
-			  vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, {}, {}, {}, barrierToTransfer);
+			void* data;
+			vmaMapMemory(spec.allocator, stagingBuffer.allocation, &data);
+			memcpy(data, imageData, static_cast<std::size_t>(imageSize));
+			vmaUnmapMemory(spec.allocator, stagingBuffer.allocation);
 
-			vk::BufferImageCopy copyRegion{
-			  .imageSubresource =
-			    {
-			      .aspectMask     = vk::ImageAspectFlagBits::eColor,
-			      .mipLevel       = 0,
-			      .baseArrayLayer = 0,
-			      .layerCount     = 1,
-			    },
-			  .imageExtent = imageExtent,
-			};
-			cmdBuffer.copyBufferToImage(stagingBuffer.buffer, image, vk::ImageLayout::eTransferDstOptimal, copyRegion);
+			Utils::Commands::immediateSubmit(spec.device, spec.graphicsQueue, spec.uploadContext, [&](vk::CommandBuffer cmdBuffer) {
+				vk::ImageSubresourceRange range{
+				  .aspectMask     = vk::ImageAspectFlagBits::eColor,
+				  .baseMipLevel   = 0,
+				  .levelCount     = 1,
+				  .baseArrayLayer = 0,
+				  .layerCount     = 1,
+				};
+				vk::ImageMemoryBarrier barrierToTransfer{
+				  .srcAccessMask    = {},
+				  .dstAccessMask    = vk::AccessFlagBits::eTransferWrite,
+				  .oldLayout        = vk::ImageLayout::eUndefined,
+				  .newLayout        = vk::ImageLayout::eTransferDstOptimal,
+				  .image            = vkHandle,
+				  .subresourceRange = range,
+				};
 
-			vk::ImageMemoryBarrier barrierToShaders{
-			  .srcAccessMask    = vk::AccessFlagBits::eTransferWrite,
-			  .dstAccessMask    = vk::AccessFlagBits::eShaderRead,
-			  .oldLayout        = vk::ImageLayout::eTransferDstOptimal,
-			  .newLayout        = vk::ImageLayout::eShaderReadOnlyOptimal,
-			  .image            = image,
-			  .subresourceRange = range,
-			};
+				cmdBuffer.pipelineBarrier(
+				  vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, {}, {}, {}, barrierToTransfer);
 
-			cmdBuffer.pipelineBarrier(
-			  vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {}, barrierToShaders);
-		});
+				vk::BufferImageCopy copyRegion{
+				  .imageSubresource =
+				    {
+				      .aspectMask     = vk::ImageAspectFlagBits::eColor,
+				      .mipLevel       = 0,
+				      .baseArrayLayer = 0,
+				      .layerCount     = 1,
+				    },
+				  .imageExtent = imageExtent,
+				};
+				cmdBuffer.copyBufferToImage(stagingBuffer.vkHandle, vkHandle, vk::ImageLayout::eTransferDstOptimal, copyRegion);
+
+				vk::ImageMemoryBarrier barrierToShaders{
+				  .srcAccessMask    = vk::AccessFlagBits::eTransferWrite,
+				  .dstAccessMask    = vk::AccessFlagBits::eShaderRead,
+				  .oldLayout        = vk::ImageLayout::eTransferDstOptimal,
+				  .newLayout        = vk::ImageLayout::eShaderReadOnlyOptimal,
+				  .image            = vkHandle,
+				  .subresourceRange = range,
+				};
+
+				cmdBuffer.pipelineBarrier(
+				  vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {}, barrierToShaders);
+			});
+		} else {
+			Utils::Commands::immediateSubmit(spec.device, spec.graphicsQueue, spec.uploadContext, [&](vk::CommandBuffer cmdBuffer) {
+				vk::ImageSubresourceRange range{
+				  .aspectMask     = vk::ImageAspectFlagBits::eColor,
+				  .baseMipLevel   = 0,
+				  .levelCount     = 1,
+				  .baseArrayLayer = 0,
+				  .layerCount     = 1,
+				};
+
+				vk::ImageMemoryBarrier barrierToShaders{
+				  .srcAccessMask    = vk::AccessFlagBits::eTransferWrite,
+				  .dstAccessMask    = vk::AccessFlagBits::eShaderRead,
+				  .oldLayout        = vk::ImageLayout::eUndefined,
+				  .newLayout        = vk::ImageLayout::eShaderReadOnlyOptimal,
+				  .image            = vkHandle,
+				  .subresourceRange = range,
+				};
+
+				cmdBuffer.pipelineBarrier(
+				  vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {}, barrierToShaders);
+			});
+		}
 
 		vk::ImageViewCreateInfo imageViewInfo{
-		  .image    = image,
+		  .image    = vkHandle,
 		  .viewType = vk::ImageViewType::e2D,
-		  .format   = format,
+		  .format   = spec.format,
 		  .subresourceRange =
 		    {
 		      .aspectMask     = vk::ImageAspectFlagBits::eColor,
@@ -194,39 +207,37 @@ namespace MRG
 		      .layerCount     = 1,
 		    },
 		};
-		view = device.createImageView(imageViewInfo);
+		view = spec.device.createImageView(imageViewInfo);
 	}
 
 	AllocatedImage::AllocatedImage(AllocatedImage&& other)
 	{
-		device     = std::move(other.device);
-		allocator  = std::move(other.allocator);
-		image      = std::move(other.image);
+		spec       = std::move(other.spec);
 		allocation = std::move(other.allocation);
+		vkHandle   = std::move(other.vkHandle);
 		view       = std::move(other.view);
 
-		// Just to be extra sure
-		other.allocator = nullptr;
+		// necessary to indicate we've taken ownership
+		other.spec.allocator = nullptr;
 	}
 
 	AllocatedImage::~AllocatedImage()
 	{
-		if (allocator != nullptr) {
-			device.destroyImageView(view);
-			vmaDestroyImage(allocator, image, allocation);
+		if (spec.allocator != nullptr) {
+			spec.device.destroyImageView(view);
+			vmaDestroyImage(spec.allocator, vkHandle, allocation);
 		}
 	}
 
 	AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other)
 	{
-		device     = std::move(other.device);
-		allocator  = std::move(other.allocator);
-		image      = std::move(other.image);
+		spec       = std::move(other.spec);
 		allocation = std::move(other.allocation);
+		vkHandle   = std::move(other.vkHandle);
 		view       = std::move(other.view);
 
-		// Just to be extra sure
-		other.allocator = nullptr;
+		// necessary to indicate we've taken ownership
+		other.spec.allocator = nullptr;
 
 		return *this;
 	}
