@@ -25,23 +25,34 @@ namespace MRG
 
 		vk::Sampler sampler{};
 		vk::Framebuffer vkHandle{};
+
+		// Render data
+		vk::CommandPool commandPool;
+		vk::CommandBuffer commandBuffer;
+
+		vk::Semaphore renderSemaphore{};
+
+		vk::DescriptorPool descriptorPool{};
+		vk::DescriptorSet level0Descriptor{};
+
+		AllocatedBuffer timeDataBuffer{};
 	};
 
 	class Framebuffer
 	{
 	public:
-		Framebuffer(vk::Device device, FramebufferData&& data);
+		Framebuffer(vk::Device deviceCopy, FramebufferData&& moveData, uint32_t initWidth, uint32_t initHeight);
 		Framebuffer(const Framebuffer&) = delete;
 		Framebuffer(Framebuffer&&)      = default;
 
 		Framebuffer& operator=(const Framebuffer&) = delete;
 		Framebuffer& operator=(Framebuffer&&) = default;
 
-		~Framebuffer() = default;
+		~Framebuffer();
 
-	private:
-		vk::Device m_device;
-		FramebufferData m_data;
+		vk::Device device;
+		FramebufferData data;
+		uint32_t width{}, height{};
 	};
 }  // namespace MRG
 

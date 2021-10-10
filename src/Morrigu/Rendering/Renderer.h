@@ -170,16 +170,40 @@ namespace MRG
 
 		void draw(RDIterator auto begin, RDIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
 		{
-			const auto& frameData = getCurrentFrameData();
+			framebuffer->data.commandBuffer.reset();
+			vk::CommandBufferBeginInfo beginInfo{
+			  .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
+			};
+			framebuffer->data.commandBuffer.begin(beginInfo);
+
+			vk::ClearValue colorClearValue{};
+			colorClearValue.color = {std::array<float, 4>{clearColor.r, clearColor.g, clearColor.b}};
+			vk::ClearValue depthClearValue{};
+			depthClearValue.depthStencil.depth = 1.f;
+
+			std::array<vk::ClearValue, 2> clearValues{colorClearValue, depthClearValue};
+
+			vk::RenderPassBeginInfo renderPassInfo{
+			  .renderPass  = m_renderPass,
+			  .framebuffer = framebuffer->data.vkHandle,
+			  .renderArea =
+			    vk::Rect2D{
+			      .offset = {0, 0},
+			      .extent = {framebuffer->width, framebuffer->height},
+			    },
+			  .clearValueCount = static_cast<uint32_t>(clearValues.size()),
+			  .pClearValues    = clearValues.data(),
+			};
+			framebuffer->data.commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
 			TimeData timeData{
 			  // Shamelessly stolen from https://docs.unity3d.com/Manual/SL-UnityShaderVariables.html
 			  .time = {elapsedTime / 20.f, elapsedTime, elapsedTime * 2.f, elapsedTime * 3.f},
 			};
 			void* data;
-			vmaMapMemory(m_allocator, frameData.timeDataBuffer.allocation, &data);
+			vmaMapMemory(m_allocator, framebuffer->data.timeDataBuffer.allocation, &data);
 			memcpy(data, &timeData, sizeof(TimeData));
-			vmaUnmapMemory(m_allocator, frameData.timeDataBuffer.allocation);
+			vmaUnmapMemory(m_allocator, framebuffer->data.timeDataBuffer.allocation);
 
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
@@ -187,31 +211,31 @@ namespace MRG
 				const auto drawable = *begin;
 				if (!(*drawable.isVisible)) { continue; }
 				if (isFirst) {
-					frameData.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-					                                           drawable.materialPipelineLayout,
-					                                           0,
-					                                           {frameData.level0Descriptor, m_level1Descriptor},
-					                                           {});
+					framebuffer->data.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+					                                                   drawable.materialPipelineLayout,
+					                                                   0,
+					                                                   {framebuffer->data.level0Descriptor, m_level1Descriptor},
+					                                                   {});
 					isFirst = false;
 				}
 				if (currentMaterial != drawable.materialPipeline) {
-					frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable.materialPipeline);
-					frameData.commandBuffer.setViewport(0,
-					                                    vk::Viewport{
-					                                      .x        = 0.f,
-					                                      .y        = 0.f,
-					                                      .width    = static_cast<float>(spec.windowWidth),
-					                                      .height   = static_cast<float>(spec.windowHeight),
-					                                      .minDepth = 0.f,
-					                                      .maxDepth = 1.f,
-					                                    });
-					frameData.commandBuffer.setScissor(
+					framebuffer->data.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable.materialPipeline);
+					framebuffer->data.commandBuffer.setViewport(0,
+					                                            vk::Viewport{
+					                                              .x        = 0.f,
+					                                              .y        = 0.f,
+					                                              .width    = static_cast<float>(spec.windowWidth),
+					                                              .height   = static_cast<float>(spec.windowHeight),
+					                                              .minDepth = 0.f,
+					                                              .maxDepth = 1.f,
+					                                            });
+					framebuffer->data.commandBuffer.setScissor(
 					  0,
 					  vk::Rect2D{
 					    .offset{0, 0},
 					    .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
 					  });
-					frameData.commandBuffer.bindDescriptorSets(
+					framebuffer->data.commandBuffer.bindDescriptorSets(
 					  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 2, drawable.level2Descriptor, {});
 					currentMaterial = drawable.materialPipeline;
 				}
@@ -221,17 +245,47 @@ namespace MRG
 				  .projectionMatrix     = camera.getProjection(),
 				  .viewProjectionMatrix = camera.getViewProjection(),
 				};
-				frameData.commandBuffer.pushConstants(
+				framebuffer->data.commandBuffer.pushConstants(
 				  drawable.materialPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
 
-				frameData.commandBuffer.bindDescriptorSets(
+				framebuffer->data.commandBuffer.bindDescriptorSets(
 				  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 3, drawable.level3Descriptor, {});
 
-				frameData.commandBuffer.bindVertexBuffers(0, drawable.vertexBuffer, {0});
-				frameData.commandBuffer.draw(static_cast<uint32_t>(drawable.vertexCount), 1, 0, 0);
+				framebuffer->data.commandBuffer.bindVertexBuffers(0, drawable.vertexBuffer, {0});
+				framebuffer->data.commandBuffer.draw(static_cast<uint32_t>(drawable.vertexCount), 1, 0, 0);
 
 				++begin;
 			}
+
+			framebuffer->data.commandBuffer.endRenderPass();
+			framebuffer->data.commandBuffer.end();
+
+			const uint64_t baseState     = 0;
+			const uint64_t signaledState = 1;
+
+			vk::TimelineSemaphoreSubmitInfo timelineInfo{
+			  .signalSemaphoreValueCount = 1,
+			  .pSignalSemaphoreValues    = &signaledState,
+			};
+
+			vk::SubmitInfo submitInfo{
+			  .pNext                = &timelineInfo,
+			  .commandBufferCount   = 1,
+			  .pCommandBuffers      = &framebuffer->data.commandBuffer,
+			  .signalSemaphoreCount = 1,
+			  .pSignalSemaphores    = &framebuffer->data.renderSemaphore,
+			};
+			m_graphicsQueue.submit(submitInfo);
+
+			const vk::SemaphoreWaitInfo waitInfo{
+			  .semaphoreCount = 1,
+			  .pSemaphores    = &framebuffer->data.renderSemaphore,
+			  .pValues        = &baseState,
+			};
+
+			// Very wasteful, but easy and guarantees render order
+			MRG_VK_CHECK_HPP(framebuffer->device.waitSemaphores(waitInfo, UINT64_MAX),
+			                 "failed to wait for the framebuffer's wait semaphore!")
 		}
 
 		RendererSpecification spec;

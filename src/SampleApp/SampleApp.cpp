@@ -36,7 +36,7 @@ public:
 		});
 	}
 
-	void onUpdate(MRG::Timestep) { application->renderer->draw(m_renderables.begin(), m_renderables.end(), *mainCamera); }
+	void onUpdate(MRG::Timestep) { application->renderer->draw(m_renderables.begin(), m_renderables.end(), *mainCamera, m_framebuffer); }
 
 	void onEvent(MRG::Event& event) override
 	{

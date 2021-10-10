@@ -196,7 +196,45 @@ namespace MRG
 
 		fbData.vkHandle = m_device.createFramebuffer(fbInfo);
 
-		return createRef<Framebuffer>(m_device, std::move(fbData));
+		vk::CommandPoolCreateInfo cmdPoolInfo{
+		  .flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+		  .queueFamilyIndex = m_graphicsQueueIndex,
+		};
+		fbData.commandPool = m_device.createCommandPool(cmdPoolInfo);
+
+		// allocate main command buffer from created command pool
+		vk::CommandBufferAllocateInfo mainCmdBufferInfo{
+		  .commandPool        = fbData.commandPool,
+		  .level              = vk::CommandBufferLevel::ePrimary,
+		  .commandBufferCount = 1,
+		};
+		fbData.commandBuffer = m_device.allocateCommandBuffers(mainCmdBufferInfo)[0];
+
+		vk::SemaphoreTypeCreateInfo timelineCreateInfo{
+		  .semaphoreType = vk::SemaphoreType::eTimeline,
+		  .initialValue  = 0,
+		};
+		fbData.renderSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{.pNext = &timelineCreateInfo});
+
+		std::array<vk::DescriptorPoolSize, 1> sizes{{vk::DescriptorType::eUniformBuffer, 1}};
+		vk::DescriptorPoolCreateInfo poolInfo{
+		  .maxSets       = 1,
+		  .poolSizeCount = static_cast<uint32_t>(sizes.size()),
+		  .pPoolSizes    = sizes.data(),
+		};
+		fbData.descriptorPool = m_device.createDescriptorPool(poolInfo);
+
+		vk::DescriptorSetAllocateInfo allocInfo{
+		  .descriptorPool     = fbData.descriptorPool,
+		  .descriptorSetCount = 1,
+		  .pSetLayouts        = &m_level0DSL,
+		};
+		fbData.level0Descriptor = m_device.allocateDescriptorSets(allocInfo)[0];
+
+		fbData.timeDataBuffer =
+		  AllocatedBuffer{m_allocator, sizeof(TimeData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU};
+
+		return createRef<Framebuffer>(m_device, std::move(fbData), fbSpec.width, fbSpec.height);
 	}
 
 	void Renderer::beginFrame()
@@ -301,7 +339,7 @@ namespace MRG
 		vkb::InstanceBuilder instanceBuilder{};
 		const auto vkbInstance =
 		  instanceBuilder.set_app_name(spec.applicationName.c_str())
-		    .require_api_version(1, 1, 0)
+		    .require_api_version(1, 2, 0)
 #ifdef MRG_DEBUG
 		    .request_validation_layers()
 		    .set_debug_messenger_severity(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
