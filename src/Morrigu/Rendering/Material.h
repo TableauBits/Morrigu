@@ -5,6 +5,7 @@
 #ifndef MORRIGU_MATERIAL_H
 #define MORRIGU_MATERIAL_H
 
+#include "Rendering/Framebuffer.h"
 #include "Rendering/PipelineBuilder.h"
 #include "Rendering/RendererTypes.h"
 #include "Rendering/Shader.h"
@@ -211,6 +212,25 @@ namespace MRG
 			vk::DescriptorImageInfo imageBufferInfo{
 			  .sampler     = texture->sampler,
 			  .imageView   = texture->image.view,
+			  .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+			};
+			vk::WriteDescriptorSet textureUpdate = {
+			  .dstSet          = level2Descriptor,
+			  .dstBinding      = bindingSlot,
+			  .descriptorCount = 1,
+			  .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
+			  .pImageInfo      = &imageBufferInfo,
+			};
+			m_device.updateDescriptorSets(textureUpdate, {});
+		}
+
+		// Uses the color attachment of the framebuffer as a texture
+		void bindTexture(uint32_t bindingSlot, const Ref<Framebuffer>& framebuffer)
+		{
+			MRG_ENGINE_ASSERT(m_sampledImages.contains(bindingSlot), "Invalid binding slot!")
+			vk::DescriptorImageInfo imageBufferInfo{
+			  .sampler     = framebuffer->data.sampler,
+			  .imageView   = framebuffer->data.colorImage.view,
 			  .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
 			};
 			vk::WriteDescriptorSet textureUpdate = {

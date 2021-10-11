@@ -17,6 +17,10 @@ public:
 		mainCamera->setPerspective(90, 0.001f, 1000.f);
 		mainCamera->recalculateViewProjection();
 
+		basicCamera.aspectRatio = 16.f / 9.f;
+		basicCamera.setOrthgraphic(1, -1.f, 1.f);
+		basicCamera.recalculateViewProjection();
+
 		const auto shader   = createShader("TestShader.vert.spv", "TestShader.frag.spv");
 		const auto material = createMaterial<MRG::TexturedVertex>(shader);
 
@@ -24,33 +28,47 @@ public:
 		uploadMesh(circleMesh);
 		m_circle = createRenderObject(circleMesh, material);
 
-		m_renderables.emplace_back(m_circle->getRenderData());
+		m_fbDrawables.emplace_back(m_circle->getRenderData());
+
+		auto quadMesh = MRG::Utils::Meshes::quad<MRG::TexturedVertex>();
+		uploadMesh(quadMesh);
+		m_quad = createRenderObject(quadMesh, application->renderer->defaultTexturedMaterial);
+		m_quad->scale({16.f / 9.f, 1.f, 1.f});
+
+		m_basicDrawables.emplace_back(m_quad->getRenderData());
 
 		auto* materialEditor = new MaterialEditorLayer;
 		materialEditor->setMaterial(material);
 		application->pushLayer(materialEditor);
 
 		m_framebuffer = createFramebuffer({
-		  .width  = 600,
-		  .height = 300,
+		  .width  = 1280,
+		  .height = 720,
 		});
+
+		m_quad->bindTexture(1, m_framebuffer);
 	}
 
-	void onUpdate(MRG::Timestep) { application->renderer->draw(m_renderables.begin(), m_renderables.end(), *mainCamera, m_framebuffer); }
+	void onUpdate(MRG::Timestep) override
+	{
+		application->renderer->draw(m_fbDrawables.begin(), m_fbDrawables.end(), *mainCamera, m_framebuffer);
+		application->renderer->draw(m_basicDrawables.begin(), m_basicDrawables.end(), basicCamera);
+	}
 
 	void onEvent(MRG::Event& event) override
 	{
 		MRG::EventDispatcher dispatcher{event};
 
 		dispatcher.dispatch<MRG::WindowResizeEvent>(
-		  [this](MRG::WindowResizeEvent& resizeEvent) { return mainCamera->onResize(resizeEvent); });
+		  [this](MRG::WindowResizeEvent& resizeEvent) { return basicCamera.onResize(resizeEvent); });
 	}
 
 private:
-	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_circle{};
-	std::vector<MRG::RenderData> m_renderables;
+	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> m_circle{}, m_quad{};
+	std::vector<MRG::RenderData> m_fbDrawables, m_basicDrawables;
 	MRG::Ref<MRG::Framebuffer> m_framebuffer;
 	float m_lerpTValue = 0.f;
+	MRG::StandardCamera basicCamera{};
 };
 
 class SampleApp : public MRG::Application

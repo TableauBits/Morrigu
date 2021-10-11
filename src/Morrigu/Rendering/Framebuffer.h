@@ -13,6 +13,9 @@ namespace MRG
 	{
 		uint32_t width;
 		uint32_t height;
+
+		vk::Filter samplingFilter;
+		vk::SamplerAddressMode samplingAddressMode;
 	};
 
 	struct FramebufferData
@@ -30,7 +33,7 @@ namespace MRG
 		vk::CommandPool commandPool;
 		vk::CommandBuffer commandBuffer;
 
-		vk::Semaphore renderSemaphore{};
+		vk::Fence renderFence{};
 
 		vk::DescriptorPool descriptorPool{};
 		vk::DescriptorSet level0Descriptor{};

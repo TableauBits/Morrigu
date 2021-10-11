@@ -186,7 +186,7 @@ namespace MRG
 		vk::FramebufferCreateInfo fbInfo{
 		  // By locking the attachments of the framebuffer, we should guarantee compatibility
 		  // (https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/chap8.html#renderpass-compatibility)
-		  .renderPass      = m_renderPass,
+		  .renderPass      = m_fbRenderPass,
 		  .attachmentCount = static_cast<uint32_t>(attachments.size()),
 		  .pAttachments    = attachments.data(),
 		  .width           = fbSpec.width,
@@ -210,11 +210,7 @@ namespace MRG
 		};
 		fbData.commandBuffer = m_device.allocateCommandBuffers(mainCmdBufferInfo)[0];
 
-		vk::SemaphoreTypeCreateInfo timelineCreateInfo{
-		  .semaphoreType = vk::SemaphoreType::eTimeline,
-		  .initialValue  = 0,
-		};
-		fbData.renderSemaphore = m_device.createSemaphore(vk::SemaphoreCreateInfo{.pNext = &timelineCreateInfo});
+		fbData.renderFence = m_device.createFence(vk::FenceCreateInfo{});
 
 		std::array<vk::DescriptorPoolSize, 1> sizes{{vk::DescriptorType::eUniformBuffer, 1}};
 		vk::DescriptorPoolCreateInfo poolInfo{
@@ -233,6 +229,15 @@ namespace MRG
 
 		fbData.timeDataBuffer =
 		  AllocatedBuffer{m_allocator, sizeof(TimeData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU};
+
+		const vk::SamplerCreateInfo samplerInfo{
+		  .magFilter    = fbSpec.samplingFilter,
+		  .minFilter    = fbSpec.samplingFilter,
+		  .addressModeU = fbSpec.samplingAddressMode,
+		  .addressModeV = fbSpec.samplingAddressMode,
+		  .addressModeW = fbSpec.samplingAddressMode,
+		};
+		fbData.sampler = m_device.createSampler(samplerInfo);
 
 		return createRef<Framebuffer>(m_device, std::move(fbData), fbSpec.width, fbSpec.height);
 	}
@@ -339,7 +344,7 @@ namespace MRG
 		vkb::InstanceBuilder instanceBuilder{};
 		const auto vkbInstance =
 		  instanceBuilder.set_app_name(spec.applicationName.c_str())
-		    .require_api_version(1, 2, 0)
+		    .require_api_version(1, 1, 0)
 #ifdef MRG_DEBUG
 		    .request_validation_layers()
 		    .set_debug_messenger_severity(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
@@ -539,6 +544,9 @@ namespace MRG
 		};
 
 		m_renderPass = m_device.createRenderPass(renderPassInfo);
+
+		attachments[0].finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		m_fbRenderPass             = m_device.createRenderPass(renderPassInfo);
 	}
 
 	void Renderer::initFramebuffers()

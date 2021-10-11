@@ -8,8 +8,10 @@ namespace MRG
 
 	Framebuffer::~Framebuffer()
 	{
+		device.destroySampler(data.sampler);
+
 		device.destroyDescriptorPool(data.descriptorPool);
-		device.destroySemaphore(data.renderSemaphore);
+		device.destroyFence(data.renderFence);
 		device.destroyCommandPool(data.commandPool);
 	}
 }  // namespace MRG

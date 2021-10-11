@@ -184,7 +184,7 @@ namespace MRG
 			std::array<vk::ClearValue, 2> clearValues{colorClearValue, depthClearValue};
 
 			vk::RenderPassBeginInfo renderPassInfo{
-			  .renderPass  = m_renderPass,
+			  .renderPass  = m_fbRenderPass,
 			  .framebuffer = framebuffer->data.vkHandle,
 			  .renderArea =
 			    vk::Rect2D{
@@ -260,32 +260,16 @@ namespace MRG
 			framebuffer->data.commandBuffer.endRenderPass();
 			framebuffer->data.commandBuffer.end();
 
-			const uint64_t baseState     = 0;
-			const uint64_t signaledState = 1;
-
-			vk::TimelineSemaphoreSubmitInfo timelineInfo{
-			  .signalSemaphoreValueCount = 1,
-			  .pSignalSemaphoreValues    = &signaledState,
-			};
-
 			vk::SubmitInfo submitInfo{
-			  .pNext                = &timelineInfo,
-			  .commandBufferCount   = 1,
-			  .pCommandBuffers      = &framebuffer->data.commandBuffer,
-			  .signalSemaphoreCount = 1,
-			  .pSignalSemaphores    = &framebuffer->data.renderSemaphore,
+			  .commandBufferCount = 1,
+			  .pCommandBuffers    = &framebuffer->data.commandBuffer,
 			};
-			m_graphicsQueue.submit(submitInfo);
-
-			const vk::SemaphoreWaitInfo waitInfo{
-			  .semaphoreCount = 1,
-			  .pSemaphores    = &framebuffer->data.renderSemaphore,
-			  .pValues        = &baseState,
-			};
+			m_graphicsQueue.submit(submitInfo, framebuffer->data.renderFence);
 
 			// Very wasteful, but easy and guarantees render order
-			MRG_VK_CHECK_HPP(framebuffer->device.waitSemaphores(waitInfo, UINT64_MAX),
+			MRG_VK_CHECK_HPP(framebuffer->device.waitForFences(framebuffer->data.renderFence, VK_TRUE, UINT64_MAX),
 			                 "failed to wait for the framebuffer's wait semaphore!")
+			framebuffer->device.resetFences(framebuffer->data.renderFence);
 		}
 
 		RendererSpecification spec;
@@ -333,6 +317,7 @@ namespace MRG
 		std::uint32_t m_graphicsQueueIndex{};
 
 		vk::RenderPass m_renderPass{};
+		vk::RenderPass m_fbRenderPass{};
 		std::vector<vk::Framebuffer> m_framebuffers{};
 
 		vk::PipelineCache m_pipelineCache{};
