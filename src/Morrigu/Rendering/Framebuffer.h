@@ -7,12 +7,18 @@
 
 #include "Rendering/RendererTypes.h"
 
+#include <imgui.h>
+
+#include <array>
+
 namespace MRG
 {
 	struct FramebufferSpecification
 	{
 		uint32_t width;
 		uint32_t height;
+
+		std::array<float, 4> clearColor{0.f, 0.f, 0.f, 1.f};
 
 		vk::Filter samplingFilter;
 		vk::SamplerAddressMode samplingAddressMode;
@@ -44,7 +50,7 @@ namespace MRG
 	class Framebuffer
 	{
 	public:
-		Framebuffer(vk::Device deviceCopy, FramebufferData&& moveData, uint32_t initWidth, uint32_t initHeight);
+		Framebuffer(vk::Device deviceCopy, FramebufferData&& moveData, uint32_t initWidth, uint32_t initHeight, const std::array<float, 4>& clearColor);
 		Framebuffer(const Framebuffer&) = delete;
 		Framebuffer(Framebuffer&&)      = default;
 
@@ -53,9 +59,14 @@ namespace MRG
 
 		~Framebuffer();
 
+		[[nodiscard]] ImTextureID getImTexID();
+
 		vk::Device device;
 		FramebufferData data;
 		uint32_t width{}, height{};
+		std::array<float, 4> clearColor{};
+
+		ImTextureID imTexID{nullptr};
 	};
 }  // namespace MRG
 

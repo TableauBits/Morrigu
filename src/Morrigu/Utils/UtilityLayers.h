@@ -18,6 +18,8 @@ namespace MRG
 
 		Ref<Camera> getMainCamera() override;
 
+		void onEvent(MRG::Event& event) override;
+
 		template<Vertex VertexType>
 		void uploadMesh(Ref<Mesh<VertexType>>& mesh)
 		{

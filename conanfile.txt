@@ -2,7 +2,7 @@
 freetype/2.10.4
 glfw/3.3.2
 glm/0.9.9.8
-imgui-docking/2021-06-13@tableaubits/stable
+imgui-docking/2021-10-11@tableaubits/stable
 spdlog/1.8.5
 spirv-cross/20210115
 stb/20200203

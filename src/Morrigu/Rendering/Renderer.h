@@ -177,7 +177,7 @@ namespace MRG
 			framebuffer->data.commandBuffer.begin(beginInfo);
 
 			vk::ClearValue colorClearValue{};
-			colorClearValue.color = {std::array<float, 4>{clearColor.r, clearColor.g, clearColor.b}};
+			colorClearValue.color = {framebuffer->clearColor};
 			vk::ClearValue depthClearValue{};
 			depthClearValue.depthStencil.depth = 1.f;
 

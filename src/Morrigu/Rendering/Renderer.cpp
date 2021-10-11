@@ -239,7 +239,7 @@ namespace MRG
 		};
 		fbData.sampler = m_device.createSampler(samplerInfo);
 
-		return createRef<Framebuffer>(m_device, std::move(fbData), fbSpec.width, fbSpec.height);
+		return createRef<Framebuffer>(m_device, std::move(fbData), fbSpec.width, fbSpec.height, fbSpec.clearColor);
 	}
 
 	void Renderer::beginFrame()
@@ -334,7 +334,6 @@ namespace MRG
 
 		destroySwapchain();
 		initSwapchain();
-		initDefaultRenderPass();
 		initFramebuffers();
 	}
 
@@ -814,7 +813,6 @@ namespace MRG
 	{
 		if (!isInitalized) { return; }
 
-		m_device.destroyRenderPass(m_renderPass);
 		for (const auto& framebuffer : m_framebuffers) { m_device.destroyFramebuffer(framebuffer); }
 		m_device.destroySwapchainKHR(m_swapchain);
 		for (const auto& imageView : m_swapchainImageViews) { m_device.destroyImageView(imageView); }

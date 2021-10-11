@@ -18,7 +18,8 @@ public:
 		mainCamera->recalculateViewProjection();
 
 		basicCamera.aspectRatio = 16.f / 9.f;
-		basicCamera.setOrthgraphic(1, -1.f, 1.f);
+		basicCamera.position    = {0.f, 0.f, 1.f};
+		basicCamera.setPerspective(90, 0.001f, 1000.f);
 		basicCamera.recalculateViewProjection();
 
 		const auto shader   = createShader("TestShader.vert.spv", "TestShader.frag.spv");
@@ -34,6 +35,7 @@ public:
 		uploadMesh(quadMesh);
 		m_quad = createRenderObject(quadMesh, application->renderer->defaultTexturedMaterial);
 		m_quad->scale({16.f / 9.f, 1.f, 1.f});
+		m_quad->rotate({0.f, 1.f, 0.f}, glm::radians(45.f));
 
 		m_basicDrawables.emplace_back(m_quad->getRenderData());
 
@@ -42,8 +44,9 @@ public:
 		application->pushLayer(materialEditor);
 
 		m_framebuffer = createFramebuffer({
-		  .width  = 1280,
-		  .height = 720,
+		  .width      = 1280,
+		  .height     = 720,
+		  .clearColor = std::array<float, 4>{0.2f, 0.2f, 0.2f, 1.f},
 		});
 
 		m_quad->bindTexture(1, m_framebuffer);
@@ -55,12 +58,15 @@ public:
 		application->renderer->draw(m_basicDrawables.begin(), m_basicDrawables.end(), basicCamera);
 	}
 
-	void onEvent(MRG::Event& event) override
-	{
-		MRG::EventDispatcher dispatcher{event};
+	void onEvent(MRG::Event& event) override { MRG::StandardLayer::onEvent(event); }
 
-		dispatcher.dispatch<MRG::WindowResizeEvent>(
-		  [this](MRG::WindowResizeEvent& resizeEvent) { return basicCamera.onResize(resizeEvent); });
+	void onImGuiUpdate(MRG::Timestep) override
+	{
+		ImGui::Begin("Framebuffer viewer");
+
+		ImGui::Image(m_framebuffer->getImTexID(), {256, 144}, {0, 1}, {1, 0});
+
+		ImGui::End();
 	}
 
 private:
