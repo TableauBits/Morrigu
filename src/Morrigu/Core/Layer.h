@@ -31,8 +31,6 @@ namespace MRG
 		virtual void onImGuiUpdate(Timestep) {}
 		virtual void onEvent(Event&) {}
 
-		[[nodiscard]] virtual Ref<Camera> getMainCamera() = 0;
-
 		Application* application{nullptr};
 	};
 }  // namespace MRG

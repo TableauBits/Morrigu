@@ -16,8 +16,6 @@ namespace MRG
 	public:
 		StandardLayer();
 
-		Ref<Camera> getMainCamera() override;
-
 		void onEvent(MRG::Event& event) override;
 
 		template<Vertex VertexType>
@@ -56,7 +54,7 @@ namespace MRG
 			return application->renderer->createFrameBuffer(spec);
 		}
 
-		Ref<StandardCamera> mainCamera{};
+		StandardCamera mainCamera{};
 	};
 
 	// This layer is an orthographic pixel perfect layer
@@ -65,12 +63,10 @@ namespace MRG
 	public:
 		UILayer();
 
-		Ref<Camera> getMainCamera() override;
-
 		void onAttach() override;
 		void onEvent(MRG::Event& event) override;
 
-		Ref<PixelPerfectCamera> mainCamera{};
+		PixelPerfectCamera mainCamera{};
 	};
 }  // namespace MRG
 

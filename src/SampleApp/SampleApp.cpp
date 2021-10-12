@@ -12,15 +12,12 @@ class SampleLayer : public MRG::StandardLayer
 public:
 	void onAttach() override
 	{
-		mainCamera->aspectRatio = 16.f / 9.f;
-		mainCamera->position    = {0.f, 0.f, 1.f};
-		mainCamera->setPerspective(90, 0.001f, 1000.f);
-		mainCamera->recalculateViewProjection();
+		mainCamera.aspectRatio = 16.f / 9.f;
+		mainCamera.position    = {0.f, 0.f, 1.f};
+		mainCamera.setPerspective(90, 0.001f, 1000.f);
+		mainCamera.recalculateViewProjection();
 
-		basicCamera.aspectRatio = 16.f / 9.f;
-		basicCamera.position    = {0.f, 0.f, 1.f};
-		basicCamera.setPerspective(90, 0.001f, 1000.f);
-		basicCamera.recalculateViewProjection();
+		fbCamera = mainCamera;
 
 		const auto shader   = createShader("TestShader.vert.spv", "TestShader.frag.spv");
 		const auto material = createMaterial<MRG::TexturedVertex>(shader);
@@ -54,8 +51,8 @@ public:
 
 	void onUpdate(MRG::Timestep) override
 	{
-		application->renderer->draw(m_fbDrawables.begin(), m_fbDrawables.end(), *mainCamera, m_framebuffer);
-		application->renderer->draw(m_basicDrawables.begin(), m_basicDrawables.end(), basicCamera);
+		application->renderer->draw(m_fbDrawables.begin(), m_fbDrawables.end(), fbCamera, m_framebuffer);
+		application->renderer->draw(m_basicDrawables.begin(), m_basicDrawables.end(), mainCamera);
 	}
 
 	void onEvent(MRG::Event& event) override { MRG::StandardLayer::onEvent(event); }
@@ -74,7 +71,7 @@ private:
 	std::vector<MRG::RenderData> m_fbDrawables, m_basicDrawables;
 	MRG::Ref<MRG::Framebuffer> m_framebuffer;
 	float m_lerpTValue = 0.f;
-	MRG::StandardCamera basicCamera{};
+	MRG::StandardCamera fbCamera{};
 };
 
 class SampleApp : public MRG::Application

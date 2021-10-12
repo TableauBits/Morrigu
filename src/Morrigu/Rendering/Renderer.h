@@ -224,17 +224,16 @@ namespace MRG
 					                                            vk::Viewport{
 					                                              .x        = 0.f,
 					                                              .y        = 0.f,
-					                                              .width    = static_cast<float>(spec.windowWidth),
-					                                              .height   = static_cast<float>(spec.windowHeight),
+					                                              .width    = static_cast<float>(framebuffer->width),
+					                                              .height   = static_cast<float>(framebuffer->height),
 					                                              .minDepth = 0.f,
 					                                              .maxDepth = 1.f,
 					                                            });
-					framebuffer->data.commandBuffer.setScissor(
-					  0,
-					  vk::Rect2D{
-					    .offset{0, 0},
-					    .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
-					  });
+					framebuffer->data.commandBuffer.setScissor(0,
+					                                           vk::Rect2D{
+					                                             .offset{0, 0},
+					                                             .extent = {framebuffer->width, framebuffer->height},
+					                                           });
 					framebuffer->data.commandBuffer.bindDescriptorSets(
 					  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 2, drawable.level2Descriptor, {});
 					currentMaterial = drawable.materialPipeline;
