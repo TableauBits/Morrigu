@@ -57,6 +57,12 @@ public:
 
 	void onUpdate(MRG::Timestep) override
 	{
+		if ((m_fbSize.x > 0.f && m_fbSize.y >= 0.f) &&
+		    (m_fbSize.x != m_framebuffer->spec.width || m_fbSize.y != m_framebuffer->spec.height)) {
+			m_framebuffer->resize(static_cast<uint32_t>(m_fbSize.x), static_cast<uint32_t>(m_fbSize.y));
+			m_quad->bindTexture(1, m_framebuffer);
+		}
+
 		application->renderer->draw(m_fbDrawables.begin(), m_fbDrawables.end(), fbCamera, m_framebuffer);
 		application->renderer->draw(m_basicDrawables.begin(), m_basicDrawables.end(), mainCamera);
 	}
@@ -67,7 +73,8 @@ public:
 	{
 		ImGui::Begin("Framebuffer viewer");
 
-		ImGui::Image(m_framebuffer->getImTexID(), {1280, 720}, {0, 1}, {1, 0});
+		m_fbSize = ImGui::GetContentRegionAvail();
+		ImGui::Image(m_framebuffer->getImTexID(), m_fbSize, {0, 1}, {1, 0});
 
 		ImGui::End();
 	}
@@ -78,6 +85,8 @@ private:
 	MRG::Ref<MRG::Framebuffer> m_framebuffer;
 	float m_lerpTValue = 0.f;
 	MRG::StandardCamera fbCamera{};
+
+	ImVec2 m_fbSize{1280.f, 720.f};
 };
 
 class SampleApp : public MRG::Application

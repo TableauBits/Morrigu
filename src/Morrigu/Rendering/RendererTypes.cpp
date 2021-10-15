@@ -61,6 +61,8 @@ namespace MRG
 
 	AllocatedBuffer& AllocatedBuffer::operator=(AllocatedBuffer&& other)
 	{
+		if (allocator != nullptr) { vmaDestroyBuffer(allocator, vkHandle, allocation); }
+
 		allocator  = std::move(other.allocator);
 		vkHandle   = std::move(other.vkHandle);
 		allocation = std::move(other.allocation);
@@ -231,6 +233,11 @@ namespace MRG
 
 	AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other)
 	{
+		if (spec.allocator != nullptr) {
+			spec.device.destroyImageView(view);
+			vmaDestroyImage(spec.allocator, vkHandle, allocation);
+		}
+
 		spec       = std::move(other.spec);
 		allocation = std::move(other.allocation);
 		vkHandle   = std::move(other.vkHandle);

@@ -49,7 +49,9 @@ namespace MRG
 
 		~Framebuffer();
 
+		// Calls invalidate(), so every texture bind will have to be done again
 		void resize(uint32_t width, uint32_t height);
+		// Completely invalidates the framebuffer object, so ensure that you rebind everything properly, and discard any stored ImtexID
 		void invalidate();
 
 		[[nodiscard]] ImTextureID getImTexID();
@@ -78,9 +80,6 @@ namespace MRG
 		AllocatedBuffer timeDataBuffer{};
 
 	private:
-		void build();
-		void destroy();
-
 		ImTextureID m_imTexID{nullptr};
 		VulkanObjects m_objects;
 	};

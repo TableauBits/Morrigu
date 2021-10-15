@@ -7,35 +7,35 @@ namespace MRG
 	Framebuffer::Framebuffer(const FramebufferSpecification& specification, const VulkanObjects vkObjs)
 	    : spec{specification}, m_objects{vkObjs}
 	{
-		build();
+		invalidate();
+
+		const vk::SamplerCreateInfo samplerInfo{
+		  .magFilter    = spec.samplingFilter,
+		  .minFilter    = spec.samplingFilter,
+		  .addressModeU = spec.samplingAddressMode,
+		  .addressModeV = spec.samplingAddressMode,
+		  .addressModeW = spec.samplingAddressMode,
+		};
+		sampler = m_objects.device.createSampler(samplerInfo);
 	}
 
-	Framebuffer::~Framebuffer() { destroy(); }
+	Framebuffer::~Framebuffer()
+	{
+		m_objects.device.destroySampler(sampler);
+
+		m_objects.device.destroyDescriptorPool(descriptorPool);
+		m_objects.device.destroyFence(renderFence);
+		m_objects.device.destroyCommandPool(commandPool);
+	}
 
 	void Framebuffer::resize(uint32_t width, uint32_t height)
 	{
 		spec.width  = width;
 		spec.height = height;
-		destroy();
-		build();
+		invalidate();
 	}
 
 	void Framebuffer::invalidate()
-	{
-		destroy();
-		build();
-	}
-
-	ImTextureID Framebuffer::getImTexID()
-	{
-		if (m_imTexID == nullptr) {
-			m_imTexID = ImGui_ImplVulkan_AddTexture(sampler, colorImage.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		}
-
-		return m_imTexID;
-	}
-
-	void Framebuffer::build()
 	{
 		colorImage = AllocatedImage{AllocatedImageSpecification{
 		  .device        = m_objects.device,
@@ -155,21 +155,28 @@ namespace MRG
 		timeDataBuffer =
 		  AllocatedBuffer{m_objects.allocator, sizeof(TimeData), vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU};
 
-		const vk::SamplerCreateInfo samplerInfo{
-		  .magFilter    = spec.samplingFilter,
-		  .minFilter    = spec.samplingFilter,
-		  .addressModeU = spec.samplingAddressMode,
-		  .addressModeV = spec.samplingAddressMode,
-		  .addressModeW = spec.samplingAddressMode,
-		};
-		sampler = m_objects.device.createSampler(samplerInfo);
+		if (m_imTexID != nullptr) {
+			vk::DescriptorImageInfo descImage{
+			  .sampler     = sampler,
+			  .imageView   = colorImage.view,
+			  .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+			};
+			vk::WriteDescriptorSet dsWrite{
+			  .dstSet          = reinterpret_cast<VkDescriptorSet>(m_imTexID),
+			  .descriptorCount = 1,
+			  .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
+			  .pImageInfo      = &descImage,
+			};
+			m_objects.device.updateDescriptorSets(dsWrite, {});
+		}
 	}
-	void Framebuffer::destroy()
-	{
-		m_objects.device.destroySampler(sampler);
 
-		m_objects.device.destroyDescriptorPool(descriptorPool);
-		m_objects.device.destroyFence(renderFence);
-		m_objects.device.destroyCommandPool(commandPool);
+	ImTextureID Framebuffer::getImTexID()
+	{
+		if (m_imTexID == nullptr) {
+			m_imTexID = ImGui_ImplVulkan_AddTexture(sampler, colorImage.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+
+		return m_imTexID;
 	}
 }  // namespace MRG
