@@ -20,7 +20,7 @@ public:
 		mainCamera.setPerspective(90, 0.001f, 1000.f);
 		mainCamera.recalculateViewProjection();
 
-		fbCamera = mainCamera;
+		m_fbCamera = mainCamera;
 
 		const auto shader   = createShader("TestShader.vert.spv", "TestShader.frag.spv");
 		const auto material = createMaterial<MRG::TexturedVertex>(shader);
@@ -61,9 +61,12 @@ public:
 		    (m_fbSize.x != m_framebuffer->spec.width || m_fbSize.y != m_framebuffer->spec.height)) {
 			m_framebuffer->resize(static_cast<uint32_t>(m_fbSize.x), static_cast<uint32_t>(m_fbSize.y));
 			m_quad->bindTexture(1, m_framebuffer);
+
+			m_fbCamera.aspectRatio = m_fbSize.x / m_fbSize.y;
+			m_fbCamera.recalculateViewProjection();
 		}
 
-		application->renderer->draw(m_fbDrawables.begin(), m_fbDrawables.end(), fbCamera, m_framebuffer);
+		application->renderer->draw(m_fbDrawables.begin(), m_fbDrawables.end(), m_fbCamera, m_framebuffer);
 		application->renderer->draw(m_basicDrawables.begin(), m_basicDrawables.end(), mainCamera);
 	}
 
@@ -84,7 +87,7 @@ private:
 	std::vector<MRG::RenderData> m_fbDrawables, m_basicDrawables;
 	MRG::Ref<MRG::Framebuffer> m_framebuffer;
 	float m_lerpTValue = 0.f;
-	MRG::StandardCamera fbCamera{};
+	MRG::StandardCamera m_fbCamera{};
 
 	ImVec2 m_fbSize{1280.f, 720.f};
 };

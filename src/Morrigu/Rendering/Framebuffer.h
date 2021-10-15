@@ -49,9 +49,11 @@ namespace MRG
 
 		~Framebuffer();
 
-		// Calls invalidate(), so every texture bind will have to be done again
+		// Calls invalidate(), so every texture bind will have to be done again, and this should be called BEFORE any rendering work done
+		// using this framebuffer
 		void resize(uint32_t width, uint32_t height);
-		// Completely invalidates the framebuffer object, so ensure that you rebind everything properly, and discard any stored ImtexID
+		// Completely invalidates the framebuffer object, and then build it up again using the internal specification, so ensure that you
+		// rebind everything properly. If you need to call this function, make sure to do so BEFORE using the framebuffer to draw.
 		void invalidate();
 
 		[[nodiscard]] ImTextureID getImTexID();

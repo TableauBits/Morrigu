@@ -37,6 +37,11 @@ namespace MRG
 
 	void Framebuffer::invalidate()
 	{
+		if (descriptorPool != vk::DescriptorPool{}) { m_objects.device.destroyDescriptorPool(descriptorPool); }
+		if (renderFence != vk::Fence{}) { m_objects.device.destroyFence(renderFence); }
+		if (commandPool != vk::CommandPool{}) { m_objects.device.destroyCommandPool(commandPool); }
+		if (vkHandle != vk::Framebuffer{}) { m_objects.device.destroyFramebuffer(vkHandle); }
+
 		colorImage = AllocatedImage{AllocatedImageSpecification{
 		  .device        = m_objects.device,
 		  .graphicsQueue = m_objects.graphicsQueue,
