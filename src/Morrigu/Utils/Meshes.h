@@ -18,9 +18,9 @@ namespace MRG::Utils::Meshes
 	template<Vertex VertexType>
 	Ref<Mesh<VertexType>> quad();
 	template<Vertex VertexType>
-	Ref<Mesh<VertexType>> circle()
+	Ref<Mesh<VertexType>> disk()
 	{
-		return loadMeshFromFile<VertexType>("default/circle.obj");
+		return loadMeshFromFile<VertexType>("default/disk.obj");
 	}
 	template<Vertex VertexType>
 	Ref<Mesh<VertexType>> cube()

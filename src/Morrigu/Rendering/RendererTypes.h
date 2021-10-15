@@ -6,6 +6,7 @@
 #define MORRIGU_RENDERERTYPES_H
 
 #include "Core/Core.h"
+#include "Utils/GLMIncludeHelper.h"
 #include "Utils/VMAIncludeHelper.h"
 
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
@@ -15,6 +16,11 @@
 
 namespace MRG
 {
+	struct TimeData
+	{
+		glm::vec4 time;
+	};
+
 	struct UploadContext
 	{
 		vk::Fence uploadFence;

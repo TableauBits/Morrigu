@@ -30,11 +30,6 @@ namespace MRG
 		vk::PresentModeKHR preferredPresentMode;
 	};
 
-	struct TimeData
-	{
-		glm::vec4 time;
-	};
-
 	struct FrameData
 	{
 		vk::Semaphore presentSemaphore, renderSemaphore;
@@ -170,14 +165,14 @@ namespace MRG
 
 		void draw(RDIterator auto begin, RDIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
 		{
-			framebuffer->data.commandBuffer.reset();
+			framebuffer->commandBuffer.reset();
 			vk::CommandBufferBeginInfo beginInfo{
 			  .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
 			};
-			framebuffer->data.commandBuffer.begin(beginInfo);
+			framebuffer->commandBuffer.begin(beginInfo);
 
 			vk::ClearValue colorClearValue{};
-			colorClearValue.color = {framebuffer->clearColor};
+			colorClearValue.color = {framebuffer->spec.clearColor};
 			vk::ClearValue depthClearValue{};
 			depthClearValue.depthStencil.depth = 1.f;
 
@@ -185,25 +180,25 @@ namespace MRG
 
 			vk::RenderPassBeginInfo renderPassInfo{
 			  .renderPass  = m_fbRenderPass,
-			  .framebuffer = framebuffer->data.vkHandle,
+			  .framebuffer = framebuffer->vkHandle,
 			  .renderArea =
 			    vk::Rect2D{
 			      .offset = {0, 0},
-			      .extent = {framebuffer->width, framebuffer->height},
+			      .extent = {framebuffer->spec.width, framebuffer->spec.height},
 			    },
 			  .clearValueCount = static_cast<uint32_t>(clearValues.size()),
 			  .pClearValues    = clearValues.data(),
 			};
-			framebuffer->data.commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+			framebuffer->commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
 			TimeData timeData{
 			  // Shamelessly stolen from https://docs.unity3d.com/Manual/SL-UnityShaderVariables.html
 			  .time = {elapsedTime / 20.f, elapsedTime, elapsedTime * 2.f, elapsedTime * 3.f},
 			};
 			void* data;
-			vmaMapMemory(m_allocator, framebuffer->data.timeDataBuffer.allocation, &data);
+			vmaMapMemory(m_allocator, framebuffer->timeDataBuffer.allocation, &data);
 			memcpy(data, &timeData, sizeof(TimeData));
-			vmaUnmapMemory(m_allocator, framebuffer->data.timeDataBuffer.allocation);
+			vmaUnmapMemory(m_allocator, framebuffer->timeDataBuffer.allocation);
 
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
@@ -211,30 +206,30 @@ namespace MRG
 				const auto drawable = *begin;
 				if (!(*drawable.isVisible)) { continue; }
 				if (isFirst) {
-					framebuffer->data.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-					                                                   drawable.materialPipelineLayout,
-					                                                   0,
-					                                                   {framebuffer->data.level0Descriptor, m_level1Descriptor},
-					                                                   {});
+					framebuffer->commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+					                                              drawable.materialPipelineLayout,
+					                                              0,
+					                                              {framebuffer->level0Descriptor, m_level1Descriptor},
+					                                              {});
 					isFirst = false;
 				}
 				if (currentMaterial != drawable.materialPipeline) {
-					framebuffer->data.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable.materialPipeline);
-					framebuffer->data.commandBuffer.setViewport(0,
-					                                            vk::Viewport{
-					                                              .x        = 0.f,
-					                                              .y        = 0.f,
-					                                              .width    = static_cast<float>(framebuffer->width),
-					                                              .height   = static_cast<float>(framebuffer->height),
-					                                              .minDepth = 0.f,
-					                                              .maxDepth = 1.f,
-					                                            });
-					framebuffer->data.commandBuffer.setScissor(0,
-					                                           vk::Rect2D{
-					                                             .offset{0, 0},
-					                                             .extent = {framebuffer->width, framebuffer->height},
-					                                           });
-					framebuffer->data.commandBuffer.bindDescriptorSets(
+					framebuffer->commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable.materialPipeline);
+					framebuffer->commandBuffer.setViewport(0,
+					                                       vk::Viewport{
+					                                         .x        = 0.f,
+					                                         .y        = 0.f,
+					                                         .width    = static_cast<float>(framebuffer->spec.width),
+					                                         .height   = static_cast<float>(framebuffer->spec.height),
+					                                         .minDepth = 0.f,
+					                                         .maxDepth = 1.f,
+					                                       });
+					framebuffer->commandBuffer.setScissor(0,
+					                                      vk::Rect2D{
+					                                        .offset{0, 0},
+					                                        .extent = {framebuffer->spec.width, framebuffer->spec.height},
+					                                      });
+					framebuffer->commandBuffer.bindDescriptorSets(
 					  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 2, drawable.level2Descriptor, {});
 					currentMaterial = drawable.materialPipeline;
 				}
@@ -244,31 +239,31 @@ namespace MRG
 				  .projectionMatrix     = camera.getProjection(),
 				  .viewProjectionMatrix = camera.getViewProjection(),
 				};
-				framebuffer->data.commandBuffer.pushConstants(
+				framebuffer->commandBuffer.pushConstants(
 				  drawable.materialPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
 
-				framebuffer->data.commandBuffer.bindDescriptorSets(
+				framebuffer->commandBuffer.bindDescriptorSets(
 				  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 3, drawable.level3Descriptor, {});
 
-				framebuffer->data.commandBuffer.bindVertexBuffers(0, drawable.vertexBuffer, {0});
-				framebuffer->data.commandBuffer.draw(static_cast<uint32_t>(drawable.vertexCount), 1, 0, 0);
+				framebuffer->commandBuffer.bindVertexBuffers(0, drawable.vertexBuffer, {0});
+				framebuffer->commandBuffer.draw(static_cast<uint32_t>(drawable.vertexCount), 1, 0, 0);
 
 				++begin;
 			}
 
-			framebuffer->data.commandBuffer.endRenderPass();
-			framebuffer->data.commandBuffer.end();
+			framebuffer->commandBuffer.endRenderPass();
+			framebuffer->commandBuffer.end();
 
 			vk::SubmitInfo submitInfo{
 			  .commandBufferCount = 1,
-			  .pCommandBuffers    = &framebuffer->data.commandBuffer,
+			  .pCommandBuffers    = &framebuffer->commandBuffer,
 			};
-			m_graphicsQueue.submit(submitInfo, framebuffer->data.renderFence);
+			m_graphicsQueue.submit(submitInfo, framebuffer->renderFence);
 
 			// Very wasteful, but easy and guarantees render order
-			MRG_VK_CHECK_HPP(framebuffer->device.waitForFences(framebuffer->data.renderFence, VK_TRUE, UINT64_MAX),
+			MRG_VK_CHECK_HPP(framebuffer->getVkDevice().waitForFences(framebuffer->renderFence, VK_TRUE, UINT64_MAX),
 			                 "failed to wait for the framebuffer's wait semaphore!")
-			framebuffer->device.resetFences(framebuffer->data.renderFence);
+			framebuffer->getVkDevice().resetFences(framebuffer->renderFence);
 		}
 
 		RendererSpecification spec;

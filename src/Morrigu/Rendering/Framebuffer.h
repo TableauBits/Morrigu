@@ -24,8 +24,39 @@ namespace MRG
 		vk::SamplerAddressMode samplingAddressMode;
 	};
 
-	struct FramebufferData
+	class Framebuffer
 	{
+	public:
+		struct VulkanObjects
+		{
+			vk::Device device;
+			vk::Queue graphicsQueue;
+			UploadContext uploadContext;
+			VmaAllocator allocator;
+			vk::Format swapchainFormat;
+			vk::Format depthImageFormat;
+			vk::RenderPass renderPass;
+			uint32_t graphicsQueueIndex;
+			vk::DescriptorSetLayout level0DSL;
+		};
+
+		Framebuffer(const FramebufferSpecification& specification, const VulkanObjects vkObjs);
+		Framebuffer(const Framebuffer&) = delete;
+		Framebuffer(Framebuffer&&)      = default;
+
+		Framebuffer& operator=(const Framebuffer&) = delete;
+		Framebuffer& operator=(Framebuffer&&) = default;
+
+		~Framebuffer();
+
+		void resize(uint32_t width, uint32_t height);
+		void invalidate();
+
+		[[nodiscard]] ImTextureID getImTexID();
+		[[nodiscard]] vk::Device getVkDevice() const { return m_objects.device; }
+
+		FramebufferSpecification spec;
+
 		// Color attachment
 		AllocatedImage colorImage{};
 
@@ -45,28 +76,13 @@ namespace MRG
 		vk::DescriptorSet level0Descriptor{};
 
 		AllocatedBuffer timeDataBuffer{};
-	};
 
-	class Framebuffer
-	{
-	public:
-		Framebuffer(vk::Device deviceCopy, FramebufferData&& moveData, uint32_t initWidth, uint32_t initHeight, const std::array<float, 4>& clearColor);
-		Framebuffer(const Framebuffer&) = delete;
-		Framebuffer(Framebuffer&&)      = default;
+	private:
+		void build();
+		void destroy();
 
-		Framebuffer& operator=(const Framebuffer&) = delete;
-		Framebuffer& operator=(Framebuffer&&) = default;
-
-		~Framebuffer();
-
-		[[nodiscard]] ImTextureID getImTexID();
-
-		vk::Device device;
-		FramebufferData data;
-		uint32_t width{}, height{};
-		std::array<float, 4> clearColor{};
-
-		ImTextureID imTexID{nullptr};
+		ImTextureID m_imTexID{nullptr};
+		VulkanObjects m_objects;
 	};
 }  // namespace MRG
 
