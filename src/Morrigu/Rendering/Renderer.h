@@ -289,7 +289,7 @@ namespace MRG
 	private:
 		int m_frameNumber{0};
 
-		static const constexpr int FRAMES_IN_FLIGHT = 3;
+		static const constexpr int FRAMES_IN_FLIGHT = 1;
 		std::array<FrameData, FRAMES_IN_FLIGHT> m_framesData{};
 		[[nodiscard]] FrameData& getCurrentFrameData() { return m_framesData[static_cast<std::size_t>(m_frameNumber % FRAMES_IN_FLIGHT)]; }
 
