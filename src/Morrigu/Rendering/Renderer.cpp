@@ -301,8 +301,9 @@ namespace MRG
 		m_swapchainImages        = std::vector<vk::Image>(rawImages.begin(), rawImages.end());
 		m_swapchainImageViews    = std::vector<vk::ImageView>(rawImageViews.begin(), rawImageViews.end());
 
-		m_depthImage.spec.device = m_device;
-		m_depthImage.spec.format = vk::Format::eD32Sfloat;
+		m_depthImage.spec.allocator = m_allocator;
+		m_depthImage.spec.device    = m_device;
+		m_depthImage.spec.format    = vk::Format::eD32Sfloat;
 		vk::Extent3D depthImageExtent{
 		  .width  = static_cast<uint32_t>(spec.windowWidth),
 		  .height = static_cast<uint32_t>(spec.windowHeight),

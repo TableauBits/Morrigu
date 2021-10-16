@@ -55,8 +55,9 @@ namespace MRG
 
 		AllocatedImage tempDepthImage{};
 
-		tempDepthImage.spec.device = m_objects.device;
-		tempDepthImage.spec.format = m_objects.depthImageFormat;
+		tempDepthImage.spec.allocator = m_objects.allocator;
+		tempDepthImage.spec.device    = m_objects.device;
+		tempDepthImage.spec.format    = m_objects.depthImageFormat;
 		vk::Extent3D depthImageExtent{
 		  .width  = spec.width,
 		  .height = spec.height,
