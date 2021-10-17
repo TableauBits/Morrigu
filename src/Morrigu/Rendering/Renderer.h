@@ -97,7 +97,7 @@ namespace MRG
 
 		[[nodiscard]] Ref<Framebuffer> createFrameBuffer(const FramebufferSpecification& fbSpec);
 
-		void draw(RDIterator auto begin, RDIterator auto end, const Camera& camera)
+		void draw(ROIterator auto begin, ROIterator auto end, const Camera& camera)
 		{
 			const auto& frameData = getCurrentFrameData();
 
@@ -113,7 +113,7 @@ namespace MRG
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
 			while (begin != end) {
-				const auto drawable = *begin;
+				const auto drawable = (*begin)->getRenderData();
 				if (!(*drawable.isVisible)) { continue; }
 				if (isFirst) {
 					frameData.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
@@ -163,7 +163,7 @@ namespace MRG
 			}
 		}
 
-		void draw(RDIterator auto begin, RDIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
+		void draw(ROIterator auto begin, ROIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
 		{
 			framebuffer->commandBuffer.reset();
 			vk::CommandBufferBeginInfo beginInfo{
@@ -203,7 +203,7 @@ namespace MRG
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
 			while (begin != end) {
-				const auto drawable = *begin;
+				const auto drawable = (*begin)->getRenderData();
 				if (!(*drawable.isVisible)) { continue; }
 				if (isFirst) {
 					framebuffer->commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,

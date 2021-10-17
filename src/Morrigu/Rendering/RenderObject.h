@@ -33,10 +33,10 @@ namespace MRG
 
 	// clang-format off
 	template<typename Iterator>
-	concept RDIterator =
+	concept ROIterator =
 		std::input_iterator<Iterator> &&
 		requires(Iterator it) {
-			{(*it)} -> std::convertible_to<RenderData>;
+			{(*it)->getRenderData()} -> std::convertible_to<RenderData>;
 		}
 	;
 	// clang-format on

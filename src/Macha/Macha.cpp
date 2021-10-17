@@ -15,22 +15,39 @@ class MachaLayer : public MRG::StandardLayer
 public:
 	void onAttach() override
 	{
+		mainCamera.aspectRatio = m_viewportSize.x / m_viewportSize.y;
+		mainCamera.setPerspective(70.f, 0.001f, 1000.f);
+		mainCamera.recalculateViewProjection();
+
 		m_viewport = createFramebuffer(MRG::FramebufferSpecification{
 		  .width               = 1280,
 		  .height              = 720,
 		  .samplingFilter      = vk::Filter::eLinear,
 		  .samplingAddressMode = vk::SamplerAddressMode::eClampToEdge,
 		});
+
+		auto mesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
+		uploadMesh(mesh);
+		const auto torus = createRenderObject(mesh, application->renderer->defaultTexturedMaterial);
+		torus->translate({0.f, 0.f, -5.f});
+		m_sceneDrawables.emplace_back(torus);
 	}
 
-	void onUpdate(MRG::Timestep) override
+	void onUpdate(MRG::Timestep ts) override
 	{
 		if ((m_viewportSize.x > 0 && m_viewportSize.y > 0) &&
 		    (m_viewportSize.x != m_viewport->spec.width || m_viewportSize.y != m_viewport->spec.height)) {
 			m_viewport->resize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
+
+			mainCamera.aspectRatio = m_viewportSize.x / m_viewportSize.y;
+			mainCamera.recalculateViewProjection();
 		}
 
-		application->renderer->draw(m_sceneDrawData.begin(), m_sceneDrawData.end(), mainCamera, m_viewport);
+		m_sceneDrawables[0]->rotate({1.f, 0.f, 0.f}, ts * glm::radians(15.f));
+		m_sceneDrawables[0]->rotate({0.f, 1.f, 0.f}, ts * glm::radians(15.f));
+		m_sceneDrawables[0]->rotate({0.f, 0.f, 1.f}, ts * glm::radians(-15.f));
+
+		application->renderer->draw(m_sceneDrawables.begin(), m_sceneDrawables.end(), mainCamera, m_viewport);
 	}
 
 	void onEvent(MRG::Event&) override {}
@@ -92,7 +109,7 @@ private:
 	ImVec2 m_viewportSize{1280.f, 720.f};
 	MRG::Ref<MRG::Framebuffer> m_viewport;
 
-	std::vector<MRG::RenderData> m_sceneDrawData{};
+	std::vector<MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>>> m_sceneDrawables{};
 };
 
 class SampleApp : public MRG::Application
