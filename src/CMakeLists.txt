@@ -52,47 +52,47 @@ set_property(TARGET Morrigu PROPERTY CXX_STANDARD 20)
 set_property(TARGET Morrigu PROPERTY CXX_STANDARD_REQUIRED ON)
 set_project_warnings(Morrigu)
 
-include(SampleApp/CMakeLists.txt)
+include(Macha/CMakeLists.txt)
 
 add_executable(
-	SampleApp
-	${SA_SOURCES}
+	Macha
+	${MC_SOURCES}
 )
 
 target_link_libraries(
-	SampleApp
+	Macha
 	PRIVATE
 	Morrigu
 )
 
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SampleApp)
-set_property(TARGET SampleApp PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtime)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Macha)
+set_property(TARGET Macha PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/runtime)
 
 include(Shaders/CMakeLists.txt)
 
 add_custom_command(
-	TARGET SampleApp
+	TARGET Macha
 	POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Meshes ${CMAKE_SOURCE_DIR}/runtime/assets/meshes
 )
 
 add_custom_command(
-	TARGET SampleApp
+	TARGET Macha
 	POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Textures ${CMAKE_SOURCE_DIR}/runtime/assets/textures
 )
 
 add_custom_command(
-	TARGET SampleApp
+	TARGET Macha
 	POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Fonts ${CMAKE_SOURCE_DIR}/runtime/assets/fonts
 )
 
 add_dependencies(
-	SampleApp
+	Macha
 	Shaders
 )
 
-set_property(TARGET SampleApp PROPERTY CXX_STANDARD 20)
-set_property(TARGET SampleApp PROPERTY CXX_STANDARD_REQUIRED ON)
-set_project_warnings(SampleApp)
+set_property(TARGET Macha PROPERTY CXX_STANDARD 20)
+set_property(TARGET Macha PROPERTY CXX_STANDARD_REQUIRED ON)
+set_project_warnings(Macha)

@@ -1,8 +1,8 @@
 set(
-		SA_SOURCES
+		MC_SOURCES
 
 		# Main file
-		${CMAKE_CURRENT_LIST_DIR}/SampleApp.cpp
+		${CMAKE_CURRENT_LIST_DIR}/Macha.cpp
 
 		# Material Editor
 		${CMAKE_CURRENT_LIST_DIR}/MaterialEditorLayer.h

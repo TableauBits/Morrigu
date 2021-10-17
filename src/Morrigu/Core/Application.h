@@ -38,6 +38,8 @@ namespace MRG
 
 		void setWindowTitle(const char* title) const;
 
+		void close();
+
 	private:
 		LayerStack m_layers;
 		ApplicationSpecification m_specification;
