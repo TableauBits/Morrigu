@@ -6,14 +6,6 @@
 
 namespace MRG
 {
-	StandardLayer::StandardLayer() : mainCamera{StandardCamera{}} {}
-	void StandardLayer::onEvent(MRG::Event& event)
-	{
-		MRG::EventDispatcher dispatcher{event};
-		dispatcher.dispatch<MRG::WindowResizeEvent>(
-		  [this](MRG::WindowResizeEvent& resizeEvent) { return mainCamera.onResize(resizeEvent); });
-	}
-
 	UILayer::UILayer() : mainCamera{PixelPerfectCamera{}} {}
 
 	void UILayer::onAttach()

@@ -4,6 +4,8 @@
 
 #include "MaterialEditorLayer.h"
 
+#include "Viewport.h"
+
 #include <Morrigu.h>
 #include <imgui.h>
 
@@ -15,42 +17,27 @@ class MachaLayer : public MRG::StandardLayer
 public:
 	void onAttach() override
 	{
-		mainCamera.aspectRatio = m_viewportSize.x / m_viewportSize.y;
-		mainCamera.setPerspective(70.f, 0.001f, 1000.f);
-		mainCamera.recalculateViewProjection();
-
-		m_viewport = createFramebuffer(MRG::FramebufferSpecification{
-		  .width               = 1280,
-		  .height              = 720,
-		  .samplingFilter      = vk::Filter::eLinear,
-		  .samplingAddressMode = vk::SamplerAddressMode::eClampToEdge,
-		});
+		m_viewport = MRG::createRef<Viewport>(application, ImVec2{1280.f, 720.f});
 
 		auto mesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
 		uploadMesh(mesh);
 		const auto torus = createRenderObject(mesh, application->renderer->defaultTexturedMaterial);
-		torus->translate({0.f, 0.f, -5.f});
 		m_sceneDrawables.emplace_back(torus);
+
+		ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 	}
 
 	void onUpdate(MRG::Timestep ts) override
 	{
-		if ((m_viewportSize.x > 0 && m_viewportSize.y > 0) &&
-		    (m_viewportSize.x != m_viewport->spec.width || m_viewportSize.y != m_viewport->spec.height)) {
-			m_viewport->resize(static_cast<uint32_t>(m_viewportSize.x), static_cast<uint32_t>(m_viewportSize.y));
-
-			mainCamera.aspectRatio = m_viewportSize.x / m_viewportSize.y;
-			mainCamera.recalculateViewProjection();
-		}
-
 		m_sceneDrawables[0]->rotate({1.f, 0.f, 0.f}, ts * glm::radians(15.f));
 		m_sceneDrawables[0]->rotate({0.f, 1.f, 0.f}, ts * glm::radians(15.f));
 		m_sceneDrawables[0]->rotate({0.f, 0.f, 1.f}, ts * glm::radians(-15.f));
 
-		application->renderer->draw(m_sceneDrawables.begin(), m_sceneDrawables.end(), mainCamera, m_viewport);
+		// Update viewport
+		m_viewport->onUpdate(m_sceneDrawables, ts);
 	}
 
-	void onEvent(MRG::Event&) override {}
+	void onEvent(MRG::Event& event) override { m_viewport->onEvent(event); }
 
 	void onImGuiUpdate(MRG::Timestep ts) override
 	{
@@ -87,13 +74,7 @@ public:
 		}
 
 		// Render viewport
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.f, 0.f});
-		if (ImGui::Begin("Viewport")) {
-			m_viewportSize = ImGui::GetContentRegionAvail();
-			ImGui::Image(m_viewport->getImTexID(), m_viewportSize, {1, 0}, {0, 1});
-		}
-		ImGui::End();  // Viewport
-		ImGui::PopStyleVar();
+		m_viewport->onImGuiUpdate(ts);
 
 		// Debug window
 		if (ImGui::Begin("Debug window")) {
@@ -106,9 +87,7 @@ public:
 	}
 
 private:
-	ImVec2 m_viewportSize{1280.f, 720.f};
-	MRG::Ref<MRG::Framebuffer> m_viewport;
-
+	MRG::Ref<Viewport> m_viewport;
 	std::vector<MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>>> m_sceneDrawables{};
 };
 

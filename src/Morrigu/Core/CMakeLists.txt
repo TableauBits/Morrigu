@@ -27,6 +27,10 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/LayerStack.h
 		${CMAKE_CURRENT_LIST_DIR}/LayerStack.cpp
 
+		# Input functions
+		${CMAKE_CURRENT_LIST_DIR}/Input.h
+		${CMAKE_CURRENT_LIST_DIR}/Input.cpp
+
 		# Timestep class
 		${CMAKE_CURRENT_LIST_DIR}/Timestep.h
 )

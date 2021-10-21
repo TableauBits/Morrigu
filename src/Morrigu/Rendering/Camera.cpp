@@ -36,6 +36,10 @@ namespace MRG
 
 	glm::quat StandardCamera::calculateOrientation() const { return glm::quat{glm::vec3{-pitch, -yaw, 0.f}}; }
 
+	glm::vec3 StandardCamera::getForwardVector() const { return glm::rotate(calculateOrientation(), glm::vec3(0.f, 0.f, -1.f)); }
+	glm::vec3 StandardCamera::getRightVector() const { return glm::rotate(calculateOrientation(), glm::vec3(1.f, 0.f, 0.f)); }
+	glm::vec3 StandardCamera::getUpVector() const { return glm::rotate(calculateOrientation(), glm::vec3(0.f, 1.f, 0.f)); }
+
 	void StandardCamera::recalculateProjection()
 	{
 		switch (projectionType) {

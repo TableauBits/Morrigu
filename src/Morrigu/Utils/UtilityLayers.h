@@ -14,10 +14,6 @@ namespace MRG
 	class StandardLayer : public Layer
 	{
 	public:
-		StandardLayer();
-
-		void onEvent(MRG::Event& event) override;
-
 		template<Vertex VertexType>
 		void uploadMesh(Ref<Mesh<VertexType>>& mesh)
 		{
@@ -53,8 +49,6 @@ namespace MRG
 		{
 			return application->renderer->createFrameBuffer(spec);
 		}
-
-		StandardCamera mainCamera{};
 	};
 
 	// This layer is an orthographic pixel perfect layer

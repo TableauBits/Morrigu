@@ -21,4 +21,6 @@
 #include "Utils/Meshes.h"
 #include "Utils/UtilityLayers.h"
 
+#include "Core/Input.h"
+
 #endif  // MORRIGU_MORRIGU_H

@@ -52,6 +52,9 @@ namespace MRG
 		void recalculateView() override;
 		void recalculateViewProjection() override;
 		[[nodiscard]] glm::quat calculateOrientation() const;
+		[[nodiscard]] glm::vec3 getForwardVector() const;
+		[[nodiscard]] glm::vec3 getRightVector() const;
+		[[nodiscard]] glm::vec3 getUpVector() const;
 
 		ProjectionType projectionType = ProjectionType::Perspective;
 
