@@ -6,6 +6,7 @@
 
 #include "Viewport.h"
 
+#include <ImGuizmo.h>
 #include <Morrigu.h>
 #include <imgui.h>
 
@@ -24,15 +25,13 @@ public:
 		const auto torus = createRenderObject(mesh, application->renderer->defaultTexturedMaterial);
 		m_sceneDrawables.emplace_back(torus);
 
+		m_viewport->selectedEntity = torus;
+
 		ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 	}
 
 	void onUpdate(MRG::Timestep ts) override
 	{
-		m_sceneDrawables[0]->rotate({1.f, 0.f, 0.f}, ts * glm::radians(15.f));
-		m_sceneDrawables[0]->rotate({0.f, 1.f, 0.f}, ts * glm::radians(15.f));
-		m_sceneDrawables[0]->rotate({0.f, 0.f, 1.f}, ts * glm::radians(-15.f));
-
 		// Update viewport
 		m_viewport->onUpdate(m_sceneDrawables, ts);
 	}

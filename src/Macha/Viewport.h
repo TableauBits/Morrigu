@@ -8,6 +8,8 @@
 #include <Morrigu.h>
 #include <imgui.h>
 
+#include <ImGuizmo.h>
+
 class Viewport
 {
 public:
@@ -17,7 +19,11 @@ public:
 	void onImGuiUpdate(MRG::Timestep ts);
 	bool onEvent(MRG::Event& event);
 
+	float moveSpeed{2.f};
 	MRG::StandardCamera camera{};
+
+	ImGuizmo::OPERATION guizmoType{ImGuizmo::OPERATION::TRANSLATE};
+	MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>> selectedEntity{};
 
 private:
 	bool onKeyPressed(MRG::KeyPressedEvent& keyPress);
@@ -42,7 +48,7 @@ private:
 	glm::vec2 m_lastMousePos{};
 	glm::vec2 m_currentMousePos{};
 	glm::vec3 m_focalPoint{};
-	float m_distance{5.f};
+	float m_distance{3.f};
 };
 
 #endif

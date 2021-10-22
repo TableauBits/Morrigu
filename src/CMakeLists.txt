@@ -63,6 +63,7 @@ target_link_libraries(
 	Macha
 	PRIVATE
 	Morrigu
+	CONAN_PKG::imguizmo
 )
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Macha)

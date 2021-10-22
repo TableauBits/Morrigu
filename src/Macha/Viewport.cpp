@@ -31,7 +31,7 @@ void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::RenderObject<MRG::Textur
 	}
 
 	// Input
-	if (m_isFocused) {
+	if (m_isFocused && !(ImGuizmo::IsOver() || ImGuizmo::IsUsing())) {
 		// Mouse input
 		if (ImGui::IsKeyDown(MRG::Key::LeftAlt)) {
 			const auto delta = (m_currentMousePos - m_lastMousePos) * 0.003f;
@@ -43,22 +43,22 @@ void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::RenderObject<MRG::Textur
 
 		// Keyboard input
 		if (ImGui::IsKeyDown(MRG::Key::W)) {
-			m_focalPoint += camera.getForwardVector() * ts.getSeconds();
+			m_focalPoint += camera.getForwardVector() * ts.getSeconds() * moveSpeed;
 			camera.position = m_focalPoint - camera.getForwardVector() * m_distance;
 			camera.recalculateViewProjection();
 		}
 		if (ImGui::IsKeyDown(MRG::Key::S)) {
-			m_focalPoint -= camera.getForwardVector() * ts.getSeconds();
+			m_focalPoint -= camera.getForwardVector() * ts.getSeconds() * moveSpeed;
 			camera.position = m_focalPoint - camera.getForwardVector() * m_distance;
 			camera.recalculateViewProjection();
 		}
 		if (ImGui::IsKeyDown(MRG::Key::A)) {
-			m_focalPoint += camera.getRightVector() * ts.getSeconds();
+			m_focalPoint += camera.getRightVector() * ts.getSeconds() * moveSpeed;
 			camera.position = m_focalPoint - camera.getForwardVector() * m_distance;
 			camera.recalculateViewProjection();
 		}
 		if (ImGui::IsKeyDown(MRG::Key::D)) {
-			m_focalPoint -= camera.getRightVector() * ts.getSeconds();
+			m_focalPoint -= camera.getRightVector() * ts.getSeconds() * moveSpeed;
 			camera.position = m_focalPoint - camera.getForwardVector() * m_distance;
 			camera.recalculateViewProjection();
 		}
@@ -69,6 +69,8 @@ void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::RenderObject<MRG::Textur
 
 void Viewport::onImGuiUpdate(MRG::Timestep)
 {
+	ImGuizmo::BeginFrame();
+
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.f, 0.f});
 	if (ImGui::Begin("Viewport")) {
 		m_position  = ImGui::GetWindowPos();
@@ -79,6 +81,25 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 		const auto temp   = ImGui::GetMousePos();
 		m_lastMousePos    = m_currentMousePos;
 		m_currentMousePos = {temp.x, temp.y};
+
+		float snap = (guizmoType == ImGuizmo::OPERATION::ROTATE) ? 45.f : 0.5f;
+		std::array<float, 3> snapValues{snap, snap, snap};
+
+		if (selectedEntity != nullptr) {
+			const auto windowPos = ImGui::GetWindowPos();
+			ImGuizmo::SetRect(windowPos.x, windowPos.y, m_size.x, m_size.y);
+			auto projection = camera.getProjection();
+			projection[0][0] *= -1;
+			projection[1][1] *= -1;
+			ImGuizmo::Manipulate(glm::value_ptr(camera.getView()),
+			                     glm::value_ptr(projection),
+			                     guizmoType,
+			                     ImGuizmo::MODE::LOCAL,
+			                     glm::value_ptr(*selectedEntity->modelMatrix),
+			                     nullptr,
+			                     ImGui::IsKeyDown(MRG::Key::LeftControl) ? snapValues.data() : nullptr);
+			selectedEntity->uploadPosition();
+		}
 
 		ImGui::Image(m_texID, m_size, {1, 0}, {0, 1});
 	}
@@ -104,6 +125,23 @@ bool Viewport::onEvent(MRG::Event& event)
 bool Viewport::onKeyPressed(MRG::KeyPressedEvent& keyPress)
 {
 	if (keyPress.getRepeatCount() > 0) { return false; }
+
+	switch (keyPress.getKeyCode()) {
+	case MRG::Key::D1:
+		if (!ImGuizmo::IsUsing()) { guizmoType = ImGuizmo::OPERATION::TRANSLATE; }
+		break;
+
+	case MRG::Key::D2:
+		if (!ImGuizmo::IsUsing()) { guizmoType = ImGuizmo::OPERATION::ROTATE; }
+		break;
+
+	case MRG::Key::D3:
+		if (!ImGuizmo::IsUsing()) { guizmoType = ImGuizmo::OPERATION::SCALE; }
+		break;
+
+	default:
+		break;
+	}
 
 	return false;
 }
@@ -151,10 +189,7 @@ void Viewport::mouseZoom(float delta)
 	speed       = std::min(speed, 100.f);
 
 	m_distance -= delta * speed;
-	if (m_distance < 1.f) {
-		m_focalPoint += camera.getForwardVector();
-		m_distance = 1.f;
-	}
+	if (m_distance < 1.f) { m_distance = 1.f; }
 
 	camera.position = m_focalPoint - camera.getForwardVector() * m_distance;
 	camera.recalculateViewProjection();

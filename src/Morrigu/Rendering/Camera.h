@@ -15,6 +15,9 @@ namespace MRG
 	public:
 		virtual ~Camera() = default;
 
+		[[nodiscard]] glm::mat4& getProjection() { return m_projection; }
+		[[nodiscard]] glm::mat4& getView() { return m_view; }
+		[[nodiscard]] glm::mat4& getViewProjection() { return m_viewProjection; };
 		[[nodiscard]] const glm::mat4& getProjection() const { return m_projection; }
 		[[nodiscard]] const glm::mat4& getView() const { return m_view; }
 		[[nodiscard]] const glm::mat4& getViewProjection() const { return m_viewProjection; };
