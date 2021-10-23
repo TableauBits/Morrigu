@@ -139,6 +139,8 @@ namespace MRG
 			  .pImageInfo      = &imageBufferInfo,
 			};
 			m_device.updateDescriptorSets(textureUpdate, {});
+
+			m_sampledImages.at(bindingSlot) = texture;
 		}
 
 		// Uses the color attachment of the framebuffer as a texture

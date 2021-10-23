@@ -189,7 +189,7 @@ void Viewport::mouseZoom(float delta)
 	speed       = std::min(speed, 100.f);
 
 	m_distance -= delta * speed;
-	if (m_distance < 1.f) { m_distance = 1.f; }
+	m_distance = std::clamp(m_distance, .1f, 100.f);
 
 	camera.position = m_focalPoint - camera.getForwardVector() * m_distance;
 	camera.recalculateViewProjection();
