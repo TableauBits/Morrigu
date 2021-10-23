@@ -53,11 +53,11 @@ namespace MRG
 			switch (action) {
 			case GLFW_PRESS:
 			case GLFW_REPEAT: {
-				auto keyPress = KeyPressedEvent(static_cast<KeyCode>(keycode), 0);  // @TODO(Ithyx): make repeatcount work
+				auto keyPress = KeyPressedEvent(keycode, 0);  // @TODO(Ithyx): make repeatcount work
 				application->onEvent(keyPress);
 			} break;
 			case GLFW_RELEASE: {
-				auto keyRelease = KeyReleasedEvent(static_cast<KeyCode>(keycode));
+				auto keyRelease = KeyReleasedEvent(keycode);
 				application->onEvent(keyRelease);
 			} break;
 
@@ -71,11 +71,11 @@ namespace MRG
 
 			switch (action) {
 			case GLFW_PRESS: {
-				auto mousePress = MouseButtonPressedEvent(static_cast<MouseCode>(button));
+				auto mousePress = MouseButtonPressedEvent(button);
 				application->onEvent(mousePress);
 			} break;
 			case GLFW_RELEASE: {
-				auto mouseRelease = MouseButtonReleasedEvent(static_cast<MouseCode>(button));
+				auto mouseRelease = MouseButtonReleasedEvent(button);
 				application->onEvent(mouseRelease);
 			} break;
 
@@ -101,7 +101,7 @@ namespace MRG
 		glfwSetCharCallback(window, [](GLFWwindow* eventWindow, std::uint32_t codePoint) {
 			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
-			auto keyType = KeyTypedEvent(codePoint);
+			auto keyType = KeyTypedEvent(static_cast<KeyCode>(codePoint));
 			application->onEvent(keyType);
 		});
 

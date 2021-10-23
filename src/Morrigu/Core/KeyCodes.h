@@ -10,7 +10,7 @@
 
 namespace MRG
 {
-	using KeyCode = uint32_t;
+	using KeyCode = int;
 	namespace Key
 	{
 		enum : KeyCode

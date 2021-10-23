@@ -11,11 +11,11 @@
 
 namespace MRG
 {
-	AllocatedBuffer::AllocatedBuffer(VmaAllocator allocator,
+	AllocatedBuffer::AllocatedBuffer(VmaAllocator newAllocator,
 	                                 std::size_t allocSize,
 	                                 vk::BufferUsageFlags bufferUsage,
 	                                 VmaMemoryUsage memoryUsage)
-	    : allocator{allocator}
+	    : allocator{newAllocator}
 	{
 		VkBufferCreateInfo bufferInfo{
 		  .sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,

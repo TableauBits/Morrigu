@@ -23,7 +23,8 @@ Viewport::Viewport(MRG::Application* context, ImVec2 initialSize) : m_context{co
 
 void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>>>& drawables, MRG::Timestep ts)
 {
-	if ((m_size.x > 0 && m_size.y > 0) && (m_size.x != m_framebuffer->spec.width || m_size.y != m_framebuffer->spec.height)) {
+	if ((m_size.x > 0 && m_size.y > 0) &&
+	    (static_cast<uint32_t>(m_size.x) != m_framebuffer->spec.width || static_cast<uint32_t>(m_size.y) != m_framebuffer->spec.height)) {
 		m_framebuffer->resize(static_cast<uint32_t>(m_size.x), static_cast<uint32_t>(m_size.y));
 
 		camera.aspectRatio = m_size.x / m_size.y;

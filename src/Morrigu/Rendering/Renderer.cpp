@@ -191,7 +191,9 @@ namespace MRG
 		  .pImageIndices      = &m_imageIndex,
 		};
 
-		MRG_VK_CHECK_HPP(m_graphicsQueue.presentKHR(presentInfo), "failed to present image to screen!")
+		try {
+			MRG_VK_CHECK_HPP(m_graphicsQueue.presentKHR(presentInfo), "failed to present image to screen!")
+		} catch (const vk::OutOfDateKHRError& error) {}
 		++m_frameNumber;
 	}
 

@@ -58,9 +58,9 @@ namespace MRG
 		const char* file = nullptr;
 
 		// Fropm data
-		void* data = nullptr;
-		uint32_t width;
-		uint32_t height;
+		void* data      = nullptr;
+		uint32_t width  = 0;
+		uint32_t height = 0;
 	};
 
 	class AllocatedImage
