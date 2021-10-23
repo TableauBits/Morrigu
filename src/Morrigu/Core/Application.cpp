@@ -118,12 +118,13 @@ namespace MRG
 			renderer->elapsedTime = elapsedTime;
 			m_lastTime            = time;
 
-			renderer->beginFrame();
-			for (auto& layer : m_layers) { layer->onUpdate(ts); }
-			renderer->beginImGui();
-			for (auto& layer : m_layers) { layer->onImGuiUpdate(ts); }
-			renderer->endImGui();
-			renderer->endFrame();
+			if (renderer->beginFrame()) {
+				for (auto& layer : m_layers) { layer->onUpdate(ts); }
+				renderer->beginImGui();
+				for (auto& layer : m_layers) { layer->onImGuiUpdate(ts); }
+				renderer->endImGui();
+				renderer->endFrame();
+			}
 
 			glfwPollEvents();
 		}

@@ -31,7 +31,7 @@ namespace MRG::Utils::Commands
 		};
 		graphicsQueue.submit(submitInfo, uploadContext.uploadFence);
 
-		MRG_VK_CHECK_HPP(device.waitForFences(uploadContext.uploadFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
+		MRG_VK_CHECK_HPP(device.waitForFences(uploadContext.uploadFence, VK_TRUE, UINT64_MAX), "failed to wait for command fence!")
 		device.resetFences(uploadContext.uploadFence);
 
 		device.resetCommandPool(uploadContext.commandPool);

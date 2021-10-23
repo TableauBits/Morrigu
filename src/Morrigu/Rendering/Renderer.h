@@ -347,7 +347,7 @@ namespace MRG
 		/// Methods called by the application class
 		friend class Application;
 
-		void beginFrame();
+		bool beginFrame();
 		void endFrame();
 		void beginImGui();
 		void endImGui();

@@ -129,13 +129,20 @@ namespace MRG
 		return createRef<Framebuffer>(fbSpec, objs);
 	}
 
-	void Renderer::beginFrame()
+	bool Renderer::beginFrame()
 	{
 		const auto& frameData = getCurrentFrameData();
 		MRG_VK_CHECK_HPP(m_device.waitForFences(frameData.renderFence, VK_TRUE, UINT64_MAX), "failed to wait for render fence!")
 		m_device.resetFences(frameData.renderFence);
 
-		m_imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, frameData.presentSemaphore).value;
+		try {
+			m_imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, frameData.presentSemaphore).value;
+		} catch (const vk::OutOfDateKHRError& error) {
+			onResize();
+			vk::SubmitInfo fenceReset{};
+			m_graphicsQueue.submit(fenceReset, frameData.renderFence);
+			return false;
+		}
 
 		frameData.commandBuffer.reset();
 		vk::CommandBufferBeginInfo beginInfo{
@@ -162,6 +169,8 @@ namespace MRG
 		  .pClearValues    = clearValues.data(),
 		};
 		frameData.commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+
+		return true;
 	}
 
 	void Renderer::endFrame()
@@ -293,6 +302,9 @@ namespace MRG
 		                      .set_desired_extent(static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight))
 		                      .build()
 		                      .value();
+
+		spec.windowWidth  = static_cast<int>(vkbSwapchain.extent.width);
+		spec.windowHeight = static_cast<int>(vkbSwapchain.extent.height);
 
 		m_swapchain       = vkbSwapchain.swapchain;
 		m_imageCount      = vkbSwapchain.image_count;
