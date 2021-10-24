@@ -137,7 +137,7 @@ namespace MRG
 
 		try {
 			m_imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, frameData.presentSemaphore).value;
-		} catch (const vk::OutOfDateKHRError& error) {
+		} catch (const vk::OutOfDateKHRError&) {
 			onResize();
 			vk::SubmitInfo fenceReset{};
 			m_graphicsQueue.submit(fenceReset, frameData.renderFence);
@@ -202,7 +202,7 @@ namespace MRG
 
 		try {
 			MRG_VK_CHECK_HPP(m_graphicsQueue.presentKHR(presentInfo), "failed to present image to screen!")
-		} catch (const vk::OutOfDateKHRError& error) {}
+		} catch (const vk::OutOfDateKHRError&) {}
 		++m_frameNumber;
 	}
 
