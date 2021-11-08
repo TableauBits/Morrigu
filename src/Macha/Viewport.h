@@ -25,6 +25,8 @@ public:
 	ImGuizmo::OPERATION guizmoType{ImGuizmo::OPERATION::TRANSLATE};
 	MRG::Ref<MRG::Entity<MRG::TexturedVertex>> selectedEntity{};
 
+	std::string name{"Viewport"};
+
 private:
 	bool onKeyPressed(MRG::KeyPressedEvent& keyPress);
 	bool onMousePressed(MRG::MouseButtonPressedEvent& mousePress);

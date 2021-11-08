@@ -73,7 +73,7 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 	ImGuizmo::BeginFrame();
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.f, 0.f});
-	if (ImGui::Begin("Viewport")) {
+	if (ImGui::Begin(name.c_str())) {
 		m_position  = ImGui::GetWindowPos();
 		m_size      = ImGui::GetContentRegionAvail();
 		m_isFocused = ImGui::IsWindowFocused();
