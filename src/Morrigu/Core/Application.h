@@ -1,56 +1,62 @@
-#ifndef MRG_CLASS_APPLICATION
-#define MRG_CLASS_APPLICATION
+//
+// Created by Mathis Lamidey on 2021-04-03.
+//
+
+#ifndef MORRIGU_APPLICATION_H
+#define MORRIGU_APPLICATION_H
+
+#include "Core/GLFWWrapper.h"
+#include "Core/LayerStack.h"
+#include "Rendering/Renderer.h"
 
 #include "Events/ApplicationEvent.h"
-#include "ImGui/ImGuiLayer.h"
-#include "LayerStack.h"
-#include "Window.h"
 
 int main();
 
 namespace MRG
 {
+	struct ApplicationSpecification
+	{
+		std::string windowName;
+		RendererSpecification rendererSpecification;
+	};
+
 	class Application
 	{
-	private:
 	public:
-		explicit Application(const char* name = "Morrigu App");
-		Application(const Application&) = delete;
-		Application(Application&&) = delete;
-		virtual ~Application();
+		explicit Application(ApplicationSpecification spec);
 
+		Application(const Application&) = delete;
+		Application(Application&&)      = delete;
 		Application& operator=(const Application&) = delete;
 		Application& operator=(Application&&) = delete;
 
-		void onEvent(Event& event);
+		void run();
 
 		void pushLayer(Layer* newLayer);
-		void pushOverlay(Layer* newOverlay);
+		Layer* popLayer();
+
+		void setWindowTitle(const char* title) const;
 
 		void close();
 
-		[[nodiscard]] Window& getWindow() const { return *m_window; }
-		[[nodiscard]] ImGuiLayer* getImGuiLayer() const { return m_ImGuiLayer; }
-		[[nodiscard]] static Application& get() { return *s_instance; }
-
 	private:
-		void run();
+		LayerStack m_layers;
+		ApplicationSpecification m_specification;
 
-		bool onWindowClose(WindowCloseEvent& event);
-		bool onWindowResize(WindowResizeEvent& event);
+		void onEvent(Event& event);
+		bool onClose(WindowCloseEvent& resizeEvent);
+		bool onResize(WindowResizeEvent& resizeEvent);
 
-		Scope<Window> m_window;
-		ImGuiLayer* m_ImGuiLayer;
-		bool m_running = true;
-		bool m_minimized = false;
-		LayerStack m_layerStack;
-		float m_lastFrameTime = 0.0f;
+		bool m_isRunning = true;
+		float m_lastTime = 0.f;
 
-		static Application* s_instance;
+	public:
+		GLFWWrapper glfwWrapper;
 
-		friend int ::main();
+		Scope<Renderer> renderer{nullptr};
+		float elapsedTime{};
 	};
-	Application* createApplication();
 }  // namespace MRG
 
-#endif
+#endif  // MORRIGU_APPLICATION_H

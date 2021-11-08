@@ -1,5 +1,9 @@
-#ifndef MRG_CLASS_LAYERSTACK
-#define MRG_CLASS_LAYERSTACK
+//
+// Created by Mathis Lamidey on 2021-04-06.
+//
+
+#ifndef MORRIGU_LAYERSTACK_H
+#define MORRIGU_LAYERSTACK_H
 
 #include "Core/Layer.h"
 
@@ -10,18 +14,16 @@ namespace MRG
 	class LayerStack
 	{
 	public:
-		LayerStack() = default;
+		LayerStack()                  = default;
 		LayerStack(const LayerStack&) = delete;
-		LayerStack(LayerStack&&) = delete;
+		LayerStack(LayerStack&&)      = delete;
 		~LayerStack();
 
 		LayerStack& operator=(const LayerStack&) = delete;
 		LayerStack& operator=(LayerStack&&) = delete;
 
 		void pushLayer(Layer* newLayer);
-		void pushOverlay(Layer* newOverlay);
-		void removeLayer(Layer* layerToRemove);
-		void removeOverlay(Layer* overlayToRemove);
+		Layer* popLayer();
 
 		[[nodiscard]] auto begin() { return m_layers.begin(); };
 		[[nodiscard]] auto end() { return m_layers.end(); };
@@ -34,8 +36,7 @@ namespace MRG
 
 	private:
 		std::vector<Layer*> m_layers;
-		std::size_t m_layerInsertionIndex = 0;
 	};
 }  // namespace MRG
 
-#endif
+#endif  // MORRIGU_LAYERSTACK_H

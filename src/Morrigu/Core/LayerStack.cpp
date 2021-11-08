@@ -1,3 +1,7 @@
+//
+// Created by Mathis Lamidey on 2021-04-06.
+//
+
 #include "LayerStack.h"
 
 namespace MRG
@@ -12,36 +16,15 @@ namespace MRG
 
 	void LayerStack::pushLayer(Layer* newLayer)
 	{
-		m_layers.emplace(m_layers.begin() + m_layerInsertionIndex, newLayer);
-		++m_layerInsertionIndex;
+		m_layers.emplace_back(newLayer);
 		newLayer->onAttach();
 	}
-	void LayerStack::pushOverlay(Layer* newOverlay)
-	{
-		m_layers.emplace_back(newOverlay);
-		newOverlay->onAttach();
-	}
 
-	void LayerStack::removeLayer(Layer* layerToRemove)
+	Layer* LayerStack::popLayer()
 	{
-		auto max =
-		  (m_layers.begin() + m_layerInsertionIndex == m_layers.end()) ? m_layers.end() : m_layers.begin() + m_layerInsertionIndex + 1;
-		auto it = std::find(m_layers.begin(), max, layerToRemove);
-		if (it != max) {
-			layerToRemove->onDetach();
-			m_layers.erase(it);
-			--m_layerInsertionIndex;
-		}
-	}
-
-	void LayerStack::removeOverlay(Layer* overlayToRemove)
-	{
-		auto min =
-		  (m_layers.begin() + m_layerInsertionIndex == m_layers.end()) ? m_layers.end() : m_layers.begin() + m_layerInsertionIndex + 1;
-		auto it = std::find(min, m_layers.end(), overlayToRemove);
-		if (it != m_layers.end()) {
-			overlayToRemove->onDetach();
-			m_layers.erase(it);
-		}
+		MRG_ENGINE_ASSERT(!m_layers.empty(), "Layer stack was empty!")
+		const auto layer = m_layers.back();
+		m_layers.pop_back();
+		return layer;
 	}
 }  // namespace MRG

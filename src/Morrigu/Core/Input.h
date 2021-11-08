@@ -1,23 +1,21 @@
-#ifndef MRG_CLASS_INPUT
-#define MRG_CLASS_INPUT
+//
+// Created by Mathis Lamidey on 2021-10-17.
+//
+
+#ifndef MORRIGU_INPUT_H
+#define MORRIGU_INPUT_H
 
 #include "Core/KeyCodes.h"
 #include "Core/MouseCodes.h"
+#include "Utils/GLMIncludeHelper.h"
 
-#include "Core/GLMIncludeHelper.h"
+#include <GLFW/glfw3.h>
 
-namespace MRG
+namespace MRG::Input
 {
-	class Input
-	{
-	public:
-		[[nodiscard]] static bool isKeyPressed(KeyCode key);
-
-		[[nodiscard]] static bool isMouseButtonPressed(MouseCode button);
-		[[nodiscard]] static glm::vec2 getMousePosition();
-		[[nodiscard]] static float getMouseX();
-		[[nodiscard]] static float getMouseY();
-	};
-}  // namespace MRG
+	[[nodiscard]] bool isKeyPressed(GLFWwindow* window, KeyCode key);
+	[[nodiscard]] bool isMouseButtonPressed(GLFWwindow* window, MouseCode mouseButton);
+	[[nodiscard]] glm::vec2 getMousePosition(GLFWwindow* window);
+}  // namespace MRG::Input
 
 #endif

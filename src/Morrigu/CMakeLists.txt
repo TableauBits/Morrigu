@@ -1,8 +1,40 @@
-# TODO: replace with sub directories cmake lists
-file(GLOB_RECURSE MAIN_SRC ${CMAKE_CURRENT_LIST_DIR}/*.h ${CMAKE_CURRENT_LIST_DIR}/*.cpp ${CMAKE_CURRENT_LIST_DIR}/*.c)
+include(${CMAKE_CURRENT_LIST_DIR}/Core/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/Events/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/Rendering/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/Utils/CMakeLists.txt)
 
-add_library(${MAIN_PRJ_NAME} ${MAIN_SRC} Renderer/EditorCamera.cpp Renderer/EditorCamera.h Renderer/EditorCamera.cpp Renderer/EditorCamera.h)
-set_property(TARGET ${MAIN_PRJ_NAME} PROPERTY CXX_STANDARD 17)
+set(
+	IMGUI_BINDINGS
+ 
+	# ImGui bindings
+	${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_glfw.h
+	${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_glfw.cpp
+	${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_vulkan.h
+	${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_vulkan.cpp
+)
 
-target_include_directories(${MAIN_PRJ_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
-target_include_directories(${MAIN_PRJ_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Vendor)
+set(
+	MRG_SOURCES
+
+	# Global include file
+	${CMAKE_CURRENT_LIST_DIR}/Morrigu.h
+
+	# Core files
+	${MRG_CORE_SOURCES}
+
+	# Event files
+	${MRG_EVENT_SOURCES}
+
+	# Rendering files
+	${MRG_RENDERING_SOURCES}
+
+	# Utils files
+	${MRG_UTILS_SOURCES}
+)
+
+set(
+	VENDOR_SOURCES
+
+	# ImGui bindings
+	${IMGUI_BINDINGS}
+)

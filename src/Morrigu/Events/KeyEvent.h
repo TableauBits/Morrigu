@@ -1,5 +1,9 @@
-#ifndef MRG_CLASS_KEYEVENT
-#define MRG_CLASS_KEYEVENT
+//
+// Created by Mathis Lamidey on 2021-04-06.
+//
+
+#ifndef MORRIGU_KEYEVENT_H
+#define MORRIGU_KEYEVENT_H
 
 #include "Core/KeyCodes.h"
 #include "Events/Event.h"
@@ -71,4 +75,4 @@ namespace MRG
 	};
 }  // namespace MRG
 
-#endif
+#endif  // MORRIGU_KEYEVENT_H

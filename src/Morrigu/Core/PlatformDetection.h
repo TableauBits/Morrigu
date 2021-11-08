@@ -1,12 +1,19 @@
+//
+// Created by Mathis Lamidey on 2021-04-03.
+//
+
+#ifndef MORRIGU_PLATFORMDETECTION_H
+#define MORRIGU_PLATFORMDETECTION_H
+
 // clang-format off
 #ifdef _WIN32
-    #ifdef _WIN64
-        #define MRG_PLATFORM_WINDOWS
-    #else
-        #error "Windows 32 bits is not supported!"
-    #endif
+#ifdef _WIN64
+#define MRG_PLATFORM_WINDOWS
+#else
+#error "Windows 32 bits is not supported!"
+#endif
 #elif defined(__APPLE__) || defined(__MACH__)
-    // Apple devices ALL fall in this category. Apple provides the following includes to know what exact platform we're exactly on:
+// Apple devices ALL fall in this category. Apple provides the following includes to know what exact platform we're exactly on:
     #include <TargetConditionals.h>
 
     // We can now use this include to define a bit more specifically what we are compiling on:
@@ -28,5 +35,6 @@
 #else
     #error "Unknown platform detected!"
 #endif
-
 // clang-format on
+
+#endif  // MORRIGU_PLATFORMDETECTION_H

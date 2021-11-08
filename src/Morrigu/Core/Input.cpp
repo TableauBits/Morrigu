@@ -1,33 +1,27 @@
+//
+// Created by Mathis Lamidey on 2021-10-17.
+//
+
 #include "Input.h"
 
-#include "Core/Application.h"
-
-namespace MRG
+namespace MRG::Input
 {
-	bool Input::isKeyPressed(KeyCode key)
+	bool isKeyPressed(GLFWwindow* window, KeyCode key)
 	{
-		const auto window = Application::get().getWindow().getGLFWWindow();
-		const auto state = glfwGetKey(window, static_cast<int32_t>(key));
-		return state == GLFW_PRESS || state == GLFW_REPEAT;
+		const auto keyState = glfwGetKey(window, key);
+		return keyState == GLFW_PRESS || keyState == GLFW_REPEAT;
 	}
 
-	bool Input::isMouseButtonPressed(MouseCode button)
+	bool isMouseButtonPressed(GLFWwindow* window, MouseCode mouseButton)
 	{
-		const auto window = Application::get().getWindow().getGLFWWindow();
-		const auto state = glfwGetMouseButton(window, static_cast<int32_t>(button));
-		return state == GLFW_PRESS;
+		const auto mouseState = glfwGetMouseButton(window, mouseButton);
+		return mouseState == GLFW_PRESS;
 	}
 
-	glm::vec2 Input::getMousePosition()
+	glm::vec2 getMousePosition(GLFWwindow* window)
 	{
-		const auto window = Application::get().getWindow().getGLFWWindow();
-		double xPos, yPos;
-		glfwGetCursorPos(window, &xPos, &yPos);
-
-		return glm::vec2{static_cast<float>(xPos), static_cast<float>(yPos)};
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		return {static_cast<float>(x), static_cast<float>(y)};
 	}
-
-	float Input::getMouseX() { return getMousePosition().x; }
-
-	float Input::getMouseY() { return getMousePosition().y; }
-}  // namespace MRG
+}  // namespace MRG::Input

@@ -1,5 +1,9 @@
-#ifndef MRG_CLASS_APPLICATIONEVENT
-#define MRG_CLASS_APPLICATIONEVENT
+//
+// Created by Mathis Lamidey on 2021-04-03.
+//
+
+#ifndef MORRIGU_APPLICATIONEVENT_H
+#define MORRIGU_APPLICATIONEVENT_H
 
 #include "Events/Event.h"
 
@@ -10,10 +14,10 @@ namespace MRG
 	class WindowResizeEvent : public Event
 	{
 	public:
-		WindowResizeEvent(uint32_t width, uint32_t height) : m_width(width), m_height(height) {}
+		WindowResizeEvent(int width, int height) : m_width(width), m_height(height) {}
 
-		[[nodiscard]] uint32_t getWidth() const { return m_width; }
-		[[nodiscard]] uint32_t getHeight() const { return m_height; }
+		[[nodiscard]] int getWidth() const { return m_width; }
+		[[nodiscard]] int getHeight() const { return m_height; }
 
 		[[nodiscard]] std::string toString() const override
 		{
@@ -26,7 +30,7 @@ namespace MRG
 		MRG_EVENT_CLASS_CATEGORY(EventCategoryApplication)
 
 	private:
-		uint32_t m_width, m_height;
+		int m_width, m_height;
 	};
 
 	class WindowCloseEvent : public Event
@@ -66,4 +70,4 @@ namespace MRG
 	};
 }  // namespace MRG
 
-#endif
+#endif  // MORRIGU_APPLICATIONEVENT_H

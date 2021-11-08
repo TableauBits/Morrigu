@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  macha:
+    build: .
+    environment:
+      - DISPLAY=${DISPLAY}
+      - XDG_RUNTIME_DIR=/tmp/
+    volumes:
+      - /$HOME/.X11-unix:/root/.X11-unix
+    network_mode: host

@@ -1,11 +1,15 @@
-#ifndef MRG_MOUSECODES
-#define MRG_MOUSECODES
+//
+// Created by Mathis Lamidey on 2021-04-06.
+//
+
+#ifndef MORRIGU_MOUSECODES_H
+#define MORRIGU_MOUSECODES_H
 
 #include <cstdint>
 
 namespace MRG
 {
-	using MouseCode = uint16_t;
+	using MouseCode = int;
 	namespace Mouse
 	{
 		enum : MouseCode
@@ -20,12 +24,12 @@ namespace MRG
 			Button6 = 6,
 			Button7 = 7,
 
-			ButtonLast = Button7,
-			ButtonLeft = Button0,
-			ButtonRight = Button1,
+			ButtonLast   = Button7,
+			ButtonLeft   = Button0,
+			ButtonRight  = Button1,
 			ButtonMiddle = Button2
 		};
 	}
 }  // namespace MRG
 
-#endif
+#endif  // MORRIGU_MOUSECODES_H

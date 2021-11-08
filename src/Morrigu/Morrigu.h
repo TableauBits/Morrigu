@@ -1,22 +1,26 @@
-#ifndef MRG_GLOBAL_HEADER
-#define MRG_GLOBAL_HEADER
+//
+// Created by Mathis Lamidey on 2021-04-06.
+//
+
+#ifndef MORRIGU_MORRIGU_H
+#define MORRIGU_MORRIGU_H
 
 #include "Core/Application.h"
-#include "Core/Input.h"
 #include "Core/Layer.h"
-#include "Core/Logger.h"
+#include "Core/Logging.h"
 #include "Core/Timestep.h"
 
-#include "Scene/Components.h"
-#include "Scene/Entity.h"
-#include "Scene/Scene.h"
+#include "Events/ApplicationEvent.h"
+#include "Events/Event.h"
+#include "Events/KeyEvent.h"
+#include "Events/MouseEvent.h"
 
-#include "Renderer/Buffers.h"
-#include "Renderer/Renderer2D.h"
-#include "Renderer/Shader.h"
-#include "Renderer/Textures.h"
-#include "Renderer/VertexArray.h"
+#include "Rendering/UI/Font.h"
+#include "Rendering/UI/Text.h"
 
-#include "Debug/Instrumentor.h"
+#include "Utils/Meshes.h"
+#include "Utils/UtilityLayers.h"
 
-#endif
+#include "Core/Input.h"
+
+#endif  // MORRIGU_MORRIGU_H

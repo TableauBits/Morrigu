@@ -1,118 +1,176 @@
+//
+// Created by Mathis Lamidey on 2021-04-03.
+//
+
 #include "Application.h"
 
-#include "Debug/Instrumentor.h"
-#include "Renderer/Renderer2D.h"
+#include "Events/KeyEvent.h"
+#include "Events/MouseEvent.h"
 
-#include <functional>
+#include <utility>
+
+namespace
+{
+	void glfwErrorCallback(int errorCode, const char* description) { MRG_ENGINE_ERROR("GLFW error #{}: \"{}\"", errorCode, description) }
+}  // namespace
 
 namespace MRG
 {
-	Application* Application::s_instance = nullptr;
-
-	Application::Application(const char* name)
+	Application::Application(ApplicationSpecification spec) : m_specification(std::move(spec))
 	{
-		MRG_PROFILE_FUNCTION()
+		glfwSetErrorCallback(glfwErrorCallback);
 
-		MRG_CORE_ASSERT(s_instance == nullptr, "Application already exists!")
-		s_instance = this;
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		auto window = glfwCreateWindow(m_specification.rendererSpecification.windowWidth,
+		                               m_specification.rendererSpecification.windowHeight,
+		                               m_specification.windowName.c_str(),
+		                               nullptr,
+		                               nullptr);
 
-		m_window = std::make_unique<Window>(WindowProperties::create(name, 1280, 720, false));
-		m_window->setEventCallback([this](Event& event) { onEvent(event); });
+		glfwSetWindowUserPointer(window, this);
 
-		Renderer2D::init(m_window->getGLFWWindow());
+		// set up callbacks
+		glfwSetWindowSizeCallback(window, [](GLFWwindow* eventWindow, int width, int height) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
-		m_ImGuiLayer = new ImGuiLayer{};
-		pushOverlay(m_ImGuiLayer);
-	}
+			application->m_specification.rendererSpecification.windowWidth  = width;
+			application->m_specification.rendererSpecification.windowHeight = height;
 
-	Application::~Application()
-	{
-		MRG_PROFILE_FUNCTION()
+			auto resize = WindowResizeEvent(width, height);
+			application->onEvent(resize);
+		});
 
-		Renderer2D::shutdown();
-	}
+		glfwSetWindowCloseCallback(window, [](GLFWwindow* eventWindow) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
-	void Application::onEvent(Event& event)
-	{
-		MRG_PROFILE_FUNCTION()
+			auto close = WindowCloseEvent();
+			application->onEvent(close);
+		});
 
-		EventDispatcher dispatcher{event};
-		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& closeEvent) -> bool { return onWindowClose(closeEvent); });
-		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) -> bool { return onWindowResize(resizeEvent); });
+		glfwSetKeyCallback(window, [](GLFWwindow* eventWindow, int keycode, int, int action, int) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
 
-		for (auto it = m_layerStack.rbegin(); it != m_layerStack.rend(); ++it) {
-			if (event.handled) {
-				break;
+			switch (action) {
+			case GLFW_PRESS:
+			case GLFW_REPEAT: {
+				auto keyPress = KeyPressedEvent(keycode, 0);  // @TODO(Ithyx): make repeatcount work
+				application->onEvent(keyPress);
+			} break;
+			case GLFW_RELEASE: {
+				auto keyRelease = KeyReleasedEvent(keycode);
+				application->onEvent(keyRelease);
+			} break;
+
+			default:
+				MRG_ENGINE_WARN("Ignored unknown GLFW keyboard event {}", action)
 			}
-			(*it)->onEvent(event);
+		});
+
+		glfwSetMouseButtonCallback(window, [](GLFWwindow* eventWindow, int button, int action, int) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
+
+			switch (action) {
+			case GLFW_PRESS: {
+				auto mousePress = MouseButtonPressedEvent(button);
+				application->onEvent(mousePress);
+			} break;
+			case GLFW_RELEASE: {
+				auto mouseRelease = MouseButtonReleasedEvent(button);
+				application->onEvent(mouseRelease);
+			} break;
+
+			default:
+				MRG_ENGINE_WARN("Ignored unknown GLFW mouse event {}", action)
+			}
+		});
+
+		glfwSetScrollCallback(window, [](GLFWwindow* eventWindow, double xOffset, double yOffset) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
+
+			auto mouseScroll = MouseScrolledEvent(static_cast<float>(xOffset), static_cast<float>(yOffset));
+			application->onEvent(mouseScroll);
+		});
+
+		glfwSetCursorPosCallback(window, [](GLFWwindow* eventWindow, double xPos, double yPos) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
+
+			auto mouseMove = MouseMovedEvent(static_cast<float>(xPos), static_cast<float>(yPos));
+			application->onEvent(mouseMove);
+		});
+
+		glfwSetCharCallback(window, [](GLFWwindow* eventWindow, std::uint32_t codePoint) {
+			auto application = static_cast<Application*>(glfwGetWindowUserPointer(eventWindow));
+
+			auto keyType = KeyTypedEvent(static_cast<KeyCode>(codePoint));
+			application->onEvent(keyType);
+		});
+
+		// callbacks set, now give ownership of window to renderer
+		renderer = createScope<Renderer>(m_specification.rendererSpecification, window);
+	}
+
+	void Application::run()
+	{
+		while (m_isRunning) {
+			const auto time = static_cast<float>(glfwGetTime());
+			Timestep ts{time - m_lastTime};
+			elapsedTime += ts;
+			renderer->elapsedTime = elapsedTime;
+			m_lastTime            = time;
+
+			if (renderer->beginFrame()) {
+				for (auto& layer : m_layers) { layer->onUpdate(ts); }
+				renderer->beginImGui();
+				for (auto& layer : m_layers) { layer->onImGuiUpdate(ts); }
+				renderer->endImGui();
+				renderer->endFrame();
+			}
+
+			glfwPollEvents();
 		}
 	}
 
 	void Application::pushLayer(Layer* newLayer)
 	{
-		MRG_PROFILE_FUNCTION()
-
-		m_layerStack.pushLayer(newLayer);
+		newLayer->application = this;
+		m_layers.pushLayer(newLayer);
 	}
 
-	void Application::pushOverlay(Layer* newOverlay)
+	Layer* Application::popLayer() { return m_layers.popLayer(); }
+
+	void Application::setWindowTitle(const char* title) const { glfwSetWindowTitle(renderer->window, title); }
+	void Application::close() { m_isRunning = false; }
+
+	void Application::onEvent(Event& event)
 	{
-		MRG_PROFILE_FUNCTION()
+		EventDispatcher dispatcher{event};
+		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& closeEvent) { return onClose(closeEvent); });
+		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& resizeEvent) { return onResize(resizeEvent); });
 
-		m_layerStack.pushOverlay(newOverlay);
-	}
-
-	void Application::close() { m_running = false; }
-
-	void Application::run()
-	{
-		MRG_PROFILE_FUNCTION()
-
-		while (m_running) {
-			MRG_PROFILE_SCOPE("RunLoop")
-
-			auto time = float(glfwGetTime());
-			Timestep ts = time - m_lastFrameTime;
-			m_lastFrameTime = time;
-
-			while (!Renderer2D::beginFrame()) {}
-
-			if (!m_minimized) {
-				MRG_PROFILE_SCOPE("LayerStack onUpdate")
-
-				for (auto& layer : m_layerStack) { layer->onUpdate(ts); }
-			}
-
-			m_ImGuiLayer->begin();
-			{
-				MRG_PROFILE_SCOPE("LayerStack onImGuiRender")
-
-				for (auto& layer : m_layerStack) { layer->onImGuiRender(); }
-			}
-			m_ImGuiLayer->end();
-			m_window->onUpdate();
-
-			while (!Renderer2D::endFrame()) {}
+		for (auto& m_layer : std::ranges::reverse_view(m_layers)) {
+			if (event.handled) { break; }
+			m_layer->onEvent(event);
 		}
 	}
 
-	bool Application::onWindowClose([[maybe_unused]] WindowCloseEvent& event)
+	bool Application::onClose(WindowCloseEvent&)
 	{
-		m_running = false;
+		m_isRunning = false;
 		return true;
 	}
 
-	bool Application::onWindowResize(WindowResizeEvent& event)
+	bool Application::onResize(WindowResizeEvent& resize)
 	{
-		MRG_PROFILE_FUNCTION()
-
-		if (event.getWidth() == 0 || event.getHeight() == 0) {
-			m_minimized = true;
-			return false;
+		int width = resize.getWidth(), height = resize.getHeight();
+		while (width == 0 || height == 0) {
+			glfwGetFramebufferSize(renderer->window, &width, &height);
+			glfwWaitEvents();
 		}
 
-		m_minimized = false;
-		Renderer2D::onWindowResize(event.getWidth(), event.getHeight());
+		renderer->spec.windowWidth  = width;
+		renderer->spec.windowHeight = height;
+		renderer->onResize();
+
 		return false;
 	}
 }  // namespace MRG

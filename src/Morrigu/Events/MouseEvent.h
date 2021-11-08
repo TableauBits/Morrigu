@@ -1,5 +1,9 @@
-#ifndef MRG_CLASS_MOUSEEVENT
-#define MRG_CLASS_MOUSEEVENT
+//
+// Created by Mathis Lamidey on 2021-04-06.
+//
+
+#ifndef MORRIGU_MOUSEEVENT_H
+#define MORRIGU_MOUSEEVENT_H
 
 #include "Core/MouseCodes.h"
 #include "Events/Event.h"
@@ -96,4 +100,4 @@ namespace MRG
 	};
 }  // namespace MRG
 
-#endif
+#endif  // MORRIGU_MOUSEEVENT_H

@@ -1,36 +1,38 @@
-#ifndef MRG_CLASS_LAYER
-#define MRG_CLASS_LAYER
+//
+// Created by Mathis Lamidey on 2021-04-03.
+//
+
+#ifndef MORRIGU_LAYER_H
+#define MORRIGU_LAYER_H
 
 #include "Core/Timestep.h"
 #include "Events/Event.h"
-
-#include <string>
-#include <utility>
+#include "Rendering/Camera.h"
 
 namespace MRG
 {
+	class Application;
+
 	class Layer
 	{
 	public:
-		explicit Layer(std::string name) : m_name(std::move(name)) {}
+		Layer()             = default;
 		Layer(const Layer&) = delete;
-		Layer(Layer&&) = delete;
-		virtual ~Layer() = default;
+		Layer(Layer&&)      = delete;
+
+		virtual ~Layer() = 0;
 
 		Layer& operator=(const Layer&) = delete;
 		Layer& operator=(Layer&&) = delete;
 
-		virtual void onAttach() = 0;
-		virtual void onDetach() = 0;
-		virtual void onUpdate(Timestep ts) = 0;
-		virtual void onEvent(Event& event) = 0;
-		virtual void onImGuiRender() {}
+		virtual void onAttach() {}
+		virtual void onDetach() {}
+		virtual void onUpdate(Timestep) {}
+		virtual void onImGuiUpdate(Timestep) {}
+		virtual void onEvent(Event&) {}
 
-		[[nodiscard]] std::string getName() const { return m_name; }
-
-	protected:
-		std::string m_name;
+		Application* application{nullptr};
 	};
 }  // namespace MRG
 
-#endif
+#endif  // MORRIGU_LAYER_H
