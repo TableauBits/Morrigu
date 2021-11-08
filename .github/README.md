@@ -1,10 +1,24 @@
 # Morrigu
 
-Morrigu is getting through a complete re-write on this branch.
-The main brach was becoming bloated and very hard to maintain and add new features to.
+Morrigu is a small 3D rendering engine developed from scratch by [me](https://github.com/Ithyx) to learn about 3D graphics.
+It is made to be cross-platform (tested on Windows, Ubuntu, and Fedora) and uses C++20 for stuff like ranges and concepts. Tested with GCC-10 and MSVC 19.28.29915.
 
-This will now follow the [vkguide](https://vkguide.dev/), at least for now to get a good
-idea of what an expandable vulkan renderer architecture looks like.
+## Dependencies
 
-This branch will probably never be as feature complete as the main branch currently is,
-but it will hopefully be a good learning experience.
+This project relies on the following dependencies (non-exhaustive list, the complete dependency list can be found in the [conan file](../conanfile.txt))
+
+* The windowing system is provided by GLFW
+* The graphics API used is Vulkan, currently version 1.1.0 (SDK and drivers are required to compile)
+* ImGui, more specifically the docking branch, is used for the UI, in conjunction with ImGuizmo.
+* The build system is a combinaiton of CMake and Conan.
+
+## How to build
+
+As this project is still fairly young, things are still moving, so I won't have dedicated instructions until things have settled down. However, I try to maintain a [Dockerfile](../Dockerfile) up to date to compile the project on Ubuntu, so this is a good starting point to see what steps are needed to compile.
+
+## Gallery
+
+As time passes, I will add new screenshots of the engine in this section. New screenshots are added at the top of the list (bottom images are older).
+
+* 2021/11/07: Merging the `restart` branch, showcasing the use of ImGui and ImGuizmo for the UI
+![Screenshot from 2021/11/07 UI showcase, using ImGui and ImGuizmo](Sample_2021_11_07.png)
