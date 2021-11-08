@@ -22,7 +22,7 @@ public:
 
 		auto mesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
 		uploadMesh(mesh);
-		const auto torus = createRenderObject(mesh, application->renderer->defaultTexturedMaterial);
+		const auto torus = createEntity(mesh, application->renderer->defaultTexturedMaterial);
 		m_sceneDrawables.emplace_back(torus);
 
 		m_viewport->selectedEntity = torus;
@@ -91,7 +91,7 @@ public:
 
 private:
 	MRG::Ref<Viewport> m_viewport;
-	std::vector<MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>>> m_sceneDrawables{};
+	std::vector<MRG::Ref<MRG::Entity<MRG::TexturedVertex>>> m_sceneDrawables{};
 };
 
 class SampleApp : public MRG::Application

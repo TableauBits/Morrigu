@@ -2,8 +2,8 @@
 // Created by Mathis Lamidey on 2021-05-18.
 //
 
-#ifndef MORRIGU_RENDEROBJECT_H
-#define MORRIGU_RENDEROBJECT_H
+#ifndef MORRIGU_ENTITY_H
+#define MORRIGU_ENTITY_H
 
 #include "Rendering/Framebuffer.h"
 #include "Rendering/Material.h"
@@ -33,7 +33,7 @@ namespace MRG
 
 	// clang-format off
 	template<typename Iterator>
-	concept ROIterator =
+	concept EntityIterator =
 		std::input_iterator<Iterator> &&
 		requires(Iterator it) {
 			{(*it)->getRenderData()} -> std::convertible_to<RenderData>;
@@ -42,14 +42,14 @@ namespace MRG
 	// clang-format on
 
 	template<Vertex VertexType>
-	class RenderObject
+	class Entity
 	{
 	public:
-		RenderObject(vk::Device device,
-		             VmaAllocator allocator,
-		             const Ref<Mesh<VertexType>>& meshRef,
-		             const Ref<Material<VertexType>>& materialRef,
-		             Ref<Texture> defaultTexture)
+		Entity(vk::Device device,
+		       VmaAllocator allocator,
+		       const Ref<Mesh<VertexType>>& meshRef,
+		       const Ref<Material<VertexType>>& materialRef,
+		       Ref<Texture> defaultTexture)
 		    : mesh{meshRef}, material{materialRef}, m_device{device}, m_allocator{allocator}
 		{
 			// Pool creation
@@ -103,7 +103,7 @@ namespace MRG
 			uploadPosition();
 		}
 
-		~RenderObject() { m_device.destroyDescriptorPool(m_descriptorPool); }
+		~Entity() { m_device.destroyDescriptorPool(m_descriptorPool); }
 
 		void uploadUniform(uint32_t bindingSlot, const NotPointer auto& uniformData)
 		{
@@ -212,4 +212,4 @@ namespace MRG
 	};
 }  // namespace MRG
 
-#endif  // MORRIGU_RENDEROBJECT_H
+#endif  // MORRIGU_ENTITY_H

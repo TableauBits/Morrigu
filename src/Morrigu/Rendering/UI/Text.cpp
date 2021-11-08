@@ -44,7 +44,7 @@ namespace MRG::UI
             };
 			if (glyph->bitmap.width != 0 && glyph->bitmap.rows != 0) {
 				const auto bitmap       = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
-				const auto renderLetter = renderer->createRenderObject(quad, renderer->textUIMaterial);
+				const auto renderLetter = renderer->createEntity(quad, renderer->textUIMaterial);
 				renderLetter->bindTexture(1, bitmap);
 				renderLetter->translate({posX, posY, 0.f});
 				renderer->uploadMesh(renderLetter->mesh);

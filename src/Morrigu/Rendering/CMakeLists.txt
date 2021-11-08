@@ -10,6 +10,9 @@ set(
 		${CMAKE_CURRENT_LIST_DIR}/Camera.h
 		${CMAKE_CURRENT_LIST_DIR}/Camera.cpp
 
+		# Entity class
+		${CMAKE_CURRENT_LIST_DIR}/Entity.h
+
 		# Framebuffer class
 		${CMAKE_CURRENT_LIST_DIR}/Framebuffer.h
 		${CMAKE_CURRENT_LIST_DIR}/Framebuffer.cpp
@@ -23,9 +26,6 @@ set(
 		# Pipeline builder class
 		${CMAKE_CURRENT_LIST_DIR}/PipelineBuilder.h
 		${CMAKE_CURRENT_LIST_DIR}/PipelineBuilder.cpp
-
-		# RenderObject class
-		${CMAKE_CURRENT_LIST_DIR}/RenderObject.h
 
 		# Shader class
 		${CMAKE_CURRENT_LIST_DIR}/Shader.h

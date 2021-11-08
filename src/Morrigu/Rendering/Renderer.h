@@ -7,8 +7,8 @@
 
 #include "Events/ApplicationEvent.h"
 #include "Rendering/Camera.h"
+#include "Rendering/Entity.h"
 #include "Rendering/Framebuffer.h"
-#include "Rendering/RenderObject.h"
 #include "Rendering/RendererTypes.h"
 #include "Rendering/Texture.h"
 #include "Rendering/UI/Font.h"
@@ -89,15 +89,14 @@ namespace MRG
 		[[nodiscard]] Ref<Texture> createTexture(const char* fileName);
 
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<RenderObject<VertexType>> createRenderObject(const Ref<Mesh<VertexType>>& mesh,
-		                                                               const Ref<Material<VertexType>>& material)
+		[[nodiscard]] Ref<Entity<VertexType>> createEntity(const Ref<Mesh<VertexType>>& mesh, const Ref<Material<VertexType>>& material)
 		{
-			return createRef<RenderObject<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture);
+			return createRef<Entity<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture);
 		}
 
 		[[nodiscard]] Ref<Framebuffer> createFrameBuffer(const FramebufferSpecification& fbSpec);
 
-		void draw(ROIterator auto begin, ROIterator auto end, const Camera& camera)
+		void draw(EntityIterator auto begin, EntityIterator auto end, const Camera& camera)
 		{
 			const auto& frameData = getCurrentFrameData();
 
@@ -163,7 +162,7 @@ namespace MRG
 			}
 		}
 
-		void draw(ROIterator auto begin, ROIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
+		void draw(EntityIterator auto begin, EntityIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
 		{
 			framebuffer->commandBuffer.reset();
 			vk::CommandBufferBeginInfo beginInfo{

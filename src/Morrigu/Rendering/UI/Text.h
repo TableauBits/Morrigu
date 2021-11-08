@@ -6,7 +6,7 @@
 #define MORRIGU_TEXT_H
 
 #include "Core/Core.h"
-#include "Rendering/RenderObject.h"
+#include "Rendering/Entity.h"
 #include "Rendering/UI/Font.h"
 
 namespace MRG
@@ -27,7 +27,7 @@ namespace MRG::UI
 		struct Letter
 		{
 			Ref<Texture> bitmap;
-			Ref<RenderObject<TexturedVertex>> quad;
+			Ref<Entity<TexturedVertex>> quad;
 		};
 		std::vector<Letter> m_letters;
 	};

@@ -39,10 +39,9 @@ namespace MRG
 		}
 
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<RenderObject<VertexType>> createRenderObject(const Ref<Mesh<VertexType>>& mesh,
-		                                                               const Ref<Material<VertexType>>& material)
+		[[nodiscard]] Ref<Entity<VertexType>> createEntity(const Ref<Mesh<VertexType>>& mesh, const Ref<Material<VertexType>>& material)
 		{
-			return application->renderer->createRenderObject(mesh, material);
+			return application->renderer->createEntity(mesh, material);
 		}
 
 		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec)

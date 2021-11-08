@@ -21,7 +21,7 @@ Viewport::Viewport(MRG::Application* context, ImVec2 initialSize) : m_context{co
 	m_texID = m_framebuffer->getImTexID();
 }
 
-void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::RenderObject<MRG::TexturedVertex>>>& drawables, MRG::Timestep ts)
+void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::Entity<MRG::TexturedVertex>>>& drawables, MRG::Timestep ts)
 {
 	if ((m_size.x > 0 && m_size.y > 0) &&
 	    (static_cast<uint32_t>(m_size.x) != m_framebuffer->spec.width || static_cast<uint32_t>(m_size.y) != m_framebuffer->spec.height)) {
