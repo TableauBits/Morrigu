@@ -105,7 +105,7 @@ namespace MRG
 
 		~RenderObject() { m_device.destroyDescriptorPool(m_descriptorPool); }
 
-		void uploadUniform(uint32_t bindingSlot, const auto& uniformData)
+		void uploadUniform(uint32_t bindingSlot, const NotPointer auto& uniformData)
 		{
 			MRG_ENGINE_ASSERT(m_uniformBuffers.contains(bindingSlot), "Invalid binding slot!")
 			void* data;

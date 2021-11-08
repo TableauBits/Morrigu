@@ -61,7 +61,7 @@ public:
 		const auto minWindowSizeBackup = style.WindowMinSize.x;
 		style.WindowMinSize.x          = 70.f;
 		const auto dockspaceID         = ImGui::GetID("Macha Dockspace");
-		
+
 		ImGui::DockSpace(dockspaceID);
 
 		style.WindowMinSize.x = minWindowSizeBackup;
@@ -81,7 +81,8 @@ public:
 		// Debug window
 		if (ImGui::Begin("Debug window")) {
 			const auto color = (ts.getMilliseconds() >= 33.34f) ? ImVec4{0.8f, 0.15f, 0.15f, 1.f} : ImVec4{0.15f, 0.8f, 0.15f, 1.f};
-			ImGui::TextColored(color, "Frametime: %2.5fms (%3.2f fps)", static_cast<double>(ts.getMilliseconds()), static_cast<double>(1.f / ts));
+			ImGui::TextColored(
+			  color, "Frametime: %2.5fms (%3.2f fps)", static_cast<double>(ts.getMilliseconds()), static_cast<double>(1.f / ts));
 		}
 		ImGui::End();  // Debug window
 

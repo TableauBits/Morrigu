@@ -12,8 +12,15 @@
 #include "Rendering/Texture.h"
 #include "Rendering/Vertex.h"
 
+#include <type_traits>
+
 namespace MRG
 {
+	// clang-format off
+	template<typename T>
+	concept NotPointer = !std::is_pointer_v<T>;
+	// clang-format on
+
 	struct CameraData
 	{
 		glm::mat4 viewMatrix;
@@ -187,13 +194,12 @@ namespace MRG
 			return shader->l2UBOData.at(bindingSlot);
 		}
 
-		template<typename UniformType>
-		void uploadUniform(uint32_t bindingSlot, const UniformType& uniformData)
+		void uploadUniform(uint32_t bindingSlot, const NotPointer auto& uniformData)
 		{
 			MRG_ENGINE_ASSERT(m_uniformBuffers.contains(bindingSlot), "Invalid binding slot!")
 			void* data;
 			vmaMapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation, &data);
-			memcpy(data, &uniformData, sizeof(UniformType));
+			memcpy(data, &uniformData, sizeof(uniformData));
 			vmaUnmapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation);
 		}
 
