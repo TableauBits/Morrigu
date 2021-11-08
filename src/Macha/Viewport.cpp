@@ -99,7 +99,7 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 			                     glm::value_ptr(*selectedEntity->modelMatrix),
 			                     nullptr,
 			                     ImGui::IsKeyDown(MRG::Key::LeftControl) ? snapValues.data() : nullptr);
-			selectedEntity->uploadPosition();
+			if (ImGuizmo::IsUsing()) { selectedEntity->uploadPosition(); }
 		}
 
 		ImGui::Image(m_texID, m_size, {1, 0}, {0, 1});
