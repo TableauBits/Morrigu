@@ -26,9 +26,9 @@ namespace MRG
 		vk::Pipeline materialPipeline;
 		vk::DescriptorSet level2Descriptor;
 
-		// RO data
+		// Entity data
 		vk::DescriptorSet level3Descriptor;
-		Ref<bool> isVisible{};
+		bool isVisible{};
 	};
 
 	// clang-format off
@@ -177,27 +177,27 @@ namespace MRG
 
 		Ref<Mesh<VertexType>> mesh;
 		Ref<Material<VertexType>> material;
-		Ref<glm::mat4> modelMatrix{createRef<glm::mat4>(1.f)};
-		Ref<bool> isVisible{createRef<bool>(true)};
+		glm::mat4 modelMatrix{1.f};
+		bool isVisible{true};
 		vk::DescriptorSet level3Descriptor;
 
 		void rotate(const glm::vec3& axis, float radRotation)
 		{
-			*modelMatrix = glm::rotate(*modelMatrix, radRotation, axis);
+			modelMatrix = glm::rotate(modelMatrix, radRotation, axis);
 			uploadPosition();
 		}
 		void scale(const glm::vec3& scaling)
 		{
-			*modelMatrix = glm::scale(*modelMatrix, scaling);
+			modelMatrix = glm::scale(modelMatrix, scaling);
 			uploadPosition();
 		}
 		void translate(const glm::vec3& translation)
 		{
-			*modelMatrix = glm::translate(*modelMatrix, translation);
+			modelMatrix = glm::translate(modelMatrix, translation);
 			uploadPosition();
 		}
 
-		void uploadPosition() { uploadUniform(0, *modelMatrix); }
+		void uploadPosition() { uploadUniform(0, modelMatrix); }
 
 		void setVisible(bool visible) { *isVisible = visible; }
 

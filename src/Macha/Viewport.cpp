@@ -96,7 +96,7 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 			                     glm::value_ptr(projection),
 			                     guizmoType,
 			                     ImGuizmo::MODE::LOCAL,
-			                     glm::value_ptr(*selectedEntity->modelMatrix),
+			                     glm::value_ptr(selectedEntity->modelMatrix),
 			                     nullptr,
 			                     ImGui::IsKeyDown(MRG::Key::LeftControl) ? snapValues.data() : nullptr);
 			if (ImGuizmo::IsUsing()) { selectedEntity->uploadPosition(); }
