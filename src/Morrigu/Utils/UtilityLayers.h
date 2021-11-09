@@ -24,7 +24,7 @@ namespace MRG
 
 		[[nodiscard]] Ref<UI::Text> createText(const std::string& content, const Ref<UI::Font>& font, const glm::vec2& position)
 		{
-			return createRef<UI::Text>(content, font, position, application->renderer.get());
+			return createRef<UI::Text>(content, font, position, application->renderer.get(), registry);
 		}
 
 		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile)
@@ -41,13 +41,15 @@ namespace MRG
 		template<Vertex VertexType>
 		[[nodiscard]] Ref<Entity<VertexType>> createEntity(const Ref<Mesh<VertexType>>& mesh, const Ref<Material<VertexType>>& material)
 		{
-			return application->renderer->createEntity(mesh, material);
+			return application->renderer->createEntity(mesh, material, registry);
 		}
 
 		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec)
 		{
 			return application->renderer->createFrameBuffer(spec);
 		}
+
+		Ref<entt::registry> registry{createRef<entt::registry>()};
 	};
 
 	// This layer is an orthographic pixel perfect layer

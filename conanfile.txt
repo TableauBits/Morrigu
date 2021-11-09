@@ -1,4 +1,5 @@
 [requires]
+entt/3.8.1
 freetype/2.10.4
 glfw/3.3.2
 glm/0.9.9.8

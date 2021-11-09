@@ -35,6 +35,7 @@ target_link_libraries(
 	PUBLIC
 	Vendor
 	Vulkan::Vulkan
+	CONAN_PKG::entt
 	CONAN_PKG::freetype
 	CONAN_PKG::glfw
 	CONAN_PKG::glm

@@ -11,6 +11,8 @@
 
 #include "Utils/GLMIncludeHelper.h"
 
+#include <entt/entt.hpp>
+
 #include <iterator>
 
 namespace MRG
@@ -49,8 +51,9 @@ namespace MRG
 		       VmaAllocator allocator,
 		       const Ref<Mesh<VertexType>>& meshRef,
 		       const Ref<Material<VertexType>>& materialRef,
-		       Ref<Texture> defaultTexture)
-		    : mesh{meshRef}, material{materialRef}, m_device{device}, m_allocator{allocator}
+		       const Ref<Texture>& defaultTexture,
+		       const Ref<entt::registry>& registryRef)
+		    : mesh{meshRef}, material{materialRef}, m_registry{registryRef}, m_device{device}, m_allocator{allocator}
 		{
 			// Pool creation
 			std::array<vk::DescriptorPoolSize, 2> sizes{
@@ -101,9 +104,15 @@ namespace MRG
 			}
 
 			uploadPosition();
+
+			m_id = m_registry->create();
 		}
 
-		~Entity() { m_device.destroyDescriptorPool(m_descriptorPool); }
+		~Entity()
+		{
+			m_registry->destroy(m_id);
+			m_device.destroyDescriptorPool(m_descriptorPool);
+		}
 
 		void uploadUniform(uint32_t bindingSlot, const NotPointer auto& uniformData)
 		{
@@ -175,12 +184,6 @@ namespace MRG
 			};
 		}
 
-		Ref<Mesh<VertexType>> mesh;
-		Ref<Material<VertexType>> material;
-		glm::mat4 modelMatrix{1.f};
-		bool isVisible{true};
-		vk::DescriptorSet level3Descriptor;
-
 		void rotate(const glm::vec3& axis, float radRotation)
 		{
 			modelMatrix = glm::rotate(modelMatrix, radRotation, axis);
@@ -199,9 +202,19 @@ namespace MRG
 
 		void uploadPosition() { uploadUniform(0, modelMatrix); }
 
+		[[nodiscard]] entt::entity getID() const { return m_id; }
 		void setVisible(bool visible) { *isVisible = visible; }
 
+		Ref<Mesh<VertexType>> mesh;
+		Ref<Material<VertexType>> material;
+		glm::mat4 modelMatrix{1.f};
+		bool isVisible{true};
+		vk::DescriptorSet level3Descriptor;
+
 	private:
+		Ref<entt::registry> m_registry;
+		entt::entity m_id;
+
 		vk::Device m_device;
 		VmaAllocator m_allocator;
 

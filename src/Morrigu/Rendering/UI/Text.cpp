@@ -9,7 +9,8 @@
 
 namespace MRG::UI
 {
-	Text::Text(const std::string& content, const Ref<Font>& font, const glm::vec2& position, Renderer* renderer)
+	Text::Text(
+	  const std::string& content, const Ref<Font>& font, const glm::vec2& position, Renderer* renderer, const Ref<entt::registry>& registry)
 	{
 		m_letters.reserve(content.size());
 
@@ -44,7 +45,7 @@ namespace MRG::UI
             };
 			if (glyph->bitmap.width != 0 && glyph->bitmap.rows != 0) {
 				const auto bitmap       = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
-				const auto renderLetter = renderer->createEntity(quad, renderer->textUIMaterial);
+				const auto renderLetter = renderer->createEntity(quad, renderer->textUIMaterial, registry);
 				renderLetter->bindTexture(1, bitmap);
 				renderLetter->translate({posX, posY, 0.f});
 				renderer->uploadMesh(renderLetter->mesh);

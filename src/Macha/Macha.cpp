@@ -83,6 +83,13 @@ public:
 			const auto color = (ts.getMilliseconds() >= 33.34f) ? ImVec4{0.8f, 0.15f, 0.15f, 1.f} : ImVec4{0.15f, 0.8f, 0.15f, 1.f};
 			ImGui::TextColored(
 			  color, "Frametime: %2.5fms (%3.2f fps)", static_cast<double>(ts.getMilliseconds()), static_cast<double>(1.f / ts));
+
+			const auto& entity = m_viewport->selectedEntity;
+			if (entity != nullptr) {
+				ImGui::Text("Selected entity ID: %d", entity->getID());
+			} else {
+				ImGui::Text("No entity selected");
+			}
 		}
 		ImGui::End();  // Debug window
 

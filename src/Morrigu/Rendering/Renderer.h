@@ -89,9 +89,10 @@ namespace MRG
 		[[nodiscard]] Ref<Texture> createTexture(const char* fileName);
 
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<Entity<VertexType>> createEntity(const Ref<Mesh<VertexType>>& mesh, const Ref<Material<VertexType>>& material)
+		[[nodiscard]] Ref<Entity<VertexType>>
+		createEntity(const Ref<Mesh<VertexType>>& mesh, const Ref<Material<VertexType>>& material, const Ref<entt::registry>& registry)
 		{
-			return createRef<Entity<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture);
+			return createRef<Entity<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture, registry);
 		}
 
 		[[nodiscard]] Ref<Framebuffer> createFrameBuffer(const FramebufferSpecification& fbSpec);
