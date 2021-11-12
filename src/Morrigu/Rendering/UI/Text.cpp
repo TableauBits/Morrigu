@@ -44,24 +44,17 @@ namespace MRG::UI
               MRG::TexturedVertex{.position{0.f, -yAbs, 0.f}, .normal{0.f, 0.f, -1.f}, .texCoords{0.f, 1.f}},
             };
 			if (glyph->bitmap.width != 0 && glyph->bitmap.rows != 0) {
-				const auto bitmap       = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
-				const auto renderLetter = renderer->createEntity(quad, renderer->textUIMaterial, registry);
-				renderLetter->bindTexture(1, bitmap);
-				renderLetter->translate({posX, posY, 0.f});
-				renderer->uploadMesh(renderLetter->mesh);
+				const auto bitmap = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
+				auto renderLetter = renderer->createEntity(registry);
+				auto& mrc         = renderLetter->addComponent<Components::MeshRenderer<TexturedVertex>>(
+                  renderer->createMeshRenderer(quad, renderer->textUIMaterial));
+				mrc.bindTexture(1, bitmap);
+				mrc.translate({posX, posY, 0.f});
+				renderer->uploadMesh(mrc.mesh);
 				m_letters.emplace_back(Letter{bitmap, renderLetter});
 			}
 			posX += static_cast<float>(glyph->advance.x >> 6);
 			posY += static_cast<float>(glyph->advance.y >> 6);
 		}
-	}
-
-	std::vector<RenderData> Text::getCollectionRenderData()
-	{
-		std::vector<RenderData> rd;
-		rd.reserve(m_letters.size());
-		for (const auto& letter : m_letters) { rd.emplace_back(letter.quad->getRenderData()); }
-
-		return rd;
 	}
 }  // namespace MRG::UI

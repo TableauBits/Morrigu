@@ -20,33 +20,22 @@ namespace MRG
 			application->renderer->uploadMesh(mesh);
 		}
 
-		[[nodiscard]] Ref<UI::Font> createFont(const std::string& filePath) { return application->renderer->createFont(filePath); }
-
-		[[nodiscard]] Ref<UI::Text> createText(const std::string& content, const Ref<UI::Font>& font, const glm::vec2& position)
-		{
-			return createRef<UI::Text>(content, font, position, application->renderer.get(), registry);
-		}
-
-		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile)
-		{
-			return application->renderer->createShader(vertexShaderFile.c_str(), fragmentShaderFile.c_str());
-		}
+		[[nodiscard]] Ref<UI::Font> createFont(const std::string& filePath);
+		[[nodiscard]] Ref<UI::Text> createText(const std::string& content, const Ref<UI::Font>& font, const glm::vec2& position);
+		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile);
+		[[nodiscard]] Ref<Entity> createEntity();
+		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec);
 
 		template<Vertex VertexType>
 		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader, const MaterialConfiguration& config = {})
 		{
 			return application->renderer->createMaterial<VertexType>(shader, config);
 		}
-
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<Entity<VertexType>> createEntity(const Ref<Mesh<VertexType>>& mesh, const Ref<Material<VertexType>>& material)
+		[[nodiscard]] Components::MeshRenderer<VertexType>::VulkanObjects createMeshRenderer(const Ref<Mesh<VertexType>>& meshRef,
+		                                                                                     const Ref<Material<VertexType>>& materialRef)
 		{
-			return application->renderer->createEntity(mesh, material, registry);
-		}
-
-		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec)
-		{
-			return application->renderer->createFrameBuffer(spec);
+			return application->renderer->createMeshRenderer<VertexType>(meshRef, materialRef);
 		}
 
 		Ref<entt::registry> registry{createRef<entt::registry>()};

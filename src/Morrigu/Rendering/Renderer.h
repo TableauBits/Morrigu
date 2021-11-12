@@ -7,6 +7,7 @@
 
 #include "Events/ApplicationEvent.h"
 #include "Rendering/Camera.h"
+#include "Rendering/Components/MeshRenderer.h"
 #include "Rendering/Entity.h"
 #include "Rendering/Framebuffer.h"
 #include "Rendering/RendererTypes.h"
@@ -88,16 +89,19 @@ namespace MRG
 
 		[[nodiscard]] Ref<Texture> createTexture(const char* fileName);
 
+		[[nodiscard]] Ref<Entity> createEntity(const Ref<entt::registry>& registry);
+
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<Entity<VertexType>>
-		createEntity(const Ref<Mesh<VertexType>>& mesh, const Ref<Material<VertexType>>& material, const Ref<entt::registry>& registry)
+		[[nodiscard]] Components::MeshRenderer<VertexType>::VulkanObjects createMeshRenderer(const Ref<Mesh<VertexType>>& meshRef,
+		                                                                                     const Ref<Material<VertexType>>& materialRef)
 		{
-			return createRef<Entity<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture, registry);
+			return Components::MeshRenderer<VertexType>::VulkanObjects(m_device, m_allocator, meshRef, materialRef, defaultTexture);
 		}
 
 		[[nodiscard]] Ref<Framebuffer> createFrameBuffer(const FramebufferSpecification& fbSpec);
 
-		void draw(EntityIterator auto begin, EntityIterator auto end, const Camera& camera)
+		template<Vertex VertexType>
+		void drawMeshes(EntityIterator auto begin, EntityIterator auto end, const Camera& camera)
 		{
 			const auto& frameData = getCurrentFrameData();
 
@@ -113,18 +117,20 @@ namespace MRG
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
 			while (begin != end) {
-				const auto entity = (*begin)->getRenderData();
-				if (!(*entity.isVisible)) { continue; }
+				Ref<Entity> entity = *begin;
+				if (!entity->hasComponents<Components::MeshRenderer<VertexType>>()) { continue; }
+				const auto& mrc = entity->getComponent<Components::MeshRenderer<VertexType>>();
+				if (!mrc.isVisible) { continue; }
 				if (isFirst) {
 					frameData.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-					                                           entity.materialPipelineLayout,
+					                                           mrc.material->pipelineLayout,
 					                                           0,
 					                                           {frameData.level0Descriptor, m_level1Descriptor},
 					                                           {});
 					isFirst = false;
 				}
-				if (currentMaterial != entity.materialPipeline) {
-					frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, entity.materialPipeline);
+				if (currentMaterial != mrc.material->pipeline) {
+					frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mrc.material->pipeline);
 					frameData.commandBuffer.setViewport(0,
 					                                    vk::Viewport{
 					                                      .x        = 0.f,
@@ -141,8 +147,8 @@ namespace MRG
 					    .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
 					  });
 					frameData.commandBuffer.bindDescriptorSets(
-					  vk::PipelineBindPoint::eGraphics, entity.materialPipelineLayout, 2, entity.level2Descriptor, {});
-					currentMaterial = entity.materialPipeline;
+					  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 2, mrc.material->level2Descriptor, {});
+					currentMaterial = mrc.material->pipeline;
 				}
 
 				CameraData cameraData{
@@ -151,19 +157,20 @@ namespace MRG
 				  .viewProjectionMatrix = camera.getViewProjection(),
 				};
 				frameData.commandBuffer.pushConstants(
-				  entity.materialPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
+				  mrc.material->pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
 
 				frameData.commandBuffer.bindDescriptorSets(
-				  vk::PipelineBindPoint::eGraphics, entity.materialPipelineLayout, 3, entity.level3Descriptor, {});
+				  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 3, mrc.level3Descriptor, {});
 
-				frameData.commandBuffer.bindVertexBuffers(0, entity.vertexBuffer, {0});
-				frameData.commandBuffer.draw(static_cast<uint32_t>(entity.vertexCount), 1, 0, 0);
+				frameData.commandBuffer.bindVertexBuffers(0, mrc.mesh->vertexBuffer.vkHandle, {0});
+				frameData.commandBuffer.draw(static_cast<uint32_t>(mrc.mesh->vertices.size()), 1, 0, 0);
 
 				++begin;
 			}
 		}
 
-		void draw(EntityIterator auto begin, EntityIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
+		template<Vertex VertexType>
+		void drawMeshes(EntityIterator auto begin, EntityIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
 		{
 			framebuffer->commandBuffer.reset();
 			vk::CommandBufferBeginInfo beginInfo{
@@ -203,18 +210,26 @@ namespace MRG
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
 			while (begin != end) {
-				const auto entity = (*begin)->getRenderData();
-				if (!entity.isVisible) { continue; }
+				Ref<Entity> entity = *begin;
+				if (!entity->hasComponents<Components::MeshRenderer<VertexType>>()) {
+					++begin;
+					continue;
+				}
+				const auto& mrc = entity->getComponent<Components::MeshRenderer<VertexType>>();
+				if (!mrc.isVisible) {
+					++begin;
+					continue;
+				}
 				if (isFirst) {
 					framebuffer->commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-					                                              entity.materialPipelineLayout,
+					                                              mrc.material->pipelineLayout,
 					                                              0,
 					                                              {framebuffer->level0Descriptor, m_level1Descriptor},
 					                                              {});
 					isFirst = false;
 				}
-				if (currentMaterial != entity.materialPipeline) {
-					framebuffer->commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, entity.materialPipeline);
+				if (currentMaterial != mrc.material->pipeline) {
+					framebuffer->commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mrc.material->pipeline);
 					framebuffer->commandBuffer.setViewport(0,
 					                                       vk::Viewport{
 					                                         .x        = 0.f,
@@ -230,8 +245,8 @@ namespace MRG
 					                                        .extent = {framebuffer->spec.width, framebuffer->spec.height},
 					                                      });
 					framebuffer->commandBuffer.bindDescriptorSets(
-					  vk::PipelineBindPoint::eGraphics, entity.materialPipelineLayout, 2, entity.level2Descriptor, {});
-					currentMaterial = entity.materialPipeline;
+					  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 2, mrc.material->level2Descriptor, {});
+					currentMaterial = mrc.material->pipeline;
 				}
 
 				CameraData cameraData{
@@ -240,13 +255,13 @@ namespace MRG
 				  .viewProjectionMatrix = camera.getViewProjection(),
 				};
 				framebuffer->commandBuffer.pushConstants(
-				  entity.materialPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
+				  mrc.material->pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
 
 				framebuffer->commandBuffer.bindDescriptorSets(
-				  vk::PipelineBindPoint::eGraphics, entity.materialPipelineLayout, 3, entity.level3Descriptor, {});
+				  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 3, mrc.level3Descriptor, {});
 
-				framebuffer->commandBuffer.bindVertexBuffers(0, entity.vertexBuffer, {0});
-				framebuffer->commandBuffer.draw(static_cast<uint32_t>(entity.vertexCount), 1, 0, 0);
+				framebuffer->commandBuffer.bindVertexBuffers(0, mrc.mesh->vertexBuffer.vkHandle, {0});
+				framebuffer->commandBuffer.draw(static_cast<uint32_t>(mrc.mesh->vertices.size()), 1, 0, 0);
 
 				++begin;
 			}

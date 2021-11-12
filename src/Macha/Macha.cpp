@@ -20,12 +20,14 @@ public:
 	{
 		m_viewport = MRG::createRef<Viewport>(application, ImVec2{1280.f, 720.f});
 
+		auto torus = createEntity();
+		m_entities.emplace_back(torus);
+		m_viewport->selectedEntity = torus;
+
 		auto mesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
 		uploadMesh(mesh);
-		const auto torus = createEntity(mesh, application->renderer->defaultTexturedMaterial);
-		m_sceneDrawables.emplace_back(torus);
-
-		m_viewport->selectedEntity = torus;
+		torus->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(
+		  createMeshRenderer(mesh, application->renderer->defaultTexturedMaterial));
 
 		ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 	}
@@ -33,7 +35,7 @@ public:
 	void onUpdate(MRG::Timestep ts) override
 	{
 		// Update viewport
-		m_viewport->onUpdate(m_sceneDrawables, ts);
+		m_viewport->onUpdate(m_entities, ts);
 	}
 
 	void onEvent(MRG::Event& event) override { m_viewport->onEvent(event); }
@@ -98,7 +100,7 @@ public:
 
 private:
 	MRG::Ref<Viewport> m_viewport;
-	std::vector<MRG::Ref<MRG::Entity<MRG::TexturedVertex>>> m_sceneDrawables{};
+	std::vector<MRG::Ref<MRG::Entity>> m_entities{};
 };
 
 class SampleApp : public MRG::Application

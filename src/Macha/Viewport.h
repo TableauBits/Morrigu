@@ -15,7 +15,7 @@ class Viewport
 public:
 	Viewport(MRG::Application* context, ImVec2 initialSize);
 
-	void onUpdate(const std::vector<MRG::Ref<MRG::Entity<MRG::TexturedVertex>>>& drawables, MRG::Timestep ts);
+	void onUpdate(const std::vector<MRG::Ref<MRG::Entity>>& entities, MRG::Timestep ts);
 	void onImGuiUpdate(MRG::Timestep ts);
 	bool onEvent(MRG::Event& event);
 
@@ -23,7 +23,7 @@ public:
 	MRG::StandardCamera camera{};
 
 	ImGuizmo::OPERATION guizmoType{ImGuizmo::OPERATION::TRANSLATE};
-	MRG::Ref<MRG::Entity<MRG::TexturedVertex>> selectedEntity{};
+	MRG::Ref<MRG::Entity> selectedEntity{};
 
 	std::string name{"Viewport"};
 

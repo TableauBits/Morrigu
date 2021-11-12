@@ -25,13 +25,11 @@ namespace MRG::UI
 		     Renderer* renderer,
 		     const Ref<entt::registry>& registry);
 
-		[[nodiscard]] std::vector<RenderData> getCollectionRenderData();
-
 	private:
 		struct Letter
 		{
 			Ref<Texture> bitmap;
-			Ref<Entity<TexturedVertex>> quad;
+			Ref<Entity> quad;
 		};
 		std::vector<Letter> m_letters;
 	};

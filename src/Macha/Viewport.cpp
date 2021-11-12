@@ -21,7 +21,7 @@ Viewport::Viewport(MRG::Application* context, ImVec2 initialSize) : m_context{co
 	m_texID = m_framebuffer->getImTexID();
 }
 
-void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::Entity<MRG::TexturedVertex>>>& drawables, MRG::Timestep ts)
+void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::Entity>>& entities, MRG::Timestep ts)
 {
 	if ((m_size.x > 0 && m_size.y > 0) &&
 	    (static_cast<uint32_t>(m_size.x) != m_framebuffer->spec.width || static_cast<uint32_t>(m_size.y) != m_framebuffer->spec.height)) {
@@ -65,7 +65,7 @@ void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::Entity<MRG::TexturedVert
 		}
 	}
 
-	m_context->renderer->draw(drawables.begin(), drawables.end(), camera, m_framebuffer);
+	m_context->renderer->drawMeshes<MRG::TexturedVertex>(entities.begin(), entities.end(), camera, m_framebuffer);
 }
 
 void Viewport::onImGuiUpdate(MRG::Timestep)
@@ -86,7 +86,9 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 		float snap = (guizmoType == ImGuizmo::OPERATION::ROTATE) ? 45.f : 0.5f;
 		std::array<float, 3> snapValues{snap, snap, snap};
 
-		if (selectedEntity != nullptr) {
+		if (selectedEntity != nullptr && selectedEntity->hasComponents<MRG::Components::MeshRenderer<MRG::TexturedVertex>>()) {
+			auto& mrc = selectedEntity->getComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>();
+
 			const auto windowPos = ImGui::GetWindowPos();
 			ImGuizmo::SetRect(windowPos.x, windowPos.y, m_size.x, m_size.y);
 			auto projection = camera.getProjection();
@@ -96,10 +98,10 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 			                     glm::value_ptr(projection),
 			                     guizmoType,
 			                     ImGuizmo::MODE::LOCAL,
-			                     glm::value_ptr(selectedEntity->modelMatrix),
+			                     glm::value_ptr(mrc.modelMatrix),
 			                     nullptr,
 			                     ImGui::IsKeyDown(MRG::Key::LeftControl) ? snapValues.data() : nullptr);
-			if (ImGuizmo::IsUsing()) { selectedEntity->uploadPosition(); }
+			if (ImGuizmo::IsUsing()) { mrc.uploadPosition(); }
 		}
 
 		ImGui::Image(m_texID, m_size, {1, 0}, {0, 1});

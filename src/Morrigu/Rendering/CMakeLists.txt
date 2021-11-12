@@ -1,7 +1,11 @@
+include(${CMAKE_CURRENT_LIST_DIR}/Components/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/UI/CMakeLists.txt)
 
 set(
 		MRG_RENDERING_SOURCES
+
+		# Component sources
+		${MRG_COMPONENT_SOURCES}
 
 		# UI sources
 		${MRG_UI_SOURCES}
