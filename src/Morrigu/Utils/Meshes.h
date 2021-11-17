@@ -44,4 +44,4 @@ namespace MRG::Utils::Meshes
 	}
 }  // namespace MRG::Utils::Meshes
 
-#endif  // MORRIGU_DEFAULTMESHES_H
+#endif  // MORRIGU_UTILSMESHES_H

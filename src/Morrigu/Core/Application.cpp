@@ -159,7 +159,7 @@ namespace MRG
 		return true;
 	}
 
-	bool Application::onResize(WindowResizeEvent& resize)
+	bool Application::onResize(WindowResizeEvent& resize) const
 	{
 		int width = resize.getWidth(), height = resize.getHeight();
 		while (width == 0 || height == 0) {

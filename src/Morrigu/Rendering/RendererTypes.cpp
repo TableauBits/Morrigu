@@ -44,11 +44,11 @@ namespace MRG
 		vkHandle = newRawBuffer;
 	}
 
-	AllocatedBuffer::AllocatedBuffer(AllocatedBuffer&& other)
+	AllocatedBuffer::AllocatedBuffer(AllocatedBuffer&& other) noexcept
 	{
-		allocator  = std::move(other.allocator);
-		vkHandle   = std::move(other.vkHandle);
-		allocation = std::move(other.allocation);
+		allocator  = other.allocator;
+		vkHandle   = other.vkHandle;
+		allocation = other.allocation;
 
 		// necessary to indicate we've taken ownership
 		other.allocator = nullptr;
@@ -59,13 +59,13 @@ namespace MRG
 		if (allocator != nullptr) { vmaDestroyBuffer(allocator, vkHandle, allocation); }
 	}
 
-	AllocatedBuffer& AllocatedBuffer::operator=(AllocatedBuffer&& other)
+	AllocatedBuffer& AllocatedBuffer::operator=(AllocatedBuffer&& other) noexcept
 	{
 		if (allocator != nullptr) { vmaDestroyBuffer(allocator, vkHandle, allocation); }
 
-		allocator  = std::move(other.allocator);
-		vkHandle   = std::move(other.vkHandle);
-		allocation = std::move(other.allocation);
+		allocator  = other.allocator;
+		vkHandle   = other.vkHandle;
+		allocation = other.allocation;
 
 		// necessary to indicate we've taken ownership
 		other.allocator = nullptr;
@@ -212,12 +212,12 @@ namespace MRG
 		view = spec.device.createImageView(imageViewInfo);
 	}
 
-	AllocatedImage::AllocatedImage(AllocatedImage&& other)
+	AllocatedImage::AllocatedImage(AllocatedImage&& other) noexcept
 	{
-		spec       = std::move(other.spec);
-		allocation = std::move(other.allocation);
-		vkHandle   = std::move(other.vkHandle);
-		view       = std::move(other.view);
+		spec       = other.spec;
+		allocation = other.allocation;
+		vkHandle   = other.vkHandle;
+		view       = other.view;
 
 		// necessary to indicate we've taken ownership
 		other.spec.allocator = nullptr;
@@ -231,17 +231,17 @@ namespace MRG
 		}
 	}
 
-	AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other)
+	AllocatedImage& AllocatedImage::operator=(AllocatedImage&& other) noexcept
 	{
 		if (spec.allocator != nullptr) {
 			spec.device.destroyImageView(view);
 			vmaDestroyImage(spec.allocator, vkHandle, allocation);
 		}
 
-		spec       = std::move(other.spec);
-		allocation = std::move(other.allocation);
-		vkHandle   = std::move(other.vkHandle);
-		view       = std::move(other.view);
+		spec       = other.spec;
+		allocation = other.allocation;
+		vkHandle   = other.vkHandle;
+		view       = other.view;
 
 		// necessary to indicate we've taken ownership
 		other.spec.allocator = nullptr;

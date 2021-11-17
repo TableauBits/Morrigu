@@ -47,14 +47,14 @@
 #define MRG_ENGINE_ASSERT(x, ...)                                                                                                          \
 	{                                                                                                                                      \
 		if (!(x)) {                                                                                                                        \
-			MRG_ENGINE_ERROR("Assertion failed: {0}", __VA_ARGS__)                                                                         \
+			MRG_ENGINE_ERROR("Assertion failed: {0}", fmt::format(__VA_ARGS__))                                                            \
 			DEBUG_BREAK;                                                                                                                   \
 		}                                                                                                                                  \
 	}
 #define MRG_ASSERT(x, ...)                                                                                                                 \
 	{                                                                                                                                      \
 		if (!(x)) {                                                                                                                        \
-			MRG_ERROR("Assertion failed: {0}", __VA_ARGS__)                                                                                \
+			MRG_ERROR("Assertion failed: {0}", fmt::format(__VA_ARGS__))                                                                                \
 			DEBUG_BREAK;                                                                                                                   \
 		}                                                                                                                                  \
 	}

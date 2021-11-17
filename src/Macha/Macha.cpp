@@ -88,7 +88,7 @@ public:
 
 			const auto& entity = m_viewport->selectedEntity;
 			if (entity != nullptr) {
-				ImGui::Text("Selected entity ID: %d", entity->getID());
+				ImGui::Text("Selected entity ID: %d", static_cast<int>(entity->getID()));
 			} else {
 				ImGui::Text("No entity selected");
 			}

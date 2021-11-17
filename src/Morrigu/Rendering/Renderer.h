@@ -95,7 +95,8 @@ namespace MRG
 		[[nodiscard]] Components::MeshRenderer<VertexType>::VulkanObjects createMeshRenderer(const Ref<Mesh<VertexType>>& meshRef,
 		                                                                                     const Ref<Material<VertexType>>& materialRef)
 		{
-			return Components::MeshRenderer<VertexType>::VulkanObjects(m_device, m_allocator, meshRef, materialRef, defaultTexture);
+			return
+			  typename Components::MeshRenderer<VertexType>::VulkanObjects{m_device, m_allocator, meshRef, materialRef, defaultTexture};
 		}
 
 		[[nodiscard]] Ref<Framebuffer> createFrameBuffer(const FramebufferSpecification& fbSpec);

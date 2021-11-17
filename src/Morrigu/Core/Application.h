@@ -31,6 +31,8 @@ namespace MRG
 		Application& operator=(const Application&) = delete;
 		Application& operator=(Application&&) = delete;
 
+		~Application() = default;
+
 		void run();
 
 		void pushLayer(Layer* newLayer);
@@ -46,7 +48,7 @@ namespace MRG
 
 		void onEvent(Event& event);
 		bool onClose(WindowCloseEvent& resizeEvent);
-		bool onResize(WindowResizeEvent& resizeEvent);
+		bool onResize(WindowResizeEvent& resizeEvent) const;
 
 		bool m_isRunning = true;
 		float m_lastTime = 0.f;
