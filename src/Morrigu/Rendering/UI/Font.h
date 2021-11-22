@@ -27,7 +27,7 @@ namespace MRG::UI
 
 		void setSize(uint32_t pointSize);
 
-		FT_Face face;
+		FT_Face face{};
 	};
 }  // namespace MRG::UI
 

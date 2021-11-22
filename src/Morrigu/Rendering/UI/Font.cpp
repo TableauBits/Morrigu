@@ -34,5 +34,5 @@ namespace MRG::UI
 		if (face != nullptr) { FT_Done_Face(face); }
 	}
 
-	void Font::setSize(uint32_t pointSize) { FT_Set_Char_Size(face, 0, pointSize * 64, 96, 96); }
+	void Font::setSize(uint32_t pointSize) { FT_Set_Char_Size(face, 0, static_cast<FT_F26Dot6>(pointSize * 64), 96, 96); }
 }  // namespace MRG::UI

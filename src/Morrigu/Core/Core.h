@@ -54,7 +54,7 @@
 #define MRG_ASSERT(x, ...)                                                                                                                 \
 	{                                                                                                                                      \
 		if (!(x)) {                                                                                                                        \
-			MRG_ERROR("Assertion failed: {0}", fmt::format(__VA_ARGS__))                                                                                \
+			MRG_ERROR("Assertion failed: {0}", fmt::format(__VA_ARGS__))                                                                   \
 			DEBUG_BREAK;                                                                                                                   \
 		}                                                                                                                                  \
 	}

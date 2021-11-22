@@ -12,6 +12,12 @@ namespace MRG
 	public:
 		GLFWWrapper();
 		~GLFWWrapper();
+
+		GLFWWrapper(const GLFWWrapper&) = delete;
+		GLFWWrapper(GLFWWrapper&&)      = delete;
+
+		GLFWWrapper& operator=(const GLFWWrapper&) = delete;
+		GLFWWrapper& operator=(GLFWWrapper&&) = delete;
 	};
 }  // namespace MRG
 

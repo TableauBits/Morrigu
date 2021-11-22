@@ -112,7 +112,7 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 
 bool Viewport::onEvent(MRG::Event& event)
 {
-	if (!m_isFocused && !m_isHovered) return false;
+	if (!m_isFocused && !m_isHovered) { return false; }
 	bool handled = false;
 	MRG::EventDispatcher dispatcher{event};
 
