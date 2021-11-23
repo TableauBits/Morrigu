@@ -8,6 +8,7 @@
 #include "Rendering/Material.h"
 #include "Rendering/Mesh.h"
 #include "Rendering/Vertex.h"
+#include "Utils/GLMIncludeHelper.h"
 
 namespace MRG::Components
 {
@@ -75,13 +76,12 @@ namespace MRG::Components
 				bindTexture(imageBinding, objs.defaultTexture);
 			}
 
-			uploadPosition();
+			updateTransform(glm::mat4{1.f});
 		}
 
 		MeshRenderer(const MeshRenderer&) = delete;
 		MeshRenderer(MeshRenderer&& other)
 		{
-			modelMatrix      = std::move(other.modelMatrix);
 			isVisible        = std::move(other.isVisible);
 			mesh             = std::move(other.mesh);
 			material         = std::move(other.material);
@@ -106,7 +106,6 @@ namespace MRG::Components
 
 		MeshRenderer& operator=(MeshRenderer&& other)
 		{
-			modelMatrix      = std::move(other.modelMatrix);
 			isVisible        = std::move(other.isVisible);
 			mesh             = std::move(other.mesh);
 			material         = std::move(other.material);
@@ -181,25 +180,8 @@ namespace MRG::Components
 			m_device.updateDescriptorSets(textureUpdate, {});
 		}
 
-		void rotate(const glm::vec3& axis, float radRotation)
-		{
-			modelMatrix = glm::rotate(modelMatrix, radRotation, axis);
-			uploadPosition();
-		}
-		void scale(const glm::vec3& scaling)
-		{
-			modelMatrix = glm::scale(modelMatrix, scaling);
-			uploadPosition();
-		}
-		void translate(const glm::vec3& translation)
-		{
-			modelMatrix = glm::translate(modelMatrix, translation);
-			uploadPosition();
-		}
+		void updateTransform(const glm::mat4& transform) { uploadUniform(0, transform); }
 
-		void uploadPosition() { uploadUniform(0, modelMatrix); }
-
-		glm::mat4 modelMatrix{1.f};
 		bool isVisible{true};
 
 		Ref<Mesh<VertexType>> mesh;

@@ -5,11 +5,7 @@
 #ifndef MORRIGU_ENTITY_H
 #define MORRIGU_ENTITY_H
 
-#include "Rendering/Framebuffer.h"
-#include "Rendering/Material.h"
-#include "Rendering/Mesh.h"
-
-#include "Utils/GLMIncludeHelper.h"
+#include "Rendering/Components/Transform.h"
 
 #include <entt/entt.hpp>
 
@@ -17,10 +13,17 @@
 
 namespace MRG
 {
+	template<typename Component>
+	concept NonEssentialComponent = !std::is_same_v<Component, Components::Transform>;
+
 	class Entity
 	{
 	public:
-		Entity(const Ref<entt::registry>& registryRef) : m_registry{registryRef} { m_id = m_registry->create(); }
+		Entity(const Ref<entt::registry>& registryRef) : m_registry{registryRef}
+		{
+			m_id = m_registry->create();
+			m_registry->emplace<Components::Transform>(m_id);
+		}
 
 		~Entity() { m_registry->destroy(m_id); }
 
@@ -37,7 +40,7 @@ namespace MRG
 			return m_registry->get<ComponentType>(m_id);
 		}
 
-		template<typename ComponentType, typename... Args>
+		template<NonEssentialComponent ComponentType, typename... Args>
 		ComponentType& addComponent(Args&&... args)
 		{
 			MRG_ENGINE_ASSERT(!hasComponents<ComponentType>(), "Entity {} already has component!", m_id)
@@ -46,7 +49,7 @@ namespace MRG
 			return component;
 		}
 
-		template<typename ComponentType>
+		template<NonEssentialComponent ComponentType>
 		void removeComponent()
 		{
 			MRG_ENGINE_ASSERT(hasComponents<ComponentType>(), "Entity {}, does not have a component of the requested type!", m_id)

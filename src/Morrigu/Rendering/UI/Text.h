@@ -7,6 +7,7 @@
 
 #include "Core/Core.h"
 #include "Rendering/Entity.h"
+#include "Rendering/Texture.h"
 #include "Rendering/UI/Font.h"
 
 namespace MRG

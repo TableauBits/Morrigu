@@ -46,10 +46,12 @@ namespace MRG::UI
 			if (glyph->bitmap.width != 0 && glyph->bitmap.rows != 0) {
 				const auto bitmap = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
 				auto renderLetter = renderer->createEntity(registry);
+				auto& tc          = renderLetter->getComponent<Components::Transform>();
 				auto& mrc         = renderLetter->addComponent<Components::MeshRenderer<TexturedVertex>>(
                   renderer->createMeshRenderer(quad, renderer->textUIMaterial));
 				mrc.bindTexture(1, bitmap);
-				mrc.translate({posX, posY, 0.f});
+				tc.translation = {posX, posY, 0.f};
+				mrc.updateTransform(tc.getTransform());
 				renderer->uploadMesh(mrc.mesh);
 				m_letters.emplace_back(Letter{bitmap, renderLetter});
 			}

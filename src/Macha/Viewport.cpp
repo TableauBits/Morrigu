@@ -87,7 +87,9 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 		std::array<float, 3> snapValues{snap, snap, snap};
 
 		if (selectedEntity != nullptr && selectedEntity->hasComponents<MRG::Components::MeshRenderer<MRG::TexturedVertex>>()) {
-			auto& mrc = selectedEntity->getComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>();
+			auto& tc       = selectedEntity->getComponent<MRG::Components::Transform>();
+			auto transform = tc.getTransform();
+			auto& mrc      = selectedEntity->getComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>();
 
 			const auto windowPos = ImGui::GetWindowPos();
 			ImGuizmo::SetRect(windowPos.x, windowPos.y, m_size.x, m_size.y);
@@ -98,10 +100,17 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 			                     glm::value_ptr(projection),
 			                     guizmoType,
 			                     ImGuizmo::MODE::LOCAL,
-			                     glm::value_ptr(mrc.modelMatrix),
+			                     glm::value_ptr(transform),
 			                     nullptr,
 			                     ImGui::IsKeyDown(MRG::Key::LeftControl) ? snapValues.data() : nullptr);
-			if (ImGuizmo::IsUsing()) { mrc.uploadPosition(); }
+			if (ImGuizmo::IsUsing()) {
+				auto [translation, rotation, scale] = MRG::Utils::Maths::decomposeTransform(transform);
+				tc.translation                      = translation;
+				tc.rotation                         = rotation;
+				tc.scale                            = scale;
+
+				mrc.updateTransform(tc.getTransform());
+			}
 		}
 
 		ImGui::Image(m_texID, m_size, {1, 0}, {0, 1});
