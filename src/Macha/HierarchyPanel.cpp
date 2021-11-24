@@ -8,8 +8,11 @@ void HierarchyPanel::onImGuiUpdate(const std::vector<MRG::Ref<MRG::Entity>>& ent
 {
 	if (ImGui::Begin("Scene hierarchy")) {}
 
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {0.f, 0.f});
+	ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, {0.f, 5.f});
 	for (const auto& entity : entities) { renderEntity(entity); }
 	if (ImGui::IsMouseDown(MRG::Mouse::ButtonLeft) && ImGui::IsWindowHovered()) { modifySelectedEntity(nullptr); }
+	ImGui::PopStyleVar(2);
 
 	ImGui::End();
 }
@@ -18,7 +21,7 @@ void HierarchyPanel::renderEntity(const MRG::Ref<MRG::Entity>& entity)
 {
 	const auto name = entity->getName();
 
-	int flags = ImGuiTreeNodeFlags_Leaf;  // ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+	int flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
 	if (entity == selectedEntity) { flags |= ImGuiTreeNodeFlags_Selected; }
 
 	// I pray that God forgives ImGui, because he sure knows I can't
