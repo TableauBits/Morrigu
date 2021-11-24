@@ -20,11 +20,12 @@ namespace MRG
 			application->renderer->uploadMesh(mesh);
 		}
 
-		[[nodiscard]] Ref<UI::Font> createFont(const std::string& filePath);
-		[[nodiscard]] Ref<UI::Text> createText(const std::string& content, const Ref<UI::Font>& font, const glm::vec2& position);
-		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile);
 		[[nodiscard]] Ref<Entity> createEntity();
+		[[nodiscard]] Ref<UI::Font> createFont(const std::string& filePath);
 		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec);
+		[[nodiscard]] Ref<UI::Text> createText(const std::string& content, const Ref<UI::Font>& font, const glm::vec2& position);
+		[[nodiscard]] Ref<Texture> createTexture(const std::string& filePath);
+		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile);
 
 		template<Vertex VertexType>
 		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader, const MaterialConfiguration& config = {})

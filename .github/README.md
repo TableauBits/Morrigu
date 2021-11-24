@@ -20,5 +20,8 @@ As this project is still fairly young, things are still moving, so I won't have 
 
 As time passes, I will add new screenshots of the engine in this section. New screenshots are added at the top of the list (bottom images are older).
 
+* 2021/11/07: Working on the ECS for the engine, here is the first prototype of a hierarchy panel
+![Gif from 2021/11/23 showing the first version of the hierarchy panel](Sample_2021_11_23.gif)
+
 * 2021/11/07: Merging the `restart` branch, showcasing the use of ImGui and ImGuizmo for the UI
 ![Screenshot from 2021/11/07 UI showcase, using ImGui and ImGuizmo](Sample_2021_11_07.png)

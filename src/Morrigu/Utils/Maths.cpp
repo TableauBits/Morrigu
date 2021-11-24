@@ -41,11 +41,11 @@ namespace MRG::Utils::Maths
 
 		rotation.y = asin(-Row[0][2]);
 		if (cos(rotation.y) != 0) {
-			rotation.x = atan2(Row[1][2], Row[2][2]);
-			rotation.z = atan2(Row[0][1], Row[0][0]);
+			rotation.x = static_cast<float>(atan2(Row[1][2], Row[2][2]));
+			rotation.z = static_cast<float>(atan2(Row[0][1], Row[0][0]));
 		} else {
-			rotation.x = atan2(-Row[2][0], Row[1][1]);
-			rotation.z = 0;
+			rotation.x = static_cast<float>(atan2(-Row[2][0], Row[1][1]));
+			rotation.z = 0.f;
 		}
 
 		return {translation, rotation, scale};

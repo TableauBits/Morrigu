@@ -4,6 +4,7 @@
 
 #include "MaterialEditorLayer.h"
 
+#include "HierarchyPanel.h"
 #include "Viewport.h"
 
 #include <ImGuizmo.h>
@@ -18,18 +19,30 @@ class MachaLayer : public MRG::StandardLayer
 public:
 	void onAttach() override
 	{
-		m_viewport = MRG::createRef<Viewport>(application, ImVec2{1280.f, 720.f});
+		m_hierarchyPanel = MRG::createRef<HierarchyPanel>();
+		m_viewport       = MRG::createRef<Viewport>(application, ImVec2{1280.f, 720.f});
 
 		auto torus = createEntity();
+		torus->setName("Torus");
 		m_entities.emplace_back(torus);
-		m_viewport->selectedEntity = torus;
+		auto torusMesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
+		uploadMesh(torusMesh);
+		auto& torusMRC = torus->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(
+		  createMeshRenderer(torusMesh, application->renderer->defaultTexturedMaterial));
+		const auto leafsTexture = createTexture("leaf.jpg");
+		torusMRC.bindTexture(1, leafsTexture);
 
-		auto mesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
-		uploadMesh(mesh);
-		torus->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(
-		  createMeshRenderer(mesh, application->renderer->defaultTexturedMaterial));
+		auto cylinder = createEntity();
+		cylinder->setName("Cylinder");
+		m_entities.emplace_back(cylinder);
+		auto cylinderMesh = MRG::Utils::Meshes::cylinder<MRG::TexturedVertex>();
+		uploadMesh(cylinderMesh);
+		auto& cylinderMRC = cylinder->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(
+		  createMeshRenderer(cylinderMesh, application->renderer->defaultTexturedMaterial));
+		const auto bricksTexture = createTexture("brick.jpg");
+		cylinderMRC.bindTexture(1, bricksTexture);
 
-		ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
+		m_hierarchyPanel->selectedEntity = torus;
 	}
 
 	void onUpdate(MRG::Timestep ts) override
@@ -77,6 +90,10 @@ public:
 			ImGui::EndMenuBar();
 		}
 
+		// Render hierarchy panel and update selected entity
+		m_hierarchyPanel->onImGuiUpdate(m_entities);
+		m_viewport->selectedEntity = m_hierarchyPanel->selectedEntity;
+
 		// Render viewport
 		m_viewport->onImGuiUpdate(ts);
 
@@ -86,9 +103,9 @@ public:
 			ImGui::TextColored(
 			  color, "Frametime: %2.5fms (%3.2f fps)", static_cast<double>(ts.getMilliseconds()), static_cast<double>(1.f / ts));
 
-			const auto& entity = m_viewport->selectedEntity;
+			const auto& entity = m_hierarchyPanel->selectedEntity;
 			if (entity != nullptr) {
-				ImGui::Text("Selected entity ID: %d", static_cast<int>(entity->getID()));
+				ImGui::Text("Selected entity ID: %d (%s)", entity->getID(), entity->getName().c_str());
 			} else {
 				ImGui::Text("No entity selected");
 			}
@@ -99,6 +116,7 @@ public:
 	}
 
 private:
+	MRG::Ref<HierarchyPanel> m_hierarchyPanel{};
 	MRG::Ref<Viewport> m_viewport;
 	std::vector<MRG::Ref<MRG::Entity>> m_entities{};
 };

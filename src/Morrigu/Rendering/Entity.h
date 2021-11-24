@@ -5,6 +5,7 @@
 #ifndef MORRIGU_ENTITY_H
 #define MORRIGU_ENTITY_H
 
+#include "Rendering/Components/Tag.h"
 #include "Rendering/Components/Transform.h"
 
 #include <entt/entt.hpp>
@@ -14,7 +15,7 @@
 namespace MRG
 {
 	template<typename Component>
-	concept NonEssentialComponent = !std::is_same_v<Component, Components::Transform>;
+	concept NonEssentialComponent = !std::is_same_v<Component, Components::Transform> && !std::is_same_v<Component, Components::Tag>;
 
 	class Entity
 	{
@@ -23,6 +24,7 @@ namespace MRG
 		{
 			m_id = m_registry->create();
 			m_registry->emplace<Components::Transform>(m_id);
+			m_registry->emplace<Components::Tag>(m_id, fmt::format("%d", m_id));
 		}
 
 		~Entity() { m_registry->destroy(m_id); }
@@ -35,6 +37,12 @@ namespace MRG
 
 		template<typename ComponentType>
 		[[nodiscard]] ComponentType& getComponent()
+		{
+			MRG_ENGINE_ASSERT(hasComponents<ComponentType>(), "Entity {}, does not have a component of the requested type!", m_id)
+			return m_registry->get<ComponentType>(m_id);
+		}
+		template<typename ComponentType>
+		[[nodiscard]] ComponentType& getComponent() const
 		{
 			MRG_ENGINE_ASSERT(hasComponents<ComponentType>(), "Entity {}, does not have a component of the requested type!", m_id)
 			return m_registry->get<ComponentType>(m_id);
@@ -56,7 +64,11 @@ namespace MRG
 			m_registry->remove<ComponentType>(m_id);
 		}
 
-		[[nodiscard]] entt::entity getID() const { return m_id; }
+		[[nodiscard]] uint32_t getID() const { return static_cast<uint32_t>(m_id); }
+		[[nodiscard]] entt::entity getHandle() const { return m_id; }
+		[[nodiscard]] std::string getName() const { return getComponent<Components::Tag>().tag; }
+
+		void setName(const std::string& name) { getComponent<Components::Tag>().tag = name; }
 
 	private:
 		entt::entity m_id;

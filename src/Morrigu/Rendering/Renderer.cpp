@@ -616,6 +616,7 @@ namespace MRG
 		ImGui::CreateContext();
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 		ImGui_ImplVulkan_InitInfo initInfo{
 		  .Instance        = m_instance,
 		  .PhysicalDevice  = m_GPU,
