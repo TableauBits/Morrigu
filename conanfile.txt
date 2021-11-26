@@ -17,6 +17,8 @@ vulkan-memory-allocator/2.3.0
 cmake
 
 [imports]
+./res/misc, imgui_stdlib.cpp -> ../src/Morrigu/Vendor/ImGui/misc
+./res/misc, imgui_stdlib.h -> ../src/Morrigu/Vendor/ImGui/misc
 ./res/bindings, imgui_impl_glfw.cpp -> ../src/Morrigu/Vendor/ImGui/bindings
 ./res/bindings, imgui_impl_vulkan.cpp -> ../src/Morrigu/Vendor/ImGui/bindings
 ./res/bindings, imgui_impl_glfw.h -> ../src/Morrigu/Vendor/ImGui/bindings

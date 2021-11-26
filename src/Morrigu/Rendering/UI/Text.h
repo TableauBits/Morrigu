@@ -6,7 +6,7 @@
 #define MORRIGU_TEXT_H
 
 #include "Core/Core.h"
-#include "Rendering/Entity.h"
+#include "Entity/Entity.h"
 #include "Rendering/Texture.h"
 #include "Rendering/UI/Font.h"
 

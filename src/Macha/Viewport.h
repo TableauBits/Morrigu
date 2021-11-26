@@ -50,7 +50,7 @@ private:
 	glm::vec2 m_lastMousePos{};
 	glm::vec2 m_currentMousePos{};
 	glm::vec3 m_focalPoint{};
-	float m_distance{3.f};
+	float m_distance{7.f};
 };
 
 #endif

@@ -103,7 +103,7 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 			                     glm::value_ptr(transform),
 			                     nullptr,
 			                     ImGui::IsKeyDown(MRG::Key::LeftControl) ? snapValues.data() : nullptr);
-			if (ImGuizmo::IsUsing()) {
+			if (ImGuizmo::IsUsing() && !ImGui::IsKeyDown(MRG::Key::LeftAlt)) {
 				auto [translation, rotation, scale] = MRG::Utils::Maths::decomposeTransform(transform);
 				tc.translation                      = translation;
 				tc.rotation                         = rotation;

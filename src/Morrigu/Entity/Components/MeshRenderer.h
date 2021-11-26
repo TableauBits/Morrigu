@@ -5,6 +5,7 @@
 #ifndef MORRIGU_COMP_MESH_RENDERER_H
 #define MORRIGU_COMP_MESH_RENDERER_H
 
+#include "Entity/Transform.h"
 #include "Rendering/Material.h"
 #include "Rendering/Mesh.h"
 #include "Rendering/Vertex.h"
@@ -180,9 +181,11 @@ namespace MRG::Components
 			m_device.updateDescriptorSets(textureUpdate, {});
 		}
 
-		void updateTransform(const glm::mat4& transform) { uploadUniform(0, transform); }
+		void updateTransform(const glm::mat4& transform) { uploadUniform(0, offset.getTransform() * transform); }
 
 		bool isVisible{true};
+
+		Transform offset{};
 
 		Ref<Mesh<VertexType>> mesh;
 		Ref<Material<VertexType>> material;

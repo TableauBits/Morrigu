@@ -19,8 +19,8 @@
 #include "Rendering/UI/Font.h"
 #include "Rendering/UI/Text.h"
 
-#include "Rendering/Components/MeshRenderer.h"
-#include "Rendering/Components/Transform.h"
+#include "Entity/Components/MeshRenderer.h"
+#include "Entity/Components/Transform.h"
 
 #include "Utils/Maths.h"
 #include "Utils/Meshes.h"

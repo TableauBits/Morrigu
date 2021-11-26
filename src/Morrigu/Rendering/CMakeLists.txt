@@ -1,4 +1,3 @@
-include(${CMAKE_CURRENT_LIST_DIR}/Components/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/UI/CMakeLists.txt)
 
 set(
@@ -13,9 +12,6 @@ set(
 		# Camera class
 		${CMAKE_CURRENT_LIST_DIR}/Camera.h
 		${CMAKE_CURRENT_LIST_DIR}/Camera.cpp
-
-		# Entity class
-		${CMAKE_CURRENT_LIST_DIR}/Entity.h
 
 		# Framebuffer class
 		${CMAKE_CURRENT_LIST_DIR}/Framebuffer.h

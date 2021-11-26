@@ -1,13 +1,13 @@
 //
-// Created by Mathis Lamidey on 2021-11-22
+// Created by Mathis Lamidey on 2021-11-25
 //
 
-#ifndef MORRIGU_COMP_TRANSFORM_H
-#define MORRIGU_COMP_TRANSFORM_H
+#ifndef MORRIGU_ENTITY_TRANSFORM_H
+#define MORRIGU_ENTITY_TRANSFORM_H
 
 #include "Utils/GLMIncludeHelper.h"
 
-namespace MRG::Components
+namespace MRG
 {
 	class Transform
 	{
@@ -23,6 +23,6 @@ namespace MRG::Components
 			return glm::translate(glm::mat4{1.f}, translation) * rotationMatrix * glm::scale(glm::mat4{1.f}, scale);
 		}
 	};
-}  // namespace MRG::Components
+}  // namespace MRG
 
 #endif

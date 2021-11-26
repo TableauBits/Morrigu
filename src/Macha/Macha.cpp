@@ -5,10 +5,10 @@
 #include "MaterialEditorLayer.h"
 
 #include "HierarchyPanel.h"
+#include "PropertiesPanel.h"
 #include "Viewport.h"
 
 #include <ImGuizmo.h>
-#include <Morrigu.h>
 #include <imgui.h>
 
 #include <array>
@@ -32,6 +32,10 @@ public:
 		const auto leafsTexture = createTexture("leaf.jpg");
 		torusMRC.bindTexture(1, leafsTexture);
 
+		auto& torusTC       = torus->getComponent<MRG::Components::Transform>();
+		torusTC.translation = {1.5f, 0.f, 0.f};
+		torusMRC.updateTransform(torusTC.getTransform());
+
 		auto cylinder = createEntity();
 		cylinder->setName("Cylinder");
 		m_entities.emplace_back(cylinder);
@@ -41,6 +45,10 @@ public:
 		  createMeshRenderer(cylinderMesh, application->renderer->defaultTexturedMaterial));
 		const auto bricksTexture = createTexture("brick.jpg");
 		cylinderMRC.bindTexture(1, bricksTexture);
+
+		auto& cylinderTC       = cylinder->getComponent<MRG::Components::Transform>();
+		cylinderTC.translation = {-1.5f, 0.f, 0.f};
+		cylinderMRC.updateTransform(cylinderTC.getTransform());
 
 		m_hierarchyPanel->selectedEntity = torus;
 	}
@@ -93,6 +101,9 @@ public:
 		// Render hierarchy panel and update selected entity
 		m_hierarchyPanel->onImGuiUpdate(m_entities);
 		m_viewport->selectedEntity = m_hierarchyPanel->selectedEntity;
+
+		// Render properties panel
+		PropertiesPanel::onImGuiUpdate(m_hierarchyPanel->selectedEntity);
 
 		// Render viewport
 		m_viewport->onImGuiUpdate(ts);

@@ -5,10 +5,10 @@
 #ifndef MORRIGU_RENDERER_H
 #define MORRIGU_RENDERER_H
 
+#include "Entity/Components/MeshRenderer.h"
+#include "Entity/Entity.h"
 #include "Events/ApplicationEvent.h"
 #include "Rendering/Camera.h"
-#include "Rendering/Components/MeshRenderer.h"
-#include "Rendering/Entity.h"
 #include "Rendering/Framebuffer.h"
 #include "Rendering/RendererTypes.h"
 #include "Rendering/Texture.h"

@@ -5,8 +5,8 @@
 #ifndef MORRIGU_ENTITY_H
 #define MORRIGU_ENTITY_H
 
-#include "Rendering/Components/Tag.h"
-#include "Rendering/Components/Transform.h"
+#include "Entity/Components/Tag.h"
+#include "Entity/Components/Transform.h"
 
 #include <entt/entt.hpp>
 
