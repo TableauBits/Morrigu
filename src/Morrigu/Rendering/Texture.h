@@ -23,6 +23,8 @@ namespace MRG
 
 		~Texture();
 
+		std::string path{};
+
 		AllocatedImage image;
 		vk::Sampler sampler;
 

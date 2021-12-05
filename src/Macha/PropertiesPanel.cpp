@@ -11,15 +11,24 @@
 
 namespace
 {
-	// From: https://stackoverflow.com/a/67855985
-	void centeredText(const std::string& text)
+	namespace ImGuiUtils
 	{
-		auto winWidth = ImGui::GetWindowWidth();
-		auto textSize = ImGui::CalcTextSize(text.c_str()).x;
+		// From: https://stackoverflow.com/a/67855985
+		void centeredText(const std::string& text)
+		{
+			auto winWidth = ImGui::GetWindowWidth();
+			auto textSize = ImGui::CalcTextSize(text.c_str()).x;
 
-		ImGui::SetCursorPosX((winWidth - textSize) * 0.5f);
-		ImGui::Text(text.c_str());
-	}
+			ImGui::SetCursorPosX((winWidth - textSize) * 0.5f);
+			ImGui::Text(text.c_str());
+		}
+
+		void subsectionHeader(const std::string& title)
+		{
+			ImGui::Dummy({0.f, 5.f});
+			centeredText(title);
+		}
+	}  // namespace ImGuiUtils
 
 	void
 	drawVec3Controls(const std::string& id, const std::string& label, glm::vec3& values, float resetValue = 0.f, float columnWidth = 100.f)
@@ -85,16 +94,87 @@ namespace
 		ImGui::PopID();
 	}
 
-	void editMeshRendererComponent(MRG::Components::MeshRenderer<MRG::TexturedVertex>& mrc, MRG::Components::Transform& tc)
+	void renderUBOData(const MRG::Shader::Node& node, std::byte*& rwHead)
+	{
+		if (node.members.empty()) {
+			switch (node.type.basetype) {
+			case spirv_cross::SPIRType::BaseType::Float: {
+				auto* pointerCast = reinterpret_cast<float*>(rwHead);
+				switch (node.type.vecsize) {
+				case 1: {
+					// Single float
+					ImGui::DragFloat(node.name.c_str(), pointerCast, 0.01f, 0.f, 1.f);
+					rwHead += 1 * sizeof(float);
+				} break;
+				case 2: {
+					// vec2
+					ImGui::DragFloat2(node.name.c_str(), pointerCast);
+					rwHead += 2 * sizeof(float);
+				} break;
+				case 4: {
+					// vec4
+					ImGui::ColorEdit4(node.name.c_str(), pointerCast);
+					rwHead += 4 * sizeof(float);
+				} break;
+				default: {
+					MRG_WARN("Only scalar float and vec2/4 are supported!")
+				} break;
+				}
+			} break;
+
+			default: {
+				MRG_WARN("Shader data type not supported yet!")
+			} break;
+			}
+		} else {
+			if (ImGui::TreeNode(node.name.c_str())) {
+				for (const auto& member : node.members) { renderUBOData(member, rwHead); }
+				ImGui::TreePop();
+			}
+		}
+	}
+
+	void editMeshRendererComponent(MRG::Components::MeshRenderer<MRG::TexturedVertex>& mrc,
+	                               MRG::Components::Transform& tc,
+	                               Components::EntitySettings& esc)
 	{
 		ImGui::Dummy({0.f, 20.f});
 		if (ImGui::CollapsingHeader("Mesh renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
 			ImGui::Checkbox("Visible", &mrc.isVisible);
 
-			centeredText("Offset");
+			ImGuiUtils::subsectionHeader("Offset transform");
 			drawVec3Controls("MRC.t", "Translation", mrc.offset.translation);
 			drawVec3Controls("MRC.r", "Rotation", mrc.offset.rotation);
 			drawVec3Controls("MRC.s", "Scale", mrc.offset.scale, 1.f);
+
+			ImGuiUtils::subsectionHeader("L3 material parameters (Per entity)");
+			ImGuiUtils::centeredText("Uniform data");
+			if (esc.uboData.size() != mrc.material->shader->l3UBOData.size()) {
+				esc.uboData.resize(mrc.material->shader->l3UBOData.size());
+				std::size_t index = 0;
+				for (auto& ubo : mrc.material->shader->l3UBOData) {
+					esc.uboData[index].resize(ubo.second.size);
+					++index;
+				}
+			}
+			std::size_t index = 0;
+			for (const auto& ubo : mrc.material->shader->l3UBOData) {
+				auto* rwHead = esc.uboData[index].data();
+				if (ImGui::TreeNode(ubo.second.name.c_str())) {
+					for (const auto& member : ubo.second.members) { renderUBOData(member, rwHead); }
+					ImGui::TreePop();
+				}
+
+				mrc.uploadUniform(ubo.first, esc.uboData[index].data(), esc.uboData[index].size());
+				++index;
+			}
+
+			ImGuiUtils::centeredText("Textures bindings");
+			for (const auto& textureBindingInfo : mrc.sampledImages) {
+				ImGui::Text("%s: %s",
+				            mrc.material->shader->l3ImageBindings[textureBindingInfo.first].name.c_str(),
+				            textureBindingInfo.second->path.c_str());
+			}
 		}
 		mrc.updateTransform(tc.getTransform());
 	}
@@ -113,15 +193,16 @@ namespace PropertiesPanel
 			// Tag and Transform components are guaranteed to be present on an entity
 			ImGui::InputText("Name", &selectedEntity->getComponent<MRG::Components::Tag>().tag);
 
-			auto& tc = selectedEntity->getComponent<MRG::Components::Transform>();
-			centeredText("Transform");
+			auto& tc  = selectedEntity->getComponent<MRG::Components::Transform>();
+			auto& esc = selectedEntity->getComponent<Components::EntitySettings>();
+			ImGuiUtils::centeredText("Transform");
 			drawVec3Controls("TC.t", "Translation", tc.translation);
 			drawVec3Controls("TC.r", "Rotation", tc.rotation);
 			drawVec3Controls("TC.s", "Scale", tc.scale, 1.f);
 
 			if (selectedEntity->hasComponents<MRG::Components::MeshRenderer<MRG::TexturedVertex>>()) {
 				auto& mrc = selectedEntity->getComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>();
-				editMeshRendererComponent(mrc, tc);
+				editMeshRendererComponent(mrc, tc, esc);
 			}
 		}
 		ImGui::End();

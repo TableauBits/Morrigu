@@ -69,12 +69,12 @@ namespace MRG::Components
 				};
 
 				m_device.updateDescriptorSets(setWrite, {});
-				m_uniformBuffers.insert(std::make_pair(bindingSlot, std::move(newBuffer)));
+				uniformBuffers.insert(std::make_pair(bindingSlot, std::move(newBuffer)));
 			}
 
 			for (const auto& imageBinding : material->shader->l3ImageBindings) {
-				m_sampledImages.insert(std::make_pair(imageBinding, objs.defaultTexture));
-				bindTexture(imageBinding, objs.defaultTexture);
+				sampledImages.insert(std::make_pair(imageBinding.first, objs.defaultTexture));
+				bindTexture(imageBinding.first, objs.defaultTexture);
 			}
 
 			updateTransform(glm::mat4{1.f});
@@ -91,8 +91,8 @@ namespace MRG::Components
 			m_device         = std::move(other.m_device);
 			m_allocator      = std::move(other.m_allocator);
 			m_descriptorPool = std::move(other.m_descriptorPool);
-			m_uniformBuffers = std::move(other.m_uniformBuffers);
-			m_sampledImages  = std::move(other.m_sampledImages);
+			uniformBuffers   = std::move(other.uniformBuffers);
+			sampledImages    = std::move(other.sampledImages);
 
 			// Necessary to take ownership
 			other.m_allocator = nullptr;
@@ -115,8 +115,8 @@ namespace MRG::Components
 			m_device         = std::move(other.m_device);
 			m_allocator      = std::move(other.m_allocator);
 			m_descriptorPool = std::move(other.m_descriptorPool);
-			m_uniformBuffers = std::move(other.m_uniformBuffers);
-			m_sampledImages  = std::move(other.m_sampledImages);
+			uniformBuffers   = std::move(other.uniformBuffers);
+			sampledImages    = std::move(other.sampledImages);
 
 			// Necessary to take ownership
 			other.m_allocator = nullptr;
@@ -126,25 +126,25 @@ namespace MRG::Components
 
 		void uploadUniform(uint32_t bindingSlot, const NotPointer auto& uniformData)
 		{
-			MRG_ENGINE_ASSERT(m_uniformBuffers.contains(bindingSlot), "Invalid binding slot!")
+			MRG_ENGINE_ASSERT(uniformBuffers.contains(bindingSlot), "Invalid binding slot!")
 			void* data;
-			vmaMapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation, &data);
+			vmaMapMemory(m_allocator, uniformBuffers[bindingSlot].allocation, &data);
 			memcpy(data, &uniformData, sizeof(uniformData));
-			vmaUnmapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation);
+			vmaUnmapMemory(m_allocator, uniformBuffers[bindingSlot].allocation);
 		}
 
 		void uploadUniform(uint32_t bindingSlot, void* srcData, std::size_t size)
 		{
-			MRG_ENGINE_ASSERT(m_uniformBuffers.contains(bindingSlot), "Invalid binding slot!")
+			MRG_ENGINE_ASSERT(uniformBuffers.contains(bindingSlot), "Invalid binding slot!")
 			void* dstData;
-			vmaMapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation, &dstData);
+			vmaMapMemory(m_allocator, uniformBuffers[bindingSlot].allocation, &dstData);
 			memcpy(dstData, srcData, size);
-			vmaUnmapMemory(m_allocator, m_uniformBuffers[bindingSlot].allocation);
+			vmaUnmapMemory(m_allocator, uniformBuffers[bindingSlot].allocation);
 		}
 
 		void bindTexture(uint32_t bindingSlot, const Ref<Texture>& texture)
 		{
-			MRG_ENGINE_ASSERT(m_sampledImages.contains(bindingSlot), "Invalid binding slot!")
+			MRG_ENGINE_ASSERT(sampledImages.contains(bindingSlot), "Invalid binding slot!")
 			vk::DescriptorImageInfo imageBufferInfo{
 			  .sampler     = texture->sampler,
 			  .imageView   = texture->image.view,
@@ -159,13 +159,13 @@ namespace MRG::Components
 			};
 			m_device.updateDescriptorSets(textureUpdate, {});
 
-			m_sampledImages.at(bindingSlot) = texture;
+			sampledImages.at(bindingSlot) = texture;
 		}
 
 		// Uses the color attachment of the framebuffer as a texture
 		void bindTexture(uint32_t bindingSlot, const Ref<Framebuffer>& framebuffer)
 		{
-			MRG_ENGINE_ASSERT(m_sampledImages.contains(bindingSlot), "Invalid binding slot!")
+			MRG_ENGINE_ASSERT(sampledImages.contains(bindingSlot), "Invalid binding slot!")
 			vk::DescriptorImageInfo imageBufferInfo{
 			  .sampler     = framebuffer->sampler,
 			  .imageView   = framebuffer->colorImage.view,
@@ -191,14 +191,13 @@ namespace MRG::Components
 		Ref<Material<VertexType>> material;
 		vk::DescriptorSet level3Descriptor;
 
+		std::map<uint32_t, Ref<Texture>> sampledImages;
+		std::map<uint32_t, AllocatedBuffer> uniformBuffers;
+
 	private:
 		vk::Device m_device;
 		VmaAllocator m_allocator;
-
 		vk::DescriptorPool m_descriptorPool;
-
-		std::map<uint32_t, AllocatedBuffer> m_uniformBuffers;
-		std::map<uint32_t, Ref<Texture>> m_sampledImages;
 	};
 }  // namespace MRG::Components
 

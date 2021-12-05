@@ -76,7 +76,7 @@ namespace MRG
 				                                    .descriptorCount = 1,
 				                                    .stageFlags      = vk::ShaderStageFlagBits::eVertex,
 				                                  }));
-				sizeMap.emplace_back(bindingSlot);
+				sizeMap.insert(std::make_pair(bindingSlot, TextureBindingInfo{image.name}));
 			}
 		}
 
@@ -134,7 +134,7 @@ namespace MRG
 					                                    .descriptorCount = 1,
 					                                    .stageFlags      = vk::ShaderStageFlagBits::eFragment,
 					                                  }));
-					sizeMap.emplace_back(bindingSlot);
+					sizeMap.insert(std::make_pair(bindingSlot, TextureBindingInfo{image.name}));
 				}
 			}
 		}

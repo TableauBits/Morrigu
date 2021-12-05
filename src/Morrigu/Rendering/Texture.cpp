@@ -11,7 +11,7 @@ namespace MRG
 {
 	Texture::Texture(
 	  vk::Device device, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const std::string& file)
-	    : m_device{device}
+	    : path{file}, m_device{device}
 	{
 		image = AllocatedImage{AllocatedImageSpecification{
 		  .device        = device,

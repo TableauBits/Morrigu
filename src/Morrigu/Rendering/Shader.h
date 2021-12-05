@@ -16,6 +16,11 @@ namespace MRG
 	class Shader
 	{
 	public:
+		struct TextureBindingInfo
+		{
+			std::string name;
+		};
+
 		struct Node
 		{
 			std::string name{};
@@ -40,10 +45,10 @@ namespace MRG
 
 		// level 2 bindings
 		std::map<uint32_t, Root> l2UBOData;
-		std::vector<uint32_t> l2ImageBindings;
+		std::map<uint32_t, TextureBindingInfo> l2ImageBindings;
 		// level 3 bindings
 		std::map<uint32_t, Root> l3UBOData;
-		std::vector<uint32_t> l3ImageBindings;
+		std::map<uint32_t, TextureBindingInfo> l3ImageBindings;
 
 	private:
 		[[nodiscard]] static std::vector<std::uint32_t> readSource(const char* filePath);

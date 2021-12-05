@@ -9,7 +9,7 @@ namespace Components
 {
 	struct EntitySettings
 	{
-		// bool syncMRCToTransform{true};
+		std::vector<std::vector<std::byte>> uboData;
 	};
 }  // namespace Components
 

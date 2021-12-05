@@ -4,6 +4,7 @@
 
 #include "MaterialEditorLayer.h"
 
+#include "Components/EntitySettings.h"
 #include "HierarchyPanel.h"
 #include "PropertiesPanel.h"
 #include "Viewport.h"
@@ -22,17 +23,15 @@ public:
 		m_hierarchyPanel = MRG::createRef<HierarchyPanel>();
 		m_viewport       = MRG::createRef<Viewport>(application, ImVec2{1280.f, 720.f});
 
+		auto material = createMaterial<MRG::TexturedVertex>(createShader("TestShader.vert.spv", "TestShader.frag.spv"));
+
 		auto torus = createEntity();
 		torus->setName("Torus");
 		m_entities.emplace_back(torus);
 		auto torusMesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
 		uploadMesh(torusMesh);
-		auto& torusMRC = torus->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(
-		  createMeshRenderer(torusMesh, application->renderer->defaultTexturedMaterial));
-		const auto leafsTexture = createTexture("leaf.jpg");
-		torusMRC.bindTexture(1, leafsTexture);
-
-		auto& torusTC       = torus->getComponent<MRG::Components::Transform>();
+		auto& torusMRC = torus->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(torusMesh, material));
+		auto& torusTC  = torus->getComponent<MRG::Components::Transform>();
 		torusTC.translation = {1.5f, 0.f, 0.f};
 		torusMRC.updateTransform(torusTC.getTransform());
 
@@ -41,11 +40,8 @@ public:
 		m_entities.emplace_back(cylinder);
 		auto cylinderMesh = MRG::Utils::Meshes::cylinder<MRG::TexturedVertex>();
 		uploadMesh(cylinderMesh);
-		auto& cylinderMRC = cylinder->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(
-		  createMeshRenderer(cylinderMesh, application->renderer->defaultTexturedMaterial));
-		const auto bricksTexture = createTexture("brick.jpg");
-		cylinderMRC.bindTexture(1, bricksTexture);
-
+		auto& cylinderMRC =
+		  cylinder->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(cylinderMesh, material));
 		auto& cylinderTC       = cylinder->getComponent<MRG::Components::Transform>();
 		cylinderTC.translation = {-1.5f, 0.f, 0.f};
 		cylinderMRC.updateTransform(cylinderTC.getTransform());
@@ -127,6 +123,14 @@ public:
 	}
 
 private:
+	[[nodiscard]] MRG::Ref<MRG::Entity> createEntity()
+	{
+		auto entity = StandardLayer::createEntity();
+		entity->addComponent<Components::EntitySettings>();
+
+		return entity;
+	}
+
 	MRG::Ref<HierarchyPanel> m_hierarchyPanel{};
 	MRG::Ref<Viewport> m_viewport;
 	std::vector<MRG::Ref<MRG::Entity>> m_entities{};
