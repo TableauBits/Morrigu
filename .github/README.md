@@ -20,6 +20,9 @@ As this project is still fairly young, things are still moving, so I won't have 
 
 As time passes, I will add new screenshots of the engine in this section. New screenshots are added at the top of the list (bottom images are older).
 
+* 2021/12/04: Still working on the ECS, here is a limited prototype of a material editor in a properties panel
+![Screenshot from 2021/12/04, showing off a prototype of the material editor. Also hints are dropped :)](Sample_2021_12_04.png)
+
 * 2021/11/23: Working on the ECS for the engine, here is the first prototype of a hierarchy panel
 ![Gif from 2021/11/23 showing the first version of the hierarchy panel](Sample_2021_11_23.gif)
 
