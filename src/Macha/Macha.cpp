@@ -154,7 +154,7 @@ int main()
 {
 	auto start = std::chrono::high_resolution_clock::now();
 	MRG::Logger::init();
-	MRG_ENGINE_TRACE("Starting engine")
+	MRG_ENGINE_INFO("Starting engine")
 	SampleApp app{};
 	auto end                     = std::chrono::high_resolution_clock::now();
 	const auto engineStartupTime = std::chrono::duration<float, std::milli>{end - start}.count();

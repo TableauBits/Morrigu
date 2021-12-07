@@ -20,7 +20,7 @@ namespace
 			auto textSize = ImGui::CalcTextSize(text.c_str()).x;
 
 			ImGui::SetCursorPosX((winWidth - textSize) * 0.5f);
-			ImGui::Text(text.c_str());
+			ImGui::Text("%s", text.c_str());
 		}
 
 		void subsectionHeader(const std::string& title)
@@ -40,7 +40,7 @@ namespace
 
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, columnWidth);
-		ImGui::Text(label.c_str());
+		ImGui::Text("%s", label.c_str());
 		ImGui::NextColumn();
 
 		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
