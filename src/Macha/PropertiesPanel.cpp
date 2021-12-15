@@ -182,26 +182,26 @@ namespace
 
 namespace PropertiesPanel
 {
-	void onImGuiUpdate(MRG::Ref<MRG::Entity>& selectedEntity)
+	void onImGuiUpdate(entt::entity& selectedEntity, entt::registry& registry)
 	{
 		if (ImGui::Begin("Entity properties")) {
-			if (selectedEntity == nullptr) {
+			if (selectedEntity == entt::null) {
 				ImGui::End();
 				return;
 			}
 
 			// Tag and Transform components are guaranteed to be present on an entity
-			ImGui::InputText("Name", &selectedEntity->getComponent<MRG::Components::Tag>().tag);
+			ImGui::InputText("Name", &registry.get<MRG::Components::Tag>(selectedEntity).tag);
 
-			auto& tc  = selectedEntity->getComponent<MRG::Components::Transform>();
-			auto& esc = selectedEntity->getComponent<Components::EntitySettings>();
+			auto& tc  = registry.get<MRG::Components::Transform>(selectedEntity);
+			auto& esc = registry.get<Components::EntitySettings>(selectedEntity);
 			ImGuiUtils::centeredText("Transform");
 			drawVec3Controls("TC.t", "Translation", tc.translation);
 			drawVec3Controls("TC.r", "Rotation", tc.rotation);
 			drawVec3Controls("TC.s", "Scale", tc.scale, 1.f);
 
-			if (selectedEntity->hasComponents<MRG::Components::MeshRenderer<MRG::TexturedVertex>>()) {
-				auto& mrc = selectedEntity->getComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>();
+			if (registry.all_of<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(selectedEntity)) {
+				auto& mrc = registry.get<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(selectedEntity);
 				editMeshRendererComponent(mrc, tc, esc);
 			}
 		}

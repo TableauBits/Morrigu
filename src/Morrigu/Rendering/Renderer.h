@@ -89,8 +89,6 @@ namespace MRG
 
 		[[nodiscard]] Ref<Texture> createTexture(const char* fileName);
 
-		[[nodiscard]] Ref<Entity> createEntity(const Ref<entt::registry>& registry);
-
 		template<Vertex VertexType>
 		[[nodiscard]] Components::MeshRenderer<VertexType>::VulkanObjects createMeshRenderer(const Ref<Mesh<VertexType>>& meshRef,
 		                                                                                     const Ref<Material<VertexType>>& materialRef)
@@ -102,7 +100,7 @@ namespace MRG
 		[[nodiscard]] Ref<Framebuffer> createFrameBuffer(const FramebufferSpecification& fbSpec);
 
 		template<Vertex VertexType>
-		void drawMeshes(EntityIterator auto begin, EntityIterator auto end, const Camera& camera)
+		void drawMeshes(const entt::registry& registry, const Camera& camera)
 		{
 			const auto& frameData = getCurrentFrameData();
 
@@ -117,10 +115,9 @@ namespace MRG
 
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
-			while (begin != end) {
-				Ref<Entity> entity = *begin;
-				if (!entity->hasComponents<Components::MeshRenderer<VertexType>>()) { continue; }
-				const auto& mrc = entity->getComponent<Components::MeshRenderer<VertexType>>();
+			auto view    = registry.view<Components::MeshRenderer<VertexType>>();
+			for (const auto& entity : view) {
+				auto [mrc] = view.get(entity);
 				if (!mrc.isVisible) { continue; }
 				if (isFirst) {
 					frameData.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
@@ -165,13 +162,11 @@ namespace MRG
 
 				frameData.commandBuffer.bindVertexBuffers(0, mrc.mesh->vertexBuffer.vkHandle, {0});
 				frameData.commandBuffer.draw(static_cast<uint32_t>(mrc.mesh->vertices.size()), 1, 0, 0);
-
-				++begin;
 			}
 		}
 
 		template<Vertex VertexType>
-		void drawMeshes(EntityIterator auto begin, EntityIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
+		void drawMeshes(const entt::registry& registry, const Camera& camera, Ref<Framebuffer> framebuffer)
 		{
 			framebuffer->commandBuffer.reset();
 			vk::CommandBufferBeginInfo beginInfo{
@@ -210,17 +205,10 @@ namespace MRG
 
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
-			while (begin != end) {
-				Ref<Entity> entity = *begin;
-				if (!entity->hasComponents<Components::MeshRenderer<VertexType>>()) {
-					++begin;
-					continue;
-				}
-				const auto& mrc = entity->getComponent<Components::MeshRenderer<VertexType>>();
-				if (!mrc.isVisible) {
-					++begin;
-					continue;
-				}
+			auto view    = registry.view<Components::MeshRenderer<VertexType>>();
+			for (const auto& entity : view) {
+				auto [mrc] = view.get(entity);
+				if (!mrc.isVisible) { continue; }
 				if (isFirst) {
 					framebuffer->commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
 					                                              mrc.material->pipelineLayout,
@@ -263,8 +251,6 @@ namespace MRG
 
 				framebuffer->commandBuffer.bindVertexBuffers(0, mrc.mesh->vertexBuffer.vkHandle, {0});
 				framebuffer->commandBuffer.draw(static_cast<uint32_t>(mrc.mesh->vertices.size()), 1, 0, 0);
-
-				++begin;
 			}
 
 			framebuffer->commandBuffer.endRenderPass();

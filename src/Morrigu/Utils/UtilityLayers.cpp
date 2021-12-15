@@ -6,7 +6,6 @@
 
 namespace MRG
 {
-	Ref<Entity> StandardLayer::createEntity() { return application->renderer->createEntity(registry); }
 	Ref<UI::Font> StandardLayer::createFont(const std::string& filePath) { return application->renderer->createFont(filePath); }
 	Ref<Framebuffer> StandardLayer::createFramebuffer(const FramebufferSpecification& spec)
 	{

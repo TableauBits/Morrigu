@@ -21,7 +21,7 @@ Viewport::Viewport(MRG::Application* context, ImVec2 initialSize) : m_context{co
 	m_texID = m_framebuffer->getImTexID();
 }
 
-void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::Entity>>& entities, MRG::Timestep ts)
+void Viewport::onUpdate(const entt::registry& registry, MRG::Timestep ts)
 {
 	if ((m_size.x > 0 && m_size.y > 0) &&
 	    (static_cast<uint32_t>(m_size.x) != m_framebuffer->spec.width || static_cast<uint32_t>(m_size.y) != m_framebuffer->spec.height)) {
@@ -65,10 +65,10 @@ void Viewport::onUpdate(const std::vector<MRG::Ref<MRG::Entity>>& entities, MRG:
 		}
 	}
 
-	m_context->renderer->drawMeshes<MRG::TexturedVertex>(entities.begin(), entities.end(), camera, m_framebuffer);
+	m_context->renderer->drawMeshes<MRG::TexturedVertex>(registry, camera, m_framebuffer);
 }
 
-void Viewport::onImGuiUpdate(MRG::Timestep)
+void Viewport::onImGuiUpdate(entt::registry& registry)
 {
 	ImGuizmo::BeginFrame();
 
@@ -86,10 +86,9 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 		float snap = (guizmoType == ImGuizmo::OPERATION::ROTATE) ? 45.f : 0.5f;
 		std::array<float, 3> snapValues{snap, snap, snap};
 
-		if (selectedEntity != nullptr && selectedEntity->hasComponents<MRG::Components::MeshRenderer<MRG::TexturedVertex>>()) {
-			auto& tc       = selectedEntity->getComponent<MRG::Components::Transform>();
+		if (selectedEntity != entt::null) {
+			auto& tc       = registry.get<MRG::Components::Transform>(selectedEntity);
 			auto transform = tc.getTransform();
-			auto& mrc      = selectedEntity->getComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>();
 
 			const auto windowPos = ImGui::GetWindowPos();
 			ImGuizmo::SetRect(windowPos.x, windowPos.y, m_size.x, m_size.y);
@@ -108,8 +107,6 @@ void Viewport::onImGuiUpdate(MRG::Timestep)
 				tc.translation                      = translation;
 				tc.rotation                         = rotation;
 				tc.scale                            = scale;
-
-				mrc.updateTransform(tc.getTransform());
 			}
 		}
 

@@ -26,8 +26,41 @@ namespace MRG
 			m_registry->emplace<Components::Transform>(m_id);
 			m_registry->emplace<Components::Tag>(m_id, fmt::format("%d", m_id));
 		}
+		Entity(Entity&& other)
+		{
+			m_id       = other.m_id;
+			m_registry = other.m_registry;
 
-		~Entity() { m_registry->destroy(m_id); }
+			// Necessary to take ownership
+			other.m_id = entt::null;
+		}
+		Entity()
+		{
+			m_id       = entt::null;
+			m_registry = nullptr;
+		}
+
+		~Entity()
+		{
+			if (m_id != entt::null) { m_registry->destroy(m_id); }
+		}
+
+		Entity& operator=(Entity&& other)
+		{
+			m_id       = other.m_id;
+			m_registry = other.m_registry;
+
+			// Necessary to take ownership
+			other.m_id = entt::null;
+
+			return *this;
+		}
+
+		Entity(const Entity&) = delete;
+		Entity& operator=(const Entity&) = delete;
+
+		[[nodiscard]] bool operator==(const MRG::Entity& other) const { return m_id == other.m_id; }
+		[[nodiscard]] bool operator==(const entt::entity& id) const { return m_id == id; }
 
 		template<typename... ComponentTypes>
 		[[nodiscard]] bool hasComponents() const
@@ -74,17 +107,6 @@ namespace MRG
 		entt::entity m_id;
 		Ref<entt::registry> m_registry;
 	};
-
-	// clang-format off
-	template<typename Iterator>
-	concept EntityIterator =
-		std::input_iterator<Iterator> &&
-		requires(Iterator it) {
-			{*it} -> std::convertible_to<Ref<Entity>>;
-		}
-	;
-	// clang-format on
-
 }  // namespace MRG
 
 #endif  // MORRIGU_ENTITY_H

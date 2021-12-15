@@ -45,15 +45,15 @@ namespace MRG::UI
             };
 			if (glyph->bitmap.width != 0 && glyph->bitmap.rows != 0) {
 				const auto bitmap = renderer->createTexture(fullBitmapData.data(), glyph->bitmap.width, glyph->bitmap.rows);
-				auto renderLetter = renderer->createEntity(registry);
-				auto& tc          = renderLetter->getComponent<Components::Transform>();
-				auto& mrc         = renderLetter->addComponent<Components::MeshRenderer<TexturedVertex>>(
+				auto renderLetter = Entity{registry};
+				auto& tc          = renderLetter.getComponent<Components::Transform>();
+				auto& mrc         = renderLetter.addComponent<Components::MeshRenderer<TexturedVertex>>(
                   renderer->createMeshRenderer(quad, renderer->textUIMaterial));
 				mrc.bindTexture(1, bitmap);
 				tc.translation = {posX, posY, 0.f};
 				mrc.updateTransform(tc.getTransform());
 				renderer->uploadMesh(mrc.mesh);
-				m_letters.emplace_back(Letter{bitmap, renderLetter});
+				m_letters.emplace_back(Letter{bitmap, std::move(renderLetter)});
 			}
 			posX += static_cast<float>(glyph->advance.x >> 6);
 			posY += static_cast<float>(glyph->advance.y >> 6);

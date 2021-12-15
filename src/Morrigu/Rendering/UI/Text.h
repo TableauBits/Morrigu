@@ -30,7 +30,7 @@ namespace MRG::UI
 		struct Letter
 		{
 			Ref<Texture> bitmap;
-			Ref<Entity> quad;
+			Entity quad;
 		};
 		std::vector<Letter> m_letters;
 	};

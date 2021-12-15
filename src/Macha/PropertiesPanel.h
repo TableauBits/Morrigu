@@ -9,7 +9,7 @@
 
 namespace PropertiesPanel
 {
-	void onImGuiUpdate(MRG::Ref<MRG::Entity>& selectedEntity);
+	void onImGuiUpdate(entt::entity& selectedEntity, entt::registry& registry);
 };  // namespace PropertiesPanel
 
 #endif

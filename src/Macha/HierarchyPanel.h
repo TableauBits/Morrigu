@@ -10,13 +10,13 @@
 class HierarchyPanel
 {
 public:
-	void onImGuiUpdate(const std::vector<MRG::Ref<MRG::Entity>>& entities);
+	void onImGuiUpdate(const std::vector<MRG::Entity>& entities);
 
-	MRG::Ref<MRG::Entity> selectedEntity{};
+	entt::entity selectedEntity{entt::null};
 
 private:
-	void renderEntity(const MRG::Ref<MRG::Entity>& entity);
-	void modifySelectedEntity(const MRG::Ref<MRG::Entity>& entity);
+	void renderEntity(const MRG::Entity& entity);
+	void modifySelectedEntity(const entt::entity& entity);
 };
 
 #endif

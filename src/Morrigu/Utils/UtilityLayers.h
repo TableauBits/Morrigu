@@ -39,7 +39,7 @@ namespace MRG
 			return application->renderer->createMeshRenderer<VertexType>(meshRef, materialRef);
 		}
 
-		Ref<entt::registry> registry{createRef<entt::registry>()};
+		MRG::Ref<entt::registry> registry{createRef<entt::registry>()};
 	};
 
 	// This layer is an orthographic pixel perfect layer

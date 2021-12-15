@@ -15,15 +15,15 @@ class Viewport
 public:
 	Viewport(MRG::Application* context, ImVec2 initialSize);
 
-	void onUpdate(const std::vector<MRG::Ref<MRG::Entity>>& entities, MRG::Timestep ts);
-	void onImGuiUpdate(MRG::Timestep ts);
+	void onUpdate(const entt::registry& registry, MRG::Timestep ts);
+	void onImGuiUpdate(entt::registry& registry);
 	bool onEvent(MRG::Event& event);
 
 	float moveSpeed{2.f};
 	MRG::StandardCamera camera{};
 
 	ImGuizmo::OPERATION guizmoType{ImGuizmo::OPERATION::TRANSLATE};
-	MRG::Ref<MRG::Entity> selectedEntity{};
+	entt::entity selectedEntity{entt::null};
 
 	std::string name{"Viewport"};
 

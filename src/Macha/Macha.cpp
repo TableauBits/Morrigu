@@ -26,33 +26,31 @@ public:
 		auto material = createMaterial<MRG::TexturedVertex>(createShader("TestShader.vert.spv", "TestShader.frag.spv"));
 
 		auto torus = createEntity();
-		torus->setName("Torus");
-		m_entities.emplace_back(torus);
+		torus.setName("Torus");
 		auto torusMesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
 		uploadMesh(torusMesh);
-		auto& torusMRC = torus->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(torusMesh, material));
-		auto& torusTC  = torus->getComponent<MRG::Components::Transform>();
+		auto& torusMRC = torus.addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(torusMesh, material));
+		auto& torusTC  = torus.getComponent<MRG::Components::Transform>();
 		torusTC.translation = {1.5f, 0.f, 0.f};
 		torusMRC.updateTransform(torusTC.getTransform());
+		m_entities.emplace_back(std::move(torus));
 
 		auto cylinder = createEntity();
-		cylinder->setName("Cylinder");
-		m_entities.emplace_back(cylinder);
+		cylinder.setName("Cylinder");
 		auto cylinderMesh = MRG::Utils::Meshes::cylinder<MRG::TexturedVertex>();
 		uploadMesh(cylinderMesh);
 		auto& cylinderMRC =
-		  cylinder->addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(cylinderMesh, material));
-		auto& cylinderTC       = cylinder->getComponent<MRG::Components::Transform>();
+		  cylinder.addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(cylinderMesh, material));
+		auto& cylinderTC       = cylinder.getComponent<MRG::Components::Transform>();
 		cylinderTC.translation = {-1.5f, 0.f, 0.f};
 		cylinderMRC.updateTransform(cylinderTC.getTransform());
-
-		m_hierarchyPanel->selectedEntity = torus;
+		m_entities.emplace_back(std::move(cylinder));
 	}
 
 	void onUpdate(MRG::Timestep ts) override
 	{
 		// Update viewport
-		m_viewport->onUpdate(m_entities, ts);
+		m_viewport->onUpdate(*registry, ts);
 	}
 
 	void onEvent(MRG::Event& event) override { m_viewport->onEvent(event); }
@@ -99,10 +97,10 @@ public:
 		m_viewport->selectedEntity = m_hierarchyPanel->selectedEntity;
 
 		// Render properties panel
-		PropertiesPanel::onImGuiUpdate(m_hierarchyPanel->selectedEntity);
+		PropertiesPanel::onImGuiUpdate(m_hierarchyPanel->selectedEntity, *registry);
 
 		// Render viewport
-		m_viewport->onImGuiUpdate(ts);
+		m_viewport->onImGuiUpdate(*registry);
 
 		// Debug window
 		if (ImGui::Begin("Debug window")) {
@@ -111,8 +109,9 @@ public:
 			  color, "Frametime: %2.5fms (%3.2f fps)", static_cast<double>(ts.getMilliseconds()), static_cast<double>(1.f / ts));
 
 			const auto& entity = m_hierarchyPanel->selectedEntity;
-			if (entity != nullptr) {
-				ImGui::Text("Selected entity ID: %d (%s)", entity->getID(), entity->getName().c_str());
+			if (entity != entt::null) {
+				ImGui::Text(
+				  "Selected entity ID: %d (%s)", static_cast<uint32_t>(entity), registry->get<MRG::Components::Tag>(entity).tag.c_str());
 			} else {
 				ImGui::Text("No entity selected");
 			}
@@ -123,17 +122,18 @@ public:
 	}
 
 private:
-	[[nodiscard]] MRG::Ref<MRG::Entity> createEntity()
+	[[nodiscard]] MRG::Entity createEntity()
 	{
-		auto entity = StandardLayer::createEntity();
-		entity->addComponent<Components::EntitySettings>();
+		auto entity = MRG::Entity{registry};
+		entity.addComponent<Components::EntitySettings>();
 
 		return entity;
 	}
 
 	MRG::Ref<HierarchyPanel> m_hierarchyPanel{};
 	MRG::Ref<Viewport> m_viewport;
-	std::vector<MRG::Ref<MRG::Entity>> m_entities{};
+	std::vector<MRG::Entity> m_entities{};
+	MRG::Entity m_selectedEntity{};
 };
 
 class SampleApp : public MRG::Application

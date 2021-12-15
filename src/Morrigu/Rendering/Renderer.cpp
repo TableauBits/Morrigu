@@ -153,8 +153,6 @@ namespace MRG
 		return createRef<Texture>(m_device, m_graphicsQueue, m_uploadContext, m_allocator, fileName);
 	}
 
-	Ref<Entity> Renderer::createEntity(const Ref<entt::registry>& registry) { return createRef<Entity>(registry); }
-
 	Ref<Framebuffer> Renderer::createFrameBuffer(const FramebufferSpecification& fbSpec)
 	{
 		Framebuffer::VulkanObjects objs{
