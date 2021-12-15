@@ -24,7 +24,7 @@ namespace MRG
 		{
 			m_id = m_registry->create();
 			m_registry->emplace<Components::Transform>(m_id);
-			m_registry->emplace<Components::Tag>(m_id, fmt::format("%d", m_id));
+			m_registry->emplace<Components::Tag>(m_id, fmt::format("{}", m_id));
 		}
 		Entity(Entity&& other)
 		{

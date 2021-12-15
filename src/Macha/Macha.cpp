@@ -20,8 +20,14 @@ class MachaLayer : public MRG::StandardLayer
 public:
 	void onAttach() override
 	{
-		m_hierarchyPanel = MRG::createRef<HierarchyPanel>();
-		m_viewport       = MRG::createRef<Viewport>(application, ImVec2{1280.f, 720.f});
+		m_viewport = MRG::createRef<Viewport>(application, ImVec2{1280.f, 720.f});
+
+		m_hierarchyPanel                           = MRG::createRef<HierarchyPanel>();
+		m_hierarchyPanel->callbacks.entityCreation = [this]() {
+			auto entity = createEntity();
+			m_entities.emplace_back(std::move(entity));
+		};
+		m_hierarchyPanel->callbacks.entitySelected = [this](const entt::entity entity) { m_viewport->selectedEntity = entity; };
 
 		auto material = createMaterial<MRG::TexturedVertex>(createShader("TestShader.vert.spv", "TestShader.frag.spv"));
 
@@ -92,15 +98,14 @@ public:
 			ImGui::EndMenuBar();
 		}
 
-		// Render hierarchy panel and update selected entity
+		// Render viewport
+		m_viewport->onImGuiUpdate(*registry);
+
+		// Render hierarchy panel
 		m_hierarchyPanel->onImGuiUpdate(m_entities);
-		m_viewport->selectedEntity = m_hierarchyPanel->selectedEntity;
 
 		// Render properties panel
 		PropertiesPanel::onImGuiUpdate(m_hierarchyPanel->selectedEntity, *registry);
-
-		// Render viewport
-		m_viewport->onImGuiUpdate(*registry);
 
 		// Debug window
 		if (ImGui::Begin("Debug window")) {
@@ -130,8 +135,8 @@ private:
 		return entity;
 	}
 
-	MRG::Ref<HierarchyPanel> m_hierarchyPanel{};
 	MRG::Ref<Viewport> m_viewport;
+	MRG::Ref<HierarchyPanel> m_hierarchyPanel{};
 	std::vector<MRG::Entity> m_entities{};
 	MRG::Entity m_selectedEntity{};
 };
