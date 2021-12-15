@@ -14,6 +14,7 @@
 
 #include <array>
 #include <chrono>
+#include <map>
 
 class MachaLayer : public MRG::StandardLayer
 {
@@ -25,9 +26,10 @@ public:
 		m_hierarchyPanel                           = MRG::createRef<HierarchyPanel>();
 		m_hierarchyPanel->callbacks.entityCreation = [this]() {
 			auto entity = createEntity();
-			m_entities.emplace_back(std::move(entity));
+			m_entities.insert(std::make_pair(entity.getHandle(), std::move(entity)));
 		};
-		m_hierarchyPanel->callbacks.entitySelected = [this](const entt::entity entity) { m_viewport->selectedEntity = entity; };
+		m_hierarchyPanel->callbacks.entityDestruction = [this](const entt::entity entityHandle) { m_entities.erase(entityHandle); };
+		m_hierarchyPanel->callbacks.entitySelected    = [this](const entt::entity entity) { m_viewport->selectedEntity = entity; };
 
 		auto material = createMaterial<MRG::TexturedVertex>(createShader("TestShader.vert.spv", "TestShader.frag.spv"));
 
@@ -39,7 +41,7 @@ public:
 		auto& torusTC  = torus.getComponent<MRG::Components::Transform>();
 		torusTC.translation = {1.5f, 0.f, 0.f};
 		torusMRC.updateTransform(torusTC.getTransform());
-		m_entities.emplace_back(std::move(torus));
+		m_entities.insert(std::make_pair(torus.getHandle(), std::move(torus)));
 
 		auto cylinder = createEntity();
 		cylinder.setName("Cylinder");
@@ -50,7 +52,7 @@ public:
 		auto& cylinderTC       = cylinder.getComponent<MRG::Components::Transform>();
 		cylinderTC.translation = {-1.5f, 0.f, 0.f};
 		cylinderMRC.updateTransform(cylinderTC.getTransform());
-		m_entities.emplace_back(std::move(cylinder));
+		m_entities.insert(std::make_pair(cylinder.getHandle(), std::move(cylinder)));
 	}
 
 	void onUpdate(MRG::Timestep ts) override
@@ -137,8 +139,7 @@ private:
 
 	MRG::Ref<Viewport> m_viewport;
 	MRG::Ref<HierarchyPanel> m_hierarchyPanel{};
-	std::vector<MRG::Entity> m_entities{};
-	MRG::Entity m_selectedEntity{};
+	std::unordered_map<entt::entity, MRG::Entity> m_entities{};
 };
 
 class SampleApp : public MRG::Application
