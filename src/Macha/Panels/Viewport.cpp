@@ -133,6 +133,7 @@ bool Viewport::onEvent(MRG::Event& event)
 
 bool Viewport::onKeyPressed(MRG::KeyPressedEvent& keyPress)
 {
+	if (!m_isFocused) { return false; }
 	if (keyPress.getRepeatCount() > 0) { return false; }
 
 	switch (keyPress.getKeyCode()) {

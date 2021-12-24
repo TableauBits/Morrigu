@@ -60,6 +60,12 @@ add_executable(
 	${MC_SOURCES}
 )
 
+target_include_directories(
+	Macha
+	PRIVATE
+	${CMAKE_CURRENT_LIST_DIR}/Macha
+)
+
 target_link_libraries(
 	Macha
 	PRIVATE

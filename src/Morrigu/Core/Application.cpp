@@ -7,6 +7,8 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
+#include <GLFW/glfw3.h>
+
 #include <utility>
 
 namespace
@@ -21,6 +23,7 @@ namespace MRG
 		glfwSetErrorCallback(glfwErrorCallback);
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		if (m_specification.maximized) { glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE); }
 		auto window = glfwCreateWindow(m_specification.rendererSpecification.windowWidth,
 		                               m_specification.rendererSpecification.windowHeight,
 		                               m_specification.windowName.c_str(),

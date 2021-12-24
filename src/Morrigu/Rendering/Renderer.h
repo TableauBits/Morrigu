@@ -25,10 +25,10 @@ namespace MRG
 {
 	struct RendererSpecification
 	{
-		std::string applicationName;
-		int windowWidth;
-		int windowHeight;
-		vk::PresentModeKHR preferredPresentMode;
+		std::string applicationName{"Morrigu engine application"};
+		vk::PresentModeKHR preferredPresentMode{vk::PresentModeKHR::eMailbox};
+		int windowWidth{1280};
+		int windowHeight{720};
 	};
 
 	struct FrameData

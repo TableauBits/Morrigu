@@ -17,7 +17,8 @@ namespace MRG
 {
 	struct ApplicationSpecification
 	{
-		std::string windowName;
+		std::string windowName{"Morrigu engine application"};
+		bool maximized{true};
 		RendererSpecification rendererSpecification;
 	};
 

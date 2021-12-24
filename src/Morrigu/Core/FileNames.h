@@ -12,7 +12,7 @@ namespace MRG::Files
 	namespace Rendering
 	{
 		static const std::string vkPipelineCacheFile = ".vkPipelineCache";
-		static const std::string defaultTexture      = "default.png";
+		static const std::string defaultTexture      = "engine/default.png";
 	}  // namespace Rendering
 }  // namespace MRG::Files
 

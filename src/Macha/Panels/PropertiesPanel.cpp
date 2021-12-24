@@ -9,6 +9,8 @@
 #include "Vendor/ImGui/misc/imgui_stdlib.h"
 #include <imgui_internal.h>
 
+#include <filesystem>
+
 namespace
 {
 	namespace ImGuiUtils
@@ -136,7 +138,9 @@ namespace
 
 	void editMeshRendererComponent(MRG::Components::MeshRenderer<MRG::TexturedVertex>& mrc,
 	                               MRG::Components::Transform& tc,
-	                               Components::EntitySettings& esc)
+	                               Components::EntitySettings& esc,
+	                               AssetRegistry& assets,
+	                               MRG::Renderer& renderer)
 	{
 		ImGui::Dummy({0.f, 20.f});
 		if (ImGui::CollapsingHeader("Mesh renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -171,9 +175,30 @@ namespace
 
 			ImGuiUtils::centeredText("Textures bindings");
 			for (const auto& textureBindingInfo : mrc.sampledImages) {
-				ImGui::Text("%s: %s",
-				            mrc.material->shader->l3ImageBindings[textureBindingInfo.first].name.c_str(),
-				            textureBindingInfo.second->path.c_str());
+				const auto name = mrc.material->shader->l3ImageBindings[textureBindingInfo.first].name.c_str();
+				ImGui::PushID(name);
+				ImGui::Text("%s: %s", name, textureBindingInfo.second->path.c_str());
+				if (ImGui::BeginDragDropTarget()) {
+					if (const auto* payload = ImGui::AcceptDragDropPayload("ASSET_PANEL")) {
+						const auto texturePath =
+						  std::filesystem::relative(reinterpret_cast<const char*>(payload->Data), MRG::Folders::Rendering::texturesFolder)
+						    .string();
+						MRG_ENGINE_TRACE("Drag and drop payload received: {}", texturePath)
+
+						auto texture = assets.getTexture(texturePath);
+						MRG::Ref<MRG::Texture> textureValue;
+						if (texture.has_value()) {
+							textureValue = texture.value();
+						} else {
+							textureValue = renderer.createTexture(texturePath.c_str());
+							assets.addTexture(textureValue);
+						}
+
+						mrc.bindTexture(textureBindingInfo.first, textureValue);
+					}
+					ImGui::EndDragDropTarget();
+				}
+				ImGui::PopID();
 			}
 		}
 		mrc.updateTransform(tc.getTransform());
@@ -182,7 +207,7 @@ namespace
 
 namespace PropertiesPanel
 {
-	void onImGuiUpdate(entt::entity& selectedEntity, entt::registry& registry)
+	void onImGuiUpdate(entt::entity& selectedEntity, entt::registry& registry, AssetRegistry& assets, MRG::Renderer& renderer)
 	{
 		if (ImGui::Begin("Entity properties")) {
 			if (selectedEntity == entt::null) {
@@ -202,7 +227,7 @@ namespace PropertiesPanel
 
 			if (registry.all_of<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(selectedEntity)) {
 				auto& mrc = registry.get<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(selectedEntity);
-				editMeshRendererComponent(mrc, tc, esc);
+				editMeshRendererComponent(mrc, tc, esc, assets, renderer);
 			}
 		}
 		ImGui::End();

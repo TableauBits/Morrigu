@@ -4,10 +4,12 @@
 
 #include "MaterialEditorLayer.h"
 
+#include "AssetRegistry.h"
 #include "Components/EntitySettings.h"
-#include "HierarchyPanel.h"
-#include "PropertiesPanel.h"
-#include "Viewport.h"
+#include "Panels/AssetPanel.h"
+#include "Panels/HierarchyPanel.h"
+#include "Panels/PropertiesPanel.h"
+#include "Panels/Viewport.h"
 
 #include <ImGuizmo.h>
 #include <imgui.h>
@@ -31,7 +33,10 @@ public:
 		m_hierarchyPanel->callbacks.entityDestruction = [this](const entt::entity entityHandle) { m_entities.erase(entityHandle); };
 		m_hierarchyPanel->callbacks.entitySelected    = [this](const entt::entity entity) { m_viewport->selectedEntity = entity; };
 
-		auto material = createMaterial<MRG::TexturedVertex>(createShader("TestShader.vert.spv", "TestShader.frag.spv"));
+		m_assetPanel = MRG::createRef<AssetPanel>(*application->renderer);
+
+		// auto material = createMaterial<MRG::TexturedVertex>(createShader("TestShader.vert.spv", "TestShader.frag.spv"));
+		auto material = application->renderer->defaultTexturedMaterial;
 
 		auto torus = createEntity();
 		torus.setName("Torus");
@@ -97,8 +102,15 @@ public:
 				if (ImGui::MenuItem("Exit")) { application->close(); }
 				ImGui::EndMenu();
 			}
+			if (ImGui::BeginMenu("Debug")) {
+				ImGui::MenuItem("ImGui demo window", nullptr, &showDemoWindow);
+				ImGui::EndMenu();
+			}
 			ImGui::EndMenuBar();
 		}
+
+		// Render ImGui demo window if requested
+		if (showDemoWindow) { ImGui::ShowDemoWindow(); }
 
 		// Render viewport
 		m_viewport->onImGuiUpdate(*registry);
@@ -107,7 +119,10 @@ public:
 		m_hierarchyPanel->onImGuiUpdate(m_entities);
 
 		// Render properties panel
-		PropertiesPanel::onImGuiUpdate(m_hierarchyPanel->selectedEntity, *registry);
+		PropertiesPanel::onImGuiUpdate(m_hierarchyPanel->selectedEntity, *registry, m_assets, *application->renderer);
+
+		// Render asset panel
+		m_assetPanel->onImGuiRender();
 
 		// Debug window
 		if (ImGui::Begin("Debug window")) {
@@ -137,9 +152,14 @@ private:
 		return entity;
 	}
 
+	bool showDemoWindow{false};
+
 	MRG::Ref<Viewport> m_viewport;
 	MRG::Ref<HierarchyPanel> m_hierarchyPanel{};
+	MRG::Ref<AssetPanel> m_assetPanel{};
 	std::unordered_map<entt::entity, MRG::Entity> m_entities{};
+
+	AssetRegistry m_assets{};
 };
 
 class SampleApp : public MRG::Application
@@ -147,10 +167,9 @@ class SampleApp : public MRG::Application
 public:
 	SampleApp()
 	    : MRG::Application{MRG::ApplicationSpecification{.windowName            = "Macha editor",
+	                                                     .maximized             = true,
 	                                                     .rendererSpecification = {
 	                                                       .applicationName      = "Macha",
-	                                                       .windowWidth          = 1280,
-	                                                       .windowHeight         = 720,
 	                                                       .preferredPresentMode = vk::PresentModeKHR::eMailbox,
 	                                                     }}}
 	{}

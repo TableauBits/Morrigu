@@ -277,7 +277,7 @@ namespace MRG
 
 	void Renderer::initVulkan()
 	{
-		std::array<uint32_t, 3> requestedAPIVersion{1, 1, 0};
+		std::array<uint32_t, 3> requestedAPIVersion{1, 0, 0};
 
 		// basic instance creation
 		vkb::InstanceBuilder instanceBuilder{};
