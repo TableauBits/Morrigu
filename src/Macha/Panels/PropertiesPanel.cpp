@@ -156,6 +156,25 @@ namespace
 			}
 			ImGui::PopStyleColor(3);
 
+			ImGui::PushID("Mesh DnD Target");
+			ImGui::Text("Drop new mesh here");  // @TODO(Ithyx): Display mesh name (path ?)
+			if (ImGui::BeginDragDropTarget()) {
+				if (const auto* payload = ImGui::AcceptDragDropPayload("ASSET_PANEL")) {
+					const auto meshPath =
+					  std::filesystem::relative(reinterpret_cast<const char*>(payload->Data), MRG::Folders::Rendering::meshesFolder)
+					    .string();
+					MRG_ENGINE_TRACE("Drag and drop payload to mesh received: {}", meshPath)
+
+					auto mesh = MRG::Utils::Meshes::loadMeshFromFile<MRG::TexturedVertex>(meshPath.c_str());
+					renderer.uploadMesh(mesh);
+
+					mrc.mesh = mesh;
+				}
+
+				ImGui::EndDragDropTarget();
+			}
+			ImGui::PopID();
+
 			ImGui::Checkbox("Visible", &mrc.isVisible);
 
 			ImGuiUtils::subsectionHeader("Offset transform");
@@ -195,7 +214,7 @@ namespace
 						const auto texturePath =
 						  std::filesystem::relative(reinterpret_cast<const char*>(payload->Data), MRG::Folders::Rendering::texturesFolder)
 						    .string();
-						MRG_ENGINE_TRACE("Drag and drop payload received: {}", texturePath)
+						MRG_ENGINE_TRACE("Drag and drop payload to texture received: {}", texturePath)
 
 						auto texture = assets.getTexture(texturePath);
 						MRG::Ref<MRG::Texture> textureValue;
