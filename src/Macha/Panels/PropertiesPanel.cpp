@@ -136,14 +136,26 @@ namespace
 		}
 	}
 
-	void editMeshRendererComponent(MRG::Components::MeshRenderer<MRG::TexturedVertex>& mrc,
-	                               MRG::Components::Transform& tc,
-	                               Components::EntitySettings& esc,
-	                               AssetRegistry& assets,
-	                               MRG::Renderer& renderer)
+	[[nodiscard]] bool editMeshRendererComponent(MRG::Components::MeshRenderer<MRG::TexturedVertex>& mrc,
+	                                             MRG::Components::Transform& tc,
+	                                             Components::EntitySettings& esc,
+	                                             AssetRegistry& assets,
+	                                             MRG::Renderer& renderer)
 	{
 		ImGui::Dummy({0.f, 20.f});
 		if (ImGui::CollapsingHeader("Mesh renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
+			static const auto closeSize = 24.f;
+			ImGui::SameLine((ImGui::GetWindowWidth() - closeSize));
+			ImGui::SetItemAllowOverlap();
+			ImGui::PushStyleColor(ImGuiCol_Button, {0.1f, 0.1f, 0.1f, 1.f});
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {0.3f, 0.1f, 0.1f, 1.f});
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, {0.5f, 0.1f, 0.1f, 1.f});
+			if (ImGui::Button("X", {closeSize, 0.f})) {
+				ImGui::PopStyleColor(3);
+				return true;
+			}
+			ImGui::PopStyleColor(3);
+
 			ImGui::Checkbox("Visible", &mrc.isVisible);
 
 			ImGuiUtils::subsectionHeader("Offset transform");
@@ -202,6 +214,7 @@ namespace
 			}
 		}
 		mrc.updateTransform(tc.getTransform());
+		return false;
 	}
 }  // namespace
 
@@ -227,7 +240,9 @@ namespace PropertiesPanel
 
 			if (registry.all_of<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(selectedEntity)) {
 				auto& mrc = registry.get<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(selectedEntity);
-				editMeshRendererComponent(mrc, tc, esc, assets, renderer);
+				if (editMeshRendererComponent(mrc, tc, esc, assets, renderer)) {
+					registry.remove<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(selectedEntity);
+				}
 			}
 		}
 		ImGui::End();
