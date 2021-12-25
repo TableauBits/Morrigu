@@ -228,6 +228,22 @@ namespace PropertiesPanel
 				return;
 			}
 
+			if (ImGui::BeginPopupContextWindow("Component add popup", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
+				if (ImGui::BeginMenu("Add component")) {
+					if (!registry.all_of<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(selectedEntity) &&
+					    ImGui::MenuItem("Mesh renderer")) {
+						auto mesh = MRG::Utils::Meshes::cube<MRG::TexturedVertex>();
+						renderer.uploadMesh(mesh);
+						registry.emplace<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(
+						  selectedEntity, renderer.createMeshRenderer(mesh, renderer.defaultTexturedMaterial));
+					}
+
+					ImGui::EndMenu();
+				}
+
+				ImGui::EndPopup();
+			}
+
 			// Tag and Transform components are guaranteed to be present on an entity
 			ImGui::InputText("Name", &registry.get<MRG::Components::Tag>(selectedEntity).tag);
 
