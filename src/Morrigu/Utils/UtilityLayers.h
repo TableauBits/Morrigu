@@ -20,10 +20,8 @@ namespace MRG
 			application->renderer->uploadMesh(mesh);
 		}
 
-		[[nodiscard]] Ref<Entity> createEntity();
 		[[nodiscard]] Ref<UI::Font> createFont(const std::string& filePath);
 		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec);
-		[[nodiscard]] Ref<UI::Text> createText(const std::string& content, const Ref<UI::Font>& font, const glm::vec2& position);
 		[[nodiscard]] Ref<Texture> createTexture(const std::string& filePath);
 		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile);
 
@@ -38,8 +36,6 @@ namespace MRG
 		{
 			return application->renderer->createMeshRenderer<VertexType>(meshRef, materialRef);
 		}
-
-		MRG::Ref<entt::registry> registry{createRef<entt::registry>()};
 	};
 
 	// This layer is an orthographic pixel perfect layer

@@ -68,7 +68,7 @@ void Viewport::onUpdate(const entt::registry& registry, MRG::Timestep ts)
 	m_context->renderer->drawMeshes<MRG::TexturedVertex>(registry, camera, m_framebuffer);
 }
 
-void Viewport::onImGuiUpdate(entt::registry& registry)
+void Viewport::onImGuiUpdate(entt::entity selectedEntity, entt::registry& registry)
 {
 	ImGuizmo::BeginFrame();
 

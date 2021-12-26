@@ -4,17 +4,15 @@
 
 #include "MaterialEditorLayer.h"
 
-#include "AssetRegistry.h"
-#include "Components/EntitySettings.h"
 #include "Panels/AssetPanel.h"
 #include "Panels/HierarchyPanel.h"
 #include "Panels/PropertiesPanel.h"
 #include "Panels/Viewport.h"
+#include "Scene.h"
 
 #include <ImGuizmo.h>
 #include <imgui.h>
 
-#include <array>
 #include <chrono>
 #include <map>
 
@@ -25,20 +23,17 @@ public:
 	{
 		m_viewport = MRG::createRef<Viewport>(application, ImVec2{1280.f, 720.f});
 
-		m_hierarchyPanel                           = MRG::createRef<HierarchyPanel>();
-		m_hierarchyPanel->callbacks.entityCreation = [this]() {
-			auto entity = createEntity();
-			m_entities.insert(std::make_pair(entity.getHandle(), std::move(entity)));
-		};
-		m_hierarchyPanel->callbacks.entityDestruction = [this](const entt::entity entityHandle) { m_entities.erase(entityHandle); };
-		m_hierarchyPanel->callbacks.entitySelected    = [this](const entt::entity entity) { m_viewport->selectedEntity = entity; };
+		m_hierarchyPanel                              = MRG::createRef<HierarchyPanel>();
+		m_hierarchyPanel->callbacks.entityCreation    = [this]() { auto entity = m_activeScene.createEntity(); };
+		m_hierarchyPanel->callbacks.entityDestruction = [this](const entt::entity entity) { m_activeScene.destroyEntity(entity); };
+		m_hierarchyPanel->callbacks.entitySelected    = [this](const entt::entity entity) { m_activeScene.selectedEntity = entity; };
 
 		m_assetPanel = MRG::createRef<AssetPanel>(*application->renderer);
 
 		// auto material = createMaterial<MRG::TexturedVertex>(createShader("TestShader.vert.spv", "TestShader.frag.spv"));
 		auto material = application->renderer->defaultTexturedMaterial;
 
-		auto torus = createEntity();
+		auto torus = m_activeScene.createEntity();
 		torus.setName("Torus");
 		auto torusMesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
 		uploadMesh(torusMesh);
@@ -46,9 +41,8 @@ public:
 		auto& torusTC  = torus.getComponent<MRG::Components::Transform>();
 		torusTC.translation = {1.5f, 0.f, 0.f};
 		torusMRC.updateTransform(torusTC.getTransform());
-		m_entities.insert(std::make_pair(torus.getHandle(), std::move(torus)));
 
-		auto cylinder = createEntity();
+		auto cylinder = m_activeScene.createEntity();
 		cylinder.setName("Cylinder");
 		auto cylinderMesh = MRG::Utils::Meshes::cylinder<MRG::TexturedVertex>();
 		uploadMesh(cylinderMesh);
@@ -57,13 +51,12 @@ public:
 		auto& cylinderTC       = cylinder.getComponent<MRG::Components::Transform>();
 		cylinderTC.translation = {-1.5f, 0.f, 0.f};
 		cylinderMRC.updateTransform(cylinderTC.getTransform());
-		m_entities.insert(std::make_pair(cylinder.getHandle(), std::move(cylinder)));
 	}
 
 	void onUpdate(MRG::Timestep ts) override
 	{
 		// Update viewport
-		m_viewport->onUpdate(*registry, ts);
+		m_viewport->onUpdate(*m_activeScene.registry, ts);
 	}
 
 	void onEvent(MRG::Event& event) override { m_viewport->onEvent(event); }
@@ -113,13 +106,13 @@ public:
 		if (showDemoWindow) { ImGui::ShowDemoWindow(); }
 
 		// Render viewport
-		m_viewport->onImGuiUpdate(*registry);
+		m_viewport->onImGuiUpdate(m_activeScene.selectedEntity, *m_activeScene.registry);
 
 		// Render hierarchy panel
-		m_hierarchyPanel->onImGuiUpdate(m_entities);
+		m_hierarchyPanel->onImGuiUpdate(*m_activeScene.registry, m_activeScene.selectedEntity);
 
 		// Render properties panel
-		PropertiesPanel::onImGuiUpdate(m_hierarchyPanel->selectedEntity, *registry, m_assets, *application->renderer);
+		PropertiesPanel::onImGuiUpdate(m_activeScene.selectedEntity, *m_activeScene.registry, m_activeScene.assets, *application->renderer);
 
 		// Render asset panel
 		m_assetPanel->onImGuiRender();
@@ -130,10 +123,11 @@ public:
 			ImGui::TextColored(
 			  color, "Frametime: %2.5fms (%3.2f fps)", static_cast<double>(ts.getMilliseconds()), static_cast<double>(1.f / ts));
 
-			const auto& entity = m_hierarchyPanel->selectedEntity;
+			const auto& entity = m_activeScene.selectedEntity;
 			if (entity != entt::null) {
-				ImGui::Text(
-				  "Selected entity ID: %d (%s)", static_cast<uint32_t>(entity), registry->get<MRG::Components::Tag>(entity).tag.c_str());
+				ImGui::Text("Selected entity ID: %d (%s)",
+				            static_cast<uint32_t>(entity),
+				            m_activeScene.registry->get<MRG::Components::Tag>(entity).tag.c_str());
 			} else {
 				ImGui::Text("No entity selected");
 			}
@@ -144,22 +138,13 @@ public:
 	}
 
 private:
-	[[nodiscard]] MRG::Entity createEntity()
-	{
-		auto entity = MRG::Entity{registry};
-		entity.addComponent<Components::EntitySettings>();
-
-		return entity;
-	}
-
 	bool showDemoWindow{false};
 
 	MRG::Ref<Viewport> m_viewport;
 	MRG::Ref<HierarchyPanel> m_hierarchyPanel{};
 	MRG::Ref<AssetPanel> m_assetPanel{};
-	std::unordered_map<entt::entity, MRG::Entity> m_entities{};
 
-	AssetRegistry m_assets{};
+	Scene m_activeScene{};
 };
 
 class SampleApp : public MRG::Application

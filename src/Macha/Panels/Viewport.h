@@ -16,15 +16,12 @@ public:
 	Viewport(MRG::Application* context, ImVec2 initialSize);
 
 	void onUpdate(const entt::registry& registry, MRG::Timestep ts);
-	void onImGuiUpdate(entt::registry& registry);
+	void onImGuiUpdate(entt::entity selectedEntity, entt::registry& registry);
 	bool onEvent(MRG::Event& event);
 
 	float moveSpeed{2.f};
 	MRG::StandardCamera camera{};
-
 	ImGuizmo::OPERATION guizmoType{ImGuizmo::OPERATION::TRANSLATE};
-	entt::entity selectedEntity{entt::null};
-
 	std::string name{"Viewport"};
 
 private:

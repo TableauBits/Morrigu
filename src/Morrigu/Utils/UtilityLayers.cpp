@@ -11,10 +11,6 @@ namespace MRG
 	{
 		return application->renderer->createFrameBuffer(spec);
 	}
-	Ref<UI::Text> StandardLayer::createText(const std::string& content, const Ref<UI::Font>& font, const glm::vec2& position)
-	{
-		return createRef<UI::Text>(content, font, position, application->renderer.get(), registry);
-	}
 	Ref<Texture> StandardLayer::createTexture(const std::string& filePath)
 	{
 		return application->renderer->createTexture(filePath.c_str());

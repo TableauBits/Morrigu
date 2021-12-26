@@ -4,7 +4,7 @@
 
 #include "HierarchyPanel.h"
 
-void HierarchyPanel::onImGuiUpdate(const std::unordered_map<entt::entity, MRG::Entity>& entities)
+void HierarchyPanel::onImGuiUpdate(entt::registry& registry, const entt::entity selectedEntity)
 {
 	if (ImGui::Begin("Scene hierarchy")) {
 		if (ImGui::BeginPopupContextWindow("Entity creation popup", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
@@ -15,7 +15,8 @@ void HierarchyPanel::onImGuiUpdate(const std::unordered_map<entt::entity, MRG::E
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {0.f, 0.f});
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, {0.f, 5.f});
-		for (const auto& [_, entity] : entities) { renderEntity(entity); }
+		registry.each(
+		  [this, &registry, selectedEntity](const entt::entity entity) { renderEntity(registry, entity, entity == selectedEntity); });
 		if (ImGui::IsMouseDown(MRG::Mouse::ButtonLeft) && ImGui::IsWindowHovered()) { modifySelectedEntity(entt::null); }
 		ImGui::PopStyleVar(2);
 	}
@@ -31,25 +32,21 @@ void HierarchyPanel::onImGuiUpdate(const std::unordered_map<entt::entity, MRG::E
 	ImGui::End();
 }
 
-void HierarchyPanel::renderEntity(const MRG::Entity& entity)
+void HierarchyPanel::renderEntity(entt::registry& registry, const entt::entity entity, bool isSelected)
 {
 	int flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
-	if (entity == selectedEntity) { flags |= ImGuiTreeNodeFlags_Selected; }
+	if (isSelected) { flags |= ImGuiTreeNodeFlags_Selected; }
 
 	// I pray that God forgives ImGui, because he sure knows I can't
-	const auto opened =
-	  ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(entity.getID())), flags, "%s", entity.getName().c_str());
-	if (ImGui::IsItemClicked()) { modifySelectedEntity(entity.getHandle()); }
+	const auto& tc    = registry.get<MRG::Components::Tag>(entity);
+	const auto opened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<intptr_t>(entity)), flags, "%s", tc.tag.c_str());
+	if (ImGui::IsItemClicked()) { modifySelectedEntity(entity); }
 	if (ImGui::BeginPopupContextItem("Entity options popup", ImGuiPopupFlags_MouseButtonRight)) {
-		if (ImGui::MenuItem("Delete entity")) { m_entityToDelete = entity.getHandle(); }
+		if (ImGui::MenuItem("Delete entity")) { m_entityToDelete = entity; }
 
 		ImGui::EndPopup();
 	}
 	if (opened) { ImGui::TreePop(); }
 }
 
-void HierarchyPanel::modifySelectedEntity(const entt::entity& entity)
-{
-	selectedEntity = entity;
-	callbacks.entitySelected(entity);
-}
+void HierarchyPanel::modifySelectedEntity(const entt::entity entity) { callbacks.entitySelected(entity); }

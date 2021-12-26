@@ -17,7 +17,7 @@ set(
 		# Main file
 		${CMAKE_CURRENT_LIST_DIR}/Macha.cpp
 
-		# Material Editor
-		${CMAKE_CURRENT_LIST_DIR}/MaterialEditorLayer.h
-		${CMAKE_CURRENT_LIST_DIR}/MaterialEditorLayer.cpp
+		# Scene
+		${CMAKE_CURRENT_LIST_DIR}/Scene.h
+		${CMAKE_CURRENT_LIST_DIR}/Scene.cpp
 )

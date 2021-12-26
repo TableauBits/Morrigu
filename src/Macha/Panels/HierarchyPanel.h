@@ -14,9 +14,7 @@
 class HierarchyPanel
 {
 public:
-	void onImGuiUpdate(const std::unordered_map<entt::entity, MRG::Entity>& entities);
-
-	entt::entity selectedEntity{entt::null};
+	void onImGuiUpdate(entt::registry& registry, const entt::entity selectedEntity);
 
 	struct Callbacks
 	{
@@ -28,8 +26,8 @@ public:
 private:
 	std::optional<entt::entity> m_entityToDelete{};
 
-	void renderEntity(const MRG::Entity& entity);
-	void modifySelectedEntity(const entt::entity& entity);
+	void renderEntity(entt::registry& registry, const entt::entity entity, bool isSelected);
+	void modifySelectedEntity(const entt::entity entity);
 };
 
 #endif
