@@ -7,7 +7,6 @@
 
 #include "Core/Application.h"
 #include "Core/Layer.h"
-#include "Rendering/UI/Text.h"
 
 namespace MRG
 {
@@ -20,7 +19,6 @@ namespace MRG
 			application->renderer->uploadMesh(mesh);
 		}
 
-		[[nodiscard]] Ref<UI::Font> createFont(const std::string& filePath);
 		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec);
 		[[nodiscard]] Ref<Texture> createTexture(const std::string& filePath);
 		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile);

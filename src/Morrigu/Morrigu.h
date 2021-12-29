@@ -16,9 +16,6 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
-#include "Rendering/UI/Font.h"
-#include "Rendering/UI/Text.h"
-
 #include "Entity/Components/MeshRenderer.h"
 #include "Entity/Components/Transform.h"
 

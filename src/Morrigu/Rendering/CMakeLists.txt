@@ -1,13 +1,5 @@
-include(${CMAKE_CURRENT_LIST_DIR}/UI/CMakeLists.txt)
-
 set(
 		MRG_RENDERING_SOURCES
-
-		# Component sources
-		${MRG_COMPONENT_SOURCES}
-
-		# UI sources
-		${MRG_UI_SOURCES}
 
 		# Camera class
 		${CMAKE_CURRENT_LIST_DIR}/Camera.h

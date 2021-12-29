@@ -12,7 +12,6 @@
 #include "Rendering/Framebuffer.h"
 #include "Rendering/RendererTypes.h"
 #include "Rendering/Texture.h"
-#include "Rendering/UI/Font.h"
 #include "Utils/Commands.h"
 
 #include <GLFW/glfw3.h>
@@ -74,8 +73,6 @@ namespace MRG
 				cmdBuffer.copyBuffer(stagingBuffer.vkHandle, mesh->vertexBuffer.vkHandle, copy);
 			});
 		}
-
-		[[nodiscard]] Ref<UI::Font> createFont(const std::string& fontPath);
 
 		[[nodiscard]] Ref<Shader> createShader(const char* vertexShaderName, const char* fragmentShaderName);
 		template<Vertex VertexType>
@@ -282,9 +279,8 @@ namespace MRG
 		Ref<Material<ColoredVertex>> defaultColoredMaterial{};
 		Ref<Shader> defaultTexturedShader{};
 		Ref<Material<TexturedVertex>> defaultTexturedMaterial{};
-		Ref<Material<TexturedVertex>> defaultUITexturedMaterial{};
-		Ref<Shader> textShader{};
-		Ref<Material<TexturedVertex>> textUIMaterial{};
+		Ref<Shader> pbrShader{};
+		Ref<Material<TexturedVertex>> pbrMaterial{};
 
 		Ref<Texture> defaultTexture{};
 
@@ -326,8 +322,6 @@ namespace MRG
 		VmaAllocator m_allocator{};
 		UploadContext m_uploadContext{};
 
-		FT_Library m_ftHandle{};
-
 		// ImGui data
 		uint32_t m_imageCount{};
 		vk::DescriptorPool m_imGuiPool{};
@@ -342,7 +336,6 @@ namespace MRG
 		void initAssets();
 		void initMaterials();
 		void initImGui();
-		void initUI();
 
 		void destroySwapchain();
 

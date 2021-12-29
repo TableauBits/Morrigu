@@ -98,7 +98,6 @@ namespace MRG
 		initAssets();
 		initMaterials();
 		initImGui();
-		initUI();
 
 		isInitalized = true;
 	}
@@ -106,8 +105,6 @@ namespace MRG
 	Renderer::~Renderer()
 	{
 		m_device.waitIdle();
-
-		FT_Done_FreeType(m_ftHandle);
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
@@ -135,8 +132,6 @@ namespace MRG
 
 		m_device.destroyCommandPool(m_uploadContext.commandPool);
 	}
-
-	Ref<UI::Font> Renderer::createFont(const std::string& fontPath) { return createRef<UI::Font>(fontPath, m_ftHandle); }
 
 	Ref<Shader> Renderer::createShader(const char* vertexShaderName, const char* fragmentShaderName)
 	{
@@ -634,11 +629,9 @@ namespace MRG
 
 		defaultTexturedShader   = createShader("TexturedMesh.vert.spv", "TexturedMesh.frag.spv");
 		defaultTexturedMaterial = createMaterial<TexturedVertex>(defaultTexturedShader, {});
-		defaultUITexturedMaterial =
-		  createMaterial<TexturedVertex>(defaultTexturedShader, MaterialConfiguration{.zTest = false, .zWrite = false});
 
-		textShader     = createShader("TextShader.vert.spv", "TextShader.frag.spv");
-		textUIMaterial = createMaterial<TexturedVertex>(textShader, MaterialConfiguration{.zTest = false, .zWrite = false});
+		pbrShader   = createShader("PBR.vert.spv", "PBR.frag.spv");
+		pbrMaterial = createMaterial<TexturedVertex>(pbrShader, {});
 	}
 
 	void Renderer::initImGui()
@@ -759,12 +752,6 @@ namespace MRG
 		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 		colors[ImGuiCol_NavWindowingDimBg]     = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 		colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.03f, 0.02f, 0.02f, 0.73f);
-	}
-
-	void Renderer::initUI()
-	{
-		[[maybe_unused]] const auto error = FT_Init_FreeType(&m_ftHandle);
-		MRG_ENGINE_ASSERT(!error, "Failed to initialize Freetype!")
 	}
 
 	void Renderer::destroySwapchain()
