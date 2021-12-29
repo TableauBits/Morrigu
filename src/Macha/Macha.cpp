@@ -30,27 +30,17 @@ public:
 
 		m_assetPanel = MRG::createRef<AssetPanel>(*application->renderer);
 
-		// auto material = createMaterial<MRG::TexturedVertex>(createShader("TestShader.vert.spv", "TestShader.frag.spv"));
-		auto material = application->renderer->defaultTexturedMaterial;
+		auto material = application->renderer->pbrMaterial;
 
-		auto torus = m_activeScene.createEntity();
-		torus.setName("Torus");
-		auto torusMesh = MRG::Utils::Meshes::torus<MRG::TexturedVertex>();
-		uploadMesh(torusMesh);
-		auto& torusMRC = torus.addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(torusMesh, material));
-		auto& torusTC  = torus.getComponent<MRG::Components::Transform>();
-		torusTC.translation = {1.5f, 0.f, 0.f};
-		torusMRC.updateTransform(torusTC.getTransform());
+		auto helmet = m_activeScene.createEntity();
+		helmet.setName("helmet");
+		auto helmetMesh = MRG::Utils::Meshes::loadMeshFromFile<MRG::TexturedVertex>("helmet.obj");
+		uploadMesh(helmetMesh);
+		auto& helmetMRC = helmet.addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(helmetMesh, material));
+		auto helmetAlbedo = createTexture(std::filesystem::path("helmet/albedo.jpg").make_preferred().string());
+		helmetMRC.bindTexture(1, helmetAlbedo);
 
-		auto cylinder = m_activeScene.createEntity();
-		cylinder.setName("Cylinder");
-		auto cylinderMesh = MRG::Utils::Meshes::cylinder<MRG::TexturedVertex>();
-		uploadMesh(cylinderMesh);
-		auto& cylinderMRC =
-		  cylinder.addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(cylinderMesh, material));
-		auto& cylinderTC       = cylinder.getComponent<MRG::Components::Transform>();
-		cylinderTC.translation = {-1.5f, 0.f, 0.f};
-		cylinderMRC.updateTransform(cylinderTC.getTransform());
+		m_activeScene.assets.addTexture(helmetAlbedo);
 	}
 
 	void onUpdate(MRG::Timestep ts) override
