@@ -112,6 +112,7 @@ namespace MRG
 	class EntityHandle
 	{
 	public:
+		EntityHandle() { m_id = entt::null; };
 		EntityHandle(const Entity& entity) : m_id{entity.m_id}, m_registry{entity.m_registry} {}
 		EntityHandle(const entt::entity& id, const MRG::Ref<entt::registry>& registry) : m_id{id}, m_registry{registry} {}
 		EntityHandle(EntityHandle&& other) = default;

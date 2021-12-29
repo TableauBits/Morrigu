@@ -4,6 +4,8 @@
 
 #include "MaterialEditorLayer.h"
 
+#include "Components/EntitySettings.h"
+#include "LightCasters/DirectionalLight.h"
 #include "Panels/AssetPanel.h"
 #include "Panels/HierarchyPanel.h"
 #include "Panels/PropertiesPanel.h"
@@ -32,15 +34,28 @@ public:
 
 		auto material = application->renderer->pbrMaterial;
 
-		auto helmet = m_activeScene.createEntity();
+		helmet = m_activeScene.createEntity();
 		helmet.setName("helmet");
 		auto helmetMesh = MRG::Utils::Meshes::loadMeshFromFile<MRG::TexturedVertex>("helmet.obj");
 		uploadMesh(helmetMesh);
 		auto& helmetMRC = helmet.addComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(createMeshRenderer(helmetMesh, material));
-		auto helmetAlbedo = createTexture(std::filesystem::path("helmet/albedo.jpg").make_preferred().string());
+
+		auto helmetAlbedo            = createTexture(std::filesystem::path("helmet/albedo.jpg").make_preferred().string());
+		auto helmetNormals           = createTexture(std::filesystem::path("helmet/normals.jpg").make_preferred().string());
+		auto helmetMetalRoughness    = createTexture(std::filesystem::path("helmet/metal_roughness.jpg").make_preferred().string());
+		auto helmetambiantOcclussion = createTexture(std::filesystem::path("helmet/ambiant_occlusion.jpg").make_preferred().string());
+		auto helmetEmission          = createTexture(std::filesystem::path("helmet/emission.jpg").make_preferred().string());
 		helmetMRC.bindTexture(1, helmetAlbedo);
+		helmetMRC.bindTexture(2, helmetNormals);
+		helmetMRC.bindTexture(3, helmetMetalRoughness);
+		helmetMRC.bindTexture(4, helmetambiantOcclussion);
+		helmetMRC.bindTexture(5, helmetEmission);
 
 		m_activeScene.assets.addTexture(helmetAlbedo);
+		m_activeScene.assets.addTexture(helmetNormals);
+		m_activeScene.assets.addTexture(helmetMetalRoughness);
+		m_activeScene.assets.addTexture(helmetambiantOcclussion);
+		m_activeScene.assets.addTexture(helmetEmission);
 	}
 
 	void onUpdate(MRG::Timestep ts) override
@@ -94,7 +109,6 @@ public:
 
 		// Render ImGui demo window if requested
 		if (showDemoWindow) { ImGui::ShowDemoWindow(); }
-
 		// Render viewport
 		m_viewport->onImGuiUpdate(m_activeScene.selectedEntity, *m_activeScene.registry);
 
@@ -103,6 +117,14 @@ public:
 
 		// Render properties panel
 		PropertiesPanel::onImGuiUpdate(m_activeScene.selectedEntity, *m_activeScene.registry, m_activeScene.assets, *application->renderer);
+		// @TODO(Ithyx): move camera position to push constants
+		auto& mrc = helmet.getComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>();
+		mrc.uploadUniform(6, glm::vec4{m_viewport->camera.position, 0.f});
+		mrc.uploadUniform(7,
+		                  DirectionalLight{
+		                    .direction = glm::vec4{1.f, 0.f, -1.f, 0.f},
+		                    .color     = glm::vec4{1.f, 1.f, 1.f, 1.f},
+		                  });
 
 		// Render asset panel
 		m_assetPanel->onImGuiRender();
@@ -135,6 +157,9 @@ private:
 	MRG::Ref<AssetPanel> m_assetPanel{};
 
 	Scene m_activeScene{};
+
+	// SUPER TEMPORARY
+	MRG::EntityHandle helmet;
 };
 
 class SampleApp : public MRG::Application

@@ -22,6 +22,8 @@ public:
 	std::unordered_map<entt::entity, MRG::Entity> ownedEntities{};
 	entt::entity selectedEntity{entt::null};
 	AssetRegistry assets;
+
+	// Lighting
 };
 
 #endif
