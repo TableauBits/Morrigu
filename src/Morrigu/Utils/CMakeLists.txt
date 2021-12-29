@@ -8,6 +8,10 @@ set(
 		# GLM include helper
 		${CMAKE_CURRENT_LIST_DIR}/GLMIncludeHelper.h
 
+		# Math helpers
+		${CMAKE_CURRENT_LIST_DIR}/Maths.h
+		${CMAKE_CURRENT_LIST_DIR}/Maths.cpp
+
 		# Default meshes utilities
 		${CMAKE_CURRENT_LIST_DIR}/Meshes.h
 		${CMAKE_CURRENT_LIST_DIR}/Meshes.cpp

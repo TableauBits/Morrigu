@@ -1,6 +1,0 @@
-set(
-		SHADER_SOURCES
-		${SHADER_SOURCES}
-		${CMAKE_CURRENT_LIST_DIR}/TextShader.vert
-		${CMAKE_CURRENT_LIST_DIR}/TextShader.frag
-)

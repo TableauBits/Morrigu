@@ -6,12 +6,13 @@
 
 #include "Core/FileNames.h"
 #include "Rendering/RendererTypes.h"
+#include "Vendor/ImGui/bindings/imgui_impl_vulkan.h"
 
 namespace MRG
 {
 	Texture::Texture(
 	  vk::Device device, vk::Queue graphicsQueue, UploadContext uploadContext, VmaAllocator allocator, const std::string& file)
-	    : m_device{device}
+	    : path{file}, m_device{device}
 	{
 		image = AllocatedImage{AllocatedImageSpecification{
 		  .device        = device,
@@ -63,4 +64,13 @@ namespace MRG
 	}
 
 	Texture::~Texture() { m_device.destroySampler(sampler); }
+
+	ImTextureID Texture::getImTexID()
+	{
+		if (m_imTexID == nullptr) {
+			m_imTexID = ImGui_ImplVulkan_AddTexture(sampler, image.view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+
+		return m_imTexID;
+	}
 }  // namespace MRG

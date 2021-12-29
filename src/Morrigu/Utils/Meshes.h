@@ -10,8 +10,8 @@
 namespace MRG::Utils::Meshes
 {
 	/// use template specialization to implement this function to your custom vertex type.
-	/// To be interchangable with the other implementations,
-	/// you should prefix the path with MRG::Folders::Rendering::meshesFolder
+	/// To be interchangible with other implementations,
+	/// these functions should prefix the given path with MRG::Folders::Rendering::meshesFolder
 	template<Vertex VertexType>
 	Ref<Mesh<VertexType>> loadMeshFromFile(const char* filePath);
 
@@ -20,28 +20,28 @@ namespace MRG::Utils::Meshes
 	template<Vertex VertexType>
 	Ref<Mesh<VertexType>> disk()
 	{
-		return loadMeshFromFile<VertexType>("default/disk.obj");
+		return loadMeshFromFile<VertexType>("engine/disk.obj");
 	}
 	template<Vertex VertexType>
 	Ref<Mesh<VertexType>> cube()
 	{
-		return loadMeshFromFile<VertexType>("default/cube.obj");
+		return loadMeshFromFile<VertexType>("engine/cube.obj");
 	}
 	template<Vertex VertexType>
 	Ref<Mesh<VertexType>> sphere()
 	{
-		return loadMeshFromFile<VertexType>("default/sphere.obj");
+		return loadMeshFromFile<VertexType>("engine/sphere.obj");
 	}
 	template<Vertex VertexType>
 	Ref<Mesh<VertexType>> cylinder()
 	{
-		return loadMeshFromFile<VertexType>("default/cylinder.obj");
+		return loadMeshFromFile<VertexType>("engine/cylinder.obj");
 	}
 	template<Vertex VertexType>
 	Ref<Mesh<VertexType>> torus()
 	{
-		return loadMeshFromFile<VertexType>("default/torus.obj");
+		return loadMeshFromFile<VertexType>("engine/torus.obj");
 	}
 }  // namespace MRG::Utils::Meshes
 
-#endif  // MORRIGU_DEFAULTMESHES_H
+#endif  // MORRIGU_UTILSMESHES_H

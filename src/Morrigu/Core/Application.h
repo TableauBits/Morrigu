@@ -17,7 +17,8 @@ namespace MRG
 {
 	struct ApplicationSpecification
 	{
-		std::string windowName;
+		std::string windowName{"Morrigu engine application"};
+		bool maximized{true};
 		RendererSpecification rendererSpecification;
 	};
 
@@ -30,6 +31,8 @@ namespace MRG
 		Application(Application&&)      = delete;
 		Application& operator=(const Application&) = delete;
 		Application& operator=(Application&&) = delete;
+
+		~Application() = default;
 
 		void run();
 
@@ -46,7 +49,7 @@ namespace MRG
 
 		void onEvent(Event& event);
 		bool onClose(WindowCloseEvent& resizeEvent);
-		bool onResize(WindowResizeEvent& resizeEvent);
+		bool onResize(WindowResizeEvent& resizeEvent) const;
 
 		bool m_isRunning = true;
 		float m_lastTime = 0.f;

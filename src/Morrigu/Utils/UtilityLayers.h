@@ -7,7 +7,6 @@
 
 #include "Core/Application.h"
 #include "Core/Layer.h"
-#include "Rendering/UI/Text.h"
 
 namespace MRG
 {
@@ -20,34 +19,20 @@ namespace MRG
 			application->renderer->uploadMesh(mesh);
 		}
 
-		[[nodiscard]] Ref<UI::Font> createFont(const std::string& filePath) { return application->renderer->createFont(filePath); }
-
-		[[nodiscard]] Ref<UI::Text> createText(const std::string& content, const Ref<UI::Font>& font, const glm::vec2& position)
-		{
-			return createRef<UI::Text>(content, font, position, application->renderer.get());
-		}
-
-		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile)
-		{
-			return application->renderer->createShader(vertexShaderFile.c_str(), fragmentShaderFile.c_str());
-		}
+		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec);
+		[[nodiscard]] Ref<Texture> createTexture(const std::string& filePath);
+		[[nodiscard]] Ref<Shader> createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile);
 
 		template<Vertex VertexType>
 		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader, const MaterialConfiguration& config = {})
 		{
 			return application->renderer->createMaterial<VertexType>(shader, config);
 		}
-
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<RenderObject<VertexType>> createRenderObject(const Ref<Mesh<VertexType>>& mesh,
-		                                                               const Ref<Material<VertexType>>& material)
+		[[nodiscard]] Components::MeshRenderer<VertexType>::VulkanObjects createMeshRenderer(const Ref<Mesh<VertexType>>& meshRef,
+		                                                                                     const Ref<Material<VertexType>>& materialRef)
 		{
-			return application->renderer->createRenderObject(mesh, material);
-		}
-
-		[[nodiscard]] Ref<Framebuffer> createFramebuffer(const FramebufferSpecification& spec)
-		{
-			return application->renderer->createFrameBuffer(spec);
+			return application->renderer->createMeshRenderer<VertexType>(meshRef, materialRef);
 		}
 	};
 

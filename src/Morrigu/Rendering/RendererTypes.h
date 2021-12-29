@@ -33,12 +33,12 @@ namespace MRG
 		AllocatedBuffer() = default;
 		AllocatedBuffer(VmaAllocator allocator, std::size_t allocSize, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage);
 		AllocatedBuffer(const AllocatedBuffer&) = delete;
-		AllocatedBuffer(AllocatedBuffer&& other);
+		AllocatedBuffer(AllocatedBuffer&& other) noexcept;
 		~AllocatedBuffer();
 
 		AllocatedBuffer& operator=(const AllocatedBuffer&) = delete;
 
-		AllocatedBuffer& operator=(AllocatedBuffer&& other);
+		AllocatedBuffer& operator=(AllocatedBuffer&& other) noexcept;
 
 		VmaAllocator allocator{};
 		vk::Buffer vkHandle{};
@@ -69,12 +69,12 @@ namespace MRG
 		AllocatedImage() = default;
 		explicit AllocatedImage(const AllocatedImageSpecification& specification);
 		AllocatedImage(const AllocatedImage&) = delete;
-		AllocatedImage(AllocatedImage&& other);
+		AllocatedImage(AllocatedImage&& other) noexcept;
 		~AllocatedImage();
 
 		AllocatedImage& operator=(const AllocatedImage&) = delete;
 
-		AllocatedImage& operator=(AllocatedImage&& other);
+		AllocatedImage& operator=(AllocatedImage&& other) noexcept;
 
 		AllocatedImageSpecification spec;
 

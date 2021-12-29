@@ -1,10 +1,5 @@
-include(${CMAKE_CURRENT_LIST_DIR}/UI/CMakeLists.txt)
-
 set(
 		MRG_RENDERING_SOURCES
-
-		# UI sources
-		${MRG_UI_SOURCES}
 
 		# Camera class
 		${CMAKE_CURRENT_LIST_DIR}/Camera.h
@@ -23,9 +18,6 @@ set(
 		# Pipeline builder class
 		${CMAKE_CURRENT_LIST_DIR}/PipelineBuilder.h
 		${CMAKE_CURRENT_LIST_DIR}/PipelineBuilder.cpp
-
-		# RenderObject class
-		${CMAKE_CURRENT_LIST_DIR}/RenderObject.h
 
 		# Shader class
 		${CMAKE_CURRENT_LIST_DIR}/Shader.h

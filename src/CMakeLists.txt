@@ -35,6 +35,7 @@ target_link_libraries(
 	PUBLIC
 	Vendor
 	Vulkan::Vulkan
+	CONAN_PKG::entt
 	CONAN_PKG::freetype
 	CONAN_PKG::glfw
 	CONAN_PKG::glm
@@ -59,6 +60,12 @@ add_executable(
 	${MC_SOURCES}
 )
 
+target_include_directories(
+	Macha
+	PRIVATE
+	${CMAKE_CURRENT_LIST_DIR}/Macha
+)
+
 target_link_libraries(
 	Macha
 	PRIVATE
@@ -81,12 +88,6 @@ add_custom_command(
 	TARGET Macha
 	POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Textures ${CMAKE_SOURCE_DIR}/runtime/assets/textures
-)
-
-add_custom_command(
-	TARGET Macha
-	POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/Assets/Fonts ${CMAKE_SOURCE_DIR}/runtime/assets/fonts
 )
 
 add_dependencies(

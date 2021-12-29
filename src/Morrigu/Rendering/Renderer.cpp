@@ -39,6 +39,46 @@ namespace
 
 		return VK_FALSE;
 	}
+
+	std::string getVendorString(uint32_t vendorID)
+	{
+		switch (vendorID) {
+		case 0x1002:
+			return "AMD";
+		case 0x1010:
+			return "ImgTec";
+		case 0x10DE:
+			return "NVIDIA";
+		case 0x13B5:
+			return "ARM";
+		case 0x5143:
+			return "Qualcomm";
+		case 0x8086:  // cheeky
+			return "INTEL";
+
+		default:
+			return "unknown";
+		}
+	}
+
+	std::string getDeviceTypeString(vk::PhysicalDeviceType type)
+	{
+		switch (type) {
+		case vk::PhysicalDeviceType::eOther:
+			return "Other";
+		case vk::PhysicalDeviceType::eIntegratedGpu:
+			return "Integrated GPU";
+		case vk::PhysicalDeviceType::eDiscreteGpu:
+			return "Discrete GPU";
+		case vk::PhysicalDeviceType::eVirtualGpu:
+			return "Virtual GPU";
+		case vk::PhysicalDeviceType::eCpu:
+			return "CPU";
+
+		default:
+			return "unknown";
+		}
+	}
 }  // namespace
 
 namespace MRG
@@ -58,7 +98,6 @@ namespace MRG
 		initAssets();
 		initMaterials();
 		initImGui();
-		initUI();
 
 		isInitalized = true;
 	}
@@ -66,8 +105,6 @@ namespace MRG
 	Renderer::~Renderer()
 	{
 		m_device.waitIdle();
-
-		FT_Done_FreeType(m_ftHandle);
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
@@ -95,8 +132,6 @@ namespace MRG
 
 		m_device.destroyCommandPool(m_uploadContext.commandPool);
 	}
-
-	Ref<UI::Font> Renderer::createFont(const std::string& fontPath) { return createRef<UI::Font>(fontPath, m_ftHandle); }
 
 	Ref<Shader> Renderer::createShader(const char* vertexShaderName, const char* fragmentShaderName)
 	{
@@ -237,11 +272,13 @@ namespace MRG
 
 	void Renderer::initVulkan()
 	{
+		std::array<uint32_t, 3> requestedAPIVersion{1, 0, 0};
+
 		// basic instance creation
 		vkb::InstanceBuilder instanceBuilder{};
 		const auto vkbInstance =
 		  instanceBuilder.set_app_name(spec.applicationName.c_str())
-		    .require_api_version(1, 1, 0)
+		    .require_api_version(requestedAPIVersion[0], requestedAPIVersion[1], requestedAPIVersion[2])
 #ifdef MRG_DEBUG
 		    .request_validation_layers()
 		    .set_debug_messenger_severity(VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
@@ -260,9 +297,22 @@ namespace MRG
 
 		// GPU selection
 		vkb::PhysicalDeviceSelector selector{vkbInstance};
-		const auto vkbPhysicalDevice = selector.set_minimum_version(1, 1).set_surface(m_surface).select().value();
+		const auto vkbPhysicalDevice =
+		  selector.set_minimum_version(requestedAPIVersion[0], requestedAPIVersion[1]).set_surface(m_surface).select().value();
 
 		m_GPU = vkbPhysicalDevice.physical_device;
+
+		const auto properties = m_GPU.getProperties();
+		MRG_ENGINE_INFO("Selected device: {}", properties.deviceName)
+		MRG_ENGINE_TRACE("\tVendor: {}", getVendorString(properties.vendorID))
+		MRG_ENGINE_TRACE("\tType: {}", getDeviceTypeString(properties.deviceType))
+		MRG_ENGINE_TRACE("\tSupported API version: {}.{}.{} (requested {}.{}.{})",
+		                 VK_VERSION_MAJOR(properties.apiVersion),
+		                 VK_VERSION_MINOR(properties.apiVersion),
+		                 VK_VERSION_PATCH(properties.apiVersion),
+		                 requestedAPIVersion[0],
+		                 requestedAPIVersion[1],
+		                 requestedAPIVersion[2])
 
 		// VkDevice creation
 		vkb::DeviceBuilder deviceBuilder{vkbPhysicalDevice};
@@ -579,11 +629,9 @@ namespace MRG
 
 		defaultTexturedShader   = createShader("TexturedMesh.vert.spv", "TexturedMesh.frag.spv");
 		defaultTexturedMaterial = createMaterial<TexturedVertex>(defaultTexturedShader, {});
-		defaultUITexturedMaterial =
-		  createMaterial<TexturedVertex>(defaultTexturedShader, MaterialConfiguration{.zTest = false, .zWrite = false});
 
-		textShader     = createShader("TextShader.vert.spv", "TextShader.frag.spv");
-		textUIMaterial = createMaterial<TexturedVertex>(textShader, MaterialConfiguration{.zTest = false, .zWrite = false});
+		pbrShader   = createShader("PBR.vert.spv", "PBR.frag.spv");
+		pbrMaterial = createMaterial<TexturedVertex>(pbrShader, {});
 	}
 
 	void Renderer::initImGui()
@@ -614,6 +662,7 @@ namespace MRG
 		ImGui::CreateContext();
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 		ImGui_ImplVulkan_InitInfo initInfo{
 		  .Instance        = m_instance,
 		  .PhysicalDevice  = m_GPU,
@@ -703,12 +752,6 @@ namespace MRG
 		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 		colors[ImGuiCol_NavWindowingDimBg]     = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 		colors[ImGuiCol_ModalWindowDimBg]      = ImVec4(0.03f, 0.02f, 0.02f, 0.73f);
-	}
-
-	void Renderer::initUI()
-	{
-		[[maybe_unused]] const auto error = FT_Init_FreeType(&m_ftHandle);
-		MRG_ENGINE_ASSERT(!error, "Failed to initialize Freetype!")
 	}
 
 	void Renderer::destroySwapchain()

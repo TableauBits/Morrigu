@@ -7,6 +7,8 @@
 
 #include "Rendering/RendererTypes.h"
 
+#include <imgui.h>
+
 namespace MRG
 {
 	class Texture
@@ -23,11 +25,16 @@ namespace MRG
 
 		~Texture();
 
+		[[nodiscard]] ImTextureID getImTexID();
+
+		std::string path{};
+
 		AllocatedImage image;
 		vk::Sampler sampler;
 
 	private:
 		vk::Device m_device;
+		ImTextureID m_imTexID{nullptr};
 	};
 }  // namespace MRG
 

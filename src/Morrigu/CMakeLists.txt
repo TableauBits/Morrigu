@@ -1,4 +1,5 @@
 include(${CMAKE_CURRENT_LIST_DIR}/Core/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/Entity/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/Events/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/Rendering/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/Utils/CMakeLists.txt)
@@ -14,6 +15,14 @@ set(
 )
 
 set(
+	IMGUI_MISC
+
+	# ImGui misc sources
+	${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/misc/imgui_stdlib.h
+	${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/misc/imgui_stdlib.cpp
+)
+
+set(
 	MRG_SOURCES
 
 	# Global include file
@@ -21,6 +30,9 @@ set(
 
 	# Core files
 	${MRG_CORE_SOURCES}
+
+	# Entity files
+	${MRG_ENTITY_SOURCES}
 
 	# Event files
 	${MRG_EVENT_SOURCES}
@@ -37,4 +49,7 @@ set(
 
 	# ImGui bindings
 	${IMGUI_BINDINGS}
+
+	# ImGui misc
+	${IMGUI_MISC}
 )

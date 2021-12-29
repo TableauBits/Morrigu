@@ -6,8 +6,20 @@
 
 namespace MRG
 {
-	UILayer::UILayer() : mainCamera{PixelPerfectCamera{}} {}
+	Ref<Framebuffer> StandardLayer::createFramebuffer(const FramebufferSpecification& spec)
+	{
+		return application->renderer->createFrameBuffer(spec);
+	}
+	Ref<Texture> StandardLayer::createTexture(const std::string& filePath)
+	{
+		return application->renderer->createTexture(filePath.c_str());
+	}
+	Ref<Shader> StandardLayer::createShader(const std::string& vertexShaderFile, const std::string& fragmentShaderFile)
+	{
+		return application->renderer->createShader(vertexShaderFile.c_str(), fragmentShaderFile.c_str());
+	}
 
+	UILayer::UILayer() : mainCamera{PixelPerfectCamera{}} {}
 	void UILayer::onAttach()
 	{
 		mainCamera.width  = static_cast<float>(application->renderer->spec.windowWidth);

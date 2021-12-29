@@ -5,13 +5,13 @@
 #ifndef MORRIGU_RENDERER_H
 #define MORRIGU_RENDERER_H
 
+#include "Entity/Components/MeshRenderer.h"
+#include "Entity/Entity.h"
 #include "Events/ApplicationEvent.h"
 #include "Rendering/Camera.h"
 #include "Rendering/Framebuffer.h"
-#include "Rendering/RenderObject.h"
 #include "Rendering/RendererTypes.h"
 #include "Rendering/Texture.h"
-#include "Rendering/UI/Font.h"
 #include "Utils/Commands.h"
 
 #include <GLFW/glfw3.h>
@@ -24,10 +24,10 @@ namespace MRG
 {
 	struct RendererSpecification
 	{
-		std::string applicationName;
-		int windowWidth;
-		int windowHeight;
-		vk::PresentModeKHR preferredPresentMode;
+		std::string applicationName{"Morrigu engine application"};
+		vk::PresentModeKHR preferredPresentMode{vk::PresentModeKHR::eMailbox};
+		int windowWidth{1280};
+		int windowHeight{720};
 	};
 
 	struct FrameData
@@ -74,8 +74,6 @@ namespace MRG
 			});
 		}
 
-		[[nodiscard]] Ref<UI::Font> createFont(const std::string& fontPath);
-
 		[[nodiscard]] Ref<Shader> createShader(const char* vertexShaderName, const char* fragmentShaderName);
 		template<Vertex VertexType>
 		[[nodiscard]] Ref<Material<VertexType>> createMaterial(const Ref<Shader>& shader, const MaterialConfiguration& config)
@@ -89,15 +87,17 @@ namespace MRG
 		[[nodiscard]] Ref<Texture> createTexture(const char* fileName);
 
 		template<Vertex VertexType>
-		[[nodiscard]] Ref<RenderObject<VertexType>> createRenderObject(const Ref<Mesh<VertexType>>& mesh,
-		                                                               const Ref<Material<VertexType>>& material)
+		[[nodiscard]] Components::MeshRenderer<VertexType>::VulkanObjects createMeshRenderer(const Ref<Mesh<VertexType>>& meshRef,
+		                                                                                     const Ref<Material<VertexType>>& materialRef)
 		{
-			return createRef<RenderObject<VertexType>>(m_device, m_allocator, mesh, material, defaultTexture);
+			return
+			  typename Components::MeshRenderer<VertexType>::VulkanObjects{m_device, m_allocator, meshRef, materialRef, defaultTexture};
 		}
 
 		[[nodiscard]] Ref<Framebuffer> createFrameBuffer(const FramebufferSpecification& fbSpec);
 
-		void draw(ROIterator auto begin, ROIterator auto end, const Camera& camera)
+		template<Vertex VertexType>
+		void drawMeshes(const entt::registry& registry, const Camera& camera)
 		{
 			const auto& frameData = getCurrentFrameData();
 
@@ -112,19 +112,20 @@ namespace MRG
 
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
-			while (begin != end) {
-				const auto drawable = (*begin)->getRenderData();
-				if (!(*drawable.isVisible)) { continue; }
+			auto view    = registry.view<Components::MeshRenderer<VertexType>>();
+			for (const auto& entity : view) {
+				auto [mrc] = view.get(entity);
+				if (!mrc.isVisible) { continue; }
 				if (isFirst) {
 					frameData.commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-					                                           drawable.materialPipelineLayout,
+					                                           mrc.material->pipelineLayout,
 					                                           0,
 					                                           {frameData.level0Descriptor, m_level1Descriptor},
 					                                           {});
 					isFirst = false;
 				}
-				if (currentMaterial != drawable.materialPipeline) {
-					frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable.materialPipeline);
+				if (currentMaterial != mrc.material->pipeline) {
+					frameData.commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mrc.material->pipeline);
 					frameData.commandBuffer.setViewport(0,
 					                                    vk::Viewport{
 					                                      .x        = 0.f,
@@ -141,8 +142,8 @@ namespace MRG
 					    .extent = {static_cast<uint32_t>(spec.windowWidth), static_cast<uint32_t>(spec.windowHeight)},
 					  });
 					frameData.commandBuffer.bindDescriptorSets(
-					  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 2, drawable.level2Descriptor, {});
-					currentMaterial = drawable.materialPipeline;
+					  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 2, mrc.material->level2Descriptor, {});
+					currentMaterial = mrc.material->pipeline;
 				}
 
 				CameraData cameraData{
@@ -151,19 +152,18 @@ namespace MRG
 				  .viewProjectionMatrix = camera.getViewProjection(),
 				};
 				frameData.commandBuffer.pushConstants(
-				  drawable.materialPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
+				  mrc.material->pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
 
 				frameData.commandBuffer.bindDescriptorSets(
-				  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 3, drawable.level3Descriptor, {});
+				  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 3, mrc.level3Descriptor, {});
 
-				frameData.commandBuffer.bindVertexBuffers(0, drawable.vertexBuffer, {0});
-				frameData.commandBuffer.draw(static_cast<uint32_t>(drawable.vertexCount), 1, 0, 0);
-
-				++begin;
+				frameData.commandBuffer.bindVertexBuffers(0, mrc.mesh->vertexBuffer.vkHandle, {0});
+				frameData.commandBuffer.draw(static_cast<uint32_t>(mrc.mesh->vertices.size()), 1, 0, 0);
 			}
 		}
 
-		void draw(ROIterator auto begin, ROIterator auto end, const Camera& camera, Ref<Framebuffer> framebuffer)
+		template<Vertex VertexType>
+		void drawMeshes(const entt::registry& registry, const Camera& camera, Ref<Framebuffer> framebuffer)
 		{
 			framebuffer->commandBuffer.reset();
 			vk::CommandBufferBeginInfo beginInfo{
@@ -202,19 +202,20 @@ namespace MRG
 
 			vk::Pipeline currentMaterial{};
 			bool isFirst = true;
-			while (begin != end) {
-				const auto drawable = (*begin)->getRenderData();
-				if (!(*drawable.isVisible)) { continue; }
+			auto view    = registry.view<Components::MeshRenderer<VertexType>>();
+			for (const auto& entity : view) {
+				auto [mrc] = view.get(entity);
+				if (!mrc.isVisible) { continue; }
 				if (isFirst) {
 					framebuffer->commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-					                                              drawable.materialPipelineLayout,
+					                                              mrc.material->pipelineLayout,
 					                                              0,
 					                                              {framebuffer->level0Descriptor, m_level1Descriptor},
 					                                              {});
 					isFirst = false;
 				}
-				if (currentMaterial != drawable.materialPipeline) {
-					framebuffer->commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, drawable.materialPipeline);
+				if (currentMaterial != mrc.material->pipeline) {
+					framebuffer->commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mrc.material->pipeline);
 					framebuffer->commandBuffer.setViewport(0,
 					                                       vk::Viewport{
 					                                         .x        = 0.f,
@@ -230,8 +231,8 @@ namespace MRG
 					                                        .extent = {framebuffer->spec.width, framebuffer->spec.height},
 					                                      });
 					framebuffer->commandBuffer.bindDescriptorSets(
-					  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 2, drawable.level2Descriptor, {});
-					currentMaterial = drawable.materialPipeline;
+					  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 2, mrc.material->level2Descriptor, {});
+					currentMaterial = mrc.material->pipeline;
 				}
 
 				CameraData cameraData{
@@ -240,15 +241,13 @@ namespace MRG
 				  .viewProjectionMatrix = camera.getViewProjection(),
 				};
 				framebuffer->commandBuffer.pushConstants(
-				  drawable.materialPipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
+				  mrc.material->pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
 
 				framebuffer->commandBuffer.bindDescriptorSets(
-				  vk::PipelineBindPoint::eGraphics, drawable.materialPipelineLayout, 3, drawable.level3Descriptor, {});
+				  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 3, mrc.level3Descriptor, {});
 
-				framebuffer->commandBuffer.bindVertexBuffers(0, drawable.vertexBuffer, {0});
-				framebuffer->commandBuffer.draw(static_cast<uint32_t>(drawable.vertexCount), 1, 0, 0);
-
-				++begin;
+				framebuffer->commandBuffer.bindVertexBuffers(0, mrc.mesh->vertexBuffer.vkHandle, {0});
+				framebuffer->commandBuffer.draw(static_cast<uint32_t>(mrc.mesh->vertices.size()), 1, 0, 0);
 			}
 
 			framebuffer->commandBuffer.endRenderPass();
@@ -280,9 +279,8 @@ namespace MRG
 		Ref<Material<ColoredVertex>> defaultColoredMaterial{};
 		Ref<Shader> defaultTexturedShader{};
 		Ref<Material<TexturedVertex>> defaultTexturedMaterial{};
-		Ref<Material<TexturedVertex>> defaultUITexturedMaterial{};
-		Ref<Shader> textShader{};
-		Ref<Material<TexturedVertex>> textUIMaterial{};
+		Ref<Shader> pbrShader{};
+		Ref<Material<TexturedVertex>> pbrMaterial{};
 
 		Ref<Texture> defaultTexture{};
 
@@ -324,8 +322,6 @@ namespace MRG
 		VmaAllocator m_allocator{};
 		UploadContext m_uploadContext{};
 
-		FT_Library m_ftHandle{};
-
 		// ImGui data
 		uint32_t m_imageCount{};
 		vk::DescriptorPool m_imGuiPool{};
@@ -340,7 +336,6 @@ namespace MRG
 		void initAssets();
 		void initMaterials();
 		void initImGui();
-		void initUI();
 
 		void destroySwapchain();
 

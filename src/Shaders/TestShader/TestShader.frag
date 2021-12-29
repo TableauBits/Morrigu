@@ -4,14 +4,14 @@
 
 layout(location = 0) in vec2 vs_UVPassthrough;
 
-layout(set = 2, binding = 0) uniform LerpInfo
+layout(set = 3, binding = 1) uniform LerpInfo
 {
 	float tBegin;
 	float tEnd;
 }
 u_LerpInfo;
 
-layout(set = 2, binding = 1) uniform Colors
+layout(set = 3, binding = 2) uniform Colors
 {
 	vec4 fromColor;
 	vec4 toColor;
