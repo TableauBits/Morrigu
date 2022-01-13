@@ -23,9 +23,8 @@ namespace MRG
 
 	struct CameraData
 	{
-		glm::mat4 viewMatrix;
-		glm::mat4 projectionMatrix;
 		glm::mat4 viewProjectionMatrix;
+		glm::vec4 worldPos;
 	};
 
 	struct MaterialConfiguration
@@ -96,8 +95,9 @@ namespace MRG
 				bindTexture(imageBinding.first, defaultTexture);
 			}
 
+			const bool hasPushConstants = shader->pcShaderStages != vk::ShaderStageFlags{};
 			vk::PushConstantRange pushConstantRange{
-			  .stageFlags = vk::ShaderStageFlagBits::eVertex,
+			  .stageFlags = shader->pcShaderStages,
 			  .offset     = 0,
 			  .size       = sizeof(CameraData),
 			};
@@ -106,7 +106,7 @@ namespace MRG
 			vk::PipelineLayoutCreateInfo layoutInfo{
 			  .setLayoutCount         = static_cast<uint32_t>(setLayouts.size()),
 			  .pSetLayouts            = setLayouts.data(),
-			  .pushConstantRangeCount = 1,
+			  .pushConstantRangeCount = static_cast<uint32_t>(hasPushConstants ? 1 : 0),
 			  .pPushConstantRanges    = &pushConstantRange,
 			};
 			pipelineLayout = m_device.createPipelineLayout(layoutInfo);

@@ -164,6 +164,29 @@ namespace MRG
 		return createRef<Framebuffer>(fbSpec, objs);
 	}
 
+	AllocatedBuffer Renderer::createBuffer(std::size_t bufferSize, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage allocationUsage)
+	{
+		return AllocatedBuffer{m_allocator, bufferSize, bufferUsage, allocationUsage};
+	}
+
+	void Renderer::bindBufferToSet1(AllocatedBuffer& buffer, std::size_t bufferSize)
+	{
+		vk::DescriptorBufferInfo bufferInfo{
+		  .buffer = buffer.vkHandle,
+		  .offset = 0,
+		  .range  = bufferSize,
+		};
+		vk::WriteDescriptorSet set1Write{
+		  .dstSet          = m_level1Descriptor,
+		  .dstBinding      = 0,
+		  .descriptorCount = 1,
+		  .descriptorType  = vk::DescriptorType::eUniformBuffer,
+		  .pBufferInfo     = &bufferInfo,
+		};
+
+		m_device.updateDescriptorSets(set1Write, {});
+	}
+
 	bool Renderer::beginFrame()
 	{
 		const auto& frameData = getCurrentFrameData();
@@ -593,9 +616,9 @@ namespace MRG
 			m_device.updateDescriptorSets(timeSetWrite, {});
 		}
 
-		// level 1 DSL (currently empty)
+		// level 1 DSL
 		setInfo.bindingCount = 0;
-		m_level1DSL          = m_device.createDescriptorSetLayout(setInfo);
+		m_level1DSL          = m_device.createDescriptorSetLayout(spec.level1SetInfo);
 
 		vk::DescriptorSetAllocateInfo allocLeve1Info{
 		  .descriptorPool     = m_descriptorPool,

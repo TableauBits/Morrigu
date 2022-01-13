@@ -80,6 +80,8 @@ namespace MRG
 			}
 		}
 
+		if (!vertResources.push_constant_buffers.empty()) { pcShaderStages |= vk::ShaderStageFlagBits::eVertex; }
+
 		//// fragment shader
 		const auto& fragResources = fragmentCompiler.get_shader_resources();
 
@@ -138,6 +140,8 @@ namespace MRG
 				}
 			}
 		}
+
+		if (!fragResources.push_constant_buffers.empty()) { pcShaderStages |= vk::ShaderStageFlagBits::eFragment; }
 
 		MRG_ENGINE_ASSERT(level3UBOBindings.contains(0), "Descriptor set level 3 MUST have a model data uniform at slot 0!")
 

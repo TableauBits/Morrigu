@@ -28,6 +28,8 @@ namespace MRG
 		virtual void recalculateView()           = 0;
 		virtual void recalculateViewProjection() = 0;
 
+		glm::vec3 position{};
+
 	protected:
 		glm::mat4 m_projection{1.f};
 		glm::mat4 m_view{1.f};
@@ -75,7 +77,6 @@ namespace MRG
 		float aspectRatio = 0.f;
 		float pitch       = 0.f;
 		float yaw         = 0.f;
-		glm::vec3 position{};
 	};
 
 	// /!\ This camera class doesn't preserve aspect ratio, but provides a 1:1 mapping from pixels to coordinates.

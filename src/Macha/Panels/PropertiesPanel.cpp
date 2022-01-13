@@ -5,6 +5,8 @@
 #include "PropertiesPanel.h"
 
 #include "Components/EntitySettings.h"
+#include "Components/LightCasters/DirectionalLight.h"
+#include "Components/LightCasters/PointLight.h"
 
 #include "Vendor/ImGui/misc/imgui_stdlib.h"
 #include <imgui_internal.h>
@@ -255,6 +257,10 @@ namespace PropertiesPanel
 						renderer.uploadMesh(mesh);
 						registry.emplace<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(
 						  selectedEntity, renderer.createMeshRenderer(mesh, renderer.defaultTexturedMaterial));
+					}
+
+					if (!registry.all_of<Components::DirectionalLight>(selectedEntity) && ImGui::MenuItem("Directional Light")) {
+						registry.emplace<Components::DirectionalLight>(selectedEntity, glm::vec4{1.f, 0.f, -1.f, 0.f}, glm::vec4{1.f});
 					}
 
 					ImGui::EndMenu();

@@ -34,7 +34,7 @@ namespace MRG
 			std::size_t size{};
 		};
 
-		explicit Shader(vk::Device device, const char* vertexShaderName, const char* fragmentShaderName);
+		Shader(vk::Device device, const char* vertexShaderName, const char* fragmentShaderName);
 		~Shader();
 
 		vk::ShaderModule vertexShaderModule;
@@ -49,6 +49,8 @@ namespace MRG
 		// level 3 bindings
 		std::map<uint32_t, Root> l3UBOData;
 		std::map<uint32_t, TextureBindingInfo> l3ImageBindings;
+		// push constants
+		vk::ShaderStageFlags pcShaderStages{0};
 
 	private:
 		[[nodiscard]] static std::vector<std::uint32_t> readSource(const char* filePath);

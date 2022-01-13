@@ -3,4 +3,7 @@ set(
 
 		# Directional light
 		${CMAKE_CURRENT_LIST_DIR}/DirectionalLight.h
+
+		# Point light
+		${CMAKE_CURRENT_LIST_DIR}/PointLight.h
 )

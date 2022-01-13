@@ -5,7 +5,6 @@
 #include "MaterialEditorLayer.h"
 
 #include "Components/EntitySettings.h"
-#include "LightCasters/DirectionalLight.h"
 #include "Panels/AssetPanel.h"
 #include "Panels/HierarchyPanel.h"
 #include "Panels/PropertiesPanel.h"
@@ -23,18 +22,20 @@ class MachaLayer : public MRG::StandardLayer
 public:
 	void onAttach() override
 	{
+		m_activeScene = MRG::createRef<Scene>(*application->renderer);
+
 		m_viewport = MRG::createRef<Viewport>(application, ImVec2{1280.f, 720.f});
 
 		m_hierarchyPanel                              = MRG::createRef<HierarchyPanel>();
-		m_hierarchyPanel->callbacks.entityCreation    = [this]() { auto entity = m_activeScene.createEntity(); };
-		m_hierarchyPanel->callbacks.entityDestruction = [this](const entt::entity entity) { m_activeScene.destroyEntity(entity); };
-		m_hierarchyPanel->callbacks.entitySelected    = [this](const entt::entity entity) { m_activeScene.selectedEntity = entity; };
+		m_hierarchyPanel->callbacks.entityCreation    = [this]() { auto entity = m_activeScene->createEntity(); };
+		m_hierarchyPanel->callbacks.entityDestruction = [this](const entt::entity entity) { m_activeScene->destroyEntity(entity); };
+		m_hierarchyPanel->callbacks.entitySelected    = [this](const entt::entity entity) { m_activeScene->selectedEntity = entity; };
 
 		m_assetPanel = MRG::createRef<AssetPanel>(*application->renderer);
 
 		auto material = application->renderer->pbrMaterial;
 
-		helmet = m_activeScene.createEntity();
+		helmet = m_activeScene->createEntity();
 		helmet.setName("helmet");
 		auto helmetMesh = MRG::Utils::Meshes::loadMeshFromFile<MRG::TexturedVertex>("helmet.obj");
 		uploadMesh(helmetMesh);
@@ -51,17 +52,20 @@ public:
 		helmetMRC.bindTexture(4, helmetambiantOcclussion);
 		helmetMRC.bindTexture(5, helmetEmission);
 
-		m_activeScene.assets.addTexture(helmetAlbedo);
-		m_activeScene.assets.addTexture(helmetNormals);
-		m_activeScene.assets.addTexture(helmetMetalRoughness);
-		m_activeScene.assets.addTexture(helmetambiantOcclussion);
-		m_activeScene.assets.addTexture(helmetEmission);
+		m_activeScene->assets.addTexture(helmetAlbedo);
+		m_activeScene->assets.addTexture(helmetNormals);
+		m_activeScene->assets.addTexture(helmetMetalRoughness);
+		m_activeScene->assets.addTexture(helmetambiantOcclussion);
+		m_activeScene->assets.addTexture(helmetEmission);
 	}
 
 	void onUpdate(MRG::Timestep ts) override
 	{
 		// Update viewport
-		m_viewport->onUpdate(*m_activeScene.registry, ts);
+		m_viewport->onUpdate(*m_activeScene->registry, ts);
+
+		// Update scene
+		m_activeScene->onUpdate(ts, *application->renderer);
 	}
 
 	void onEvent(MRG::Event& event) override { m_viewport->onEvent(event); }
@@ -110,21 +114,14 @@ public:
 		// Render ImGui demo window if requested
 		if (showDemoWindow) { ImGui::ShowDemoWindow(); }
 		// Render viewport
-		m_viewport->onImGuiUpdate(m_activeScene.selectedEntity, *m_activeScene.registry);
+		m_viewport->onImGuiUpdate(m_activeScene->selectedEntity, *m_activeScene->registry);
 
 		// Render hierarchy panel
-		m_hierarchyPanel->onImGuiUpdate(*m_activeScene.registry, m_activeScene.selectedEntity);
+		m_hierarchyPanel->onImGuiUpdate(*m_activeScene->registry, m_activeScene->selectedEntity);
 
 		// Render properties panel
-		PropertiesPanel::onImGuiUpdate(m_activeScene.selectedEntity, *m_activeScene.registry, m_activeScene.assets, *application->renderer);
-		// @TODO(Ithyx): move camera position to push constants
-		auto& mrc = helmet.getComponent<MRG::Components::MeshRenderer<MRG::TexturedVertex>>();
-		mrc.uploadUniform(6, glm::vec4{m_viewport->camera.position, 0.f});
-		mrc.uploadUniform(7,
-		                  DirectionalLight{
-		                    .direction = glm::vec4{1.f, 0.f, -1.f, 0.f},
-		                    .color     = glm::vec4{1.f, 1.f, 1.f, 1.f},
-		                  });
+		PropertiesPanel::onImGuiUpdate(
+		  m_activeScene->selectedEntity, *m_activeScene->registry, m_activeScene->assets, *application->renderer);
 
 		// Render asset panel
 		m_assetPanel->onImGuiRender();
@@ -135,11 +132,11 @@ public:
 			ImGui::TextColored(
 			  color, "Frametime: %2.5fms (%3.2f fps)", static_cast<double>(ts.getMilliseconds()), static_cast<double>(1.f / ts));
 
-			const auto& entity = m_activeScene.selectedEntity;
+			const auto& entity = m_activeScene->selectedEntity;
 			if (entity != entt::null) {
 				ImGui::Text("Selected entity ID: %d (%s)",
 				            static_cast<uint32_t>(entity),
-				            m_activeScene.registry->get<MRG::Components::Tag>(entity).tag.c_str());
+				            m_activeScene->registry->get<MRG::Components::Tag>(entity).tag.c_str());
 			} else {
 				ImGui::Text("No entity selected");
 			}
@@ -156,7 +153,7 @@ private:
 	MRG::Ref<HierarchyPanel> m_hierarchyPanel{};
 	MRG::Ref<AssetPanel> m_assetPanel{};
 
-	Scene m_activeScene{};
+	MRG::Ref<Scene> m_activeScene{};
 
 	// SUPER TEMPORARY
 	MRG::EntityHandle helmet;
@@ -165,14 +162,7 @@ private:
 class SampleApp : public MRG::Application
 {
 public:
-	SampleApp()
-	    : MRG::Application{MRG::ApplicationSpecification{.windowName            = "Macha editor",
-	                                                     .maximized             = true,
-	                                                     .rendererSpecification = {
-	                                                       .applicationName      = "Macha",
-	                                                       .preferredPresentMode = vk::PresentModeKHR::eMailbox,
-	                                                     }}}
-	{}
+	SampleApp(const MRG::ApplicationSpecification& spec) : MRG::Application{spec} {}
 };
 
 int main()
@@ -180,7 +170,25 @@ int main()
 	auto start = std::chrono::high_resolution_clock::now();
 	MRG::Logger::init();
 	MRG_ENGINE_INFO("Starting engine")
-	SampleApp app{};
+
+	vk::DescriptorSetLayoutBinding binding{
+	  .binding         = 0,
+	  .descriptorType  = vk::DescriptorType::eUniformBuffer,
+	  .descriptorCount = 1,
+	  .stageFlags      = vk::ShaderStageFlagBits::eFragment,
+	};
+	MRG::ApplicationSpecification spec{.windowName            = "Macha editor",
+	                                   .maximized             = true,
+	                                   .rendererSpecification = {
+	                                     .applicationName      = "Macha",
+	                                     .preferredPresentMode = vk::PresentModeKHR::eMailbox,
+	                                     .level1SetInfo =
+	                                       vk::DescriptorSetLayoutCreateInfo{
+	                                         .bindingCount = 1,
+	                                         .pBindings    = &binding,
+	                                       },
+	                                   }};
+	SampleApp app{spec};
 	auto end                     = std::chrono::high_resolution_clock::now();
 	const auto engineStartupTime = std::chrono::duration<float, std::milli>{end - start}.count();
 	MRG_ENGINE_INFO("Engine startup time: {}ms", engineStartupTime)

@@ -1,5 +1,4 @@
 include(${CMAKE_CURRENT_LIST_DIR}/Components/CMakeLists.txt)
-include(${CMAKE_CURRENT_LIST_DIR}/LightCasters/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/Panels/CMakeLists.txt)
 
 set(
@@ -7,9 +6,6 @@ set(
 
 		# Components
 		${MC_COMPONENT_SOURCES}
-
-		# Light Casters
-		${MC_LIGHT_CASTERS_SOURCES}
 
 		# Panels
 		${MC_PANEL_SOURCES}

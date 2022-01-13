@@ -6,9 +6,8 @@ layout(location = 2) in vec2 v_UV;
 
 layout(push_constant) uniform CameraData
 {
-	mat4 view;
-	mat4 projection;
 	mat4 viewProjection;
+	vec4 worldPos;
 }
 pc_CameraData;
 

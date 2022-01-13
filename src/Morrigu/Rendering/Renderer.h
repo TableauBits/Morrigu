@@ -28,6 +28,11 @@ namespace MRG
 		vk::PresentModeKHR preferredPresentMode{vk::PresentModeKHR::eMailbox};
 		int windowWidth{1280};
 		int windowHeight{720};
+
+		// Default to an empty descriptor set
+		vk::DescriptorSetLayoutCreateInfo level1SetInfo{
+		  .bindingCount = 0,
+		};
 	};
 
 	struct FrameData
@@ -96,6 +101,10 @@ namespace MRG
 
 		[[nodiscard]] Ref<Framebuffer> createFrameBuffer(const FramebufferSpecification& fbSpec);
 
+		[[nodiscard]] AllocatedBuffer createBuffer(std::size_t bufferSize, vk::BufferUsageFlags usage, VmaMemoryUsage allocationUsage);
+
+		void bindBufferToSet1(AllocatedBuffer& buffer, std::size_t bufferSize);
+
 		template<Vertex VertexType>
 		void drawMeshes(const entt::registry& registry, const Camera& camera)
 		{
@@ -146,13 +155,14 @@ namespace MRG
 					currentMaterial = mrc.material->pipeline;
 				}
 
-				CameraData cameraData{
-				  .viewMatrix           = camera.getView(),
-				  .projectionMatrix     = camera.getProjection(),
-				  .viewProjectionMatrix = camera.getViewProjection(),
-				};
-				frameData.commandBuffer.pushConstants(
-				  mrc.material->pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
+				if (mrc.material->shader->pcShaderStages != vk::ShaderStageFlags{}) {
+					CameraData cameraData{
+					  .viewProjectionMatrix = camera.getViewProjection(),
+					  .worldPos             = camera.position,
+					};
+					frameData.commandBuffer.pushConstants(
+					  mrc.material->pipelineLayout, mrc.material->shader->pcShaderStages, 0, sizeof(cameraData), &cameraData);
+				}
 
 				frameData.commandBuffer.bindDescriptorSets(
 				  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 3, mrc.level3Descriptor, {});
@@ -235,13 +245,14 @@ namespace MRG
 					currentMaterial = mrc.material->pipeline;
 				}
 
-				CameraData cameraData{
-				  .viewMatrix           = camera.getView(),
-				  .projectionMatrix     = camera.getProjection(),
-				  .viewProjectionMatrix = camera.getViewProjection(),
-				};
-				framebuffer->commandBuffer.pushConstants(
-				  mrc.material->pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(cameraData), &cameraData);
+				if (mrc.material->shader->pcShaderStages != vk::ShaderStageFlags{}) {
+					CameraData cameraData{
+					  .viewProjectionMatrix = camera.getViewProjection(),
+					  .worldPos             = glm::vec4{camera.position, 0.f},
+					};
+					framebuffer->commandBuffer.pushConstants(
+					  mrc.material->pipelineLayout, mrc.material->shader->pcShaderStages, 0, sizeof(cameraData), &cameraData);
+				}
 
 				framebuffer->commandBuffer.bindDescriptorSets(
 				  vk::PipelineBindPoint::eGraphics, mrc.material->pipelineLayout, 3, mrc.level3Descriptor, {});
@@ -264,6 +275,8 @@ namespace MRG
 			                 "failed to wait for the framebuffer's wait semaphore!")
 			framebuffer->getVkDevice().resetFences(framebuffer->renderFence);
 		}
+
+		[[nodiscard]] VmaAllocator getAllocator() { return m_allocator; }
 
 		RendererSpecification spec;
 
