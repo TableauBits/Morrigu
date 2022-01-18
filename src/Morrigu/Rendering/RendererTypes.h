@@ -40,6 +40,14 @@ namespace MRG
 
 		AllocatedBuffer& operator=(AllocatedBuffer&& other) noexcept;
 
+		void uploadData(const auto& data)
+		{
+			void* dataPtr;
+			vmaMapMemory(allocator, allocation, &dataPtr);
+			memcpy(dataPtr, &data, sizeof(data));
+			vmaUnmapMemory(allocator, allocation);
+		}
+
 		VmaAllocator allocator{};
 		vk::Buffer vkHandle{};
 		VmaAllocation allocation{};

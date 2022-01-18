@@ -26,33 +26,36 @@ MRG::EntityHandle Scene::createEntity()
 
 void Scene::destroyEntity(const entt::entity entityID) { ownedEntities.erase(entityID); }
 
-void Scene::onUpdate(MRG::Timestep, MRG::Renderer& renderer)
+void Scene::onUpdate(MRG::Timestep)
 {
 	// TODO: update scripts here
 
 	Lights lightsInfo{};
 	// update directional light info
-	const auto dlView   = registry->view<Components::DirectionalLight>();
+	const auto dlView   = registry->view<MRG::Components::Transform, Components::DirectionalLight>();
 	const auto dlEntity = dlView.front();
 	if (registry->valid(dlEntity)) {
-		const auto [dlc]       = dlView.get(dlEntity);
-		lightsInfo.directional = dlc;
+		const auto [tc, dlc]   = dlView.get(dlEntity);
+		lightsInfo.directional = DirectionalLight{
+		  .direction = glm::vec4{glm::rotate(glm::quat{tc.rotation}, glm::vec3{0.f, 0.f, -1.f}), 1.f},
+		  .color     = dlc.color,
+		};
 	}
 
 	// update point lights info
-	const auto plView = registry->view<Components::PointLight>();
+	const auto plView = registry->view<MRG::Components::Transform, Components::PointLight>();
 	auto plCount      = 0;
-	for (const auto [_, plc] : plView.each()) {
+	for (const auto [_, tc, plc] : plView.each()) {
 		if (plCount >= POINT_LIGHT_COUNT) { break; }
 
-		lightsInfo.pointLights[plCount] = plc;
+		lightsInfo.pointLights[plCount] = PointLight{
+		  .position    = glm::vec4{tc.translation, 1.f},
+		  .color       = plc.color,
+		  .attenuation = plc.attenuation,
+		};
 		++plCount;
 	}
-
 	lightsInfo.activePointLightCount = plCount;
 
-	void* data;
-	vmaMapMemory(renderer.getAllocator(), m_lightsInfoBuffer.allocation, &data);
-	memcpy(data, &lightsInfo, sizeof(lightsInfo));
-	vmaUnmapMemory(renderer.getAllocator(), m_lightsInfoBuffer.allocation);
+	m_lightsInfoBuffer.uploadData(lightsInfo);
 }

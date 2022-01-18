@@ -32,6 +32,22 @@ namespace
 			ImGui::Dummy({0.f, 5.f});
 			centeredText(title);
 		}
+
+		[[nodiscard]] bool removeComponent(const char* componentName)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, {0.55f, 0.1f, 0.1f, 1.f});
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {0.65f, 0.1f, 0.1f, 1.f});
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, {0.8f, 0.1f, 0.1f, 1.f});
+
+			static constexpr auto padding = 10.f;
+			ImGui::SetCursorPosX(padding / 2.f);
+			const auto res = ImGui::Button(fmt::format("Remove component##{}", componentName).c_str(),
+			                               {ImGui::GetContentRegionAvailWidth() - padding, 0.f});
+
+			ImGui::PopStyleColor(3);
+
+			return res;
+		}
 	}  // namespace ImGuiUtils
 
 	void
@@ -146,17 +162,7 @@ namespace
 	{
 		ImGui::Dummy({0.f, 20.f});
 		if (ImGui::CollapsingHeader("Mesh renderer", ImGuiTreeNodeFlags_DefaultOpen)) {
-			static const auto closeSize = 24.f;
-			ImGui::SameLine((ImGui::GetWindowWidth() - closeSize));
-			ImGui::SetItemAllowOverlap();
-			ImGui::PushStyleColor(ImGuiCol_Button, {0.1f, 0.1f, 0.1f, 1.f});
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {0.3f, 0.1f, 0.1f, 1.f});
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, {0.5f, 0.1f, 0.1f, 1.f});
-			if (ImGui::Button("X", {closeSize, 0.f})) {
-				ImGui::PopStyleColor(3);
-				return true;
-			}
-			ImGui::PopStyleColor(3);
+			if (ImGuiUtils::removeComponent("mesh renderer")) { return true; }
 
 			ImGui::PushID("Mesh DnD Target");
 			ImGui::Text("Drop new mesh here");  // @TODO(Ithyx): Display mesh name (path ?)
@@ -237,6 +243,17 @@ namespace
 		mrc.updateTransform(tc.getTransform());
 		return false;
 	}
+
+	[[nodiscard]] bool editDirectionalLightComponent(Components::DirectionalLight& dlc)
+	{
+		ImGui::Dummy({0.f, 20.f});
+		if (ImGui::CollapsingHeader("Directional light", ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (ImGuiUtils::removeComponent("directional light")) { return true; }
+
+			ImGui::ColorEdit3("light color", glm::value_ptr(dlc.color));
+		}
+		return false;
+	}
 }  // namespace
 
 namespace PropertiesPanel
@@ -260,7 +277,7 @@ namespace PropertiesPanel
 					}
 
 					if (!registry.all_of<Components::DirectionalLight>(selectedEntity) && ImGui::MenuItem("Directional Light")) {
-						registry.emplace<Components::DirectionalLight>(selectedEntity, glm::vec4{1.f, 0.f, -1.f, 0.f}, glm::vec4{1.f});
+						registry.emplace<Components::DirectionalLight>(selectedEntity, glm::vec4{1.f});
 					}
 
 					ImGui::EndMenu();
@@ -284,6 +301,10 @@ namespace PropertiesPanel
 				if (editMeshRendererComponent(mrc, tc, esc, assets, renderer)) {
 					registry.remove<MRG::Components::MeshRenderer<MRG::TexturedVertex>>(selectedEntity);
 				}
+			}
+			if (registry.all_of<Components::DirectionalLight>(selectedEntity)) {
+				auto& dlc = registry.get<Components::DirectionalLight>(selectedEntity);
+				if (editDirectionalLightComponent(dlc)) { registry.remove<Components::DirectionalLight>(selectedEntity); }
 			}
 		}
 		ImGui::End();

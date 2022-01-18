@@ -11,7 +11,6 @@ namespace Components
 {
 	struct DirectionalLight
 	{
-		glm::vec4 direction{};
 		glm::vec4 color{};
 	};
 }  // namespace Components

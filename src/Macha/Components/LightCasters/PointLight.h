@@ -11,7 +11,6 @@ namespace Components
 {
 	struct PointLight
 	{
-		glm::vec4 position{};
 		glm::vec4 color{};
 
 		// x: constant, y: linear, z: quadratic. w is ignored.

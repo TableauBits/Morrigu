@@ -65,7 +65,7 @@ public:
 		m_viewport->onUpdate(*m_activeScene->registry, ts);
 
 		// Update scene
-		m_activeScene->onUpdate(ts, *application->renderer);
+		m_activeScene->onUpdate(ts);
 	}
 
 	void onEvent(MRG::Event& event) override { m_viewport->onEvent(event); }
