@@ -4,6 +4,33 @@ include(${CMAKE_CURRENT_LIST_DIR}/Events/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/Rendering/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/Utils/CMakeLists.txt)
 
+# Patching ImGui:
+# @TODO(Ithyx): Move this horror to a conan.py
+file(READ ${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_vulkan.cpp VULKAN_BACKEND)
+message("Patching ImGui")
+string(
+	REPLACE
+	"//ImGui_ImplVulkan_CreatePipeline(device, allocator, VK_NULL_HANDLE, wd->RenderPass, VK_SAMPLE_COUNT_1_BIT, &wd->Pipeline, bd->Subpass)"
+	"ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();\n        ImGui_ImplVulkan_CreatePipeline(device, allocator, VK_NULL_HANDLE, wd->RenderPass, VK_SAMPLE_COUNT_1_BIT, &wd->Pipeline, bd->Subpass)"
+	VULKAN_BACKEND
+	"${VULKAN_BACKEND}"
+)
+string(
+	REPLACE
+	"info.format = VK_FORMAT_R8G8B8A8_UNORM;"
+	"info.format = VK_FORMAT_R8G8B8A8_SRGB;"
+	VULKAN_BACKEND
+	"${VULKAN_BACKEND}"
+)
+string(
+	REPLACE
+	"{ VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM }"
+	"{ VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_B8G8R8_SRGB, VK_FORMAT_R8G8B8_SRGB }"
+	VULKAN_BACKEND
+	"${VULKAN_BACKEND}"
+)
+file(WRITE ${CMAKE_CURRENT_LIST_DIR}/Vendor/ImGui/bindings/imgui_impl_vulkan.cpp "${VULKAN_BACKEND}")
+
 set(
 	IMGUI_BINDINGS
  

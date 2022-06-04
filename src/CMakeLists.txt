@@ -16,7 +16,7 @@ target_link_libraries(
 	PRIVATE
 	Vulkan::Vulkan
 	CONAN_PKG::glfw
-	CONAN_PKG::imgui-docking
+	CONAN_PKG::imgui
 )
 
 add_library(
@@ -39,7 +39,7 @@ target_link_libraries(
 	CONAN_PKG::freetype
 	CONAN_PKG::glfw
 	CONAN_PKG::glm
-	CONAN_PKG::imgui-docking
+	CONAN_PKG::imgui
 	CONAN_PKG::spdlog
 	CONAN_PKG::spirv-cross
 	CONAN_PKG::stb

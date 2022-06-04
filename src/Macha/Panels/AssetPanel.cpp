@@ -26,7 +26,7 @@ void AssetPanel::onImGuiRender()
 		ImGui::EndDisabled();
 		ImGui::PopStyleColor();
 
-		const auto totalWidth  = ImGui::GetContentRegionAvailWidth();
+		const auto totalWidth  = ImGui::GetContentRegionAvail().x;
 		const auto columnCount = std::max(1, static_cast<int>(totalWidth / totalElementSize));
 
 		auto counter = 0;

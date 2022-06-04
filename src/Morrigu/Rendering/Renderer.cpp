@@ -65,13 +65,13 @@ namespace
 	{
 		switch (type) {
 		case vk::PhysicalDeviceType::eOther:
-			return "Other";
+			return "other";
 		case vk::PhysicalDeviceType::eIntegratedGpu:
-			return "Integrated GPU";
+			return "integrated GPU";
 		case vk::PhysicalDeviceType::eDiscreteGpu:
-			return "Discrete GPU";
+			return "discrete GPU";
 		case vk::PhysicalDeviceType::eVirtualGpu:
-			return "Virtual GPU";
+			return "virtual GPU";
 		case vk::PhysicalDeviceType::eCpu:
 			return "CPU";
 

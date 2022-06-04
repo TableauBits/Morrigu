@@ -41,8 +41,8 @@ namespace
 
 			static constexpr auto padding = 10.f;
 			ImGui::SetCursorPosX(padding / 2.f);
-			const auto res = ImGui::Button(fmt::format("Remove component##{}", componentName).c_str(),
-			                               {ImGui::GetContentRegionAvailWidth() - padding, 0.f});
+			const auto res =
+			  ImGui::Button(fmt::format("Remove component##{}", componentName).c_str(), {ImGui::GetContentRegionAvail().x - padding, 0.f});
 
 			ImGui::PopStyleColor(3);
 
