@@ -1,4 +1,5 @@
 build/
+.cache/
 .vs/
 .vscode/
 cmake-build-release/
@@ -9,4 +10,6 @@ Release/
 temp/
 
 runtime/
-src/Morrigu/Vendor/
+src/Morrigu/Vendor/ImGui/bindings
+
+compile_commands.json

@@ -44,7 +44,7 @@ void Scene::onUpdate(MRG::Timestep)
 
 	// update point lights info
 	const auto plView = registry->view<MRG::Components::Transform, Components::PointLight>();
-	auto plCount      = 0;
+	auto plCount      = 0u;
 	for (const auto [_, tc, plc] : plView.each()) {
 		if (plCount >= POINT_LIGHT_COUNT) { break; }
 
